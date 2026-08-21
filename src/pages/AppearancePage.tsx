@@ -1671,15 +1671,13 @@ const CarouselPreview = ({
   colors: PreviewColors;
 }) => {
   const mockupRef = useRef<HTMLDivElement>(null);
-  const scale = usePreviewScale(mockupRef);
-
+  const trackWrapperRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
 
   const visibleItems = safeNumber(carousel.visible_items, 4, 1);
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
-  const items = Array.from({ length: Math.max(1, Math.min(visibleItems, 6)) });
+  const items = Array.from({ length: Math.max(1, visibleItems) });
   const isCircle = shape === 'circle';
-  const isSquare = shape === 'square';
   const isPortrait = shape === 'portrait';
   const isLandscape = shape === 'landscape';
 
@@ -1704,24 +1702,39 @@ const CarouselPreview = ({
     });
   }, [carousel.autoplay_videos]);
 
-  // Tamanho real configurado (sem clamp artificial), escalado via transform
   const rawWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
-  const cardWidth = `${rawWidth}px`;
-
+  const spacing = safeNumber(carousel.spacing, 8, 0);
   const cardHeightPx = isPortrait
     ? Math.round((rawWidth * 16) / 9)
     : isLandscape
       ? Math.round((rawWidth * 9) / 16)
       : rawWidth;
-  const cardHeight = `${cardHeightPx}px`;
 
-  const borderRadius = isCircle
-    ? '50%'
-    : cssSize(carousel.border_radius, '12px');
+  const totalContentWidth = visibleItems * rawWidth + (visibleItems - 1) * spacing;
+
+  // Escala dinâmica: ajusta para caber TODOS os itens sem cortar, sem scroll
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const el = trackWrapperRef.current;
+    if (!el) return;
+    const update = () => {
+      const availableWidth = el.getBoundingClientRect().width;
+      if (availableWidth > 0 && totalContentWidth > 0) {
+        setScale(availableWidth / totalContentWidth);
+      }
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [totalContentWidth]);
+
+  const cardWidth = `${rawWidth}px`;
+  const cardHeight = `${cardHeightPx}px`;
+  const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
 
   return (
     <div ref={mockupRef} className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50 flex flex-col h-[500px]">
-      {/* Header do Mockup */}
       <div className="flex items-center justify-between bg-white px-4 py-2.5 shadow-sm shrink-0 border-b border-slate-100">
         <div className="flex items-center gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-md" style={{ backgroundColor: colors.primary }}>
@@ -1735,10 +1748,7 @@ const CarouselPreview = ({
         </div>
       </div>
 
-      {/* Conteúdo Rolável da Loja Falsa */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4 [&::-webkit-scrollbar]:hidden">
-        
-        {/* Banner Curto */}
         <div
           className="h-16 w-full rounded-lg"
           style={{
@@ -1747,118 +1757,111 @@ const CarouselPreview = ({
           }}
         />
 
-        {/* Bloco do Carrossel de Stories */}
         <div className="space-y-2">
           {carousel.show_title && (
             <div className="h-3 w-28 rounded bg-slate-700" style={{ opacity: 0.8 }} />
           )}
 
-          <div
-            className={cn(
-              'flex overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden',
-              carousel.auto_center ? 'justify-center' : 'justify-start'
-            )}
-            style={{
-              gap: `${safeNumber(carousel.spacing, 8, 0)}px`,
-              transform: `scale(${scale})`,
-              transformOrigin: carousel.auto_center ? 'top center' : 'top left',
-            }}
-          >
-            {items.map((_, index) => (
-              <div key={index} className="flex flex-col gap-1 shrink-0" style={{ width: cardWidth }}>
-                
-{/* Vídeo / Story */}
-                <div
-                  className="relative overflow-hidden shadow-sm bg-slate-900"
-                  style={{
-                    width: cardWidth,
-                    height: cardHeight,
-                    borderColor: carousel.border_color || colors.primary,
-                    borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
-                    borderStyle: 'solid',
-                    borderRadius,
-                                        transform: carousel.auto_highlight && index === highlightIndex ? 'scale(1.08)' : 'scale(1)',
-                    zIndex: carousel.auto_highlight && index === highlightIndex ? 10 : 1,
-                    boxShadow: carousel.auto_highlight && index === highlightIndex ? `0 0 0 2px ${colors.primary}` : undefined,
-                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          {/* Wrapper que mede a largura disponível real */}
+          <div ref={trackWrapperRef} className="w-full">
+            <div
+              className="flex mx-auto"
+              style={{
+                gap: `${spacing}px`,
+                width: `${totalContentWidth}px`,
+                transform: `scale(${scale})`,
+                transformOrigin: 'top center',
+              }}
+            >
+              {items.map((_, index) => (
+                <div key={index} className="flex flex-col gap-1 shrink-0" style={{ width: cardWidth }}>
+                  <div
+                    className="relative overflow-hidden shadow-sm bg-slate-900"
+                    style={{
+                      width: cardWidth,
+                      height: cardHeight,
+                      borderColor: carousel.border_color || colors.primary,
+                      borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
+                      borderStyle: 'solid',
+                      borderRadius,
+                      transform: carousel.auto_highlight && index === highlightIndex ? 'scale(1.08)' : 'scale(1)',
+                      zIndex: carousel.auto_highlight && index === highlightIndex ? 10 : 1,
+                      boxShadow: carousel.auto_highlight && index === highlightIndex ? `0 0 0 2px ${colors.primary}` : undefined,
+                      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    }}
+                  >
+                    <video
+                      ref={(el) => {
+                        if (el) videoRefs.current.set(index, el);
+                        else videoRefs.current.delete(index);
+                      }}
+                      src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
+                      loop={carousel.autoplay_videos ?? true}
+                      muted
+                      playsInline
+                      preload="auto"
+                      poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+                      className="h-full w-full object-cover pointer-events-none"
+                    />
 
-                  }}
-                >
-<video
-  ref={(el) => {
-    if (el) videoRefs.current.set(index, el);
-    else videoRefs.current.delete(index);
-  }}
-  src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
-  loop={carousel.autoplay_videos ?? true}
-  muted
-  playsInline
-  preload="auto"
-  poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-  className="h-full w-full object-cover pointer-events-none"
-/>
+                    {carousel.show_play_icon && (
+                      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                          <PlaySquare size={12} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-                  {carousel.show_play_icon && (
-                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-                        <PlaySquare size={12} />
+                  {carousel.show_product && !isCircle && (
+                    <div
+                      className="flex items-center gap-1.5 p-1 shadow-sm bg-white"
+                      style={{
+                        backgroundColor: carousel.product_card_bg || '#FFFFFF',
+                        borderColor: carousel.product_card_border_color || '#E2E8F0',
+                        borderWidth: `${safeNumber(carousel.product_card_border_width, 1, 0)}px`,
+                        borderStyle: 'solid',
+                        borderRadius: `${safeNumber(carousel.product_card_border_radius, 8, 0)}px`,
+                      }}
+                    >
+                      <div className="h-7 w-7 shrink-0 rounded bg-slate-200" />
+                      <div className="min-w-0 flex-1 flex flex-col justify-center">
+                        <div
+                          className="truncate font-bold leading-tight"
+                          style={{
+                            fontSize: `${safeNumber(carousel.product_card_name_size, 10, 8)}px`,
+                            color: carousel.product_card_name_color || '#0F172A',
+                          }}
+                        >
+                          Calça Confort
+                        </div>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <span
+                            style={{
+                              fontSize: `${safeNumber(carousel.product_card_price_size, 10, 8)}px`,
+                              fontWeight: carousel.product_card_price_bold ?? true ? '800' : '600',
+                              color: carousel.product_card_price_color || colors.primary,
+                            }}
+                          >
+                            R$ 149,95
+                          </span>
+                          <span className="font-extrabold text-[9px]" style={{ color: carousel.product_card_price_color || colors.primary }}>
+                            &rarr;
+                          </span>
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
-
-                {/* Card de Produto Otimizado (Lado a Lado) */}
-                {carousel.show_product && !isCircle && (
-                  <div
-                    className="flex items-center gap-1.5 p-1 shadow-sm bg-white"
-                    style={{
-                      backgroundColor: carousel.product_card_bg || '#FFFFFF',
-                      borderColor: carousel.product_card_border_color || '#E2E8F0',
-                      borderWidth: `${safeNumber(carousel.product_card_border_width, 1, 0)}px`,
-                      borderStyle: 'solid',
-                      borderRadius: `${safeNumber(carousel.product_card_border_radius, 8, 0)}px`,
-                    }}
-                  >
-                    <div className="h-7 w-7 shrink-0 rounded bg-slate-200" />
-                    <div className="min-w-0 flex-1 flex flex-col justify-center">
-                      <div
-                        className="truncate font-bold leading-tight"
-                        style={{
-                          fontSize: `${safeNumber(carousel.product_card_name_size, 10, 8)}px`,
-                          color: carousel.product_card_name_color || '#0F172A',
-                        }}
-                      >
-                        Calça Confort
-                      </div>
-                      <div className="flex items-center justify-between mt-0.5">
-                        <span
-                          style={{
-                            fontSize: `${safeNumber(carousel.product_card_price_size, 10, 8)}px`,
-                            fontWeight: carousel.product_card_price_bold ?? true ? '800' : '600',
-                            color: carousel.product_card_price_color || colors.primary,
-                          }}
-                        >
-                          R$ 149,95
-                        </span>
-                        <span className="font-extrabold text-[9px]" style={{ color: carousel.product_card_price_color || colors.primary }}>
-                          &rarr;
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Vitrine da Loja de Fundo */}
         <div className="grid grid-cols-2 gap-2 pt-2">
           <div className="h-28 rounded-lg bg-white border border-slate-100 shadow-sm" />
           <div className="h-28 rounded-lg bg-white border border-slate-100 shadow-sm" />
         </div>
-
       </div>
     </div>
   );
