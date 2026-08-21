@@ -3975,14 +3975,13 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
           '-webkit-backface-visibility:hidden !important;' +
           'background:#000 !important;';
 
-        primeVideoFrame(previewVideo);
-        previewVideo.src = videoUrlWithFragment;
+previewVideo.src = videoUrlWithFragment;
 
-        innerMask.appendChild(previewVideo);
-        var pvPlayPromise = previewVideo.play();
-        if (pvPlayPromise && typeof pvPlayPromise.catch === 'function') {
-          pvPlayPromise.catch(function () {});
-        }
+innerMask.appendChild(previewVideo);
+var pvPlayPromise = previewVideo.play();
+if (pvPlayPromise && typeof pvPlayPromise.catch === 'function') {
+  pvPlayPromise.catch(function () {});
+}
       } else {
         var displayImgSrc = thumbUrl;
 
