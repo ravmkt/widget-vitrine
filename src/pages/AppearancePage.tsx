@@ -1805,21 +1805,43 @@ const GridPreview = ({
 }: {
   grid: GridConfig;
   colors: PreviewColors;
-}) => {
   const mockupRef = useRef<HTMLDivElement>(null);
   const scale = usePreviewScale(mockupRef);
 
-    const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+  const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+
+  const cols = limitNumber(grid.visible_items, 10, 1, 10);
+  const rows = 2;
+  const totalItems = cols * rows;
+  const items = Array.from({ length: totalItems });
+
+  const [activeIndex, setActiveIndex] = useState(0);
+
   useEffect(() => {
-    videoRefs.current.forEach((vid) => {
+    if (!grid.sequential_playback) return;
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % totalItems);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [grid.sequential_playback, totalItems]);
+
+  useEffect(() => {
+    videoRefs.current.forEach((vid, index) => {
       if (!vid) return;
-      if (grid.autoplay_videos ?? true) {
+      if (grid.sequential_playback) {
+        if (index === activeIndex) {
+          vid.currentTime = 0;
+          vid.play().catch(() => {});
+        } else {
+          vid.pause();
+        }
+      } else if (grid.autoplay_videos ?? true) {
         vid.play().catch(() => {});
       } else {
         vid.pause();
       }
     });
-  }, [grid.autoplay_videos]);
+  }, [grid.autoplay_videos, grid.sequential_playback, activeIndex, totalItems]);
 
   const cols = limitNumber(grid.visible_items, 10, 1, 10);
   const rawWidth = safeNumber(parseFloat(grid.width || '90'), 90, 40);
