@@ -2984,6 +2984,8 @@ const AppearancePage = () => {
                             if (checked) {
                               setFloatingDevice('desktop');
                               setCarouselDevice('desktop');
+                                  setDynamicCarouselDevice('desktop');
+
                               setGridDevice('desktop');
                             }
                           }}
