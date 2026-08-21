@@ -4514,6 +4514,8 @@ function initInlineWidget(options) {
   var displayMode = options.storyFormat || getWidgetDisplayMode(appearance);
   
   if (displayMode === 'carousel') {
+    document.querySelectorAll('[id^="vidlytics-wrapper-"]').forEach(function (w) { w.remove(); });
+
     var wrapper = document.createElement('div');
     wrapper.id = 'vidlytics-wrapper-' + Date.now();
     
