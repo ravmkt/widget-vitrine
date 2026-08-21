@@ -1488,6 +1488,17 @@ function usePreviewScale(containerRef: React.RefObject<HTMLDivElement>) {
 }
 
 const FloatingPreview = ({
+    const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    if (floating.autoplay_videos ?? true) {
+      vid.play().catch(() => {});
+    } else {
+      vid.pause();
+    }
+  }, [floating.autoplay_videos]);
+
   floating,
   colors,
 }: {
