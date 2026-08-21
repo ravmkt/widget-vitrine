@@ -143,6 +143,9 @@ product_card_bg: string;
 
 type DynamicCarouselConfig = CarouselConfig & {
   enabled: boolean;
+  highlight_shadow: boolean;
+  highlight_scale_up: boolean;
+  highlight_scale_down_others: boolean;
 };
 
 type GridConfig = {
