@@ -4696,7 +4696,6 @@ function renderFloatingWidget(floatingStories) {
 
   var stories = floatingStories || currentStories;
   var mode = 'bubble';
-  console.log('[Vidlytics] ðŸŽˆ Renderizando flutuante. Modo:', mode, '| stories:', stories.length);
 
   if (!stories || stories.length === 0) {
     console.log('[Vidlytics] âš ï¸ Nenhum story para flutuante.');
