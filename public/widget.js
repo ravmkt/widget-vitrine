@@ -2,7 +2,7 @@
   var WIDGET_VERSION = '2026.08.21-15';
 
   console.info(
-    '%cVidlytics Widget carregado â€” versÃ£o ' + WIDGET_VERSION,
+    '%cVidlytics Widget carregado Ã¢â‚¬â€ versÃƒÂ£o ' + WIDGET_VERSION,
     'color: #22c55e; font-weight: bold; font-size: 13px;'
   );
 
@@ -28,7 +28,7 @@
 
   var enableFloating = widgetsCfg.floatingVideo !== undefined ? widgetsCfg.floatingVideo : config.floatingVideo !== false;
 
-  // ðŸ†• PLAYER FULLSCREEN (independente do modal de stories)
+  // Ã°Å¸â€ â€¢ PLAYER FULLSCREEN (independente do modal de stories)
   var fsPlayerOverlay = null;
   var fsPlayerContainer = null;
 
@@ -45,7 +45,7 @@ function ensureModalStylesInLightDOM(appearance) {
     if (fsPlayerOverlay) return;
 
     // Injeta CSS do player fullscreen no DOM global (light DOM),
-    // pois o overlay Ã© anexado em document.body, fora do Shadow DOM
+    // pois o overlay ÃƒÂ© anexado em document.body, fora do Shadow DOM
     if (!document.getElementById('vl-fs-player-styles')) {
       var fsStyle = document.createElement('style');
       fsStyle.id = 'vl-fs-player-styles';
@@ -69,13 +69,13 @@ function ensureModalStylesInLightDOM(appearance) {
 
     fsPlayerContainer = fsPlayerOverlay.querySelector('.vl-fs-container');
 
-    // Fechar pelo botÃ£o X
+    // Fechar pelo botÃƒÂ£o X
     fsPlayerOverlay.querySelector('.vl-fs-close').addEventListener('click', function(e) {
       e.stopPropagation();
       closeFullscreenPlayer();
     });
 
-    // Fechar clicando fora do vÃ­deo
+    // Fechar clicando fora do vÃƒÂ­deo
     fsPlayerOverlay.addEventListener('click', function(e) {
       if (e.target === fsPlayerOverlay) closeFullscreenPlayer();
     });
@@ -103,7 +103,7 @@ function ensureModalStylesInLightDOM(appearance) {
     fsPlayerContainer.innerHTML = '';
     sourceType = String(sourceType || '').trim().toLowerCase();
 
-// YouTube (Mutado por padrÃ£o no autoplay)
+// YouTube (Mutado por padrÃƒÂ£o no autoplay)
     if (sourceType === 'youtube' || sourceType === 'yt') {
       var ytId = extractYouTubeId(videoUrl);
       if (ytId) {
@@ -133,7 +133,7 @@ function ensureModalStylesInLightDOM(appearance) {
     else if (sourceType === 'upload' || isDirectVideoUrl(videoUrl)) {
       fsPlayerContainer.innerHTML = '<video src="' + videoUrl + '" controls autoplay playsinline></video>';
     }
-    // Fallback genÃ©rico: tenta como vÃ­deo direto
+    // Fallback genÃƒÂ©rico: tenta como vÃƒÂ­deo direto
     else {
       fsPlayerContainer.innerHTML = '<video src="' + videoUrl + '" controls autoplay playsinline></video>';
     }
@@ -165,7 +165,7 @@ var storeWhatsappNumber = '';
   var currentStories = [];
     var currentStoryIndex = 0;
   var currentVideoIndex = 0;
-var isUserMuted = true; // Controla a persistÃªncia da preferÃªncia de som durante a navegaÃ§Ã£o
+var isUserMuted = true; // Controla a persistÃƒÂªncia da preferÃƒÂªncia de som durante a navegaÃƒÂ§ÃƒÂ£o
 
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
@@ -428,12 +428,10 @@ function normalizeMediaUrl(url) {
   function setStorageItem(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 
 function normalizeAppearanceItem(item) {
-    console.log('[DEBUG] Item ANTES do flatten:', JSON.parse(JSON.stringify(item || {})));
     var merged = {};
     flattenAppearanceInto(merged, item || {}, 0);
     delete merged.storageAppearance; delete merged.configAppearance; delete merged.dbAppearance;
     delete merged.widgetsAppearance; delete merged.widgetsAparencia;
-    console.log('[DEBUG] Resultado APÃ“S flatten - grid_config:', merged.grid_config);
     return merged;
   }
   var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_config'];
@@ -483,7 +481,7 @@ function normalizeAppearanceItem(item) {
   }
 
   function supabaseFetch(path, options) {
-    if (!hasSupabase) return Promise.reject(new Error('Supabase nÃ£o configurado.'));
+    if (!hasSupabase) return Promise.reject(new Error('Supabase nÃƒÂ£o configurado.'));
     options = options || {};
     var headers = {
       'apikey': supabaseAnonKey,
@@ -690,7 +688,7 @@ function getCarouselConfig(appearance) {
     return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
   }
   
-// 1. DefiniÃ§Ãµes estruturais do carrossel
+// 1. DefiniÃƒÂ§ÃƒÂµes estruturais do carrossel
   var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
   var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
   var borderWidth = toNumber(rcv('border_width', 'carousel_border_width', '0'), 0);
@@ -712,6 +710,7 @@ var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false
   var showItemTitle = toBoolean(rcv('show_item_title', 'carousel_show_item_title', false), false);
   var showArrows = toBoolean(rcv('show_arrows', 'carousel_show_arrows', true), true);
   var showProduct = toBoolean(rcv('show_product', 'carousel_show_product', true), true);
+  var autoHighlight = toBoolean(rcv('auto_highlight', 'carousel_auto_highlight', false), false);
 
   // Leitura da chave real view_mode ('preview' / 'playing' / 'video' = reproduz mutado)
   var autoplayVideos = rcv('autoplay_videos', 'carousel_autoplay_videos', true);
@@ -724,7 +723,7 @@ var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
   else if (shape === 'circle') aspect = '1/1';
   else if (shape === 'landscape' || shape === 'paisagem' || shape === '16:9' || shape === '16_9') aspect = '16/9';
 
-  // Leitura consolidada e Ãºnica das propriedades do card de produto
+  // Leitura consolidada e ÃƒÂºnica das propriedades do card de produto
   var pBg = sanitizeCssValue(rcv('product_card_bg', 'carousel_product_card_bg', '#FFFFFF'), '#FFFFFF', 'color');
   var pBorderColor = sanitizeCssValue(rcv('product_card_border_color', 'carousel_product_card_border_color', '#E2E8F0'), '#E2E8F0', 'color');
   var pBorderWidth = toNumber(rcv('product_card_border_width', 'carousel_product_card_border_width', '1'), 1);
@@ -781,7 +780,7 @@ function getGridConfig(appearance) {
   var borderWidth = safeInt(rcv('border_style', 'grid_border_width', '2'), 2);
   
   var rawBorderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
-  // Se o formato for cÃ­rculo, forÃ§a o border-radius para 50%
+  // Se o formato for cÃƒÂ­rculo, forÃƒÂ§a o border-radius para 50%
   var borderRadius = (shape === 'circle') ? '50%' : (rawBorderRadius + 'px');
 
   var objectFit = String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
@@ -892,28 +891,28 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
       : fetchJson('videos?select=*&store_id=eq.' + encodeURIComponent(storeId));
   }
 
-  // ðŸ”§ NOVA FUNÃ‡ÃƒO â€” Junta vÃ­deos aos stories via tabela story_videos
+  // Ã°Å¸â€Â§ NOVA FUNÃƒâ€¡ÃƒÆ’O Ã¢â‚¬â€ Junta vÃƒÂ­deos aos stories via tabela story_videos
   function joinStoriesWithVideos(stories, storyVideos, videos) {
     if (!stories || !stories.length) return stories;
 
-    // Cria um mapa rÃ¡pido de vÃ­deos por ID
+    // Cria um mapa rÃƒÂ¡pido de vÃƒÂ­deos por ID
     var videoMap = {};
     (videos || []).forEach(function (v) {
       if (v && v.id) videoMap[v.id] = v;
     });
 
-    // Para cada story, monta o array de vÃ­deos ordenado por position
+    // Para cada story, monta o array de vÃƒÂ­deos ordenado por position
     (stories || []).forEach(function (story) {
       var svRows = (storyVideos || []).filter(function (sv) {
         return sv.story_id === story.id;
       });
 
-      // Ordena por position (campo que define a ordem dos vÃ­deos no story)
+      // Ordena por position (campo que define a ordem dos vÃƒÂ­deos no story)
       svRows.sort(function (a, b) {
         return (a.position || 0) - (b.position || 0);
       });
 
-      // Mapeia para os objetos completos de vÃ­deo
+      // Mapeia para os objetos completos de vÃƒÂ­deo
       story.videos = svRows.map(function (sv) {
         return videoMap[sv.video_id];
       }).filter(Boolean);
@@ -922,7 +921,6 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
       if (story.videos.length === 0) {
         console.warn('[Vidlytics] Story "' + (story.title || story.id) + '" sem videos vinculados.');
       } else {
-        console.log('[Vidlytics] Story "' + (story.title || story.id) + '" com ' + story.videos.length + ' video(s).');
       }
     });
 
@@ -1285,7 +1283,7 @@ function getVideoUrl(video) {
     return '';
   }
 
-    // ðŸ†• EXTRAIR ID DO INSTAGRAM REEL
+    // Ã°Å¸â€ â€¢ EXTRAIR ID DO INSTAGRAM REEL
   function extractInstagramId(url) {
     if (!url) return '';
     try {
@@ -1295,7 +1293,7 @@ function getVideoUrl(video) {
     } catch (e) { return url; }
   }
 
-  // ðŸ†• EXTRAIR ID DO TIKTOK
+  // Ã°Å¸â€ â€¢ EXTRAIR ID DO TIKTOK
   function extractTikTokId(url) {
     if (!url) return '';
     try {
@@ -1305,7 +1303,7 @@ function getVideoUrl(video) {
     } catch (e) { return url; }
   }
 
-  // ðŸ†• EXTRAIR ID DO PIN DO PINTEREST
+  // Ã°Å¸â€ â€¢ EXTRAIR ID DO PIN DO PINTEREST
   function extractPinterestId(url) {
     if (!url) return '';
     try {
@@ -1694,7 +1692,7 @@ function applyHostPosition(host, appearance) {
 function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
 
-    // Throttle: evita reenviar o mesmo evento para o mesmo vÃ­deo em menos de 4s
+    // Throttle: evita reenviar o mesmo evento para o mesmo vÃƒÂ­deo em menos de 4s
     sendAnalyticsEvent._lastSent = sendAnalyticsEvent._lastSent || {};
     var throttleKey = String(eventType) + '_' + String(videoId);
     var throttleNow = Date.now();
@@ -1776,7 +1774,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
 
     var wrapper = createEl('div', 'vl-player');
 
-    // 0. Imagem EstÃ¡tica / Foto no Story
+    // 0. Imagem EstÃƒÂ¡tica / Foto no Story
     if (isImage || (url && /\.(jpe?g|png|webp|gif|svg)($|\?|#)/i.test(url))) {
       var imgEl = createEl('img');
       imgEl.src = url || getVideoThumbnail(video);
@@ -1793,7 +1791,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-// 1. YouTube Shorts ou VÃ­deo Tradicional (Respeita a preferÃªncia de Ã¡udio ativa do usuÃ¡rio)
+// 1. YouTube Shorts ou VÃƒÂ­deo Tradicional (Respeita a preferÃƒÂªncia de ÃƒÂ¡udio ativa do usuÃƒÂ¡rio)
     if (ytId) {
       var iframe = createEl('iframe');
       var ytMuteParam = isUserMuted ? '1' : '0';
@@ -1807,13 +1805,13 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-    // 1.1. Pinterest Pin Embed com ValidaÃ§Ã£o Defensiva de ID
+    // 1.1. Pinterest Pin Embed com ValidaÃƒÂ§ÃƒÂ£o Defensiva de ID
     var pinId = extractPinterestId(url);
     if (sourceType === 'pinterest' || pinId) {
       if (!pinId) {
         var errorMsg = createEl('div');
         errorMsg.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:13px;text-align:center;padding:16px;background:#111;';
-        errorMsg.textContent = 'NÃ£o foi possÃ­vel carregar este Pin do Pinterest';
+        errorMsg.textContent = 'NÃƒÂ£o foi possÃƒÂ­vel carregar este Pin do Pinterest';
         wrapper.appendChild(errorMsg);
         return wrapper;
       }
@@ -1827,7 +1825,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-    // 2.1. TikTok Embed Oficial (evita erro NotSupportedError em URLs de compartilhamento/pÃ¡gina)
+    // 2.1. TikTok Embed Oficial (evita erro NotSupportedError em URLs de compartilhamento/pÃƒÂ¡gina)
     if (sourceType === 'tiktok' || (tkId && url.indexOf('tiktok.com') !== -1)) {
       var tkIframe = createEl('iframe');
       tkIframe.src = 'https://www.tiktok.com/embed/v2/' + tkId;
@@ -1839,13 +1837,13 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-    // 3. MÃ­dia MP4 / Upload / CDN / URL Externa (Respeita a preferÃªncia de Ã¡udio ativa do usuÃ¡rio)
+    // 3. MÃƒÂ­dia MP4 / Upload / CDN / URL Externa (Respeita a preferÃƒÂªncia de ÃƒÂ¡udio ativa do usuÃƒÂ¡rio)
     if (url) {
       var media = createEl('video');
       media.controls = false;
       media.preload = 'auto';
       media.autoplay = true;
-      media.muted = isUserMuted; // MantÃ©m o som ligado se o usuÃ¡rio jÃ¡ tiver desmutado anteriormente
+      media.muted = isUserMuted; // MantÃƒÂ©m o som ligado se o usuÃƒÂ¡rio jÃƒÂ¡ tiver desmutado anteriormente
       media.loop = true;
       media.playsInline = true;
       media.setAttribute('playsinline', '');
@@ -1867,10 +1865,10 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       
       // Tratamento de Erro Fallback (Ex: link 403 Forbidden expirado)
       media.addEventListener('error', function () {
-        console.error('[Vidlytics] Erro fatal ao carregar mÃ­dia:', url);
+        console.error('[Vidlytics] Erro fatal ao carregar mÃƒÂ­dia:', url);
         var errorMsg = createEl('div');
         errorMsg.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#111;color:#ef4444;font-size:13px;font-weight:700;text-align:center;padding:20px;z-index:10;';
-        errorMsg.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>MÃ­dia indisponÃ­vel ou expirada.';
+        errorMsg.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>MÃƒÂ­dia indisponÃƒÂ­vel ou expirada.';
         wrapper.appendChild(errorMsg);
       });
 
@@ -1880,7 +1878,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
         var p = media.play();
         if (p && typeof p.catch === 'function') {
           p.catch(function (err) {
-            console.warn('[Vidlytics] Falha no disparo do vÃ­deo:', err);
+            console.warn('[Vidlytics] Falha no disparo do vÃƒÂ­deo:', err);
           });
         }
       }, 50);
@@ -1888,11 +1886,11 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-    // 4. Fallback caso nÃ£o haja nenhuma URL
+    // 4. Fallback caso nÃƒÂ£o haja nenhuma URL
     var link = createEl('a');
     link.href = url || '#';
     link.target = '_blank';
-    link.textContent = 'Ver vÃ­deo';
+    link.textContent = 'Ver vÃƒÂ­deo';
     link.className = 'vl-cta';
     wrapper.appendChild(link);
     return wrapper;
@@ -1933,7 +1931,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   }
 
   function getCommentEmojis() {
-    return ['ðŸ˜Ž', 'ðŸ‘', 'ðŸ‘', 'ðŸ˜±', 'ðŸ™', 'ðŸ’ª', 'ðŸ”¥', 'â¤ï¸', 'ðŸ’™', 'âœ¨', 'ðŸŽ‰', 'âœ…', 'â­', 'ðŸ˜¢', 'ðŸ˜¡', 'ðŸ¤”', 'ðŸ‘€', 'ðŸ˜Š', 'ðŸ¥°'];
+    return ['Ã°Å¸ËœÅ½', 'Ã°Å¸â€˜Â', 'Ã°Å¸â€˜Â', 'Ã°Å¸ËœÂ±', 'Ã°Å¸â„¢Â', 'Ã°Å¸â€™Âª', 'Ã°Å¸â€Â¥', 'Ã¢ÂÂ¤Ã¯Â¸Â', 'Ã°Å¸â€™â„¢', 'Ã¢Å“Â¨', 'Ã°Å¸Å½â€°', 'Ã¢Å“â€¦', 'Ã¢Â­Â', 'Ã°Å¸ËœÂ¢', 'Ã°Å¸ËœÂ¡', 'Ã°Å¸Â¤â€', 'Ã°Å¸â€˜â‚¬', 'Ã°Å¸ËœÅ ', 'Ã°Å¸Â¥Â°'];
   }
 
   function getSizingModelId(video) {
@@ -1942,14 +1940,14 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   }
 
   function createComment(commentData) {
-    if (!hasSupabase) return Promise.reject(new Error('Supabase nÃ£o configurado.'));
+    if (!hasSupabase) return Promise.reject(new Error('Supabase nÃƒÂ£o configurado.'));
     commentData = commentData || {};
 
     var authorName = String(commentData.author_name || '').trim();
     var commentText = String(commentData.content || commentData.text || '').trim();
 
     if (!authorName) return Promise.reject(new Error('Informe seu nome.'));
-    if (!commentText) return Promise.reject(new Error('Digite um comentÃ¡rio.'));
+    if (!commentText) return Promise.reject(new Error('Digite um comentÃƒÂ¡rio.'));
 
     var payload = {
       p_store_id: storeId,
@@ -1981,10 +1979,10 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
         return response.text().then(function (rawMessage) {
           var parsed = {};
           try { parsed = JSON.parse(rawMessage || '{}'); } catch (error) {}
-          if (response.status === 401) throw new Error('A chave pÃºblica ou a URL do Supabase sÃ£o invÃ¡lidas.');
-          if (parsed.message === 'rate_limit_exceeded') throw new Error('VocÃª estÃ¡ comentando rÃ¡pido demais. Aguarde um pouco.');
-          if (parsed.message === 'invalid_content') throw new Error('ComentÃ¡rio invÃ¡lido.');
-          throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'NÃ£o foi possÃ­vel enviar o comentÃ¡rio.');
+          if (response.status === 401) throw new Error('A chave pÃƒÂºblica ou a URL do Supabase sÃƒÂ£o invÃƒÂ¡lidas.');
+          if (parsed.message === 'rate_limit_exceeded') throw new Error('VocÃƒÂª estÃƒÂ¡ comentando rÃƒÂ¡pido demais. Aguarde um pouco.');
+          if (parsed.message === 'invalid_content') throw new Error('ComentÃƒÂ¡rio invÃƒÂ¡lido.');
+          throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'NÃƒÂ£o foi possÃƒÂ­vel enviar o comentÃƒÂ¡rio.');
         });
       });
   }
@@ -2117,7 +2115,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     if (existing) { existing.remove(); return; }
     var shareUrl = window.location.href;
     var story = currentStories[currentStoryIndex];
-    var shareText = story ? (story.title || 'Confira este vÃ­deo!') : 'Confira este vÃ­deo!';
+    var shareText = story ? (story.title || 'Confira este vÃƒÂ­deo!') : 'Confira este vÃƒÂ­deo!';
     var panel = createEl('div');
     panel.id = 'vl-share-panel';
     panel.style.cssText = 'position:absolute;bottom:calc(100% + 8px);right:-20px;background:#1e293b;border-radius:12px;padding:8px;min-width:180px;box-shadow:0 10px 25px rgba(0,0,0,0.5);z-index:200;animation:vlFadeIn 0.15s ease;';
@@ -2409,7 +2407,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     ].join('');
 
     var panelTitle = createEl('h3');
-    panelTitle.textContent = 'ComentÃ¡rios' + (hasComments ? ' (' + commentsCount + ')' : '');
+    panelTitle.textContent = 'ComentÃƒÂ¡rios' + (hasComments ? ' (' + commentsCount + ')' : '');
     panelTitle.style.cssText = 'margin:0;font-size:16px;font-weight:700;color:#111;';
     panelHeader.appendChild(panelTitle);
 
@@ -2586,7 +2584,7 @@ if (replyIsVisible) {
 
       var ctaBtn = createEl('button');
       ctaBtn.type = 'button';
-      ctaBtn.textContent = 'Deixe seu comentÃ¡rio';
+      ctaBtn.textContent = 'Deixe seu comentÃƒÂ¡rio';
       ctaBtn.style.cssText = 'width:100%;height:40px;border:none;border-radius:12px;background:' + buttonColor + ';color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:' + fontFamily + ';';
       ctaBtn.onmouseenter = function () { ctaBtn.style.opacity = '.9'; };
       ctaBtn.onmouseleave = function () { ctaBtn.style.opacity = '1'; };
@@ -2624,12 +2622,12 @@ if (replyIsVisible) {
       formWrap.appendChild(nameInput);
 
       var commentLabel = createEl('label');
-      commentLabel.textContent = 'Seu comentÃ¡rio';
+      commentLabel.textContent = 'Seu comentÃƒÂ¡rio';
       commentLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
       formWrap.appendChild(commentLabel);
 
       var commentTextarea = createEl('textarea');
-      commentTextarea.placeholder = 'Escreva seu comentÃ¡rio...';
+      commentTextarea.placeholder = 'Escreva seu comentÃƒÂ¡rio...';
       commentTextarea.maxLength = 1000; commentTextarea.rows = 3;
       commentTextarea.style.cssText = 'width:100%;height:70px;min-height:70px;max-height:70px;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;resize:none;outline:none;transition:border-color .2s;margin-bottom:8px;box-sizing:border-box;background:#f8fafc;font-family:' + fontFamily + ';';
       commentTextarea.addEventListener('focus', function () {
@@ -2736,7 +2734,7 @@ var sendBtn = createEl('button', 'vl-form-btn-send');
         var text = commentTextarea.value.trim();
 
         if (!text) {
-          statusMsg.textContent = 'Digite um comentÃ¡rio para enviar.';
+          statusMsg.textContent = 'Digite um comentÃƒÂ¡rio para enviar.';
           statusMsg.style.color = '#ef4444';
           return;
         }
@@ -2762,7 +2760,7 @@ if (hasSupabase) {
               var isApproved = Boolean(result && result.status === 'approved');
 
               if (isApproved) {
-                // âœ… AprovaÃ§Ã£o AutomÃ¡tica: insere imediatamente na lista em memÃ³ria para exibiÃ§Ã£o instantÃ¢nea
+                // Ã¢Å“â€¦ AprovaÃƒÂ§ÃƒÂ£o AutomÃƒÂ¡tica: insere imediatamente na lista em memÃƒÂ³ria para exibiÃƒÂ§ÃƒÂ£o instantÃƒÂ¢nea
                 readCommentsData.push({
                   id: 'local_' + Date.now(),
                   video_id: videoId,
@@ -2772,16 +2770,16 @@ if (hasSupabase) {
                   created_at: new Date().toISOString(),
                   status: 'approved'
                 });
-                statusMsg.textContent = 'Seu comentÃ¡rio foi publicado.';
+                statusMsg.textContent = 'Seu comentÃƒÂ¡rio foi publicado.';
                 statusMsg.style.color = '#22c55e';
               } else {
-                // â³ ModeraÃ§Ã£o Manual: nÃ£o exibe atÃ© a aprovaÃ§Ã£o no painel
-                statusMsg.textContent = 'Obrigado pelo seu comentÃ¡rio. Em breve ele serÃ¡ publicado.';
+                // Ã¢ÂÂ³ ModeraÃƒÂ§ÃƒÂ£o Manual: nÃƒÂ£o exibe atÃƒÂ© a aprovaÃƒÂ§ÃƒÂ£o no painel
+                statusMsg.textContent = 'Obrigado pelo seu comentÃƒÂ¡rio. Em breve ele serÃƒÂ¡ publicado.';
                 statusMsg.style.color = '#f59e0b';
               }
 
               commentsCount = getCommentCountForVideo(videoId);
-              panelTitle.textContent = 'ComentÃ¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+              panelTitle.textContent = 'ComentÃƒÂ¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
 
               trackMetric({
                 event_type: 'comment',
@@ -2790,7 +2788,7 @@ if (hasSupabase) {
                 page_url: window.location.href
               });
 
-              // â±ï¸ Fecha o painel e volta para o vÃ­deo apÃ³s 2 segundos
+              // Ã¢ÂÂ±Ã¯Â¸Â Fecha o painel e volta para o vÃƒÂ­deo apÃƒÂ³s 2 segundos
               setTimeout(function () {
                 restoreVideoView();
               }, 2000);
@@ -2816,15 +2814,15 @@ if (hasSupabase) {
             created_at: new Date().toISOString(),
             status: 'approved'
           });
-          statusMsg.textContent = 'Seu comentÃ¡rio foi publicado.';
+          statusMsg.textContent = 'Seu comentÃƒÂ¡rio foi publicado.';
           statusMsg.style.color = '#22c55e';
         } else {
-          statusMsg.textContent = 'Obrigado pelo seu comentÃ¡rio. Em breve ele serÃ¡ publicado.';
+          statusMsg.textContent = 'Obrigado pelo seu comentÃƒÂ¡rio. Em breve ele serÃƒÂ¡ publicado.';
           statusMsg.style.color = '#f59e0b';
         }
 
         commentsCount = getCommentCountForVideo(videoId);
-        panelTitle.textContent = 'ComentÃ¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+        panelTitle.textContent = 'ComentÃƒÂ¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
 
         setTimeout(function () {
           restoreVideoView();
@@ -2839,7 +2837,7 @@ if (hasSupabase) {
 
     function renderInitialState() {
       commentsCount = getCommentCountForVideo(videoId);
-      panelTitle.textContent = 'ComentÃ¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+      panelTitle.textContent = 'ComentÃƒÂ¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
       if (commentsCount > 0) { renderCommentList(); } else { renderEmptyState(); }
       renderCommentButton();
     }
@@ -2852,14 +2850,14 @@ if (hasSupabase) {
   }
 
   function closeOverlay() {
-    // Dispara video_close antes de limpar o estado, se havia um vÃ­deo ativo
+    // Dispara video_close antes de limpar o estado, se havia um vÃƒÂ­deo ativo
     try {
       var closingStory = currentStories[currentStoryIndex];
       var closingVideo = closingStory && (closingStory.videos || [])[currentVideoIndex];
       if (closingVideo) {
         sendAnalyticsEvent('video_close', closingVideo.id, null);
       }
-    } catch (err) { /* noop - nÃ£o deve travar o fechamento */ }
+    } catch (err) { /* noop - nÃƒÂ£o deve travar o fechamento */ }
 
     if (overlay) overlay.className = 'vl-overlay';
     if (modalContent) {
@@ -2867,7 +2865,7 @@ if (hasSupabase) {
       if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
       modalContent.innerHTML = '';
     }
-    isUserMuted = true; // Reseta para o padrÃ£o seguro no prÃ³ximo clique de abertura
+    isUserMuted = true; // Reseta para o padrÃƒÂ£o seguro no prÃƒÂ³ximo clique de abertura
     resumePreviews();
   }
 
@@ -2907,12 +2905,12 @@ if (hasSupabase) {
 
     var muteBtn = createEl('button', 'vl-control');
     muteBtn.id = 'vl-mute-btn';
-    // Renderiza o Ã­cone de acordo com o estado de Ã¡udio ativo no momento
+    // Renderiza o ÃƒÂ­cone de acordo com o estado de ÃƒÂ¡udio ativo no momento
     muteBtn.innerHTML = isUserMuted ? svgIcon('volumeOff') : svgIcon('volume');
     muteBtn.title = isUserMuted ? 'Ativar som' : 'Mudo';
     muteBtn.onclick = function (e) {
       e.stopPropagation();
-      isUserMuted = !isUserMuted; // Persiste a decisÃ£o do usuÃ¡rio para os prÃ³ximos vÃ­deos
+      isUserMuted = !isUserMuted; // Persiste a decisÃƒÂ£o do usuÃƒÂ¡rio para os prÃƒÂ³ximos vÃƒÂ­deos
 
       var vid = modalContent.querySelector('video');
       var iframe = modalContent.querySelector('iframe');
@@ -2980,7 +2978,7 @@ if (hasSupabase) {
 
       var vidEl = player.querySelector('video');
       
-      // Garante a sincronizaÃ§Ã£o bidirecional entre o vÃ­deo e os botÃµes da UI
+      // Garante a sincronizaÃƒÂ§ÃƒÂ£o bidirecional entre o vÃƒÂ­deo e os botÃƒÂµes da UI
       if (vidEl) {
         vidEl.addEventListener('volumechange', function () {
           var mb = modalContent.querySelector('#vl-mute-btn');
@@ -3001,7 +2999,7 @@ if (hasSupabase) {
     } else {
       var emptyBody = createEl('div');
       emptyBody.style.cssText = 'padding:40px;text-align:center;color:#fff;';
-      emptyBody.textContent = 'Nenhum vÃ­deo encontrado.';
+      emptyBody.textContent = 'Nenhum vÃƒÂ­deo encontrado.';
       body.appendChild(emptyBody);
     }
 
@@ -3065,7 +3063,7 @@ if (hasSupabase) {
       commentBtn.innerHTML = svgIcon(
         commentCountVal > 0 ? 'commentFilled' : 'comment'
       );
-      commentBtn.title = 'ComentÃ¡rios';
+      commentBtn.title = 'ComentÃƒÂ¡rios';
 
       commentBtn.onclick = function (e) {
         e.preventDefault();
@@ -3109,13 +3107,12 @@ if (hasSupabase) {
     container.appendChild(body);
 
 var showVerProduto = appearanceConfig.show_product !== false;
-// WhatsApp segue o mesmo critÃ©rio do card de produto â€” sem flag separada
+// WhatsApp segue o mesmo critÃƒÂ©rio do card de produto Ã¢â‚¬â€ sem flag separada
 var showWhatsAppProduto = showVerProduto;
 
-    // ðŸ” DEBUG â€” colar AQUI (depois das declaraÃ§Ãµes)
+    // Ã°Å¸â€Â DEBUG Ã¢â‚¬â€ colar AQUI (depois das declaraÃƒÂ§ÃƒÂµes)
     var videoProductId = video ? (video.product_id || video.productId) : null;
     var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
-    console.log('ðŸ› DEBUG WHATSAPP V2:', {
       showWhatsAppProduto: showWhatsAppProduto,
       storeWhatsappNumber: storeWhatsappNumber,
       videoProductId: videoProductId,
@@ -3185,7 +3182,7 @@ var pButtonBg = appearanceConfig.product_card_button_bg || priColor;
           if (!productUrl) {
             buyBtn.style.opacity = '0.5';
             buyBtn.style.pointerEvents = 'none';
-            buyBtn.title = 'URL do produto nÃ£o cadastrada';
+            buyBtn.title = 'URL do produto nÃƒÂ£o cadastrada';
           }
           buyBtn.onclick = function (e) {
             e.stopPropagation();
@@ -3201,7 +3198,7 @@ var pButtonBg = appearanceConfig.product_card_button_bg || priColor;
             var waNumberClean = waNumber.replace(/\D/g, '');
             var productName = productData.name || 'Produto';
 
-            var waMsgRaw = storeWhatsappMessage || 'OlÃ¡! Tenho interesse no produto: {{product_name}}';
+            var waMsgRaw = storeWhatsappMessage || 'OlÃƒÂ¡! Tenho interesse no produto: {{product_name}}';
             waMsgRaw = waMsgRaw
               .replace(/\{\{story_title\}\}/g, productName)
               .replace(/\{\{product_name\}\}/g, productName)
@@ -3236,7 +3233,7 @@ sendAnalyticsEvent('whatsapp_click', video ? video.id : null, productData ? prod
   }
 
   /* ================================================================
-     NAVEGAÃ‡ÃƒO ENTRE STORIES E VÃDEOS
+     NAVEGAÃƒâ€¡ÃƒÆ’O ENTRE STORIES E VÃƒÂDEOS
      ================================================================ */
 
   function nextStoryOrVideo() {
@@ -3350,7 +3347,7 @@ function openStoryModal(storyIndex, videoIndex) {
   if (!currentStories || currentStories.length === 0) return;
   if (storyIndex === undefined || storyIndex === null) storyIndex = 0;
   currentStoryIndex = Math.max(0, Math.min(storyIndex, currentStories.length - 1));
-  // Usa o videoIndex se fornecido, senÃ£o comeÃ§a do 0
+  // Usa o videoIndex se fornecido, senÃƒÂ£o comeÃƒÂ§a do 0
   if (videoIndex !== undefined && videoIndex !== null) {
     var maxVid = (currentStories[currentStoryIndex].videos || []).length - 1;
     currentVideoIndex = Math.max(0, Math.min(videoIndex, maxVid));
@@ -3381,7 +3378,7 @@ function openStoryModal(storyIndex, videoIndex) {
   }
 
   /* ================================================================
-     FUNÃ‡Ã•ES AUXILIARES DE COR
+     FUNÃƒâ€¡Ãƒâ€¢ES AUXILIARES DE COR
      ================================================================ */
 
   function adjustColor(hex, amount) {
@@ -3417,7 +3414,7 @@ function openStoryModal(storyIndex, videoIndex) {
   }
 
   /* ================================================================
-     INJEÃ‡ÃƒO DE ESTILOS (CSS) NO SHADOW DOM
+     INJEÃƒâ€¡ÃƒÆ’O DE ESTILOS (CSS) NO SHADOW DOM
      ================================================================ */
 
   function injectStyles(shadowRoot) {
@@ -3487,7 +3484,7 @@ function openStoryModal(storyIndex, videoIndex) {
   }
 
   /* ================================================================
-     ÃCONES SVG
+     ÃƒÂCONES SVG
      ================================================================ */
 
   function svgIcon(name) {
@@ -3514,7 +3511,7 @@ function openStoryModal(storyIndex, videoIndex) {
   }
 
   /* ================================================================
-     RENDERIZAÃ‡ÃƒO DAS BOLHAS (STORY BUBBLES)
+     RENDERIZAÃƒâ€¡ÃƒÆ’O DAS BOLHAS (STORY BUBBLES)
      ================================================================ */
 
   function renderBubbles(container) {
@@ -3523,7 +3520,7 @@ function openStoryModal(storyIndex, videoIndex) {
 
     if (!currentStories || currentStories.length === 0) {
       var emptyMsg = createEl('div');
-      emptyMsg.textContent = 'Nenhum story disponÃ­vel.';
+      emptyMsg.textContent = 'Nenhum story disponÃƒÂ­vel.';
       emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
       container.appendChild(emptyMsg);
       return;
@@ -3652,7 +3649,7 @@ function getWidgetDisplayMode(appearance) {
   var carouselPopulated = carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0;
   var floatingPopulated = floatingCfg && typeof floatingCfg === 'object' && Object.keys(floatingCfg).length > 0;
 
-  // âœ… floating tem prioridade mÃ¡xima (sempre que configurado)
+  // Ã¢Å“â€¦ floating tem prioridade mÃƒÂ¡xima (sempre que configurado)
   if (floatingPopulated) return 'floating';
   if (gridPopulated && carouselPopulated) return 'stories';
   if (gridPopulated) return 'grid';
@@ -3687,7 +3684,7 @@ function enableDragScroll(el) {
 
 function startMomentum() {
   cancelMomentum();
-  if (Math.abs(velX) < 2) return; // deixa o scroll-snap nativo alinhar, sem forÃ§ar via JS
+  if (Math.abs(velX) < 2) return; // deixa o scroll-snap nativo alinhar, sem forÃƒÂ§ar via JS
   momentumId = requestAnimationFrame(function animate() {
     velX *= 0.92;
     el.scrollLeft -= velX;
@@ -3718,7 +3715,7 @@ function onStart(e) {
   lastX = startX;
   scrollStart = el.scrollLeft;
   currentX = startX;
-  if (e.type === 'mousedown') e.preventDefault(); // ðŸ‘ˆ adicionar isso
+  if (e.type === 'mousedown') e.preventDefault(); // Ã°Å¸â€˜Ë† adicionar isso
 }
 
   function onMove(e) {
@@ -3760,7 +3757,6 @@ function onStart(e) {
 }
 
 function renderCarouselWidget(targetOrOptions, stories, appearance) {
-  console.log('[Vidlytics] Iniciando renderCarouselWidget com', stories.length, 'stories');
   
   var target, position;
   
@@ -3778,7 +3774,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   }
   
   if (!target) {
-    console.warn('[Vidlytics] Target nÃ£o encontrado para carrossel:', targetOrOptions);
+    console.warn('[Vidlytics] Target nÃƒÂ£o encontrado para carrossel:', targetOrOptions);
     return;
   }
   
@@ -3855,11 +3851,11 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     'will-change:transform !important;';
   track.style.transform = 'translateX(0px)';
   
-// Items renderizam completamente com suporte robusto a vÃ­deo e imagem
+// Items renderizam completamente com suporte robusto a vÃƒÂ­deo e imagem
   stories.forEach(function(story, storyIndex) {
     var videos = (story.videos || []).filter(Boolean);
     videos.forEach(function(video, videoIndex) {
-      // 1. ResoluÃ§Ã£o completa e defensiva de URLs
+      // 1. ResoluÃƒÂ§ÃƒÂ£o completa e defensiva de URLs
       var rawVideoUrl = getVideoUrl(video);
       var thumbUrl = getVideoThumbnail(video) || 
                      (video && (video.thumbnail_url || video.cover_image_url || video.poster_url || video.image_url)) ||
@@ -3880,7 +3876,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         'background:transparent !important;' +
         'cursor:pointer !important;';
 
-      // 3. ResoluÃ§Ã£o precisa de bordas e raios (preserva 0 para canto reto)
+      // 3. ResoluÃƒÂ§ÃƒÂ£o precisa de bordas e raios (preserva 0 para canto reto)
       var parsedBorder = parseFloat(cfg.borderWidth);
       var borderWidthNum = !isNaN(parsedBorder) ? Math.max(0, parsedBorder) : 0;
 
@@ -3892,7 +3888,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         ? cfg.itemRadius
         : (innerRadiusVal + 'px');
 
-      // 4. Card visual do vÃ­deo
+      // 4. Card visual do vÃƒÂ­deo
       var videoCard = document.createElement('div');
       var carouselBorderCss = (borderWidthNum > 0)
         ? ('box-shadow: inset 0 0 0 ' + borderWidthNum + 'px ' + cfg.borderColor + ' !important;')
@@ -3910,7 +3906,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
         carouselBorderCss;
 
-      // 5. MÃ¡scara interna para corte perfeito da mÃ­dia (DecisÃ£o por view_mode)
+      // 5. MÃƒÂ¡scara interna para corte perfeito da mÃƒÂ­dia (DecisÃƒÂ£o por view_mode)
       var innerMask = document.createElement('div');
       innerMask.className = 'vidlytics-carousel-inner-mask';
       innerMask.style.cssText = [
@@ -3925,7 +3921,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         'background:#000 !important;'
       ].join('');
 
-      // Modo 'playing' (preview): reproduz vÃ­deo mutado com poster nativo da capa
+      // Modo 'playing' (preview): reproduz vÃƒÂ­deo mutado com poster nativo da capa
       // Modo 'static': renderiza exclusivamente tag <img> da capa
       if (cfg.carouselPlayMode === 'playing' && rawVideoUrl) {
         var previewVideo = document.createElement('video');
@@ -4027,7 +4023,7 @@ directFrameVid.src = directUrl;
 
       videoCard.appendChild(innerMask);
 
-      // 6. Ãcone de Play centralizado
+      // 6. ÃƒÂcone de Play centralizado
       if (cfg.showPlayIcon) {
         var play = document.createElement('div');
         play.className = 'vidlytics-carousel-play';
@@ -4048,7 +4044,7 @@ directFrameVid.src = directUrl;
         videoCard.appendChild(play);
       }
       
-      // 7. TÃ­tulo do Item sobreposto
+      // 7. TÃƒÂ­tulo do Item sobreposto
       if (cfg.showItemTitle && story.title) {
         var titleOverlay = document.createElement('div');
         titleOverlay.className = 'vidlytics-carousel-item-title';
@@ -4178,7 +4174,7 @@ directFrameVid.src = directUrl;
             sendAnalyticsEvent('product_click', video ? video.id : null, productData ? productData.id : null);
           });
 
-          // Registra a visualizaÃ§Ã£o do produto na vitrine do carrossel
+          // Registra a visualizaÃƒÂ§ÃƒÂ£o do produto na vitrine do carrossel
           sendAnalyticsEvent('product_view', video ? video.id : null, productData ? productData.id : null);
 
           item.appendChild(prodCard);
@@ -4272,7 +4268,6 @@ track.appendChild(item);
   });
   
   target.insertAdjacentElement(position, wrapper);
-  console.log('[Vidlytics] âœ… Carrossel injetado no DOM via', position, '| itens:', track.children.length);
 }
 
 function renderGridWidget(container, stories, appearance) {
@@ -4291,7 +4286,7 @@ function renderGridWidget(container, stories, appearance) {
 
   if (allVideos.length === 0) {
     var emptyMsg = createEl('div');
-    emptyMsg.textContent = 'Nenhum vÃ­deo disponÃ­vel.';
+    emptyMsg.textContent = 'Nenhum vÃƒÂ­deo disponÃƒÂ­vel.';
     emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
     container.appendChild(emptyMsg);
     return;
@@ -4299,9 +4294,7 @@ function renderGridWidget(container, stories, appearance) {
 
   var cfg = getGridConfig(appearance);
 
-  // ðŸ› DEBUG #1 â€” confirma se autoplayVideos estÃ¡ true/false vindo da config
-  console.log('[DEBUG] cfg completo:', cfg);
-  console.log('[DEBUG] cfg.autoplayVideos:', cfg.autoplayVideos);
+  // Ã°Å¸Ââ€º DEBUG #1 Ã¢â‚¬â€ confirma se autoplayVideos estÃƒÂ¡ true/false vindo da config
 
   var fontFamily = getFontFamily(appearance);
   var columns = cfg.columns || 4;
@@ -4350,8 +4343,7 @@ function renderGridWidget(container, stories, appearance) {
     var isImageItem = sourceType === 'image' || (video && video.type === 'image');
     var effectiveMediaUrl = thumbUrl || rawVideoUrl;
 
-    // ðŸ› DEBUG #2 â€” confirma se a URL do vÃ­deo estÃ¡ vindo preenchida e o objeto completo
-    console.log('[DEBUG] video item:', {
+    // Ã°Å¸Ââ€º DEBUG #2 Ã¢â‚¬â€ confirma se a URL do vÃƒÂ­deo estÃƒÂ¡ vindo preenchida e o objeto completo
       title: video.title || story.title,
       rawVideoUrl: rawVideoUrl,
       thumbUrl: thumbUrl,
@@ -4380,9 +4372,8 @@ function renderGridWidget(container, stories, appearance) {
         'background:#000;'
       ].join('');
 
-      // ðŸ› DEBUG #3 â€” mostra qual branch foi escolhida (imagem estÃ¡tica vs vÃ­deo autoplay)
+      // Ã°Å¸Ââ€º DEBUG #3 Ã¢â‚¬â€ mostra qual branch foi escolhida (imagem estÃƒÂ¡tica vs vÃƒÂ­deo autoplay)
       var willUseImage = isImageItem || !rawVideoUrl || (!cfg.autoplayVideos && thumbUrl);
-      console.log('[DEBUG] Branch escolhida:', willUseImage ? 'IMAGEM ESTÃTICA' : 'VÃDEO AUTOPLAY');
       if (willUseImage) {
         var img = createEl('img');
         img.src = thumbUrl || rawVideoUrl;
@@ -4480,7 +4471,6 @@ gridVideo.src = gridUrlWithFragment;
   });
 
   container.appendChild(gridWrapper);
-  console.log('[Vidlytics] Grade renderizada com ' + allVideos.length + ' video(s) em ' + columns + ' colunas.');
 }
 
 function initInlineWidget(options) {
@@ -4490,24 +4480,20 @@ function initInlineWidget(options) {
   var stories = options.stories || currentStories;
   var appearance = options.appearance || currentAppearance;
   
-  console.log('[Vidlytics] Seletor:', selector);
-  console.log('[Vidlytics] Posicao:', position);
   
   var target = document.querySelector(selector);
   if (!target) {
-    console.warn('[Vidlytics] Target nÃ£o encontrado:', selector);
+    console.warn('[Vidlytics] Target nÃƒÂ£o encontrado:', selector);
     return;
   }
-  console.log('[Vidlytics] Elemento encontrado:', target);
   
   var displayMode = options.storyFormat || getWidgetDisplayMode(appearance);
-  console.log('[Vidlytics] Modo de exibiÃ§Ã£o detectado:', displayMode);
   
   if (displayMode === 'carousel') {
     var wrapper = document.createElement('div');
     wrapper.id = 'vidlytics-wrapper-' + Date.now();
     
-    // ðŸ”§ CRÃTICO: altura mÃ­nima + overflow visible
+    // Ã°Å¸â€Â§ CRÃƒÂTICO: altura mÃƒÂ­nima + overflow visible
     Object.assign(wrapper.style, {
       width: '100%',
       minHeight: '300px',
@@ -4541,7 +4527,7 @@ function initInlineWidget(options) {
         minHeight: 'auto'
       });
       
-      // ðŸ”§ Remove overflow:hidden de TODOS os pais
+      // Ã°Å¸â€Â§ Remove overflow:hidden de TODOS os pais
       var el = wrapper.parentElement;
       while (el && el !== document.body) {
         if (getComputedStyle(el).overflow === 'hidden') {
@@ -4559,10 +4545,9 @@ function initInlineWidget(options) {
         });
       });
 
-      console.log('[Vidlytics] âœ… Wrapper fix aplicado!');
     }, 200);
 
-  } else if (displayMode === 'grid') { // <--- ðŸ”§ ROTA DO GRID ADICIONADA AQUI
+  } else if (displayMode === 'grid') { // <--- Ã°Å¸â€Â§ ROTA DO GRID ADICIONADA AQUI
     var container = document.createElement('div');
     container.className = 'vl-container';
     renderGridWidget(container, stories, appearance);
@@ -4575,11 +4560,10 @@ function initInlineWidget(options) {
     target.insertAdjacentElement(position, container);
   }
   
-  console.log('[Vidlytics] âœ… Inline injetado!');
 }
 
   /* ================================================================
-     INICIALIZAÃ‡ÃƒO PRINCIPAL
+     INICIALIZAÃƒâ€¡ÃƒÆ’O PRINCIPAL
      ================================================================ */
 
   function init(options) {
@@ -4612,7 +4596,7 @@ function initInlineWidget(options) {
   }
 
   /* ================================================================
-     AUTO-INICIALIZAÃ‡ÃƒO VIA ATRIBUTO DATA
+     AUTO-INICIALIZAÃƒâ€¡ÃƒÆ’O VIA ATRIBUTO DATA
      ================================================================ */
 
   function autoInit() {
@@ -4622,7 +4606,7 @@ function initInlineWidget(options) {
         var cfg = JSON.parse(script.getAttribute('data-vidlytics-init') || '{}');
         init(cfg);
       } catch (e) {
-        console.error('[Vidlytics] Erro ao parsear configuraÃ§Ã£o:', e);
+        console.error('[Vidlytics] Erro ao parsear configuraÃƒÂ§ÃƒÂ£o:', e);
       }
     });
   }
@@ -4705,7 +4689,7 @@ function initInlineWidget(options) {
   }
 
   /* ================================================================
-     RENDERIZAÃ‡ÃƒO DO WIDGET FLUTUANTE
+     RENDERIZAÃƒâ€¡ÃƒÆ’O DO WIDGET FLUTUANTE
      ================================================================ */
 
 function renderFloatingWidget(floatingStories) {
@@ -4735,7 +4719,7 @@ function renderFloatingWidget(floatingStories) {
   globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
   injectStyles(globalShadowRoot);
 
-  // â”€â”€ CONTAINER PRINCIPAL â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ CONTAINER PRINCIPAL Ã¢â€â‚¬Ã¢â€â‚¬
   var widget = createEl('div', 'vidlytics-floating-widget');
   widget.style.cssText =
     'display:flex !important;' +
@@ -4744,7 +4728,7 @@ function renderFloatingWidget(floatingStories) {
     'gap:8px !important;' +
     'position:relative !important;';
 
-  // â”€â”€ BOTÃƒO FECHAR (X) â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ BOTÃƒÆ’O FECHAR (X) Ã¢â€â‚¬Ã¢â€â‚¬
   var closeBtn = null;
   if (cfg.allowClose) {
     closeBtn = createEl('div', 'vl-floating-close-btn');
@@ -4782,7 +4766,7 @@ function renderFloatingWidget(floatingStories) {
     });
   }
 
-  // â”€â”€ BOLHA / CARD â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ BOLHA / CARD Ã¢â€â‚¬Ã¢â€â‚¬
   var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
   if (!thumbUrl && story.videos && story.videos.length > 0) {
     thumbUrl = getVideoThumbnail(story.videos[0]);
@@ -4859,7 +4843,7 @@ function renderFloatingWidget(floatingStories) {
     cardInner.appendChild(img);
   }
 
-  // Ãcone de play centralizado
+  // ÃƒÂcone de play centralizado
 if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isImageItem)) {
     var playOverlay = createEl('div', 'vl-floating-play-icon');
     playOverlay.style.cssText =
@@ -4886,7 +4870,7 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
     openStoryModal(0);
   });
 
-  // â”€â”€ MONTAR WIDGET â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ MONTAR WIDGET Ã¢â€â‚¬Ã¢â€â‚¬
   var wrapper = createEl('div', 'vl-floating-wrapper');
   wrapper.style.cssText =
     'position:relative !important;' +
@@ -4896,7 +4880,7 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
   if (closeBtn) wrapper.appendChild(closeBtn);
   widget.appendChild(wrapper);
 
-  // â”€â”€ TÃTULO â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ TÃƒÂTULO Ã¢â€â‚¬Ã¢â€â‚¬
   if (cfg.showTitle && story.title) {
     var titleEl = createEl('div', 'vl-floating-title');
     titleEl.textContent = story.title;
@@ -4915,7 +4899,6 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
 
   globalShadowRoot.appendChild(widget);
   applyDraggable(cardOuter, currentAppearance);
-  console.log('[Vidlytics] âœ… Flutuante renderizado em:', cfg.position, '| shape:', cfg.shape, '| size:', cfg.width, 'x', cfg.height);
 }
 
   /* ================================================================
@@ -4940,7 +4923,7 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
       'background:#1e293b;color:#fff;padding:12px 20px;' +
       'font-family:sans-serif;font-size:14px;font-weight:600;' +
       'text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.2);';
-    bannerEl.textContent = 'ðŸŽ¯ Clique no elemento onde o widget de stories serÃ¡ exibido';
+    bannerEl.textContent = 'Ã°Å¸Å½Â¯ Clique no elemento onde o widget de stories serÃƒÂ¡ exibido';
     document.body.appendChild(bannerEl);
 
     var highlightEl = document.createElement('div');
@@ -5008,7 +4991,6 @@ function sendSelector(selector, storyId) {
     endpoint = supabaseUrl.replace(/\/rest\/v1.*/, '') + '/functions/v1/widget-selector';
   }
 
-  console.log('[Vidlytics] Enviando seletor:', payload);
 
   fetch(endpoint, {
     method: 'POST',
@@ -5017,10 +4999,9 @@ function sendSelector(selector, storyId) {
   })
     .then(function (res) {
       return res.json().then(function (data) {
-        console.log('[Vidlytics] Resposta:', data);
 
         if (data.success) {
-          alert('âœ… Seletor vinculado com sucesso!\n\nVolte para o painel do Vidlytics para continuar.');
+          alert('Ã¢Å“â€¦ Seletor vinculado com sucesso!\n\nVolte para o painel do Vidlytics para continuar.');
 
           if (window.opener) {
             window.close();
@@ -5028,19 +5009,19 @@ function sendSelector(selector, storyId) {
             document.body.innerHTML =
               '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f8fafc;">' +
               '<div style="text-align:center;padding:40px;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.1);max-width:420px;">' +
-              '<div style="font-size:48px;margin-bottom:16px;">âœ…</div>' +
+              '<div style="font-size:48px;margin-bottom:16px;">Ã¢Å“â€¦</div>' +
               '<h2 style="margin:0 0 8px;color:#0f172a;">Seletor vinculado!</h2>' +
               '<p style="color:#64748b;margin:0;">Volte para o painel do <strong>Vidlytics</strong> para continuar.</p>' +
               '</div></div>';
           }
         } else {
-          alert('âŒ Erro: ' + (data.message || data.error || 'Falha ao salvar.'));
+          alert('Ã¢ÂÅ’ Erro: ' + (data.message || data.error || 'Falha ao salvar.'));
         }
       });
     })
     .catch(function (err) {
       console.error('[Vidlytics] Erro de rede:', err);
-      alert('âŒ Erro de conexÃ£o. Tente novamente.');
+      alert('Ã¢ÂÅ’ Erro de conexÃƒÂ£o. Tente novamente.');
     });
 }
 
@@ -5085,7 +5066,7 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
   }
 
 /* ================================================================
-     VALIDAÃ‡ÃƒO DE STATUS DA ASSINATURA / TRIAL & CARÃŠNCIA DE 72H
+     VALIDAÃƒâ€¡ÃƒÆ’O DE STATUS DA ASSINATURA / TRIAL & CARÃƒÅ NCIA DE 72H
      ================================================================ */
 
   function isStoreBlocked(store) {
@@ -5097,11 +5078,11 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
       return true;
     }
 
-    // 2. InadimplÃªncia: avalia a janela de carÃªncia de 72 horas (Grace Period)
+    // 2. InadimplÃƒÂªncia: avalia a janela de carÃƒÂªncia de 72 horas (Grace Period)
     if (status === 'past_due') {
       var pastDueSince = store.past_due_since;
       if (!pastDueSince) {
-        // Se entrou em past_due sem timestamp registrado, bloqueia por seguranÃ§a
+        // Se entrou em past_due sem timestamp registrado, bloqueia por seguranÃƒÂ§a
         return true;
       }
 
@@ -5118,7 +5099,7 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
       return elapsed > GRACE_PERIOD_MS;
     }
 
-    // 3. PerÃ­odo de teste (trialing)
+    // 3. PerÃƒÂ­odo de teste (trialing)
     if (status === 'trialing') {
       if (!store.trial_ends_at) return true;
       return new Date(store.trial_ends_at).getTime() <= Date.now();
@@ -5129,7 +5110,7 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
       return false;
     }
 
-    // Fail-closed por padrÃ£o
+    // Fail-closed por padrÃƒÂ£o
     return true;
   }
 
@@ -5151,7 +5132,7 @@ return supabaseFetch(
   }
 
   /* ================================================================
-     INICIALIZAÃ‡ÃƒO DO WIDGET (COM story_id DA URL)
+     INICIALIZAÃƒâ€¡ÃƒÆ’O DO WIDGET (COM story_id DA URL)
      ================================================================ */
 
 function initWidget() {
@@ -5166,7 +5147,7 @@ function initWidget() {
 
   readStoreStatus().then(function (storeData) {
     if (hasSupabase && !storeData) {
-      console.warn('[Vidlytics] Widget inativo: nÃ£o foi possÃ­vel validar a autenticidade da loja.');
+      console.warn('[Vidlytics] Widget inativo: nÃƒÂ£o foi possÃƒÂ­vel validar a autenticidade da loja.');
       return;
     }
 
@@ -5198,8 +5179,7 @@ return readStoreSettings().then(function (settings) {
     }).then(function (stories) {
       currentStories = stories || [];
 
-      // ðŸ”§ Buscar story_videos e videos, depois juntar tudo
-      console.log('[Vidlytics] Buscando videos vinculados aos stories...');
+      // Ã°Å¸â€Â§ Buscar story_videos e videos, depois juntar tudo
       return Promise.all([
         readStoryVideos(),
         readVideos()
@@ -5207,59 +5187,42 @@ return readStoreSettings().then(function (settings) {
         var storyVideosData = results[0] || [];
         var videosData = results[1] || [];
 
-        console.log('[Vidlytics] story_videos encontrados:', storyVideosData.length);
-        console.log('[Vidlytics] videos encontrados:', videosData.length);
 
         currentStories = joinStoriesWithVideos(currentStories, storyVideosData, videosData);
 
-        console.log('[Vidlytics] Total de stories com videos:', currentStories.filter(function(s) {
           return s.videos && s.videos.length > 0;
         }).length);
 
-        console.log('[Vidlytics] ðŸ” Indo buscar products...');
         return readProducts();
       });
     }).then(function (products) {
       readProductsData = products || [];
-      console.log('[Vidlytics] âœ… Products carregados:', readProductsData.length);
-      console.log('[Vidlytics] ðŸ” Indo buscar sizing_models...');
       return readSizingModels();
     }).then(function (models) {
       readSizingModelsData = models || [];
-      console.log('[Vidlytics] âœ… Sizing models carregados:', readSizingModelsData.length);
-      console.log('[Vidlytics] ðŸ” Indo buscar comments...');
       return readComments();
     }).then(function (comments) {
       readCommentsData = comments || [];
-      console.log('[Vidlytics] âœ… Comments carregados:', readCommentsData.length);
-      console.log('[Vidlytics] ðŸ” Indo buscar likes...');
       return readLikesFromDb();
     }).then(function (likes) {
       likedVideos = likes.likedVideos || {};
       videoLikeCounts = likes.likeCounts || {};
-      console.log('[Vidlytics] âœ… Likes carregados. storeId:', storeId, 'hasSupabase:', hasSupabase);
-      console.log('[Vidlytics] ðŸ” Indo buscar display_locations...');
 
-      // ðŸ†• LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
+      // Ã°Å¸â€ â€¢ LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
       if (!storeId || !hasSupabase) {
-        console.log('[Vidlytics] âš ï¸ storeId ou hasSupabase invÃ¡lido, pulando display_locations.');
         return Promise.resolve();
       }
 
-      console.log('[Vidlytics] ðŸ” Chamando readDisplayLocations()...');
       return readDisplayLocations().then(function (locations) {
-        console.log('[Vidlytics] âœ… readDisplayLocations retornou:', locations ? locations.length : 0, 'locations');
-        console.log('[Vidlytics] ðŸ” Chamando readPageRules()...');
         return readPageRules().then(function (rules) {
-          console.log('[Vidlytics] âœ… readPageRules retornou:', rules ? rules.length : 0, 'rules');
 
           var activeLocations = locations.filter(function (loc) {
             return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
           });
 
-          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-          // ðŸ“‹ CLASSIFICAR STORIES POR FORMATO
-          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+          // Ã°Å¸â€œâ€¹ CLASSIFICAR STORIES POR FORMATO
+          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
           function getStoryFormat(story) {
             var fmt = String(story.format || story.display_format || story.displayFormat || story.visual_style || story.visualStyle || '').trim().toLowerCase();
             if (fmt === 'carrossel' || fmt === 'carousel') return 'carousel';
@@ -5270,42 +5233,36 @@ return readStoreSettings().then(function (settings) {
           var floatingStories = currentStories.filter(function (s) { return getStoryFormat(s) === 'floating_widget'; });
           var inlineStories = currentStories.filter(function (s) { return getStoryFormat(s) !== 'floating_widget'; });
 
-          console.log('[Vidlytics] ðŸ“‹ Stories â€” floating:', floatingStories.length, '| inline:', inlineStories.length);
 
-          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-          // ðŸŽˆ FLUTUANTE â€” SEMPRE renderiza, ignora seletor
-          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+          // Ã°Å¸Å½Ë† FLUTUANTE Ã¢â‚¬â€ SEMPRE renderiza, ignora seletor
+          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
           if (floatingStories.length > 0) {
-            console.log('[Vidlytics] ðŸŽˆ Renderizando flutuante para', floatingStories.length, 'story(ies).');
             renderFloatingWidget(floatingStories);
           }
 
-          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-          // ðŸ“ INLINE (carrossel/grade) â€” precisa de seletor
-          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-          console.log('[Vidlytics] ðŸ“ Active locations:', activeLocations.length);
+          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+          // Ã°Å¸â€œÂ INLINE (carrossel/grade) Ã¢â‚¬â€ precisa de seletor
+          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
           var injected = false;
 
           activeLocations.forEach(function (location) {
             var locStoryId = location.story_id;
             if (!locStoryId) {
-              console.log('[Vidlytics] âš ï¸ Location sem story_id, pulando.');
               return;
             }
 
             var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
             if (!story) {
-              console.warn('[Vidlytics] âŒ Story nÃ£o encontrada:', locStoryId);
+              console.warn('[Vidlytics] Ã¢ÂÅ’ Story nÃƒÂ£o encontrada:', locStoryId);
               return;
             }
 
             var storyFormat = getStoryFormat(story);
-            console.log('[Vidlytics] âœ… Story:', story.title || story.id, '| formato:', storyFormat);
 
-            // Flutuante jÃ¡ foi renderizado
+            // Flutuante jÃƒÂ¡ foi renderizado
             if (storyFormat === 'floating_widget') {
-              console.log('[Vidlytics] â­ï¸ Story flutuante jÃ¡ renderizado, pulando inline.');
               return;
             }
 
@@ -5313,22 +5270,17 @@ return readStoreSettings().then(function (settings) {
             if (storyRules.length > 0) {
               var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
               if (!hasMatch) {
-                console.log('[Vidlytics] âŒ Regra nÃ£o bateu, pulando.');
                 return;
               }
-              console.log('[Vidlytics] âœ… Regra bateu!');
             }
 
             var selector = location.selector;
             var position = location.position || 'beforeend';
-            console.log('[Vidlytics] ðŸŽ¯ Selector:', selector || '(vazio)', '| Position:', position);
 
             if (!selector) {
-              console.log('[Vidlytics] âš ï¸ Location sem selector, pulando.');
               return;
             }
 
-            console.log('[Vidlytics] ðŸš€ Injetando widget em:', selector);
             try {
               initInlineWidget({
                 target: selector,
@@ -5341,17 +5293,15 @@ return readStoreSettings().then(function (settings) {
                 storyFormat: storyFormat
               });
               injected = true;
-              console.log('[Vidlytics] âœ… Inline injetado!');
             } catch (err) {
-              console.error('[Vidlytics] âŒ Erro:', err);
+              console.error('[Vidlytics] Ã¢ÂÅ’ Erro:', err);
             }
           });
 
-          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-          // ðŸ”§ FALLBACK â€” sÃ³ para stories inline sem seletor
-          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+          // Ã°Å¸â€Â§ FALLBACK Ã¢â‚¬â€ sÃƒÂ³ para stories inline sem seletor
+          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
           if (!injected && inlineStories.length > 0 && floatingStories.length === 0) {
-            console.log('[Vidlytics] ðŸ”§ Fallback inline.');
             var fb = document.querySelector('#vidlytics-stories');
             if (!fb) {
               fb = document.createElement('div');
@@ -5369,20 +5319,18 @@ return readStoreSettings().then(function (settings) {
                 appearance: currentAppearance,
                 storyFormat: getStoryFormat(inlineStories[0])
               });
-              console.log('[Vidlytics] âœ… Fallback injetado!');
             } catch (err) {
-              console.error('[Vidlytics] âŒ Erro no fallback:', err);
+              console.error('[Vidlytics] Ã¢ÂÅ’ Erro no fallback:', err);
             }
           }
         });
       });
 }).then(function () {
-      console.log('[Vidlytics] âœ… Widget inicializado com sucesso.');
     }).catch(function (err) {
-      console.warn('[Vidlytics] Erro na inicializaÃ§Ã£o:', err);
+      console.warn('[Vidlytics] Erro na inicializaÃƒÂ§ÃƒÂ£o:', err);
     });
   }).catch(function (err) {
-    console.warn('[Vidlytics] Erro ao carregar aparÃªncia:', err);
+    console.warn('[Vidlytics] Erro ao carregar aparÃƒÂªncia:', err);
   });
   }).catch(function (err) {
     console.warn('[Vidlytics] Erro ao verificar status da loja:', err);
