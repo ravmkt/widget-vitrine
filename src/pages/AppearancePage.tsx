@@ -2596,38 +2596,6 @@ const AppearancePage = () => {
     [formData.grid_config, gridDevice, formData.useGlobalAppearance],
   );
 
-  useEffect(() => {
-    const vid = floatingPreviewVideoRef.current;
-    if (!vid) return;
-    if (activeFloatingConfig.autoplay_videos ?? true) {
-      vid.play().catch(() => {});
-    } else {
-      vid.pause();
-    }
-  }, [activeFloatingConfig.autoplay_videos]);
-
-  useEffect(() => {
-    carouselPreviewVideoRefs.current.forEach((vid) => {
-      if (!vid) return;
-      if (activeCarouselConfig.autoplay_videos ?? true) {
-        vid.play().catch(() => {});
-      } else {
-        vid.pause();
-      }
-    });
-  }, [activeCarouselConfig.autoplay_videos]);
-
-  useEffect(() => {
-    gridPreviewVideoRefs.current.forEach((vid) => {
-      if (!vid) return;
-      if (activeGridConfig.autoplay_videos ?? true) {
-        vid.play().catch(() => {});
-      } else {
-        vid.pause();
-      }
-    });
-  }, [activeGridConfig.autoplay_videos]);
-
   if (loading || tenantLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
