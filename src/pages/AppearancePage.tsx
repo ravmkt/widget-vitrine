@@ -2650,6 +2650,7 @@ const AppearancePage = () => {
       if (formData.useGlobalAppearance) {
         floatingConfig.mobile = floatingConfig.desktop;
         carouselConfig.mobile = carouselConfig.desktop;
+        dynamicCarouselConfig.mobile = dynamicCarouselConfig.desktop;
         gridConfig.mobile = gridConfig.desktop;
       }
 
