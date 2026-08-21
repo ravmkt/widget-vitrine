@@ -128,7 +128,8 @@ type CarouselConfig = {
   object_fit: string;
 show_title: boolean;
 autoplay_videos: boolean;
-  product_card_bg: string;
+auto_highlight: boolean; // true = destaque automático no centro a cada 5s
+product_card_bg: string;
   product_card_border_color: string;
   product_card_border_width: string;
   product_card_border_radius: string;
