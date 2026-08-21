@@ -1861,13 +1861,9 @@ const GridPreview = ({
     });
   }, [grid.autoplay_videos, grid.sequential_playback, activeIndex, totalItems]);
 
-  const cols = limitNumber(grid.visible_items, 10, 1, 10);
   const rawWidth = safeNumber(parseFloat(grid.width || '90'), 90, 40);
-const cardWidth = `${rawWidth}px`;
-const rows = 2;
+  const cardWidth = `${rawWidth}px`;
   const shape = normalizeWidgetShape(grid.shape, 'portrait');
-const totalItems = cols * rows;
-  const items = Array.from({ length: totalItems });
   const isCircle = shape === 'circle';
   const isSquare = shape === 'square';
   const isPortrait = shape === 'portrait';
