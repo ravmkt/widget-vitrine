@@ -790,14 +790,17 @@ function getGridConfig(appearance) {
     aspectRatio = '1 / 1';
   }
 
-  return {
-    shape: shape, size: sizeNumber,
-    columns: columns, rows: rows, spacing: spacing,
-    borderColor: borderColor, borderWidth: borderWidth,
-    borderRadius: borderRadius, objectFit: objectFit,
-    showTitle: showTitle, aspectRatio: aspectRatio
-    autoplayVideos: (function(){ var v = rcv('autoplay_videos', 'grid_autoplay_videos', true); return !(v === false || v === 'false'); })(),
-  };
+return {
+  shape: shape, size: sizeNumber,
+  columns: columns, rows: rows, spacing: spacing,
+  borderColor: borderColor, borderWidth: borderWidth,
+  borderRadius: borderRadius, objectFit: objectFit,
+  showTitle: showTitle, aspectRatio: aspectRatio,
+  autoplayVideos: (function () {
+    var v = rcv('autoplay_videos', 'grid_autoplay_videos');
+    return v === null || v === undefined ? true : toBoolean(v);
+  })()
+};
 }
 
   function getPrimaryColor(appearance) {
