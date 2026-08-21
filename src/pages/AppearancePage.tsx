@@ -2630,6 +2630,13 @@ const AppearancePage = () => {
         same_for_all: formData.useGlobalAppearance,
       };
 
+      const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
+        ...formData.dynamic_carousel_config,
+        desktop: normalizeCarouselConfigShape(formData.dynamic_carousel_config.desktop) as DynamicCarouselConfig,
+        mobile: normalizeCarouselConfigShape(formData.dynamic_carousel_config.mobile) as DynamicCarouselConfig,
+        same_for_all: formData.useGlobalAppearance,
+      };
+
       const gridConfig: ResponsiveConfig<GridConfig> = {
         ...formData.grid_config,
         desktop: normalizeGridConfigShape(formData.grid_config.desktop),
