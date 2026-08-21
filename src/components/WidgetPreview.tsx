@@ -324,14 +324,15 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
           </div>
 
           <div className="relative my-4 flex flex-1 items-center justify-center overflow-hidden rounded-2xl bg-slate-900">
-            <video
-              src={getVideoUrl(mainVideoForActiveStory)}
-              className="h-full w-full object-cover"
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
+<video
+  key={`${mainVideoForActiveStory.id}-${activeAppearance?.autoplay_videos}`}
+  src={getVideoUrl(mainVideoForActiveStory)}
+  className="h-full w-full object-cover"
+  autoPlay={activeAppearance?.autoplay_videos !== false}
+  loop
+  muted
+  playsInline
+/>
           </div>
 
           {(activeStory as any).cta_enabled &&
