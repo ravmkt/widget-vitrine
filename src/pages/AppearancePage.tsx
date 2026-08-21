@@ -633,7 +633,7 @@ const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
 
 const createDefaultDynamicCarouselDesktopConfig = (): DynamicCarouselConfig => ({
   ...createDefaultCarouselDesktopConfig(),
-  enabled: false,
+  enabled: true,
 });
 
 const createDefaultDynamicCarouselMobileConfig = (): DynamicCarouselConfig => ({
