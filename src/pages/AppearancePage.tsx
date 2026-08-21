@@ -1626,6 +1626,13 @@ const CarouselPreview = ({
 
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
 
+  const visibleItems = safeNumber(carousel.visible_items, 4, 1);
+  const shape = normalizeWidgetShape(carousel.shape, 'portrait');
+  const items = Array.from({ length: Math.max(1, Math.min(visibleItems, 6)) });
+  const isCircle = shape === 'circle';
+  const isSquare = shape === 'square';
+  const isPortrait = shape === 'portrait';
+  const isLandscape = shape === 'landscape';
 
   const [highlightIndex, setHighlightIndex] = useState(0);
 
@@ -1647,14 +1654,6 @@ const CarouselPreview = ({
       }
     });
   }, [carousel.autoplay_videos]);
-
-  const visibleItems = safeNumber(carousel.visible_items, 4, 1);
-  const shape = normalizeWidgetShape(carousel.shape, 'portrait');
-  const items = Array.from({ length: Math.max(1, Math.min(visibleItems, 6)) });
-  const isCircle = shape === 'circle';
-  const isSquare = shape === 'square';
-  const isPortrait = shape === 'portrait';
-  const isLandscape = shape === 'landscape';
 
   // Tamanho real configurado (sem clamp artificial), escalado via transform
   const rawWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
