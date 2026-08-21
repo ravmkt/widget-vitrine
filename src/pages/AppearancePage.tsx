@@ -3358,6 +3358,7 @@ if (activeFloatingConfig.shape === 'portrait') {
                         
                         <div className="space-y-1.5">
                           <ToggleSwitch label="Exibir título da grade" checked={activeGridConfig.show_title ?? false} onChange={e => updateGridConfig({ show_title: e.target.checked })} />
+<ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeGridConfig.autoplay_videos ?? true} onChange={e => updateGridConfig({ autoplay_videos: e.target.checked })} />
                         </div>
                       </div>
 
