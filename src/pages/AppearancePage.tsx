@@ -1877,7 +1877,7 @@ const ModalPreview = ({
           <video
             src={DEMO_PREVIEW_VIDEOS[0]}
             autoPlay={floating.autoplay_videos ?? true}
-            loop
+            loop={floating.autoplay_videos ?? true}
             muted
             playsInline
             preload="auto"
