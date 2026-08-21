@@ -151,6 +151,7 @@ type GridConfig = {
   object_fit: string;
 show_title: boolean;
 autoplay_videos: boolean;
+sequential_playback: boolean; // true = modo sequencial 5s por vídeo
 };
 
 type ModalConfig = {
