@@ -1574,7 +1574,7 @@ const FloatingPreview = ({
           }}
         >
            <video
-            ref={floatingPreviewVideoRef}
+ref={videoRef}
             src={DEMO_PREVIEW_VIDEOS[0]}
             loop={floating.autoplay_videos ?? true}
             muted
