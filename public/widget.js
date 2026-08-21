@@ -3898,12 +3898,10 @@ videoCard.style.cssText =
   'border-radius:' + cfg.itemRadius + ' !important;' +
   'overflow:hidden !important;' +
   'position:relative !important;' +
-  'background:#000 !important;' +
   'transform:translateZ(0) !important;' +
-  'transform-origin:center bottom !important;' + 
+  'transform-origin:center bottom !important;' +
   '-webkit-backface-visibility:hidden !important;' +
-  '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
-        carouselBorderCss;
+  carouselBorderCss;
 
       // 5. MÃƒÂ¡scara interna para corte perfeito da mÃƒÂ­dia (DecisÃƒÂ£o por view_mode)
       var innerMask = document.createElement('div');
