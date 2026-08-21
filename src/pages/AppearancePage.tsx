@@ -1488,6 +1488,16 @@ function usePreviewScale(containerRef: React.RefObject<HTMLDivElement>) {
 }
 
 const FloatingPreview = ({
+
+  floating,
+  colors,
+}: {
+  floating: FloatingConfig;
+  colors: PreviewColors;
+}) => {
+  const mockupRef = useRef<HTMLDivElement>(null);
+  const scale = usePreviewScale(mockupRef);
+
     const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const vid = videoRef.current;
@@ -1498,15 +1508,6 @@ const FloatingPreview = ({
       vid.pause();
     }
   }, [floating.autoplay_videos]);
-
-  floating,
-  colors,
-}: {
-  floating: FloatingConfig;
-  colors: PreviewColors;
-}) => {
-  const mockupRef = useRef<HTMLDivElement>(null);
-  const scale = usePreviewScale(mockupRef);
 
   const isCircle = floating.shape === 'circle';
   const width = cssSize(floating.width, '80px');
