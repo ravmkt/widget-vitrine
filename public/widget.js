@@ -4695,7 +4695,6 @@ function renderFloatingWidget(floatingStories) {
   if (!currentAppearance) return;
 
   var stories = floatingStories || currentStories;
-  var mode = 'bubble';
 
   if (!stories || stories.length === 0) {
     return;
