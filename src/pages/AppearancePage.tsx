@@ -635,6 +635,7 @@ const createDefaultGridDesktopConfig = (): GridConfig => ({
   object_fit: 'cover',
   show_title: false,
   autoplay_videos: true,
+  sequential_playback: false,
 });
 
 const createDefaultGridMobileConfig = (): GridConfig => ({
