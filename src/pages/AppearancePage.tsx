@@ -3369,6 +3369,29 @@ if (activeFloatingConfig.shape === 'portrait') {
                         </div>
                       </div>
 
+{/* 4. Destaque de Vídeo */}
+<div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-2.5">
+  <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">4. Destaque de Vídeo</h4>
+
+  <div className="space-y-1.5">
+    <ToggleSwitch
+      label="Aplicar sombra no vídeo em destaque"
+      checked={activeDynamicCarouselConfig.highlight_shadow ?? false}
+      onChange={e => updateDynamicCarouselConfig({ highlight_shadow: e.target.checked })}
+    />
+    <ToggleSwitch
+      label="Ampliar vídeo em destaque"
+      checked={activeDynamicCarouselConfig.highlight_scale_up ?? false}
+      onChange={e => updateDynamicCarouselConfig({ highlight_scale_up: e.target.checked })}
+    />
+    <ToggleSwitch
+      label="Reduzir vídeos inativos"
+      checked={activeDynamicCarouselConfig.highlight_scale_down_others ?? false}
+      onChange={e => updateDynamicCarouselConfig({ highlight_scale_down_others: e.target.checked })}
+    />
+  </div>
+</div>
+
                       {/* 4. Estilo do Card de Produto */}
                       {activeCarouselConfig.show_product && (
                         <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-3">
