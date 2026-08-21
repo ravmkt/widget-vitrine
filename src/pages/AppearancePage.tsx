@@ -622,6 +622,7 @@ const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
   product_card_price_size: '12',
   product_card_price_color: '#0094EB',
   product_card_price_bold: true,
+  auto_highlight: false,
 });
 
 const createDefaultGridDesktopConfig = (): GridConfig => ({
