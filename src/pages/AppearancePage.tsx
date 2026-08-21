@@ -636,12 +636,18 @@ const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
 
 const createDefaultDynamicCarouselDesktopConfig = (): DynamicCarouselConfig => ({
   ...createDefaultCarouselDesktopConfig(),
-  enabled: false,
+  enabled: true,
+  highlight_shadow: false,
+  highlight_scale_up: false,
+  highlight_scale_down_others: false,
 });
 
 const createDefaultDynamicCarouselMobileConfig = (): DynamicCarouselConfig => ({
   ...createDefaultCarouselMobileConfig(),
-  enabled: false,
+  enabled: true,
+  highlight_shadow: false,
+  highlight_scale_up: false,
+  highlight_scale_down_others: false,
 });
 
 const createDefaultGridDesktopConfig = (): GridConfig => ({
