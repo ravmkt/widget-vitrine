@@ -1803,6 +1803,18 @@ const GridPreview = ({
   const mockupRef = useRef<HTMLDivElement>(null);
   const scale = usePreviewScale(mockupRef);
 
+    const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+  useEffect(() => {
+    videoRefs.current.forEach((vid) => {
+      if (!vid) return;
+      if (grid.autoplay_videos ?? true) {
+        vid.play().catch(() => {});
+      } else {
+        vid.pause();
+      }
+    });
+  }, [grid.autoplay_videos]);
+
   const cols = limitNumber(grid.visible_items, 10, 1, 10);
   const rawWidth = safeNumber(parseFloat(grid.width || '90'), 90, 40);
 const cardWidth = `${rawWidth}px`;
