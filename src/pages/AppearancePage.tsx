@@ -64,6 +64,7 @@ type ModalTab =
   | 'basic'
   | 'floating'
   | 'carousel'
+  | 'dynamic_carousel'
   | 'grid'
   | 'modal';
 
