@@ -4282,36 +4282,39 @@ if (cfg.autoHighlight) {
 
       var vid = el.querySelector('video');
       if (vid) {
-        if (isActive) {
-          vid.currentTime = 0;
-          var p = vid.play();
-          if (p && p.catch) p.catch(function () {});
-        } else {
-          vid.pause();
-          vid.currentTime = 0;
-        }
-      }
-    });
+        if (isActive) {function vlApplyHighlight() {
+  vlItems.forEach(function (el, idx) {
+    var card = el.querySelector('div');
+    if (!card) return;
+    var isActive = idx === vlHighlightIdx;
 
-    // Janela deslizante: ativo sempre é o card mais à direita visível
-    var activeEl = vlItems[vlHighlightIdx];
-    if (activeEl) {
-      var totalItems = vlItems.length;
-      var effectiveVisibleItems = Math.min(visibleItems, totalItems); // guard
-      var stepPx = itemWidthPx + gapPx;
+    el.style.overflow = 'visible';
+    el.style.transformOrigin = 'center bottom';
+    el.style.transform = isActive ? 'translateZ(0) scale(1.08)' : 'translateZ(0) scale(1)';
+    el.style.zIndex = isActive ? '10' : '1';
+    el.style.transition = 'transform 0.3s ease';
 
-      var windowStart = vlHighlightIdx - (effectiveVisibleItems - 1);
-      var maxWindowStart = Math.max(0, totalItems - effectiveVisibleItems);
-      windowStart = Math.max(0, Math.min(windowStart, maxWindowStart));
+    card.style.transform = 'translateZ(0)';
+    card.style.zIndex = '';
+  });
 
-      var targetTranslate = -(windowStart * stepPx);
-      var maxScroll = getMaxScroll();
-      targetTranslate = clamp(targetTranslate, -maxScroll, 0);
+  var activeEl = vlItems[vlHighlightIdx];
+  if (activeEl) {
+    var totalItems = vlItems.length;
+    var effectiveVisibleItems = Math.min(visibleItems, totalItems);
 
-      track.style.transition = 'transform 0.5s ease';
-      track.style.transform = 'translateX(' + targetTranslate + 'px)';
-    }
+    var windowStart = vlHighlightIdx - (effectiveVisibleItems - 1);
+    var maxWindowStart = Math.max(0, totalItems - effectiveVisibleItems);
+    windowStart = Math.max(0, Math.min(windowStart, maxWindowStart));
+
+    var targetTranslate = -(windowStart * stepPx);
+    var maxScroll = getMaxScroll();
+    targetTranslate = clamp(targetTranslate, -maxScroll, 0);
+
+    track.style.transition = 'transform 0.5s ease';
+    track.style.transform = 'translateX(' + targetTranslate + 'px)';
   }
+}
 
   vlApplyHighlight();
   setInterval(function () {
