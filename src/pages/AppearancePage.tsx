@@ -2578,6 +2578,7 @@ const AppearancePage = () => {
     setFormData(createDefaultFormData(finalStoreId));
     setFloatingDevice('desktop');
     setCarouselDevice('desktop');
+        setDynamicCarouselDevice('desktop');
     setGridDevice('desktop');
     setActiveTab('basic');
     setShowModal(true);
@@ -2588,6 +2589,7 @@ const AppearancePage = () => {
     setFormData(normalizeAppearance(style, resolvedStoreId || storeId));
     setFloatingDevice('desktop');
     setCarouselDevice('desktop');
+        setDynamicCarouselDevice('desktop');
     setGridDevice('desktop');
     setActiveTab('basic');
     setShowModal(true);
