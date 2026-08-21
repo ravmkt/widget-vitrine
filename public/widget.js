@@ -715,7 +715,7 @@ var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false
   // Leitura da chave real view_mode ('preview' / 'playing' / 'video' = reproduz mutado)
   var autoplayVideos = rcv('autoplay_videos', 'carousel_autoplay_videos', true);
   autoplayVideos = (autoplayVideos === false || autoplayVideos === 'false') ? false : true;
-  var carouselPlayMode = autoplayVideos ? 'playing' : 'static';
+var carouselPlayMode = (autoplayVideos || autoHighlight) ? 'playing' : 'static';
 
 var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
   var aspect = '9/16';
