@@ -629,6 +629,16 @@ const createDefaultCarouselMobileConfig = (): CarouselConfig => ({
   auto_highlight: false,
 });
 
+const createDefaultDynamicCarouselDesktopConfig = (): DynamicCarouselConfig => ({
+  ...createDefaultCarouselDesktopConfig(),
+  enabled: false,
+});
+
+const createDefaultDynamicCarouselMobileConfig = (): DynamicCarouselConfig => ({
+  ...createDefaultCarouselMobileConfig(),
+  enabled: false,
+});
+
 const createDefaultGridDesktopConfig = (): GridConfig => ({
   visible_items: 4,
   rows: 1,
