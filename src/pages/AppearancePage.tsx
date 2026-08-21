@@ -3651,6 +3651,7 @@ if (activeFloatingConfig.shape === 'portrait') {
                   formData={formData}
                   floatingDevice={floatingDevice}
                   carouselDevice={carouselDevice}
+                  dynamicCarouselDevice={dynamicCarouselDevice}
                   gridDevice={gridDevice}
                   activeTab={activeTab}
                 />
