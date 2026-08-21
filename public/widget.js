@@ -4018,8 +4018,7 @@ if (pvPlayPromise && typeof pvPlayPromise.catch === 'function') {
                 'border-radius:' + innerRadiusCss + ' !important;' +
                 '-webkit-backface-visibility:hidden !important;' +
                 'background:#000 !important;';
-              primeVideoFrame(fallbackVid);
-              fallbackVid.src = fallbackUrl;
+fallbackVid.src = fallbackUrl;
               innerMask.appendChild(fallbackVid);
             }
           };
