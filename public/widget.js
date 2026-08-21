@@ -3831,7 +3831,9 @@ trackContainer.style.cssText =
   'max-width:100% !important;' +
   'margin:0 auto !important;' +
   'padding-top:64px !important;' +
-  'padding-bottom:2px !important;';
+  'padding-bottom:2px !important;' +
+  'padding-left:16px !important;' +
+  'padding-right:16px !important;';
   
   var track = document.createElement('div');
   track.className = 'vidlytics-carousel-track';
