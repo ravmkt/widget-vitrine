@@ -1715,8 +1715,8 @@ const CarouselPreview = ({
                 >
 <video
   ref={(el) => {
-    if (el) carouselPreviewVideoRefs.current.set(index, el);
-    else carouselPreviewVideoRefs.current.delete(index);
+    if (el) videoRefs.current.set(index, el);
+    else videoRefs.current.delete(index);
   }}
   src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
   loop={carousel.autoplay_videos ?? true}
