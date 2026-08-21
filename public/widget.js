@@ -3110,19 +3110,6 @@ if (hasSupabase) {
 var showVerProduto = appearanceConfig.show_product !== false;
 // WhatsApp segue o mesmo critÃƒÂ©rio do card de produto Ã¢â‚¬â€ sem flag separada
 var showWhatsAppProduto = showVerProduto;
-
-    // Ã°Å¸â€Â DEBUG Ã¢â‚¬â€ colar AQUI (depois das declaraÃƒÂ§ÃƒÂµes)
-    var videoProductId = video ? (video.product_id || video.productId) : null;
-    var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
-      showWhatsAppProduto: showWhatsAppProduto,
-      storeWhatsappNumber: storeWhatsappNumber,
-      videoProductId: videoProductId,
-      productDataFound: !!productData,
-      productWhatsapp: productData ? (productData.whatsapp_number || productData.whatsappNumber) : null,
-      modalConfigRaw: currentAppearance.modal_config
-    });
-    // FIM DEBUG
-
     if (showVerProduto || showWhatsAppProduto) {
       var videoProductId = video.product_id || (video.productId) || null;
       var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
