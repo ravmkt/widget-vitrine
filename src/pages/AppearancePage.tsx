@@ -2679,6 +2679,7 @@ const AppearancePage = () => {
 
         floating_config: floatingConfig,
         carousel_config: carouselConfig,
+        dynamic_carousel_config: dynamicCarouselConfig,
         grid_config: gridConfig,
         modal_config: modalConfig,
 
