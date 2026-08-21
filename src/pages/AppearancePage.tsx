@@ -2277,6 +2277,8 @@ const AppearancePage = () => {
 
   const [floatingDevice, setFloatingDevice] = useState<DeviceType>('desktop');
   const [carouselDevice, setCarouselDevice] = useState<DeviceType>('desktop');
+    const [dynamicCarouselDevice, setDynamicCarouselDevice] = useState<DeviceType>('desktop');
+
   const [gridDevice, setGridDevice] = useState<DeviceType>('desktop');
   const [activeTab, setActiveTab] = useState<ModalTab>('basic');
 
