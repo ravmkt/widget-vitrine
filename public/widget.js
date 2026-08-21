@@ -4269,6 +4269,28 @@ track.appendChild(item);
     }, true);
   });
   
+  if (cfg.autoHighlight) {
+    var vlItems = Array.prototype.slice.call(track.querySelectorAll('.vidlytics-carousel-item'));
+    var vlHighlightIdx = 0;
+
+    function vlApplyHighlight() {
+      vlItems.forEach(function (el, idx) {
+        var card = el.querySelector('div');
+        if (!card) return;
+        var isActive = idx === vlHighlightIdx;
+        card.style.transform = isActive ? 'translateZ(0) scale(1.08)' : 'translateZ(0) scale(1)';
+        card.style.zIndex = isActive ? '10' : '1';
+        card.style.transition = 'transform 0.3s ease';
+      });
+    }
+
+    vlApplyHighlight();
+    setInterval(function () {
+      vlHighlightIdx = (vlHighlightIdx + 1) % vlItems.length;
+      vlApplyHighlight();
+    }, 5000);
+  }
+
   target.insertAdjacentElement(position, wrapper);
 }
 
