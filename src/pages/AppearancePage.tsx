@@ -826,6 +826,7 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
 
     floating_config: createResponsiveConfig(floatingDesktop, floatingMobile),
     carousel_config: createResponsiveConfig(carouselDesktop, carouselMobile),
+    dynamic_carousel_config: createResponsiveConfig(dynamicCarouselDesktop, dynamicCarouselMobile),
     grid_config: createResponsiveConfig(gridDesktop, gridMobile),
     modal_config: modalConfig,
 
