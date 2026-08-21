@@ -2574,6 +2574,7 @@ const AppearancePage = () => {
     setEditingStyle(null);
   };
 
+
   const activeFloatingConfig = useMemo(
     () =>
       getActiveResponsiveConfig(formData.floating_config, floatingDevice, formData.useGlobalAppearance),
