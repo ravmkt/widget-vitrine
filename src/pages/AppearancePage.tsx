@@ -638,7 +638,7 @@ const createDefaultDynamicCarouselDesktopConfig = (): DynamicCarouselConfig => (
 
 const createDefaultDynamicCarouselMobileConfig = (): DynamicCarouselConfig => ({
   ...createDefaultCarouselMobileConfig(),
-  enabled: false,
+  enabled: true,
 });
 
 const createDefaultGridDesktopConfig = (): GridConfig => ({
