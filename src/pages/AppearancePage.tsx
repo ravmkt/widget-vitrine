@@ -1900,6 +1900,9 @@ gridTemplateColumns: `repeat(${cols}, ${cardWidth})`,
                   'relative overflow-hidden shadow-sm flex items-center justify-center bg-slate-900',
                   isCircle && 'rounded-full',
                   !isCircle && 'rounded-xl'
+                                    opacity: grid.sequential_playback && index !== activeIndex ? 0.4 : 1,
+                  transition: 'opacity 0.3s ease',
+
                 )}
 style={{
   width: cardWidth,
