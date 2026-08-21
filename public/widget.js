@@ -4854,7 +4854,7 @@ function renderFloatingWidget(floatingStories) {
   }
 
   // Ícone de play centralizado
-  if (cfg.showPlayIcon && thumbUrl) {
+if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isImageItem)) {
     var playOverlay = createEl('div', 'vl-floating-play-icon');
     playOverlay.style.cssText =
       'position:absolute !important;' +
