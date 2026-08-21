@@ -2574,6 +2574,9 @@ const AppearancePage = () => {
     setEditingStyle(null);
   };
 
+  const floatingPreviewVideoRef = useRef<HTMLVideoElement>(null);
+  const carouselPreviewVideoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+  const gridPreviewVideoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
 
   const activeFloatingConfig = useMemo(
     () =>
