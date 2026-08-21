@@ -2181,12 +2181,14 @@ const PreviewCard = ({
   formData,
   floatingDevice,
   carouselDevice,
+  dynamicCarouselDevice,
   gridDevice,
   activeTab,
 }: {
   formData: ExtendedAppearance;
   floatingDevice: DeviceType;
   carouselDevice: DeviceType;
+  dynamicCarouselDevice: DeviceType;
   gridDevice: DeviceType;
   activeTab: ModalTab;
 }) => {
