@@ -3251,6 +3251,16 @@ if (activeFloatingConfig.shape === 'portrait') {
                         )}
                       </div>
 
+{/* Aviso obrigatório de vídeos mínimos */}
+<div className="flex items-start gap-2.5 rounded-xl border-2 border-amber-300 bg-amber-50 px-3.5 py-3">
+  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-400 text-white text-xs font-black">
+    !
+  </span>
+  <p className="text-xs font-bold text-amber-800 leading-snug">
+    Atenção: são necessários no mínimo <span className="underline">3 vídeos</span> na loja para que o Carrossel Dinâmico seja ativado e exibido.
+  </p>
+</div>
+
 {/* 1. Layout & Dimensões */}
 <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
   <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">1. Layout & Dimensões</h4>
