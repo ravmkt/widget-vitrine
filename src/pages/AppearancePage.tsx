@@ -1625,6 +1625,20 @@ const CarouselPreview = ({
   const scale = usePreviewScale(mockupRef);
 
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+
+  const visibleItems = safeNumber(carousel.visible_items, 4, 1);
+  const items = Array.from({ length: Math.max(1, Math.min(visibleItems, 6)) });
+
+  const [highlightIndex, setHighlightIndex] = useState(0);
+
+  useEffect(() => {
+    if (!carousel.auto_highlight) return;
+    const interval = setInterval(() => {
+      setHighlightIndex((prev) => (prev + 1) % items.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [carousel.auto_highlight, items.length]);
+
   useEffect(() => {
     videoRefs.current.forEach((vid) => {
       if (!vid) return;
