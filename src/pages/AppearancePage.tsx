@@ -2197,9 +2197,9 @@ const PreviewCard = ({
     floatingDevice,
     formData.useGlobalAppearance,
   );
-  const carousel = getActiveResponsiveConfig(
-    formData.carousel_config,
-    carouselDevice,
+  const dynamicCarousel = getActiveResponsiveConfig(
+    formData.dynamic_carousel_config,
+    dynamicCarouselDevice,
     formData.useGlobalAppearance,
   );
   const grid = getActiveResponsiveConfig(
