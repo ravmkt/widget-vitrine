@@ -3406,8 +3406,9 @@ if (activeFloatingConfig.shape === 'portrait') {
                         <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">3. Elementos Visíveis</h4>
                         
                         <div className="space-y-1.5">
-                          <ToggleSwitch label="Exibir título da grade" checked={activeGridConfig.show_title ?? false} onChange={e => updateGridConfig({ show_title: e.target.checked })} />
+<ToggleSwitch label="Exibir título da grade" checked={activeGridConfig.show_title ?? false} onChange={e => updateGridConfig({ show_title: e.target.checked })} />
 <ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeGridConfig.autoplay_videos ?? true} onChange={e => updateGridConfig({ autoplay_videos: e.target.checked })} />
+<ToggleSwitch label="Reprodução sequencial (1 vídeo por vez, 5s cada)" checked={activeGridConfig.sequential_playback ?? false} onChange={e => updateGridConfig({ sequential_playback: e.target.checked })} />
                         </div>
                       </div>
 
