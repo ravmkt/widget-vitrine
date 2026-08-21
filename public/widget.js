@@ -4740,50 +4740,28 @@ function initInlineWidget(options) {
   }
   
   var displayMode = options.storyFormat || getWidgetDisplayMode(appearance);
-  
-  // Dentro de getWidgetDisplayMode, adicionar detecção ANTES do fallback de floating:
-function getWidgetDisplayMode(appearance) {
-  var mode = readAppearanceValue(appearance, [
-    'display_mode', 'displayMode', 'widget_type', 'widgetType', 'mode',
-    'tipo_exibicao', 'tipoExibicao'
-  ]);
-  if (mode) {
-    mode = String(mode).trim().toLowerCase();
-    if (mode === 'dynamic_carousel' || mode === 'carrossel_dinamico') {
-      var dcCfg = appearance.dynamic_carousel_config;
-      if (typeof dcCfg === 'string') { try { dcCfg = JSON.parse(dcCfg); } catch(e) { dcCfg = null; } }
-      if (dcCfg && toBoolean(dcCfg.enabled, false)) return 'dynamic_carousel';
-      // enabled=false → cai para o próximo modo (não quebra usuários existentes)
-    }
-    if (mode === 'carousel' || mode === 'carrossel') return 'carousel';
-    if (mode === 'grid' || mode === 'grade') return 'grid';
-    if (mode === 'floating' || mode === 'flutuante') return 'floating';
-    if (mode === 'stories' || mode === 'bubbles' || mode === 'bolhas') return 'stories';
+
+  if (displayMode === 'dynamic_carousel') {
+    document.querySelectorAll('[id^="vidlytics-wrapper-"]').forEach(function (w) { w.remove(); });
+
+    var dcWrapper = document.createElement('div');
+    dcWrapper.id = 'vidlytics-wrapper-' + Date.now();
+    Object.assign(dcWrapper.style, {
+      width: '100%',
+      minHeight: '260px',
+      margin: '20px 0',
+      overflow: 'visible',
+      display: 'block',
+    });
+    target.insertAdjacentElement('afterend', dcWrapper);
+
+    renderDynamicCarouselWidget({
+      target: '#' + dcWrapper.id,
+      position: 'beforeend',
+    }, stories, appearance);
+
+    return;
   }
-
-}
-// No mount principal (onde hoje tem "if (displayMode === 'carousel') {...}"), adicionar ANTES desse bloco:
-if (displayMode === 'dynamic_carousel') {
-  document.querySelectorAll('[id^="vidlytics-wrapper-"]').forEach(function (w) { w.remove(); });
-
-  var dcWrapper = document.createElement('div');
-  dcWrapper.id = 'vidlytics-wrapper-' + Date.now();
-  Object.assign(dcWrapper.style, {
-    width: '100%',
-    minHeight: '260px',
-    margin: '20px 0',
-    overflow: 'visible',
-    display: 'block',
-  });
-  target.insertAdjacentElement('afterend', dcWrapper);
-
-  renderDynamicCarouselWidget({
-    target: '#' + dcWrapper.id,
-    position: 'beforeend',
-  }, stories, appearance);
-
-  return;
-}
 
   if (displayMode === 'carousel') {
     document.querySelectorAll('[id^="vidlytics-wrapper-"]').forEach(function (w) { w.remove(); });
