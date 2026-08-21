@@ -1617,6 +1617,18 @@ const CarouselPreview = ({
   const mockupRef = useRef<HTMLDivElement>(null);
   const scale = usePreviewScale(mockupRef);
 
+  const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+  useEffect(() => {
+    videoRefs.current.forEach((vid) => {
+      if (!vid) return;
+      if (carousel.autoplay_videos ?? true) {
+        vid.play().catch(() => {});
+      } else {
+        vid.pause();
+      }
+    });
+  }, [carousel.autoplay_videos]);
+
   const visibleItems = safeNumber(carousel.visible_items, 4, 1);
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
   const items = Array.from({ length: Math.max(1, Math.min(visibleItems, 6)) });
