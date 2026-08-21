@@ -1,8 +1,8 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.20-15';
+  var WIDGET_VERSION = '2026.08.21-15';
 
   console.info(
-    '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
+    '%cVidlytics Widget carregado â€” versÃ£o ' + WIDGET_VERSION,
     'color: #22c55e; font-weight: bold; font-size: 13px;'
   );
 
@@ -28,7 +28,7 @@
 
   var enableFloating = widgetsCfg.floatingVideo !== undefined ? widgetsCfg.floatingVideo : config.floatingVideo !== false;
 
-  // 🆕 PLAYER FULLSCREEN (independente do modal de stories)
+  // ðŸ†• PLAYER FULLSCREEN (independente do modal de stories)
   var fsPlayerOverlay = null;
   var fsPlayerContainer = null;
 
@@ -45,7 +45,7 @@ function ensureModalStylesInLightDOM(appearance) {
     if (fsPlayerOverlay) return;
 
     // Injeta CSS do player fullscreen no DOM global (light DOM),
-    // pois o overlay é anexado em document.body, fora do Shadow DOM
+    // pois o overlay Ã© anexado em document.body, fora do Shadow DOM
     if (!document.getElementById('vl-fs-player-styles')) {
       var fsStyle = document.createElement('style');
       fsStyle.id = 'vl-fs-player-styles';
@@ -69,13 +69,13 @@ function ensureModalStylesInLightDOM(appearance) {
 
     fsPlayerContainer = fsPlayerOverlay.querySelector('.vl-fs-container');
 
-    // Fechar pelo botão X
+    // Fechar pelo botÃ£o X
     fsPlayerOverlay.querySelector('.vl-fs-close').addEventListener('click', function(e) {
       e.stopPropagation();
       closeFullscreenPlayer();
     });
 
-    // Fechar clicando fora do vídeo
+    // Fechar clicando fora do vÃ­deo
     fsPlayerOverlay.addEventListener('click', function(e) {
       if (e.target === fsPlayerOverlay) closeFullscreenPlayer();
     });
@@ -103,7 +103,7 @@ function ensureModalStylesInLightDOM(appearance) {
     fsPlayerContainer.innerHTML = '';
     sourceType = String(sourceType || '').trim().toLowerCase();
 
-// YouTube (Mutado por padrão no autoplay)
+// YouTube (Mutado por padrÃ£o no autoplay)
     if (sourceType === 'youtube' || sourceType === 'yt') {
       var ytId = extractYouTubeId(videoUrl);
       if (ytId) {
@@ -133,7 +133,7 @@ function ensureModalStylesInLightDOM(appearance) {
     else if (sourceType === 'upload' || isDirectVideoUrl(videoUrl)) {
       fsPlayerContainer.innerHTML = '<video src="' + videoUrl + '" controls autoplay playsinline></video>';
     }
-    // Fallback genérico: tenta como vídeo direto
+    // Fallback genÃ©rico: tenta como vÃ­deo direto
     else {
       fsPlayerContainer.innerHTML = '<video src="' + videoUrl + '" controls autoplay playsinline></video>';
     }
@@ -165,7 +165,7 @@ var storeWhatsappNumber = '';
   var currentStories = [];
     var currentStoryIndex = 0;
   var currentVideoIndex = 0;
-var isUserMuted = true; // Controla a persistência da preferência de som durante a navegação
+var isUserMuted = true; // Controla a persistÃªncia da preferÃªncia de som durante a navegaÃ§Ã£o
 
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
@@ -433,7 +433,7 @@ function normalizeAppearanceItem(item) {
     flattenAppearanceInto(merged, item || {}, 0);
     delete merged.storageAppearance; delete merged.configAppearance; delete merged.dbAppearance;
     delete merged.widgetsAppearance; delete merged.widgetsAparencia;
-    console.log('[DEBUG] Resultado APÓS flatten - grid_config:', merged.grid_config);
+    console.log('[DEBUG] Resultado APÃ“S flatten - grid_config:', merged.grid_config);
     return merged;
   }
   var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_config'];
@@ -483,7 +483,7 @@ function normalizeAppearanceItem(item) {
   }
 
   function supabaseFetch(path, options) {
-    if (!hasSupabase) return Promise.reject(new Error('Supabase não configurado.'));
+    if (!hasSupabase) return Promise.reject(new Error('Supabase nÃ£o configurado.'));
     options = options || {};
     var headers = {
       'apikey': supabaseAnonKey,
@@ -686,7 +686,7 @@ function getCarouselConfig(appearance) {
     return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
   }
   
-// 1. Definições estruturais do carrossel
+// 1. DefiniÃ§Ãµes estruturais do carrossel
   var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
   var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
   var borderWidth = toNumber(rcv('border_width', 'carousel_border_width', '0'), 0);
@@ -720,7 +720,7 @@ var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
   else if (shape === 'circle') aspect = '1/1';
   else if (shape === 'landscape' || shape === 'paisagem' || shape === '16:9' || shape === '16_9') aspect = '16/9';
 
-  // Leitura consolidada e única das propriedades do card de produto
+  // Leitura consolidada e Ãºnica das propriedades do card de produto
   var pBg = sanitizeCssValue(rcv('product_card_bg', 'carousel_product_card_bg', '#FFFFFF'), '#FFFFFF', 'color');
   var pBorderColor = sanitizeCssValue(rcv('product_card_border_color', 'carousel_product_card_border_color', '#E2E8F0'), '#E2E8F0', 'color');
   var pBorderWidth = toNumber(rcv('product_card_border_width', 'carousel_product_card_border_width', '1'), 1);
@@ -777,7 +777,7 @@ function getGridConfig(appearance) {
   var borderWidth = safeInt(rcv('border_style', 'grid_border_width', '2'), 2);
   
   var rawBorderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
-  // Se o formato for círculo, força o border-radius para 50%
+  // Se o formato for cÃ­rculo, forÃ§a o border-radius para 50%
   var borderRadius = (shape === 'circle') ? '50%' : (rawBorderRadius + 'px');
 
   var objectFit = String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
@@ -888,28 +888,28 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
       : fetchJson('videos?select=*&store_id=eq.' + encodeURIComponent(storeId));
   }
 
-  // 🔧 NOVA FUNÇÃO — Junta vídeos aos stories via tabela story_videos
+  // ðŸ”§ NOVA FUNÃ‡ÃƒO â€” Junta vÃ­deos aos stories via tabela story_videos
   function joinStoriesWithVideos(stories, storyVideos, videos) {
     if (!stories || !stories.length) return stories;
 
-    // Cria um mapa rápido de vídeos por ID
+    // Cria um mapa rÃ¡pido de vÃ­deos por ID
     var videoMap = {};
     (videos || []).forEach(function (v) {
       if (v && v.id) videoMap[v.id] = v;
     });
 
-    // Para cada story, monta o array de vídeos ordenado por position
+    // Para cada story, monta o array de vÃ­deos ordenado por position
     (stories || []).forEach(function (story) {
       var svRows = (storyVideos || []).filter(function (sv) {
         return sv.story_id === story.id;
       });
 
-      // Ordena por position (campo que define a ordem dos vídeos no story)
+      // Ordena por position (campo que define a ordem dos vÃ­deos no story)
       svRows.sort(function (a, b) {
         return (a.position || 0) - (b.position || 0);
       });
 
-      // Mapeia para os objetos completos de vídeo
+      // Mapeia para os objetos completos de vÃ­deo
       story.videos = svRows.map(function (sv) {
         return videoMap[sv.video_id];
       }).filter(Boolean);
@@ -1265,32 +1265,6 @@ function getVideoUrl(video) {
     }
   }
 
-  function primeVideoFrame(vidEl) {
-    if (!vidEl) return;
-    vidEl.muted = true;
-    vidEl.defaultMuted = true;
-    vidEl.playsInline = true;
-    vidEl.setAttribute('playsinline', '');
-    vidEl.setAttribute('webkit-playsinline', '');
-    vidEl.setAttribute('muted', '');
-
-    function tryPrime() {
-      var playPromise = vidEl.play();
-      if (playPromise !== undefined) {
-        playPromise.then(function () {
-          vidEl.pause();
-        }).catch(function () {
-          try { vidEl.currentTime = 0.001; } catch (e) {}
-        });
-      }
-    }
-
-    if (vidEl.readyState >= 2) {
-      tryPrime();
-    } else {
-      vidEl.addEventListener('loadeddata', tryPrime, { once: true });
-    }
-  }
 
   function extractYouTubeId(url) {
     if (!url) return '';
@@ -1307,7 +1281,7 @@ function getVideoUrl(video) {
     return '';
   }
 
-    // 🆕 EXTRAIR ID DO INSTAGRAM REEL
+    // ðŸ†• EXTRAIR ID DO INSTAGRAM REEL
   function extractInstagramId(url) {
     if (!url) return '';
     try {
@@ -1317,7 +1291,7 @@ function getVideoUrl(video) {
     } catch (e) { return url; }
   }
 
-  // 🆕 EXTRAIR ID DO TIKTOK
+  // ðŸ†• EXTRAIR ID DO TIKTOK
   function extractTikTokId(url) {
     if (!url) return '';
     try {
@@ -1327,7 +1301,7 @@ function getVideoUrl(video) {
     } catch (e) { return url; }
   }
 
-  // 🆕 EXTRAIR ID DO PIN DO PINTEREST
+  // ðŸ†• EXTRAIR ID DO PIN DO PINTEREST
   function extractPinterestId(url) {
     if (!url) return '';
     try {
@@ -1716,7 +1690,7 @@ function applyHostPosition(host, appearance) {
 function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
 
-    // Throttle: evita reenviar o mesmo evento para o mesmo vídeo em menos de 4s
+    // Throttle: evita reenviar o mesmo evento para o mesmo vÃ­deo em menos de 4s
     sendAnalyticsEvent._lastSent = sendAnalyticsEvent._lastSent || {};
     var throttleKey = String(eventType) + '_' + String(videoId);
     var throttleNow = Date.now();
@@ -1798,7 +1772,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
 
     var wrapper = createEl('div', 'vl-player');
 
-    // 0. Imagem Estática / Foto no Story
+    // 0. Imagem EstÃ¡tica / Foto no Story
     if (isImage || (url && /\.(jpe?g|png|webp|gif|svg)($|\?|#)/i.test(url))) {
       var imgEl = createEl('img');
       imgEl.src = url || getVideoThumbnail(video);
@@ -1815,7 +1789,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-// 1. YouTube Shorts ou Vídeo Tradicional (Respeita a preferência de áudio ativa do usuário)
+// 1. YouTube Shorts ou VÃ­deo Tradicional (Respeita a preferÃªncia de Ã¡udio ativa do usuÃ¡rio)
     if (ytId) {
       var iframe = createEl('iframe');
       var ytMuteParam = isUserMuted ? '1' : '0';
@@ -1829,13 +1803,13 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-    // 1.1. Pinterest Pin Embed com Validação Defensiva de ID
+    // 1.1. Pinterest Pin Embed com ValidaÃ§Ã£o Defensiva de ID
     var pinId = extractPinterestId(url);
     if (sourceType === 'pinterest' || pinId) {
       if (!pinId) {
         var errorMsg = createEl('div');
         errorMsg.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:13px;text-align:center;padding:16px;background:#111;';
-        errorMsg.textContent = 'Não foi possível carregar este Pin do Pinterest';
+        errorMsg.textContent = 'NÃ£o foi possÃ­vel carregar este Pin do Pinterest';
         wrapper.appendChild(errorMsg);
         return wrapper;
       }
@@ -1849,7 +1823,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-    // 2.1. TikTok Embed Oficial (evita erro NotSupportedError em URLs de compartilhamento/página)
+    // 2.1. TikTok Embed Oficial (evita erro NotSupportedError em URLs de compartilhamento/pÃ¡gina)
     if (sourceType === 'tiktok' || (tkId && url.indexOf('tiktok.com') !== -1)) {
       var tkIframe = createEl('iframe');
       tkIframe.src = 'https://www.tiktok.com/embed/v2/' + tkId;
@@ -1861,13 +1835,13 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-    // 3. Mídia MP4 / Upload / CDN / URL Externa (Respeita a preferência de áudio ativa do usuário)
+    // 3. MÃ­dia MP4 / Upload / CDN / URL Externa (Respeita a preferÃªncia de Ã¡udio ativa do usuÃ¡rio)
     if (url) {
       var media = createEl('video');
       media.controls = false;
       media.preload = 'auto';
       media.autoplay = true;
-      media.muted = isUserMuted; // Mantém o som ligado se o usuário já tiver desmutado anteriormente
+      media.muted = isUserMuted; // MantÃ©m o som ligado se o usuÃ¡rio jÃ¡ tiver desmutado anteriormente
       media.loop = true;
       media.playsInline = true;
       media.setAttribute('playsinline', '');
@@ -1889,10 +1863,10 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       
       // Tratamento de Erro Fallback (Ex: link 403 Forbidden expirado)
       media.addEventListener('error', function () {
-        console.error('[Vidlytics] Erro fatal ao carregar mídia:', url);
+        console.error('[Vidlytics] Erro fatal ao carregar mÃ­dia:', url);
         var errorMsg = createEl('div');
         errorMsg.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#111;color:#ef4444;font-size:13px;font-weight:700;text-align:center;padding:20px;z-index:10;';
-        errorMsg.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>Mídia indisponível ou expirada.';
+        errorMsg.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>MÃ­dia indisponÃ­vel ou expirada.';
         wrapper.appendChild(errorMsg);
       });
 
@@ -1902,7 +1876,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
         var p = media.play();
         if (p && typeof p.catch === 'function') {
           p.catch(function (err) {
-            console.warn('[Vidlytics] Falha no disparo do vídeo:', err);
+            console.warn('[Vidlytics] Falha no disparo do vÃ­deo:', err);
           });
         }
       }, 50);
@@ -1910,11 +1884,11 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-    // 4. Fallback caso não haja nenhuma URL
+    // 4. Fallback caso nÃ£o haja nenhuma URL
     var link = createEl('a');
     link.href = url || '#';
     link.target = '_blank';
-    link.textContent = 'Ver vídeo';
+    link.textContent = 'Ver vÃ­deo';
     link.className = 'vl-cta';
     wrapper.appendChild(link);
     return wrapper;
@@ -1955,7 +1929,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   }
 
   function getCommentEmojis() {
-    return ['😎', '👍', '👏', '😱', '🙏', '💪', '🔥', '❤️', '💙', '✨', '🎉', '✅', '⭐', '😢', '😡', '🤔', '👀', '😊', '🥰'];
+    return ['ðŸ˜Ž', 'ðŸ‘', 'ðŸ‘', 'ðŸ˜±', 'ðŸ™', 'ðŸ’ª', 'ðŸ”¥', 'â¤ï¸', 'ðŸ’™', 'âœ¨', 'ðŸŽ‰', 'âœ…', 'â­', 'ðŸ˜¢', 'ðŸ˜¡', 'ðŸ¤”', 'ðŸ‘€', 'ðŸ˜Š', 'ðŸ¥°'];
   }
 
   function getSizingModelId(video) {
@@ -1964,14 +1938,14 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   }
 
   function createComment(commentData) {
-    if (!hasSupabase) return Promise.reject(new Error('Supabase não configurado.'));
+    if (!hasSupabase) return Promise.reject(new Error('Supabase nÃ£o configurado.'));
     commentData = commentData || {};
 
     var authorName = String(commentData.author_name || '').trim();
     var commentText = String(commentData.content || commentData.text || '').trim();
 
     if (!authorName) return Promise.reject(new Error('Informe seu nome.'));
-    if (!commentText) return Promise.reject(new Error('Digite um comentário.'));
+    if (!commentText) return Promise.reject(new Error('Digite um comentÃ¡rio.'));
 
     var payload = {
       p_store_id: storeId,
@@ -2003,10 +1977,10 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
         return response.text().then(function (rawMessage) {
           var parsed = {};
           try { parsed = JSON.parse(rawMessage || '{}'); } catch (error) {}
-          if (response.status === 401) throw new Error('A chave pública ou a URL do Supabase são inválidas.');
-          if (parsed.message === 'rate_limit_exceeded') throw new Error('Você está comentando rápido demais. Aguarde um pouco.');
-          if (parsed.message === 'invalid_content') throw new Error('Comentário inválido.');
-          throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'Não foi possível enviar o comentário.');
+          if (response.status === 401) throw new Error('A chave pÃºblica ou a URL do Supabase sÃ£o invÃ¡lidas.');
+          if (parsed.message === 'rate_limit_exceeded') throw new Error('VocÃª estÃ¡ comentando rÃ¡pido demais. Aguarde um pouco.');
+          if (parsed.message === 'invalid_content') throw new Error('ComentÃ¡rio invÃ¡lido.');
+          throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'NÃ£o foi possÃ­vel enviar o comentÃ¡rio.');
         });
       });
   }
@@ -2139,7 +2113,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     if (existing) { existing.remove(); return; }
     var shareUrl = window.location.href;
     var story = currentStories[currentStoryIndex];
-    var shareText = story ? (story.title || 'Confira este vídeo!') : 'Confira este vídeo!';
+    var shareText = story ? (story.title || 'Confira este vÃ­deo!') : 'Confira este vÃ­deo!';
     var panel = createEl('div');
     panel.id = 'vl-share-panel';
     panel.style.cssText = 'position:absolute;bottom:calc(100% + 8px);right:-20px;background:#1e293b;border-radius:12px;padding:8px;min-width:180px;box-shadow:0 10px 25px rgba(0,0,0,0.5);z-index:200;animation:vlFadeIn 0.15s ease;';
@@ -2431,7 +2405,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     ].join('');
 
     var panelTitle = createEl('h3');
-    panelTitle.textContent = 'Comentários' + (hasComments ? ' (' + commentsCount + ')' : '');
+    panelTitle.textContent = 'ComentÃ¡rios' + (hasComments ? ' (' + commentsCount + ')' : '');
     panelTitle.style.cssText = 'margin:0;font-size:16px;font-weight:700;color:#111;';
     panelHeader.appendChild(panelTitle);
 
@@ -2608,7 +2582,7 @@ if (replyIsVisible) {
 
       var ctaBtn = createEl('button');
       ctaBtn.type = 'button';
-      ctaBtn.textContent = 'Deixe seu comentário';
+      ctaBtn.textContent = 'Deixe seu comentÃ¡rio';
       ctaBtn.style.cssText = 'width:100%;height:40px;border:none;border-radius:12px;background:' + buttonColor + ';color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:' + fontFamily + ';';
       ctaBtn.onmouseenter = function () { ctaBtn.style.opacity = '.9'; };
       ctaBtn.onmouseleave = function () { ctaBtn.style.opacity = '1'; };
@@ -2646,12 +2620,12 @@ if (replyIsVisible) {
       formWrap.appendChild(nameInput);
 
       var commentLabel = createEl('label');
-      commentLabel.textContent = 'Seu comentário';
+      commentLabel.textContent = 'Seu comentÃ¡rio';
       commentLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
       formWrap.appendChild(commentLabel);
 
       var commentTextarea = createEl('textarea');
-      commentTextarea.placeholder = 'Escreva seu comentário...';
+      commentTextarea.placeholder = 'Escreva seu comentÃ¡rio...';
       commentTextarea.maxLength = 1000; commentTextarea.rows = 3;
       commentTextarea.style.cssText = 'width:100%;height:70px;min-height:70px;max-height:70px;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;resize:none;outline:none;transition:border-color .2s;margin-bottom:8px;box-sizing:border-box;background:#f8fafc;font-family:' + fontFamily + ';';
       commentTextarea.addEventListener('focus', function () {
@@ -2758,7 +2732,7 @@ var sendBtn = createEl('button', 'vl-form-btn-send');
         var text = commentTextarea.value.trim();
 
         if (!text) {
-          statusMsg.textContent = 'Digite um comentário para enviar.';
+          statusMsg.textContent = 'Digite um comentÃ¡rio para enviar.';
           statusMsg.style.color = '#ef4444';
           return;
         }
@@ -2784,7 +2758,7 @@ if (hasSupabase) {
               var isApproved = Boolean(result && result.status === 'approved');
 
               if (isApproved) {
-                // ✅ Aprovação Automática: insere imediatamente na lista em memória para exibição instantânea
+                // âœ… AprovaÃ§Ã£o AutomÃ¡tica: insere imediatamente na lista em memÃ³ria para exibiÃ§Ã£o instantÃ¢nea
                 readCommentsData.push({
                   id: 'local_' + Date.now(),
                   video_id: videoId,
@@ -2794,16 +2768,16 @@ if (hasSupabase) {
                   created_at: new Date().toISOString(),
                   status: 'approved'
                 });
-                statusMsg.textContent = 'Seu comentário foi publicado.';
+                statusMsg.textContent = 'Seu comentÃ¡rio foi publicado.';
                 statusMsg.style.color = '#22c55e';
               } else {
-                // ⏳ Moderação Manual: não exibe até a aprovação no painel
-                statusMsg.textContent = 'Obrigado pelo seu comentário. Em breve ele será publicado.';
+                // â³ ModeraÃ§Ã£o Manual: nÃ£o exibe atÃ© a aprovaÃ§Ã£o no painel
+                statusMsg.textContent = 'Obrigado pelo seu comentÃ¡rio. Em breve ele serÃ¡ publicado.';
                 statusMsg.style.color = '#f59e0b';
               }
 
               commentsCount = getCommentCountForVideo(videoId);
-              panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+              panelTitle.textContent = 'ComentÃ¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
 
               trackMetric({
                 event_type: 'comment',
@@ -2812,7 +2786,7 @@ if (hasSupabase) {
                 page_url: window.location.href
               });
 
-              // ⏱️ Fecha o painel e volta para o vídeo após 2 segundos
+              // â±ï¸ Fecha o painel e volta para o vÃ­deo apÃ³s 2 segundos
               setTimeout(function () {
                 restoreVideoView();
               }, 2000);
@@ -2838,15 +2812,15 @@ if (hasSupabase) {
             created_at: new Date().toISOString(),
             status: 'approved'
           });
-          statusMsg.textContent = 'Seu comentário foi publicado.';
+          statusMsg.textContent = 'Seu comentÃ¡rio foi publicado.';
           statusMsg.style.color = '#22c55e';
         } else {
-          statusMsg.textContent = 'Obrigado pelo seu comentário. Em breve ele será publicado.';
+          statusMsg.textContent = 'Obrigado pelo seu comentÃ¡rio. Em breve ele serÃ¡ publicado.';
           statusMsg.style.color = '#f59e0b';
         }
 
         commentsCount = getCommentCountForVideo(videoId);
-        panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+        panelTitle.textContent = 'ComentÃ¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
 
         setTimeout(function () {
           restoreVideoView();
@@ -2861,7 +2835,7 @@ if (hasSupabase) {
 
     function renderInitialState() {
       commentsCount = getCommentCountForVideo(videoId);
-      panelTitle.textContent = 'Comentários' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+      panelTitle.textContent = 'ComentÃ¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
       if (commentsCount > 0) { renderCommentList(); } else { renderEmptyState(); }
       renderCommentButton();
     }
@@ -2874,14 +2848,14 @@ if (hasSupabase) {
   }
 
   function closeOverlay() {
-    // Dispara video_close antes de limpar o estado, se havia um vídeo ativo
+    // Dispara video_close antes de limpar o estado, se havia um vÃ­deo ativo
     try {
       var closingStory = currentStories[currentStoryIndex];
       var closingVideo = closingStory && (closingStory.videos || [])[currentVideoIndex];
       if (closingVideo) {
         sendAnalyticsEvent('video_close', closingVideo.id, null);
       }
-    } catch (err) { /* noop - não deve travar o fechamento */ }
+    } catch (err) { /* noop - nÃ£o deve travar o fechamento */ }
 
     if (overlay) overlay.className = 'vl-overlay';
     if (modalContent) {
@@ -2889,7 +2863,7 @@ if (hasSupabase) {
       if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
       modalContent.innerHTML = '';
     }
-    isUserMuted = true; // Reseta para o padrão seguro no próximo clique de abertura
+    isUserMuted = true; // Reseta para o padrÃ£o seguro no prÃ³ximo clique de abertura
     resumePreviews();
   }
 
@@ -2929,12 +2903,12 @@ if (hasSupabase) {
 
     var muteBtn = createEl('button', 'vl-control');
     muteBtn.id = 'vl-mute-btn';
-    // Renderiza o ícone de acordo com o estado de áudio ativo no momento
+    // Renderiza o Ã­cone de acordo com o estado de Ã¡udio ativo no momento
     muteBtn.innerHTML = isUserMuted ? svgIcon('volumeOff') : svgIcon('volume');
     muteBtn.title = isUserMuted ? 'Ativar som' : 'Mudo';
     muteBtn.onclick = function (e) {
       e.stopPropagation();
-      isUserMuted = !isUserMuted; // Persiste a decisão do usuário para os próximos vídeos
+      isUserMuted = !isUserMuted; // Persiste a decisÃ£o do usuÃ¡rio para os prÃ³ximos vÃ­deos
 
       var vid = modalContent.querySelector('video');
       var iframe = modalContent.querySelector('iframe');
@@ -3002,7 +2976,7 @@ if (hasSupabase) {
 
       var vidEl = player.querySelector('video');
       
-      // Garante a sincronização bidirecional entre o vídeo e os botões da UI
+      // Garante a sincronizaÃ§Ã£o bidirecional entre o vÃ­deo e os botÃµes da UI
       if (vidEl) {
         vidEl.addEventListener('volumechange', function () {
           var mb = modalContent.querySelector('#vl-mute-btn');
@@ -3023,7 +2997,7 @@ if (hasSupabase) {
     } else {
       var emptyBody = createEl('div');
       emptyBody.style.cssText = 'padding:40px;text-align:center;color:#fff;';
-      emptyBody.textContent = 'Nenhum vídeo encontrado.';
+      emptyBody.textContent = 'Nenhum vÃ­deo encontrado.';
       body.appendChild(emptyBody);
     }
 
@@ -3087,7 +3061,7 @@ if (hasSupabase) {
       commentBtn.innerHTML = svgIcon(
         commentCountVal > 0 ? 'commentFilled' : 'comment'
       );
-      commentBtn.title = 'Comentários';
+      commentBtn.title = 'ComentÃ¡rios';
 
       commentBtn.onclick = function (e) {
         e.preventDefault();
@@ -3131,13 +3105,13 @@ if (hasSupabase) {
     container.appendChild(body);
 
 var showVerProduto = appearanceConfig.show_product !== false;
-// WhatsApp segue o mesmo critério do card de produto — sem flag separada
+// WhatsApp segue o mesmo critÃ©rio do card de produto â€” sem flag separada
 var showWhatsAppProduto = showVerProduto;
 
-    // 🔍 DEBUG — colar AQUI (depois das declarações)
+    // ðŸ” DEBUG â€” colar AQUI (depois das declaraÃ§Ãµes)
     var videoProductId = video ? (video.product_id || video.productId) : null;
     var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
-    console.log('🐛 DEBUG WHATSAPP V2:', {
+    console.log('ðŸ› DEBUG WHATSAPP V2:', {
       showWhatsAppProduto: showWhatsAppProduto,
       storeWhatsappNumber: storeWhatsappNumber,
       videoProductId: videoProductId,
@@ -3207,7 +3181,7 @@ var pButtonBg = appearanceConfig.product_card_button_bg || priColor;
           if (!productUrl) {
             buyBtn.style.opacity = '0.5';
             buyBtn.style.pointerEvents = 'none';
-            buyBtn.title = 'URL do produto não cadastrada';
+            buyBtn.title = 'URL do produto nÃ£o cadastrada';
           }
           buyBtn.onclick = function (e) {
             e.stopPropagation();
@@ -3223,7 +3197,7 @@ var pButtonBg = appearanceConfig.product_card_button_bg || priColor;
             var waNumberClean = waNumber.replace(/\D/g, '');
             var productName = productData.name || 'Produto';
 
-            var waMsgRaw = storeWhatsappMessage || 'Olá! Tenho interesse no produto: {{product_name}}';
+            var waMsgRaw = storeWhatsappMessage || 'OlÃ¡! Tenho interesse no produto: {{product_name}}';
             waMsgRaw = waMsgRaw
               .replace(/\{\{story_title\}\}/g, productName)
               .replace(/\{\{product_name\}\}/g, productName)
@@ -3258,7 +3232,7 @@ sendAnalyticsEvent('whatsapp_click', video ? video.id : null, productData ? prod
   }
 
   /* ================================================================
-     NAVEGAÇÃO ENTRE STORIES E VÍDEOS
+     NAVEGAÃ‡ÃƒO ENTRE STORIES E VÃDEOS
      ================================================================ */
 
   function nextStoryOrVideo() {
@@ -3372,7 +3346,7 @@ function openStoryModal(storyIndex, videoIndex) {
   if (!currentStories || currentStories.length === 0) return;
   if (storyIndex === undefined || storyIndex === null) storyIndex = 0;
   currentStoryIndex = Math.max(0, Math.min(storyIndex, currentStories.length - 1));
-  // Usa o videoIndex se fornecido, senão começa do 0
+  // Usa o videoIndex se fornecido, senÃ£o comeÃ§a do 0
   if (videoIndex !== undefined && videoIndex !== null) {
     var maxVid = (currentStories[currentStoryIndex].videos || []).length - 1;
     currentVideoIndex = Math.max(0, Math.min(videoIndex, maxVid));
@@ -3403,7 +3377,7 @@ function openStoryModal(storyIndex, videoIndex) {
   }
 
   /* ================================================================
-     FUNÇÕES AUXILIARES DE COR
+     FUNÃ‡Ã•ES AUXILIARES DE COR
      ================================================================ */
 
   function adjustColor(hex, amount) {
@@ -3439,7 +3413,7 @@ function openStoryModal(storyIndex, videoIndex) {
   }
 
   /* ================================================================
-     INJEÇÃO DE ESTILOS (CSS) NO SHADOW DOM
+     INJEÃ‡ÃƒO DE ESTILOS (CSS) NO SHADOW DOM
      ================================================================ */
 
   function injectStyles(shadowRoot) {
@@ -3509,7 +3483,7 @@ function openStoryModal(storyIndex, videoIndex) {
   }
 
   /* ================================================================
-     ÍCONES SVG
+     ÃCONES SVG
      ================================================================ */
 
   function svgIcon(name) {
@@ -3536,7 +3510,7 @@ function openStoryModal(storyIndex, videoIndex) {
   }
 
   /* ================================================================
-     RENDERIZAÇÃO DAS BOLHAS (STORY BUBBLES)
+     RENDERIZAÃ‡ÃƒO DAS BOLHAS (STORY BUBBLES)
      ================================================================ */
 
   function renderBubbles(container) {
@@ -3545,7 +3519,7 @@ function openStoryModal(storyIndex, videoIndex) {
 
     if (!currentStories || currentStories.length === 0) {
       var emptyMsg = createEl('div');
-      emptyMsg.textContent = 'Nenhum story disponível.';
+      emptyMsg.textContent = 'Nenhum story disponÃ­vel.';
       emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
       container.appendChild(emptyMsg);
       return;
@@ -3674,7 +3648,7 @@ function getWidgetDisplayMode(appearance) {
   var carouselPopulated = carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0;
   var floatingPopulated = floatingCfg && typeof floatingCfg === 'object' && Object.keys(floatingCfg).length > 0;
 
-  // ✅ floating tem prioridade máxima (sempre que configurado)
+  // âœ… floating tem prioridade mÃ¡xima (sempre que configurado)
   if (floatingPopulated) return 'floating';
   if (gridPopulated && carouselPopulated) return 'stories';
   if (gridPopulated) return 'grid';
@@ -3709,7 +3683,7 @@ function enableDragScroll(el) {
 
 function startMomentum() {
   cancelMomentum();
-  if (Math.abs(velX) < 2) return; // deixa o scroll-snap nativo alinhar, sem forçar via JS
+  if (Math.abs(velX) < 2) return; // deixa o scroll-snap nativo alinhar, sem forÃ§ar via JS
   momentumId = requestAnimationFrame(function animate() {
     velX *= 0.92;
     el.scrollLeft -= velX;
@@ -3740,7 +3714,7 @@ function onStart(e) {
   lastX = startX;
   scrollStart = el.scrollLeft;
   currentX = startX;
-  if (e.type === 'mousedown') e.preventDefault(); // 👈 adicionar isso
+  if (e.type === 'mousedown') e.preventDefault(); // ðŸ‘ˆ adicionar isso
 }
 
   function onMove(e) {
@@ -3800,7 +3774,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   }
   
   if (!target) {
-    console.warn('[Vidlytics] Target não encontrado para carrossel:', targetOrOptions);
+    console.warn('[Vidlytics] Target nÃ£o encontrado para carrossel:', targetOrOptions);
     return;
   }
   
@@ -3877,11 +3851,11 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     'will-change:transform !important;';
   track.style.transform = 'translateX(0px)';
   
-// Items renderizam completamente com suporte robusto a vídeo e imagem
+// Items renderizam completamente com suporte robusto a vÃ­deo e imagem
   stories.forEach(function(story, storyIndex) {
     var videos = (story.videos || []).filter(Boolean);
     videos.forEach(function(video, videoIndex) {
-      // 1. Resolução completa e defensiva de URLs
+      // 1. ResoluÃ§Ã£o completa e defensiva de URLs
       var rawVideoUrl = getVideoUrl(video);
       var thumbUrl = getVideoThumbnail(video) || 
                      (video && (video.thumbnail_url || video.cover_image_url || video.poster_url || video.image_url)) ||
@@ -3902,7 +3876,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         'background:transparent !important;' +
         'cursor:pointer !important;';
 
-      // 3. Resolução precisa de bordas e raios (preserva 0 para canto reto)
+      // 3. ResoluÃ§Ã£o precisa de bordas e raios (preserva 0 para canto reto)
       var parsedBorder = parseFloat(cfg.borderWidth);
       var borderWidthNum = !isNaN(parsedBorder) ? Math.max(0, parsedBorder) : 0;
 
@@ -3914,7 +3888,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         ? cfg.itemRadius
         : (innerRadiusVal + 'px');
 
-      // 4. Card visual do vídeo
+      // 4. Card visual do vÃ­deo
       var videoCard = document.createElement('div');
       var carouselBorderCss = (borderWidthNum > 0)
         ? ('box-shadow: inset 0 0 0 ' + borderWidthNum + 'px ' + cfg.borderColor + ' !important;')
@@ -3932,7 +3906,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
         carouselBorderCss;
 
-      // 5. Máscara interna para corte perfeito da mídia (Decisão por view_mode)
+      // 5. MÃ¡scara interna para corte perfeito da mÃ­dia (DecisÃ£o por view_mode)
       var innerMask = document.createElement('div');
       innerMask.className = 'vidlytics-carousel-inner-mask';
       innerMask.style.cssText = [
@@ -3947,7 +3921,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         'background:#000 !important;'
       ].join('');
 
-      // Modo 'playing' (preview): reproduz vídeo mutado com poster nativo da capa
+      // Modo 'playing' (preview): reproduz vÃ­deo mutado com poster nativo da capa
       // Modo 'static': renderiza exclusivamente tag <img> da capa
       if (cfg.carouselPlayMode === 'playing' && rawVideoUrl) {
         var previewVideo = document.createElement('video');
@@ -4049,7 +4023,7 @@ directFrameVid.src = directUrl;
 
       videoCard.appendChild(innerMask);
 
-      // 6. Ícone de Play centralizado
+      // 6. Ãcone de Play centralizado
       if (cfg.showPlayIcon) {
         var play = document.createElement('div');
         play.className = 'vidlytics-carousel-play';
@@ -4070,7 +4044,7 @@ directFrameVid.src = directUrl;
         videoCard.appendChild(play);
       }
       
-      // 7. Título do Item sobreposto
+      // 7. TÃ­tulo do Item sobreposto
       if (cfg.showItemTitle && story.title) {
         var titleOverlay = document.createElement('div');
         titleOverlay.className = 'vidlytics-carousel-item-title';
@@ -4200,7 +4174,7 @@ directFrameVid.src = directUrl;
             sendAnalyticsEvent('product_click', video ? video.id : null, productData ? productData.id : null);
           });
 
-          // Registra a visualização do produto na vitrine do carrossel
+          // Registra a visualizaÃ§Ã£o do produto na vitrine do carrossel
           sendAnalyticsEvent('product_view', video ? video.id : null, productData ? productData.id : null);
 
           item.appendChild(prodCard);
@@ -4294,7 +4268,7 @@ track.appendChild(item);
   });
   
   target.insertAdjacentElement(position, wrapper);
-  console.log('[Vidlytics] ✅ Carrossel injetado no DOM via', position, '| itens:', track.children.length);
+  console.log('[Vidlytics] âœ… Carrossel injetado no DOM via', position, '| itens:', track.children.length);
 }
 
 function renderGridWidget(container, stories, appearance) {
@@ -4313,7 +4287,7 @@ function renderGridWidget(container, stories, appearance) {
 
   if (allVideos.length === 0) {
     var emptyMsg = createEl('div');
-    emptyMsg.textContent = 'Nenhum vídeo disponível.';
+    emptyMsg.textContent = 'Nenhum vÃ­deo disponÃ­vel.';
     emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
     container.appendChild(emptyMsg);
     return;
@@ -4321,7 +4295,7 @@ function renderGridWidget(container, stories, appearance) {
 
   var cfg = getGridConfig(appearance);
 
-  // 🐛 DEBUG #1 — confirma se autoplayVideos está true/false vindo da config
+  // ðŸ› DEBUG #1 â€” confirma se autoplayVideos estÃ¡ true/false vindo da config
   console.log('[DEBUG] cfg completo:', cfg);
   console.log('[DEBUG] cfg.autoplayVideos:', cfg.autoplayVideos);
 
@@ -4372,7 +4346,7 @@ function renderGridWidget(container, stories, appearance) {
     var isImageItem = sourceType === 'image' || (video && video.type === 'image');
     var effectiveMediaUrl = thumbUrl || rawVideoUrl;
 
-    // 🐛 DEBUG #2 — confirma se a URL do vídeo está vindo preenchida e o objeto completo
+    // ðŸ› DEBUG #2 â€” confirma se a URL do vÃ­deo estÃ¡ vindo preenchida e o objeto completo
     console.log('[DEBUG] video item:', {
       title: video.title || story.title,
       rawVideoUrl: rawVideoUrl,
@@ -4402,9 +4376,9 @@ function renderGridWidget(container, stories, appearance) {
         'background:#000;'
       ].join('');
 
-      // 🐛 DEBUG #3 — mostra qual branch foi escolhida (imagem estática vs vídeo autoplay)
+      // ðŸ› DEBUG #3 â€” mostra qual branch foi escolhida (imagem estÃ¡tica vs vÃ­deo autoplay)
       var willUseImage = isImageItem || !rawVideoUrl || (!cfg.autoplayVideos && thumbUrl);
-      console.log('[DEBUG] Branch escolhida:', willUseImage ? 'IMAGEM ESTÁTICA' : 'VÍDEO AUTOPLAY');
+      console.log('[DEBUG] Branch escolhida:', willUseImage ? 'IMAGEM ESTÃTICA' : 'VÃDEO AUTOPLAY');
 
       if (willUseImage) {
         var img = createEl('img');
@@ -4500,19 +4474,19 @@ function initInlineWidget(options) {
   
   var target = document.querySelector(selector);
   if (!target) {
-    console.warn('[Vidlytics] Target não encontrado:', selector);
+    console.warn('[Vidlytics] Target nÃ£o encontrado:', selector);
     return;
   }
   console.log('[Vidlytics] Elemento encontrado:', target);
   
   var displayMode = options.storyFormat || getWidgetDisplayMode(appearance);
-  console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
+  console.log('[Vidlytics] Modo de exibiÃ§Ã£o detectado:', displayMode);
   
   if (displayMode === 'carousel') {
     var wrapper = document.createElement('div');
     wrapper.id = 'vidlytics-wrapper-' + Date.now();
     
-    // 🔧 CRÍTICO: altura mínima + overflow visible
+    // ðŸ”§ CRÃTICO: altura mÃ­nima + overflow visible
     Object.assign(wrapper.style, {
       width: '100%',
       minHeight: '300px',
@@ -4546,7 +4520,7 @@ function initInlineWidget(options) {
         minHeight: 'auto'
       });
       
-      // 🔧 Remove overflow:hidden de TODOS os pais
+      // ðŸ”§ Remove overflow:hidden de TODOS os pais
       var el = wrapper.parentElement;
       while (el && el !== document.body) {
         if (getComputedStyle(el).overflow === 'hidden') {
@@ -4564,10 +4538,10 @@ function initInlineWidget(options) {
         });
       });
 
-      console.log('[Vidlytics] ✅ Wrapper fix aplicado!');
+      console.log('[Vidlytics] âœ… Wrapper fix aplicado!');
     }, 200);
 
-  } else if (displayMode === 'grid') { // <--- 🔧 ROTA DO GRID ADICIONADA AQUI
+  } else if (displayMode === 'grid') { // <--- ðŸ”§ ROTA DO GRID ADICIONADA AQUI
     var container = document.createElement('div');
     container.className = 'vl-container';
     renderGridWidget(container, stories, appearance);
@@ -4580,11 +4554,11 @@ function initInlineWidget(options) {
     target.insertAdjacentElement(position, container);
   }
   
-  console.log('[Vidlytics] ✅ Inline injetado!');
+  console.log('[Vidlytics] âœ… Inline injetado!');
 }
 
   /* ================================================================
-     INICIALIZAÇÃO PRINCIPAL
+     INICIALIZAÃ‡ÃƒO PRINCIPAL
      ================================================================ */
 
   function init(options) {
@@ -4617,7 +4591,7 @@ function initInlineWidget(options) {
   }
 
   /* ================================================================
-     AUTO-INICIALIZAÇÃO VIA ATRIBUTO DATA
+     AUTO-INICIALIZAÃ‡ÃƒO VIA ATRIBUTO DATA
      ================================================================ */
 
   function autoInit() {
@@ -4627,7 +4601,7 @@ function initInlineWidget(options) {
         var cfg = JSON.parse(script.getAttribute('data-vidlytics-init') || '{}');
         init(cfg);
       } catch (e) {
-        console.error('[Vidlytics] Erro ao parsear configuração:', e);
+        console.error('[Vidlytics] Erro ao parsear configuraÃ§Ã£o:', e);
       }
     });
   }
@@ -4710,7 +4684,7 @@ function initInlineWidget(options) {
   }
 
   /* ================================================================
-     RENDERIZAÇÃO DO WIDGET FLUTUANTE
+     RENDERIZAÃ‡ÃƒO DO WIDGET FLUTUANTE
      ================================================================ */
 
 function renderFloatingWidget(floatingStories) {
@@ -4718,10 +4692,10 @@ function renderFloatingWidget(floatingStories) {
 
   var stories = floatingStories || currentStories;
   var mode = 'bubble';
-  console.log('[Vidlytics] 🎈 Renderizando flutuante. Modo:', mode, '| stories:', stories.length);
+  console.log('[Vidlytics] ðŸŽˆ Renderizando flutuante. Modo:', mode, '| stories:', stories.length);
 
   if (!stories || stories.length === 0) {
-    console.log('[Vidlytics] ⚠️ Nenhum story para flutuante.');
+    console.log('[Vidlytics] âš ï¸ Nenhum story para flutuante.');
     return;
   }
 
@@ -4743,7 +4717,7 @@ function renderFloatingWidget(floatingStories) {
   globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
   injectStyles(globalShadowRoot);
 
-  // ── CONTAINER PRINCIPAL ──
+  // â”€â”€ CONTAINER PRINCIPAL â”€â”€
   var widget = createEl('div', 'vidlytics-floating-widget');
   widget.style.cssText =
     'display:flex !important;' +
@@ -4752,7 +4726,7 @@ function renderFloatingWidget(floatingStories) {
     'gap:8px !important;' +
     'position:relative !important;';
 
-  // ── BOTÃO FECHAR (X) ──
+  // â”€â”€ BOTÃƒO FECHAR (X) â”€â”€
   var closeBtn = null;
   if (cfg.allowClose) {
     closeBtn = createEl('div', 'vl-floating-close-btn');
@@ -4790,7 +4764,7 @@ function renderFloatingWidget(floatingStories) {
     });
   }
 
-  // ── BOLHA / CARD ──
+  // â”€â”€ BOLHA / CARD â”€â”€
   var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
   if (!thumbUrl && story.videos && story.videos.length > 0) {
     thumbUrl = getVideoThumbnail(story.videos[0]);
@@ -4867,7 +4841,7 @@ function renderFloatingWidget(floatingStories) {
     cardInner.appendChild(img);
   }
 
-  // Ícone de play centralizado
+  // Ãcone de play centralizado
 if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isImageItem)) {
     var playOverlay = createEl('div', 'vl-floating-play-icon');
     playOverlay.style.cssText =
@@ -4894,7 +4868,7 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
     openStoryModal(0);
   });
 
-  // ── MONTAR WIDGET ──
+  // â”€â”€ MONTAR WIDGET â”€â”€
   var wrapper = createEl('div', 'vl-floating-wrapper');
   wrapper.style.cssText =
     'position:relative !important;' +
@@ -4904,7 +4878,7 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
   if (closeBtn) wrapper.appendChild(closeBtn);
   widget.appendChild(wrapper);
 
-  // ── TÍTULO ──
+  // â”€â”€ TÃTULO â”€â”€
   if (cfg.showTitle && story.title) {
     var titleEl = createEl('div', 'vl-floating-title');
     titleEl.textContent = story.title;
@@ -4923,7 +4897,7 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
 
   globalShadowRoot.appendChild(widget);
   applyDraggable(cardOuter, currentAppearance);
-  console.log('[Vidlytics] ✅ Flutuante renderizado em:', cfg.position, '| shape:', cfg.shape, '| size:', cfg.width, 'x', cfg.height);
+  console.log('[Vidlytics] âœ… Flutuante renderizado em:', cfg.position, '| shape:', cfg.shape, '| size:', cfg.width, 'x', cfg.height);
 }
 
   /* ================================================================
@@ -4948,7 +4922,7 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
       'background:#1e293b;color:#fff;padding:12px 20px;' +
       'font-family:sans-serif;font-size:14px;font-weight:600;' +
       'text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.2);';
-    bannerEl.textContent = '🎯 Clique no elemento onde o widget de stories será exibido';
+    bannerEl.textContent = 'ðŸŽ¯ Clique no elemento onde o widget de stories serÃ¡ exibido';
     document.body.appendChild(bannerEl);
 
     var highlightEl = document.createElement('div');
@@ -5028,7 +5002,7 @@ function sendSelector(selector, storyId) {
         console.log('[Vidlytics] Resposta:', data);
 
         if (data.success) {
-          alert('✅ Seletor vinculado com sucesso!\n\nVolte para o painel do Vidlytics para continuar.');
+          alert('âœ… Seletor vinculado com sucesso!\n\nVolte para o painel do Vidlytics para continuar.');
 
           if (window.opener) {
             window.close();
@@ -5036,19 +5010,19 @@ function sendSelector(selector, storyId) {
             document.body.innerHTML =
               '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f8fafc;">' +
               '<div style="text-align:center;padding:40px;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.1);max-width:420px;">' +
-              '<div style="font-size:48px;margin-bottom:16px;">✅</div>' +
+              '<div style="font-size:48px;margin-bottom:16px;">âœ…</div>' +
               '<h2 style="margin:0 0 8px;color:#0f172a;">Seletor vinculado!</h2>' +
               '<p style="color:#64748b;margin:0;">Volte para o painel do <strong>Vidlytics</strong> para continuar.</p>' +
               '</div></div>';
           }
         } else {
-          alert('❌ Erro: ' + (data.message || data.error || 'Falha ao salvar.'));
+          alert('âŒ Erro: ' + (data.message || data.error || 'Falha ao salvar.'));
         }
       });
     })
     .catch(function (err) {
       console.error('[Vidlytics] Erro de rede:', err);
-      alert('❌ Erro de conexão. Tente novamente.');
+      alert('âŒ Erro de conexÃ£o. Tente novamente.');
     });
 }
 
@@ -5093,7 +5067,7 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
   }
 
 /* ================================================================
-     VALIDAÇÃO DE STATUS DA ASSINATURA / TRIAL & CARÊNCIA DE 72H
+     VALIDAÃ‡ÃƒO DE STATUS DA ASSINATURA / TRIAL & CARÃŠNCIA DE 72H
      ================================================================ */
 
   function isStoreBlocked(store) {
@@ -5105,11 +5079,11 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
       return true;
     }
 
-    // 2. Inadimplência: avalia a janela de carência de 72 horas (Grace Period)
+    // 2. InadimplÃªncia: avalia a janela de carÃªncia de 72 horas (Grace Period)
     if (status === 'past_due') {
       var pastDueSince = store.past_due_since;
       if (!pastDueSince) {
-        // Se entrou em past_due sem timestamp registrado, bloqueia por segurança
+        // Se entrou em past_due sem timestamp registrado, bloqueia por seguranÃ§a
         return true;
       }
 
@@ -5126,7 +5100,7 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
       return elapsed > GRACE_PERIOD_MS;
     }
 
-    // 3. Período de teste (trialing)
+    // 3. PerÃ­odo de teste (trialing)
     if (status === 'trialing') {
       if (!store.trial_ends_at) return true;
       return new Date(store.trial_ends_at).getTime() <= Date.now();
@@ -5137,7 +5111,7 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
       return false;
     }
 
-    // Fail-closed por padrão
+    // Fail-closed por padrÃ£o
     return true;
   }
 
@@ -5159,7 +5133,7 @@ return supabaseFetch(
   }
 
   /* ================================================================
-     INICIALIZAÇÃO DO WIDGET (COM story_id DA URL)
+     INICIALIZAÃ‡ÃƒO DO WIDGET (COM story_id DA URL)
      ================================================================ */
 
 function initWidget() {
@@ -5174,7 +5148,7 @@ function initWidget() {
 
   readStoreStatus().then(function (storeData) {
     if (hasSupabase && !storeData) {
-      console.warn('[Vidlytics] Widget inativo: não foi possível validar a autenticidade da loja.');
+      console.warn('[Vidlytics] Widget inativo: nÃ£o foi possÃ­vel validar a autenticidade da loja.');
       return;
     }
 
@@ -5206,7 +5180,7 @@ return readStoreSettings().then(function (settings) {
     }).then(function (stories) {
       currentStories = stories || [];
 
-      // 🔧 Buscar story_videos e videos, depois juntar tudo
+      // ðŸ”§ Buscar story_videos e videos, depois juntar tudo
       console.log('[Vidlytics] Buscando videos vinculados aos stories...');
       return Promise.all([
         readStoryVideos(),
@@ -5224,50 +5198,50 @@ return readStoreSettings().then(function (settings) {
           return s.videos && s.videos.length > 0;
         }).length);
 
-        console.log('[Vidlytics] 🔍 Indo buscar products...');
+        console.log('[Vidlytics] ðŸ” Indo buscar products...');
         return readProducts();
       });
     }).then(function (products) {
       readProductsData = products || [];
-      console.log('[Vidlytics] ✅ Products carregados:', readProductsData.length);
-      console.log('[Vidlytics] 🔍 Indo buscar sizing_models...');
+      console.log('[Vidlytics] âœ… Products carregados:', readProductsData.length);
+      console.log('[Vidlytics] ðŸ” Indo buscar sizing_models...');
       return readSizingModels();
     }).then(function (models) {
       readSizingModelsData = models || [];
-      console.log('[Vidlytics] ✅ Sizing models carregados:', readSizingModelsData.length);
-      console.log('[Vidlytics] 🔍 Indo buscar comments...');
+      console.log('[Vidlytics] âœ… Sizing models carregados:', readSizingModelsData.length);
+      console.log('[Vidlytics] ðŸ” Indo buscar comments...');
       return readComments();
     }).then(function (comments) {
       readCommentsData = comments || [];
-      console.log('[Vidlytics] ✅ Comments carregados:', readCommentsData.length);
-      console.log('[Vidlytics] 🔍 Indo buscar likes...');
+      console.log('[Vidlytics] âœ… Comments carregados:', readCommentsData.length);
+      console.log('[Vidlytics] ðŸ” Indo buscar likes...');
       return readLikesFromDb();
     }).then(function (likes) {
       likedVideos = likes.likedVideos || {};
       videoLikeCounts = likes.likeCounts || {};
-      console.log('[Vidlytics] ✅ Likes carregados. storeId:', storeId, 'hasSupabase:', hasSupabase);
-      console.log('[Vidlytics] 🔍 Indo buscar display_locations...');
+      console.log('[Vidlytics] âœ… Likes carregados. storeId:', storeId, 'hasSupabase:', hasSupabase);
+      console.log('[Vidlytics] ðŸ” Indo buscar display_locations...');
 
-      // 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
+      // ðŸ†• LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
       if (!storeId || !hasSupabase) {
-        console.log('[Vidlytics] ⚠️ storeId ou hasSupabase inválido, pulando display_locations.');
+        console.log('[Vidlytics] âš ï¸ storeId ou hasSupabase invÃ¡lido, pulando display_locations.');
         return Promise.resolve();
       }
 
-      console.log('[Vidlytics] 🔍 Chamando readDisplayLocations()...');
+      console.log('[Vidlytics] ðŸ” Chamando readDisplayLocations()...');
       return readDisplayLocations().then(function (locations) {
-        console.log('[Vidlytics] ✅ readDisplayLocations retornou:', locations ? locations.length : 0, 'locations');
-        console.log('[Vidlytics] 🔍 Chamando readPageRules()...');
+        console.log('[Vidlytics] âœ… readDisplayLocations retornou:', locations ? locations.length : 0, 'locations');
+        console.log('[Vidlytics] ðŸ” Chamando readPageRules()...');
         return readPageRules().then(function (rules) {
-          console.log('[Vidlytics] ✅ readPageRules retornou:', rules ? rules.length : 0, 'rules');
+          console.log('[Vidlytics] âœ… readPageRules retornou:', rules ? rules.length : 0, 'rules');
 
           var activeLocations = locations.filter(function (loc) {
             return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
           });
 
-          // ────────────────────────────────────────────
-          // 📋 CLASSIFICAR STORIES POR FORMATO
-          // ────────────────────────────────────────────
+          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ðŸ“‹ CLASSIFICAR STORIES POR FORMATO
+          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           function getStoryFormat(story) {
             var fmt = String(story.format || story.display_format || story.displayFormat || story.visual_style || story.visualStyle || '').trim().toLowerCase();
             if (fmt === 'carrossel' || fmt === 'carousel') return 'carousel';
@@ -5278,42 +5252,42 @@ return readStoreSettings().then(function (settings) {
           var floatingStories = currentStories.filter(function (s) { return getStoryFormat(s) === 'floating_widget'; });
           var inlineStories = currentStories.filter(function (s) { return getStoryFormat(s) !== 'floating_widget'; });
 
-          console.log('[Vidlytics] 📋 Stories — floating:', floatingStories.length, '| inline:', inlineStories.length);
+          console.log('[Vidlytics] ðŸ“‹ Stories â€” floating:', floatingStories.length, '| inline:', inlineStories.length);
 
-          // ────────────────────────────────────────────
-          // 🎈 FLUTUANTE — SEMPRE renderiza, ignora seletor
-          // ────────────────────────────────────────────
+          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ðŸŽˆ FLUTUANTE â€” SEMPRE renderiza, ignora seletor
+          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           if (floatingStories.length > 0) {
-            console.log('[Vidlytics] 🎈 Renderizando flutuante para', floatingStories.length, 'story(ies).');
+            console.log('[Vidlytics] ðŸŽˆ Renderizando flutuante para', floatingStories.length, 'story(ies).');
             renderFloatingWidget(floatingStories);
           }
 
-          // ────────────────────────────────────────────
-          // 📍 INLINE (carrossel/grade) — precisa de seletor
-          // ────────────────────────────────────────────
-          console.log('[Vidlytics] 📍 Active locations:', activeLocations.length);
+          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ðŸ“ INLINE (carrossel/grade) â€” precisa de seletor
+          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          console.log('[Vidlytics] ðŸ“ Active locations:', activeLocations.length);
 
           var injected = false;
 
           activeLocations.forEach(function (location) {
             var locStoryId = location.story_id;
             if (!locStoryId) {
-              console.log('[Vidlytics] ⚠️ Location sem story_id, pulando.');
+              console.log('[Vidlytics] âš ï¸ Location sem story_id, pulando.');
               return;
             }
 
             var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
             if (!story) {
-              console.warn('[Vidlytics] ❌ Story não encontrada:', locStoryId);
+              console.warn('[Vidlytics] âŒ Story nÃ£o encontrada:', locStoryId);
               return;
             }
 
             var storyFormat = getStoryFormat(story);
-            console.log('[Vidlytics] ✅ Story:', story.title || story.id, '| formato:', storyFormat);
+            console.log('[Vidlytics] âœ… Story:', story.title || story.id, '| formato:', storyFormat);
 
-            // Flutuante já foi renderizado
+            // Flutuante jÃ¡ foi renderizado
             if (storyFormat === 'floating_widget') {
-              console.log('[Vidlytics] ⏭️ Story flutuante já renderizado, pulando inline.');
+              console.log('[Vidlytics] â­ï¸ Story flutuante jÃ¡ renderizado, pulando inline.');
               return;
             }
 
@@ -5321,22 +5295,22 @@ return readStoreSettings().then(function (settings) {
             if (storyRules.length > 0) {
               var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
               if (!hasMatch) {
-                console.log('[Vidlytics] ❌ Regra não bateu, pulando.');
+                console.log('[Vidlytics] âŒ Regra nÃ£o bateu, pulando.');
                 return;
               }
-              console.log('[Vidlytics] ✅ Regra bateu!');
+              console.log('[Vidlytics] âœ… Regra bateu!');
             }
 
             var selector = location.selector;
             var position = location.position || 'beforeend';
-            console.log('[Vidlytics] 🎯 Selector:', selector || '(vazio)', '| Position:', position);
+            console.log('[Vidlytics] ðŸŽ¯ Selector:', selector || '(vazio)', '| Position:', position);
 
             if (!selector) {
-              console.log('[Vidlytics] ⚠️ Location sem selector, pulando.');
+              console.log('[Vidlytics] âš ï¸ Location sem selector, pulando.');
               return;
             }
 
-            console.log('[Vidlytics] 🚀 Injetando widget em:', selector);
+            console.log('[Vidlytics] ðŸš€ Injetando widget em:', selector);
             try {
               initInlineWidget({
                 target: selector,
@@ -5349,17 +5323,17 @@ return readStoreSettings().then(function (settings) {
                 storyFormat: storyFormat
               });
               injected = true;
-              console.log('[Vidlytics] ✅ Inline injetado!');
+              console.log('[Vidlytics] âœ… Inline injetado!');
             } catch (err) {
-              console.error('[Vidlytics] ❌ Erro:', err);
+              console.error('[Vidlytics] âŒ Erro:', err);
             }
           });
 
-          // ────────────────────────────────────────────
-          // 🔧 FALLBACK — só para stories inline sem seletor
-          // ────────────────────────────────────────────
+          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ðŸ”§ FALLBACK â€” sÃ³ para stories inline sem seletor
+          // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           if (!injected && inlineStories.length > 0 && floatingStories.length === 0) {
-            console.log('[Vidlytics] 🔧 Fallback inline.');
+            console.log('[Vidlytics] ðŸ”§ Fallback inline.');
             var fb = document.querySelector('#vidlytics-stories');
             if (!fb) {
               fb = document.createElement('div');
@@ -5377,20 +5351,20 @@ return readStoreSettings().then(function (settings) {
                 appearance: currentAppearance,
                 storyFormat: getStoryFormat(inlineStories[0])
               });
-              console.log('[Vidlytics] ✅ Fallback injetado!');
+              console.log('[Vidlytics] âœ… Fallback injetado!');
             } catch (err) {
-              console.error('[Vidlytics] ❌ Erro no fallback:', err);
+              console.error('[Vidlytics] âŒ Erro no fallback:', err);
             }
           }
         });
       });
 }).then(function () {
-      console.log('[Vidlytics] ✅ Widget inicializado com sucesso.');
+      console.log('[Vidlytics] âœ… Widget inicializado com sucesso.');
     }).catch(function (err) {
-      console.warn('[Vidlytics] Erro na inicialização:', err);
+      console.warn('[Vidlytics] Erro na inicializaÃ§Ã£o:', err);
     });
   }).catch(function (err) {
-    console.warn('[Vidlytics] Erro ao carregar aparência:', err);
+    console.warn('[Vidlytics] Erro ao carregar aparÃªncia:', err);
   });
   }).catch(function (err) {
     console.warn('[Vidlytics] Erro ao verificar status da loja:', err);
