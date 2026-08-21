@@ -759,7 +759,8 @@ var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
     productCardPriceSize: pPriceSize,
     productCardPriceColor: pPriceColor,
     productCardPriceBold: pPriceBold,
-    carouselPlayMode: carouselPlayMode,
+        carouselPlayMode: carouselPlayMode,
+    autoHighlight: autoHighlight,
     shape: shape,
     itemAspect: aspect
   };
