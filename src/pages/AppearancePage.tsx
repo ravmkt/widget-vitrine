@@ -1687,17 +1687,17 @@ const CarouselPreview = ({
                     borderRadius,
                   }}
                 >
-                  <video
-                    src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    preload="auto"
-                    onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
-                    poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-                    className="h-full w-full object-cover pointer-events-none"
-                  />
+<video
+  src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
+  autoPlay={carousel.autoplay_videos ?? true}
+  loop={carousel.autoplay_videos ?? true}
+  muted
+  playsInline
+  preload="auto"
+  onLoadedData={(e) => { if (carousel.autoplay_videos ?? true) e.currentTarget.play().catch(() => {}); }}
+  poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+  className="h-full w-full object-cover pointer-events-none"
+/>
                   {carousel.show_play_icon && (
                     <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
