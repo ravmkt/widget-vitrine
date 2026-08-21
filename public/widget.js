@@ -796,6 +796,7 @@ function getGridConfig(appearance) {
     borderColor: borderColor, borderWidth: borderWidth,
     borderRadius: borderRadius, objectFit: objectFit,
     showTitle: showTitle, aspectRatio: aspectRatio
+    autoplayVideos: (function(){ var v = rcv('autoplay_videos', 'grid_autoplay_videos', true); return !(v === false || v === 'false'); })(),
   };
 }
 
