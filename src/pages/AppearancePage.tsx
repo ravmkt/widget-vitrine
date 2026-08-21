@@ -3400,7 +3400,216 @@ if (activeFloatingConfig.shape === 'portrait') {
                     </SectionCard>
                   )}
 
+                  {/* ── Carrossel Dinâmico ── */}
+                  {activeTab === 'dynamic_carousel' && (
+                    <SectionCard title="Configurações do Carrossel Dinâmico">
+                      
+                      {/* Seletor Inteligente de Dispositivo */}
+                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60">
+                        <span className="text-xs font-bold text-slate-700">Dispositivo</span>
+                        
+                        {formData.useGlobalAppearance ? (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold" title="Configuração vinculada entre Desktop e Mobile">
+                            <Monitor size={14} />
+                            <Link size={12} className="text-[#0094EB]" />
+                            <Smartphone size={14} />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+                            <button
+                              type="button"
+                              onClick={() => setDynamicCarouselDevice('desktop')}
+                              className={cn(
+                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
+                                dynamicCarouselDevice === 'desktop'
+                                  ? 'bg-[#0094EB] text-white'
+                                  : 'text-slate-500 hover:text-slate-800'
+                              )}
+                              title="Editar configurações Desktop"
+                            >
+                              <Monitor size={13} />
+                              Desktop
+                            </button>
+                            <Link2Off size={12} className="text-slate-300 mx-0.5" />
+                            <button
+                              type="button"
+                              onClick={() => setDynamicCarouselDevice('mobile')}
+                              className={cn(
+                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
+                                dynamicCarouselDevice === 'mobile'
+                                  ? 'bg-[#0094EB] text-white'
+                                  : 'text-slate-500 hover:text-slate-800'
+                              )}
+                              title="Editar configurações Mobile"
+                            >
+                              <Smartphone size={13} />
+                              Mobile
+                            </button>
+                          </div>
+                        )}
+                      </div>
 
+                      {/* 1. Layout & Dimensões */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">1. Layout & Dimensões</h4>
+
+                        <ToggleSwitch
+                          label="Ativar Carrossel Dinâmico"
+                          checked={activeDynamicCarouselConfig.enabled}
+                          onChange={e => updateDynamicCarouselConfig({ enabled: e.target.checked })}
+                          description="Quando ativado, este carrossel substitui o carrossel padrão na loja."
+                        />
+
+                        
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <FormField label="Formato dos Cards">
+<select
+                              value={activeDynamicCarouselConfig.shape}
+                              onChange={e => updateDynamicCarouselConfig({ shape: e.target.value as WidgetShape })}
+                              className={selectClass}
+                            >
+                              <option value="circle">Circular</option>
+                              <option value="square">Quadrado</option>
+                              <option value="portrait">Retrato 9:16</option>
+                              <option value="landscape">Paisagem 16:9</option>
+                            </select>
+                          </FormField>
+
+                          <FormField label="Largura Card (px)">
+                            <input
+                              type="number" min="20" step="1"
+                              value={toNumberInputValue(activeDynamicCarouselConfig.width)}
+                              onChange={e => updateDynamicCarouselConfig({ width: e.target.value })}
+                              placeholder="Ex: 120"
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Itens Visíveis">
+                            <input
+                              type="number" min="1" step="1"
+                              value={activeDynamicCarouselConfig.visible_items}
+                              onChange={e => updateDynamicCarouselConfig({ visible_items: safeNumber(e.target.value, 1, 1) })}
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Espaçamento (px)">
+                            <input
+                              type="number" min="0" step="1"
+                              value={activeDynamicCarouselConfig.spacing}
+                              onChange={e => updateDynamicCarouselConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Margem Superior (px)">
+                            <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.margin_top)} onChange={e => updateDynamicCarouselConfig({ margin_top: e.target.value })} placeholder="Ex: 0" className={inputClass} />
+                          </FormField>
+
+                          <FormField label="Margem Inferior (px)">
+                            <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.margin_bottom)} onChange={e => updateDynamicCarouselConfig({ margin_bottom: e.target.value })} placeholder="Ex: 0" className={inputClass} />
+                          </FormField>
+                        </div>
+                      </div>
+
+                      {/* 2. Bordas & Ajustes */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">2. Bordas & Ajustes</h4>
+                        
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <FormField label="Cor da Borda">
+                            <ColorInput label="Cor da borda" value={activeDynamicCarouselConfig.border_color || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ border_color: e.target.value })} />
+                          </FormField>
+
+                          <FormField label="Largura Borda (px)">
+                            <input
+                              type="number" min="0" step="1"
+                              value={toNumberInputValue(activeDynamicCarouselConfig.border_style)}
+                              onChange={e => updateDynamicCarouselConfig({ border_style: e.target.value })}
+                              placeholder="Ex: 2"
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Raio da Borda (px)">
+                            <input
+                              type="number" min="0" step="1"
+                              value={toNumberInputValue(activeDynamicCarouselConfig.border_radius)}
+                              onChange={e => updateDynamicCarouselConfig({ border_radius: e.target.value })}
+                              placeholder="Ex: 12"
+                              className={inputClass}
+                            />
+                          </FormField>
+
+                          <FormField label="Ajuste Imagem">
+                            <select value={activeDynamicCarouselConfig.object_fit || 'cover'} onChange={e => updateDynamicCarouselConfig({ object_fit: e.target.value })} className={selectClass}>
+                              <option value="cover">Cover (Preencher)</option>
+                              <option value="contain">Contain (Ajustar)</option>
+                              <option value="fill">Fill (Esticar)</option>
+                            </select>
+                          </FormField>
+                        </div>
+                      </div>
+
+                      {/* 3. Elementos Visíveis */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-2.5">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">3. Elementos Visíveis</h4>
+                        
+                        <div className="space-y-1.5">
+                          <ToggleSwitch label="Exibir título da vitrine" checked={activeDynamicCarouselConfig.show_title ?? false} onChange={e => updateDynamicCarouselConfig({ show_title: e.target.checked })} />
+<ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeDynamicCarouselConfig.autoplay_videos ?? true} onChange={e => updateDynamicCarouselConfig({ autoplay_videos: e.target.checked })} />
+<ToggleSwitch label="Destaque automático central (avança a cada 5s)" checked={activeDynamicCarouselConfig.auto_highlight ?? false} onChange={e => updateDynamicCarouselConfig({ auto_highlight: e.target.checked })} />
+<ToggleSwitch label="Exibir ícone de Play no centro do vídeo" checked={activeDynamicCarouselConfig.show_play_icon} onChange={e => updateDynamicCarouselConfig({ show_play_icon: e.target.checked })} />
+                          <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeDynamicCarouselConfig.show_product} onChange={e => updateDynamicCarouselConfig({ show_product: e.target.checked })} />
+                        </div>
+                      </div>
+
+                      {/* 4. Estilo do Card de Produto */}
+                      {activeDynamicCarouselConfig.show_product && (
+                        <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-3">
+                          <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">
+                            4. Estilo do Card de Produto
+                          </h4>
+                          
+<div className="grid grid-cols-2 gap-2.5">
+                            <FormField label="Fundo do Card">
+                              <ColorInput label="Fundo do card" value={activeDynamicCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateDynamicCarouselConfig({ product_card_bg: e.target.value })} />
+                            </FormField>
+
+                            <FormField label="Cor da Borda">
+                              <ColorInput label="Cor da borda" value={activeDynamicCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateDynamicCarouselConfig({ product_card_border_color: e.target.value })} />
+                            </FormField>
+
+                            <FormField label="Largura Borda (px)">
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_border_width)} onChange={e => updateDynamicCarouselConfig({ product_card_border_width: e.target.value })} placeholder="Ex: 1" className={inputClass} />
+                            </FormField>
+
+                            <FormField label="Raio Borda (px)">
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_border_radius)} onChange={e => updateDynamicCarouselConfig({ product_card_border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                            </FormField>
+
+                            <FormField label="Tamanho Título">
+                              <input type="number" min="8" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_name_size)} onChange={e => updateDynamicCarouselConfig({ product_card_name_size: e.target.value })} placeholder="Ex: 11" className={inputClass} />
+                            </FormField>
+
+                            <FormField label="Cor Título">
+                              <ColorInput label="Cor do título" value={activeDynamicCarouselConfig.product_card_name_color || '#0F172A'} onChange={e => updateDynamicCarouselConfig({ product_card_name_color: e.target.value })} />
+                            </FormField>
+
+                            <FormField label="Tamanho Preço">
+                              <input type="number" min="8" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_price_size)} onChange={e => updateDynamicCarouselConfig({ product_card_price_size: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                            </FormField>
+
+<FormField label="Cor Preço">
+                              <ColorInput label="Cor do preço" value={activeDynamicCarouselConfig.product_card_price_color || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ product_card_price_color: e.target.value })} />
+                            </FormField>
+                          </div>
+                        </div>
+                      )}
+
+                    </SectionCard>
+                  )}
 
                   {/* ── Grade ── */}
                   {activeTab === 'grid' && (
