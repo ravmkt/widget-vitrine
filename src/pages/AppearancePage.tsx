@@ -1830,13 +1830,15 @@ style={{
                 }}
               >
 <video
+  ref={(el) => {
+    if (el) gridPreviewVideoRefs.current.set(index, el);
+    else gridPreviewVideoRefs.current.delete(index);
+  }}
   src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
-  autoPlay={grid.autoplay_videos ?? true}
   loop={grid.autoplay_videos ?? true}
   muted
   playsInline
   preload="auto"
-  onLoadedData={(e) => { if (grid.autoplay_videos ?? true) e.currentTarget.play().catch(() => {}); }}
   poster="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"
   className="h-full w-full object-cover pointer-events-none"
 />
