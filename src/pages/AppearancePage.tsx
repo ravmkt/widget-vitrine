@@ -3353,7 +3353,6 @@ if (activeFloatingConfig.shape === 'portrait') {
                         <div className="space-y-1.5">
                           <ToggleSwitch label="Exibir título da vitrine" checked={activeCarouselConfig.show_title ?? false} onChange={e => updateCarouselConfig({ show_title: e.target.checked })} />
 <ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeCarouselConfig.autoplay_videos ?? true} onChange={e => updateCarouselConfig({ autoplay_videos: e.target.checked })} />
-<ToggleSwitch label="Destaque automático central (avança a cada 5s)" checked={activeCarouselConfig.auto_highlight ?? false} onChange={e => updateCarouselConfig({ auto_highlight: e.target.checked })} />
 <ToggleSwitch label="Exibir ícone de Play no centro do vídeo" checked={activeCarouselConfig.show_play_icon} onChange={e => updateCarouselConfig({ show_play_icon: e.target.checked })} />
                           <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeCarouselConfig.show_product} onChange={e => updateCarouselConfig({ show_product: e.target.checked })} />
                         </div>
