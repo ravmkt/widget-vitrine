@@ -1274,6 +1274,11 @@ const syncGlobalConfig = (
       ...prev.carousel_config,
       same_for_all: false,
     },
+        dynamic_carousel_config: {
+      ...prev.dynamic_carousel_config,
+      same_for_all: false,
+    },
+
     grid_config: {
       ...prev.grid_config,
       same_for_all: false,
