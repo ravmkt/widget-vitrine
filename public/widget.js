@@ -4202,10 +4202,13 @@ track.appendChild(item);
   }
 
   function getMaxScroll() {
-    var trackWidth = track.scrollWidth;
-    var containerWidth = trackContainer.offsetWidth;
-    return Math.max(0, trackWidth - containerWidth);
-  }
+  var trackWidth = track.scrollWidth;
+  var containerWidth = trackContainer.offsetWidth;
+  // Desconta o padding lateral (zoomBufferPx x 2) que existe só para o
+  // scale(1.08) do item ativo não cortar nas bordas — não é largura útil.
+  var usableWidth = containerWidth - (zoomBufferPx * 2);
+  return Math.max(0, trackWidth - usableWidth);
+}
 
   function clamp(val, min, max) {
     return Math.min(max, Math.max(min, val));
