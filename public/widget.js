@@ -3886,16 +3886,17 @@ trackContainer.style.cssText =
         ? ('box-shadow: inset 0 0 0 ' + borderWidthNum + 'px ' + cfg.borderColor + ' !important;')
         : '';
 
-      videoCard.style.cssText =
-        'width:100% !important;' +
-        'aspect-ratio:' + cfg.itemAspect + ' !important;' +
-        'border-radius:' + cfg.itemRadius + ' !important;' +
-        'overflow:hidden !important;' +
-        'position:relative !important;' +
-        'background:#000 !important;' +
-        'transform:translateZ(0) !important;' +
-        '-webkit-backface-visibility:hidden !important;' +
-        '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
+videoCard.style.cssText =
+  'width:100% !important;' +
+  'aspect-ratio:' + cfg.itemAspect + ' !important;' +
+  'border-radius:' + cfg.itemRadius + ' !important;' +
+  'overflow:hidden !important;' +
+  'position:relative !important;' +
+  'background:#000 !important;' +
+  'transform:translateZ(0) !important;' +
+  'transform-origin:center bottom !important;' + 
+  '-webkit-backface-visibility:hidden !important;' +
+  '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
         carouselBorderCss;
 
       // 5. MÃƒÂ¡scara interna para corte perfeito da mÃƒÂ­dia (DecisÃƒÂ£o por view_mode)
