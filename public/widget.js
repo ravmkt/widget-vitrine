@@ -4292,15 +4292,21 @@ if (cfg.autoHighlight) {
       }
     });
 
-    // Centraliza o item ativo (efeito de "arrastar" o carrossel)
+    // Janela deslizante: ativo sempre é o card mais à direita visível
     var activeEl = vlItems[vlHighlightIdx];
     if (activeEl) {
-      var itemOffset = activeEl.offsetLeft;
-      var itemWidthActive = activeEl.offsetWidth;
-      var containerWidth = trackContainer.clientWidth;
-      var targetTranslate = -(itemOffset - (containerWidth / 2) + (itemWidthActive / 2));
+      var totalItems = vlItems.length;
+      var effectiveVisibleItems = Math.min(visibleItems, totalItems); // guard
+      var stepPx = itemWidthPx + gapPx;
+
+      var windowStart = vlHighlightIdx - (effectiveVisibleItems - 1);
+      var maxWindowStart = Math.max(0, totalItems - effectiveVisibleItems);
+      windowStart = Math.max(0, Math.min(windowStart, maxWindowStart));
+
+      var targetTranslate = -(windowStart * stepPx);
       var maxScroll = getMaxScroll();
       targetTranslate = clamp(targetTranslate, -maxScroll, 0);
+
       track.style.transition = 'transform 0.5s ease';
       track.style.transform = 'translateX(' + targetTranslate + 'px)';
     }
