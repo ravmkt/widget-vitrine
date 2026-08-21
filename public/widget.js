@@ -4424,6 +4424,10 @@ fallbackGridVid.src = fallbackGridUrlWithFragment;
         gridVideo.setAttribute('playsinline', '');
         gridVideo.setAttribute('webkit-playsinline', '');
         gridVideo.setAttribute('muted', '');
+                gridVideo.loop = true;
+        gridVideo.autoplay = true;
+        gridVideo.setAttribute('autoplay', '');
+        gridVideo.setAttribute('loop', '');
         gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
 
 gridVideo.src = gridUrlWithFragment;
