@@ -52,7 +52,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// â”€â”€ Redireciona usuÃ¡rio logado para o dashboard â”€â”€
+// â”€â”€ Redireciona usuário logado para o dashboard â”€â”€
 const GuestRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
 
@@ -122,7 +122,7 @@ function App() {
       <Toaster richColors position="top-center" duration={3000} />
       <BrowserRouter>
         <Routes>
-{/* Rotas pÃºblicas */}
+{/* Rotas públicas */}
           <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
@@ -135,20 +135,20 @@ function App() {
           {/* Dashboard */}
           <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
 
-          {/* â”€â”€ Stories (rotas especÃ­ficas ANTES da genÃ©rica) â”€â”€ */}
+          {/* â”€â”€ Stories (rotas específicas ANTES da genérica) â”€â”€ */}
           <Route path="/stories/widget" element={<ProtectedRoute><AppLayout><StoriesWidgetPage /></AppLayout></ProtectedRoute>} />
           <Route path="/stories/preview/:id" element={<ProtectedRoute><StoryPreviewPage /></ProtectedRoute>} />
 <Route path="/stories/:id" element={<ProtectedRoute><AppLayout><StoryDetailsPage /></AppLayout></ProtectedRoute>} /> 
           <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
 
-          {/* â”€â”€ VÃ­deos (rotas especÃ­ficas ANTES das genÃ©ricas) â”€â”€ */}
+          {/* â”€â”€ Vídeos (rotas específicas ANTES das genéricas) â”€â”€ */}
           <Route path="/videos/performance" element={<ProtectedRoute><AppLayout><PerformancePage /></AppLayout></ProtectedRoute>} />
           <Route path="/videos/:videoId/performance" element={<ProtectedRoute><AppLayout><VideoPerformancePage /></AppLayout></ProtectedRoute>} />
           <Route path="/videos/new" element={<ProtectedRoute><AppLayout><VideoEditPage /></AppLayout></ProtectedRoute>} />
           <Route path="/videos/:id/edit" element={<ProtectedRoute><AppLayout><VideoEditPage /></AppLayout></ProtectedRoute>} />
 <Route path="/gallery" element={<Navigate to="/armazenamento" replace />} />
 
-          {/* Produtos, Medidas, AparÃªncia, ComentÃ¡rios */}
+          {/* Produtos, Medidas, Aparência, Comentários */}
 <Route path="/produtos" element={<ProtectedRoute><AppLayout><ProductsPage /></AppLayout></ProtectedRoute>} />
           <Route path="/medidas" element={<ProtectedRoute><AppLayout><MedidasPage /></AppLayout></ProtectedRoute>} />
           <Route path="/aparencia" element={<ProtectedRoute><AppLayout><AppearancePage /></AppLayout></ProtectedRoute>} />
@@ -156,7 +156,7 @@ function App() {
           <Route path="/storage" element={<ProtectedRoute><AppLayout><StoragePage /></AppLayout></ProtectedRoute>} />
           <Route path="/armazenamento" element={<ProtectedRoute><AppLayout><StoragePage /></AppLayout></ProtectedRoute>} />
 
-          {/* ConfiguraÃ§Ãµes */}
+          {/* Configurações */}
           <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
           <Route path="/integration" element={<ProtectedRoute><AppLayout><IntegrationPage /></AppLayout></ProtectedRoute>} />
 
