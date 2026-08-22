@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.22-00';
+  var WIDGET_VERSION = '2026.08.22-01';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3633,6 +3633,7 @@ function getDynamicCarouselConfig(appearance) {
     try { raw = JSON.parse(raw); } catch(e) { raw = null; }
   }
   if (!raw || typeof raw !== 'object') raw = {};
+  try { console.log('[DIAG-CFG] RAW-CRU:', JSON.stringify(appearance.dynamic_carousel_config)); console.log('[DIAG-CFG] RAW-PARSED:', JSON.stringify(raw)); } catch(e){ console.warn('[DIAG-CFG] raw nao serializavel'); }
 
   // Resolve o device atual (mobile/desktop) e faz merge com o raiz
   var device = window.innerWidth < 768 ? 'mobile' : 'desktop';
@@ -3645,6 +3646,7 @@ function getDynamicCarouselConfig(appearance) {
       // Fallback: tenta no raiz (configs antigas sem mobile/desktop)
       v = raw[field];
     }
+  console.log('[DIAG-CFG] device =', window.innerWidth < 768 ? 'mobile' : 'desktop', '| enabled na ifca:', layer['enabled'], '| enabled no raw:', raw['enabled'], '| typeof config:', typeof appearance.dynamic_carousel_config);
     return (v !== undefined && v !== null && v !== '') ? v : fallback;
   };
 
@@ -3686,8 +3688,7 @@ function getDynamicCarouselConfig(appearance) {
 
 function renderDynamicCarouselWidget(options, stories, appearance) {
   var cfg = getDynamicCarouselConfig(appearance);
-  console.log('[DIAG-DC] ENTRADA. enabled check proximo.');
-  if (!cfg.enabled) { console.warn('[DIAG-DC] SAINDO: enabled = FALSE'); return; }
+  if (!cfg.enabled) return;
 
   // Coleta itens renderizáveis (vídeo válido OU thumb do vídeo OU thumb do story)
   var items = [];
@@ -3702,8 +3703,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
   });
 
   // Guard: mínimo 3 vídeos
-  console.log('[DIAG-DC] items =', items.length);
-    if (items.length < 3) {
+  if (items.length < 3) {
     console.warn('[Vidlytics] Carrossel Dinâmico requer no mínimo 3 vídeos. Encontrados:', items.length);
     return;
   }
