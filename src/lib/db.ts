@@ -171,7 +171,7 @@ export interface PageRule {
   updated_at?: string;
 }
 
-export type StoryFormat = 'floating_widget' | 'carousel' | 'grid';
+export type StoryFormat = 'floating_widget' | 'carousel' | 'dynamic_carousel' | 'grid';
 export type CTAType = 'product' | 'custom_link' | 'whatsapp' | 'none';
 export type ScrollDirection = 'horizontal' | 'vertical';
 
@@ -557,18 +557,18 @@ const DEFAULT_APPEARANCES: Appearance[] = [
   },
 ];
 
-let memoryStores = [DEFAULT_STORE];
-let memoryStoreSettings = [DEFAULT_store_settings];
-let memoryAppearances = [...DEFAULT_APPEARANCES];
-let memoryVideos: Video[] = [];
-let memoryStories: Story[] = [];
-let memoryStoryVideos: StoryVideo[] = [];
-let memoryProducts: Product[] = [];
-let memoryStoryProducts: StoryProduct[] = [];
-let memoryDisplayLocations: DisplayLocation[] = [];
-let memoryPageRules: PageRule[] = [];
-let memoryComments: Comment[] = [];
-let memorySizingModels: SizingModel[] = [];
+const memoryStores = [DEFAULT_STORE];
+const memoryStoreSettings = [DEFAULT_store_settings];
+const memoryAppearances = [...DEFAULT_APPEARANCES];
+const memoryVideos: Video[] = [];
+const memoryStories: Story[] = [];
+const memoryStoryVideos: StoryVideo[] = [];
+const memoryProducts: Product[] = [];
+const memoryStoryProducts: StoryProduct[] = [];
+const memoryDisplayLocations: DisplayLocation[] = [];
+const memoryPageRules: PageRule[] = [];
+const memoryComments: Comment[] = [];
+const memorySizingModels: SizingModel[] = [];
 
 // ═══════════════════════════════════════════════════════
 // HELPERS DE UUID
