@@ -947,9 +947,9 @@ export default function StoriesWidgetPage() {
 
   // Layout efetivo: grid pode ser sobrescrito para carousel quando o player é forçado
   const effectiveLayout: StoryFormat = forcePlayerView ? 'carousel' : activeStoryFormat;
-  const isGridLayout = effectiveLayout === 'grid';
-  const isCarouselLayout = effectiveLayout === 'carousel';
-  const isFloatingLayout = effectiveLayout === 'floating_widget';
+const isGridLayout = effectiveLayout === 'grid';
+const isCarouselLayout = effectiveLayout === 'carousel' || effectiveLayout === 'dynamic_carousel';
+const isFloatingLayout = effectiveLayout === 'floating_widget';
 
   const currentVideos = story ? storyVideosMap.get(story.id) || [] : [];
   const currentVideo = currentVideos[videoIdx] ?? null;
