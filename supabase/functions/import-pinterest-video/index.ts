@@ -109,7 +109,7 @@ serve(async (req) => {
 
     let directMp4Url = "";
     let thumbnailPic = "";
-    let mediaTitle = String(videoData.title || `PINTEREST_${Date.now()}`);
+    const mediaTitle = String(videoData.title || `PINTEREST_${Date.now()}`);
     let html = ""; // 🚀 Declarado no escopo da requisição para evitar ReferenceError
 
     console.log("[Pinterest] Resolvendo Pin ID:", pinId, "URL:", rawUrl);

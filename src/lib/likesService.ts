@@ -1,4 +1,4 @@
-// ── Serviço de Likes (backend + cache local) ──────────────
+﻿// ── Serviço de Likes (backend + cache local) ──────────────
 
 import { supabase } from '@/lib/supabase';
 

@@ -1,0 +1,305 @@
+﻿
+> public\widget.js:3614:function getWidgetDisplayMode(appearance) {
+  public\widget.js:3615:  var mode = readAppearanceValue(appearance, [
+  public\widget.js:3616:    'display_mode', 'displayMode', 'widget_type', 'widgetType', 'mode',
+  public\widget.js:3617:    'tipo_exibicao', 'tipoExibicao'
+  public\widget.js:3618:  ]);
+  public\widget.js:3619:  if (mode) {
+  public\widget.js:3620:    mode = String(mode).trim().toLowerCase();
+  public\widget.js:3621:    if (mode === 'carousel' || mode === 'carrossel') return 'carousel';
+  public\widget.js:3622:    if (mode === 'grid' || mode === 'grade') return 'grid';
+  public\widget.js:3623:    if (mode === 'floating' || mode === 'flutuante') return 'floating';
+  public\widget.js:3624:    if (mode === 'stories' || mode === 'bubbles' || mode === 'bolhas') return 'stories';
+  public\widget.js:3625:  }
+  public\widget.js:3626:
+  public\widget.js:3627:  // Fallback: detecta pelo jsonb preenchido
+  public\widget.js:3628:  var gridCfg = appearance.grid_config;
+  public\widget.js:3629:  var carouselCfg = appearance.carousel_config;
+  public\widget.js:3630:  var floatingCfg = appearance.floating_config;
+  public\widget.js:3631:
+  public\widget.js:3632:  if (typeof gridCfg === 'string') { try { gridCfg = JSON.parse(gridCfg); } catch(e) { gridCfg = null; } }
+  public\widget.js:3633:  if (typeof carouselCfg === 'string') { try { carouselCfg = JSON.parse(carouselCfg); } catch(e) { carouselCfg = null; } }
+  public\widget.js:3634:  if (typeof floatingCfg === 'string') { try { floatingCfg = JSON.parse(floatingCfg); } catch(e) { floatingCfg = null; } }
+  public\widget.js:3635:
+  public\widget.js:3636:  var gridPopulated = gridCfg && typeof gridCfg === 'object' && Object.keys(gridCfg).length > 0;
+  public\widget.js:3637:  var carouselPopulated = carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0;
+  public\widget.js:3638:  var floatingPopulated = floatingCfg && typeof floatingCfg === 'object' && Object.keys(floatingCfg).length > 0;
+  public\widget.js:3639:
+  public\widget.js:3640:  // Ã¢Å“â€¦ floating tem prioridade mÃƒÂ¡xima (sempre que configurado)
+  public\widget.js:3641:  if (floatingPopulated) return 'floating';
+  public\widget.js:3642:  if (gridPopulated && carouselPopulated) return 'stories';
+  public\widget.js:3643:  if (gridPopulated) return 'grid';
+  public\widget.js:3644:  if (carouselPopulated) return 'carousel';
+  public\widget.js:3645:  
+  public\widget.js:3646:  return 'stories';
+  public\widget.js:3647:}
+  public\widget.js:3648:
+  public\widget.js:3649:function enableDragScroll(el) {
+  public\widget.js:3650:  var isDown = false;
+  public\widget.js:3651:  var startX, scrollStart;
+  public\widget.js:3652:  var moved = false;
+  public\widget.js:3653:  var DRAG_THRESHOLD = 2;
+  public\widget.js:3654:  var SPEED = 2.0;
+  public\widget.js:3655:  var currentX = 0;
+  public\widget.js:3656:  var velX = 0;
+  public\widget.js:3657:  var lastX = 0;
+  public\widget.js:3658:  var momentumId = null;
+  public\widget.js:3659:  var cards = el.querySelectorAll('.vl-carousel-item');
+  public\widget.js:3660:
+  public\widget.js:3661:  function getX(e) {
+  public\widget.js:3662:    return e.touches ? e.touches[0].pageX : e.pageX;
+  public\widget.js:3663:  }
+  public\widget.js:3664:
+  public\widget.js:3665:  function cancelMomentum() {
+  public\widget.js:3666:    if (momentumId) {
+  public\widget.js:3667:      cancelAnimationFrame(momentumId);
+  public\widget.js:3668:      momentumId = null;
+  public\widget.js:3669:    }
+  public\widget.js:3670:    velX = 0;
+  public\widget.js:3671:  }
+  public\widget.js:3672:
+  public\widget.js:3673:function startMomentum() {
+  public\widget.js:3674:  cancelMomentum();
+  public\widget.js:3675:  if (Math.abs(velX) < 2) return; // deixa o scroll-snap nativo alinhar, sem forÃƒÂ§ar via JS
+  public\widget.js:3676:  momentumId = requestAnimationFrame(function animate() {
+  public\widget.js:3677:    velX *= 0.92;
+  public\widget.js:3678:    el.scrollLeft -= velX;
+  public\widget.js:3679:    if (Math.abs(velX) > 0.5) {
+  public\widget.js:3680:      momentumId = requestAnimationFrame(animate);
+  public\widget.js:3681:    }
+  public\widget.js:3682:  });
+  public\widget.js:3683:}
+  public\widget.js:3684:
+  public\widget.js:3685:  function snapToNearest() {
+  public\widget.js:3686:    var firstItem = el.querySelector('.vl-carousel-item');
+  public\widget.js:3687:    if (!firstItem) return;
+  public\widget.js:3688:    var itemWidth = firstItem.offsetWidth;
+  public\widget.js:3689:    var track = el.querySelector('.vl-carousel-track');
+  public\widget.js:3690:    var gap = track ? parseFloat(getComputedStyle(track).gap) || 0 : 0;
+  public\widget.js:3691:    var step = itemWidth + gap;
+  public\widget.js:3692:    var targetScroll = Math.round(el.scrollLeft / step) * step;
+  public\widget.js:3693:    el.scrollTo({ left: targetScroll, behavior: 'smooth' });
+  public\widget.js:3694:  }
+  public\widget.js:3695:
+  public\widget.js:3696:function onStart(e) {
+  public\widget.js:3697:  cancelMomentum();
+  public\widget.js:3698:  isDown = true;
+  public\widget.js:3699:  moved = false;
+  public\widget.js:3700:  el.classList.add('is-dragging');
+  public\widget.js:3701:  el.style.cursor = 'grabbing';
+  public\widget.js:3702:  startX = getX(e);
+  public\widget.js:3703:  lastX = startX;
+  public\widget.js:3704:  scrollStart = el.scrollLeft;
+  public\widget.js:3705:  currentX = startX;
+  public\widget.js:3706:  if (e.type === 'mousedown') e.preventDefault(); // Ã°Å¸â€˜Ë† adicionar isso
+  public\widget.js:3707:}
+  public\widget.js:3708:
+  public\widget.js:3709:  function onMove(e) {
+  public\widget.js:3710:    if (!isDown) return;
+  public\widget.js:3711:    var x = getX(e);
+  public\widget.js:3712:    var dx = x - startX;
+  public\widget.js:3713:
+  public\widget.js:3714:    if (Math.abs(dx) > DRAG_THRESHOLD) {
+  public\widget.js:3715:      moved = true;
+  public\widget.js:3716:    }
+  public\widget.js:3717:
+  public\widget.js:3718:    if (moved) {
+  public\widget.js:3719:      e.preventDefault();
+  public\widget.js:3720:      velX = x - lastX;
+  public\widget.js:3721:      lastX = x;
+  public\widget.js:3722:      currentX = x;
+  public\widget.js:3723:      var walk = (startX - x) * SPEED;
+  public\widget.js:3724:      el.scrollLeft = scrollStart + walk;
+  public\widget.js:3725:    }
+  public\widget.js:3726:  }
+  public\widget.js:3727:
+  public\widget.js:3728:  function onEnd() {
+  public\widget.js:3729:    if (!isDown) return;
+  public\widget.js:3730:    isDown = false;
+  public\widget.js:3731:    el.classList.remove('is-dragging');
+  public\widget.js:3732:    el.style.cursor = 'grab';
+  public\widget.js:3733:
+  public\widget.js:3734:    if (!moved) return;
+  public\widget.js:3735:    startMomentum();
+  public\widget.js:3736:  }
+  public\widget.js:3737:
+  public\widget.js:3738:  el.addEventListener('mousedown', onStart);
+  public\widget.js:3739:  el.addEventListener('mousemove', onMove);
+  public\widget.js:3740:  el.addEventListener('mouseup', onEnd);
+  public\widget.js:3741:  el.addEventListener('mouseleave', onEnd);
+  public\widget.js:3742:  el.addEventListener('touchstart', onStart, { passive: false });
+  public\widget.js:3743:  el.addEventListener('touchmove', onMove, { passive: false });
+  public\widget.js:3744:  el.addEventListener('touchend', onEnd);
+  public\widget.js:3745:}
+  public\widget.js:3746:
+  public\widget.js:3747:function renderCarouselWidget(targetOrOptions, stories, appearance) {
+  public\widget.js:3748:  
+  public\widget.js:3749:  var target, position;
+  public\widget.js:3750:  
+  public\widget.js:3751:  // Suporta { target, position } ou elemento/string direto
+  public\widget.js:3752:  if (targetOrOptions && typeof targetOrOptions === 'object' && targetOrOptions.nodeType !== 1) {
+  public\widget.js:3753:    target = targetOrOptions.target;
+  public\widget.js:3754:    position = targetOrOptions.position || 'afterend';
+  public\widget.js:3755:  } else {
+  public\widget.js:3756:    target = targetOrOptions;
+  public\widget.js:3757:    position = 'afterend';
+  public\widget.js:3758:  }
+  public\widget.js:3759:  
+  public\widget.js:3760:  if (typeof target === 'string') {
+  public\widget.js:3761:    target = document.querySelector(target);
+  public\widget.js:3762:  }
+  public\widget.js:3763:  
+  public\widget.js:3764:  if (!target) {
+> public\widget.js:4536:  var displayMode = options.storyFormat || getWidgetDisplayMode(appearance);
+  public\widget.js:4537:  
+  public\widget.js:4538:  if (displayMode === 'carousel') {
+  public\widget.js:4539:    document.querySelectorAll('[id^="vidlytics-wrapper-"]').forEach(function (w) { w.remove(); });
+  public\widget.js:4540:
+  public\widget.js:4541:    var wrapper = document.createElement('div');
+  public\widget.js:4542:    wrapper.id = 'vidlytics-wrapper-' + Date.now();
+  public\widget.js:4543:    
+  public\widget.js:4544:    // Ã°Å¸â€Â§ CRÃƒÂTICO: altura mÃƒÂ­nima + overflow visible
+  public\widget.js:4545:    Object.assign(wrapper.style, {
+  public\widget.js:4546:      width: '100%',
+  public\widget.js:4547:      minHeight: '300px',
+  public\widget.js:4548:      margin: '20px 0',
+  public\widget.js:4549:      overflow: 'visible',
+  public\widget.js:4550:      display: 'block'
+  public\widget.js:4551:    });
+  public\widget.js:4552:    
+  public\widget.js:4553:    target.insertAdjacentElement('afterend', wrapper);
+  public\widget.js:4554:    
+  public\widget.js:4555:    renderCarouselWidget({ 
+  public\widget.js:4556:      target: '#' + wrapper.id, 
+  public\widget.js:4557:      position: 'beforeend' 
+  public\widget.js:4558:    }, stories, appearance);
+  public\widget.js:4559:
+  public\widget.js:4560:    setTimeout(function () {
+  public\widget.js:4561:      var carousel = wrapper.querySelector('.vidlytics-carousel-container');
+  public\widget.js:4562:      if (!carousel) {
+  public\widget.js:4563:        console.warn('[Vidlytics] Carrossel nao encontrado!');
+  public\widget.js:4564:        return;
+  public\widget.js:4565:      }
+  public\widget.js:4566:
+  public\widget.js:4567:// trecho novo
+  public\widget.js:4568:      Object.assign(carousel.style, {
+  public\widget.js:4569:        display: 'flex',
+  public\widget.js:4570:        justifyContent: 'center',
+  public\widget.js:4571:        alignItems: 'center',
+  public\widget.js:4572:        width: '100%',
+  public\widget.js:4573:        margin: '0 auto',
+  public\widget.js:4574:        padding: '0',
+  public\widget.js:4575:        minHeight: 'auto'
+  public\widget.js:4576:      });
+  public\widget.js:4577:      
+  public\widget.js:4578:      // Ã°Å¸â€Â§ Remove overflow:hidden de TODOS os pais
+  public\widget.js:4579:      var el = wrapper.parentElement;
+  public\widget.js:4580:      while (el && el !== document.body) {
+  public\widget.js:4581:        if (getComputedStyle(el).overflow === 'hidden') {
+  public\widget.js:4582:          el.style.setProperty('overflow', 'visible', 'important');
+  public\widget.js:4583:        }
+  public\widget.js:4584:        el = el.parentElement;
+  public\widget.js:4585:      }
+  public\widget.js:4586:
+  public\widget.js:4587:// trecho novo
+  public\widget.js:4588:      var items = carousel.querySelectorAll('.vidlytics-carousel-item');
+  public\widget.js:4589:      items.forEach(function (item) {
+  public\widget.js:4590:        Object.assign(item.style, {
+  public\widget.js:4591:          minHeight: 'auto',
+  public\widget.js:4592:          flexShrink: '0'
+  public\widget.js:4593:        });
+  public\widget.js:4594:      });
+  public\widget.js:4595:
+  public\widget.js:4596:    }, 200);
+  public\widget.js:4597:
+  public\widget.js:4598:  } else if (displayMode === 'grid') { // <--- Ã°Å¸â€Â§ ROTA DO GRID ADICIONADA AQUI
+  public\widget.js:4599:    var container = document.createElement('div');
+  public\widget.js:4600:    container.className = 'vl-container';
+  public\widget.js:4601:    renderGridWidget(container, stories, appearance);
+  public\widget.js:4602:    target.insertAdjacentElement(position, container);
+  public\widget.js:4603:
+  public\widget.js:4604:  } else {
+  public\widget.js:4605:    var container = document.createElement('div');
+  public\widget.js:4606:    container.className = 'vl-container';
+  public\widget.js:4607:    renderBubbles(container, stories, appearance);
+  public\widget.js:4608:    target.insertAdjacentElement(position, container);
+  public\widget.js:4609:  }
+  public\widget.js:4610:  
+  public\widget.js:4611:}
+  public\widget.js:4612:
+  public\widget.js:4613:  /* ================================================================
+  public\widget.js:4614:     INICIALIZAÃƒâ€¡ÃƒÆ’O PRINCIPAL
+  public\widget.js:4615:     ================================================================ */
+  public\widget.js:4616:
+  public\widget.js:4617:  function init(options) {
+  public\widget.js:4618:    options = options || {};
+  public\widget.js:4619:    storeId = options.store_id || options.storeId || storeId;
+  public\widget.js:4620:    supabaseUrl = options.supabase_url || options.supabaseUrl || supabaseUrl;
+  public\widget.js:4621:    supabaseAnonKey = options.supabase_key || options.supabaseKey || options.supabaseAnonKey || supabaseAnonKey;
+  public\widget.js:4622:    hasSupabase = !!(supabaseUrl && supabaseAnonKey && storeId);
+  public\widget.js:4623:
+  public\widget.js:4624:    storeWhatsappNumber = options.whatsapp_number || options.whatsappNumber || storeWhatsappNumber;
+  public\widget.js:4625:    storeWhatsappMessage = options.whatsapp_message || options.whatsappMessage || storeWhatsappMessage;
+  public\widget.js:4626:    autoApproveComments = options.auto_approve_comments !== undefined
+  public\widget.js:4627:      ? options.auto_approve_comments
+  public\widget.js:4628:      : (options.autoApproveComments !== undefined ? options.autoApproveComments : false);
+  public\widget.js:4629:
+  public\widget.js:4630:    if (options.stories) { currentStories = options.stories; }
+  public\widget.js:4631:    if (options.products) { readProductsData = options.products; }
+  public\widget.js:4632:    if (options.sizing_models || options.sizingModels) {
+  public\widget.js:4633:      readSizingModelsData = options.sizing_models || options.sizingModels;
+  public\widget.js:4634:    }
+  public\widget.js:4635:    if (options.comments) { readCommentsData = options.comments; }
+  public\widget.js:4636:    if (options.appearance) { currentAppearance = options.appearance; }
+  public\widget.js:4637:
+  public\widget.js:4638:    var mode = String(options.mode || 'inline').toLowerCase();
+  public\widget.js:4639:    if (mode === 'floating') {
+  public\widget.js:4640:      renderFloatingWidget();
+  public\widget.js:4641:    } else {
+  public\widget.js:4642:      initInlineWidget(options);
+  public\widget.js:4643:    }
+  public\widget.js:4644:  }
+  public\widget.js:4645:
+  public\widget.js:4646:  /* ================================================================
+  public\widget.js:4647:     AUTO-INICIALIZAÃƒâ€¡ÃƒÆ’O VIA ATRIBUTO DATA
+  public\widget.js:4648:     ================================================================ */
+  public\widget.js:4649:
+  public\widget.js:4650:  function autoInit() {
+  public\widget.js:4651:    var scripts = document.querySelectorAll('script[data-vidlytics-init]');
+  public\widget.js:4652:    scripts.forEach(function (script) {
+  public\widget.js:4653:      try {
+  public\widget.js:4654:        var cfg = JSON.parse(script.getAttribute('data-vidlytics-init') || '{}');
+  public\widget.js:4655:        init(cfg);
+  public\widget.js:4656:      } catch (e) {
+  public\widget.js:4657:        console.error('[Vidlytics] Erro ao parsear configuraÃƒÂ§ÃƒÂ£o:', e);
+  public\widget.js:4658:      }
+  public\widget.js:4659:    });
+  public\widget.js:4660:  }
+  public\widget.js:4661:
+  public\widget.js:4662:  /* ================================================================
+  public\widget.js:4663:     ARRASTAR (DRAG) DO WIDGET FLUTUANTE
+  public\widget.js:4664:     ================================================================ */
+  public\widget.js:4665:
+  public\widget.js:4666:  function applyDraggable(el, appearance) {
+  public\widget.js:4667:    var behaviorConfig = getFloatingBehaviorConfig(appearance);
+  public\widget.js:4668:    if (!behaviorConfig.allowDrag) return;
+  public\widget.js:4669:
+  public\widget.js:4670:    var isDragging = false;
+  public\widget.js:4671:    var startX, startY, initialRight, initialBottom;
+  public\widget.js:4672:
+  public\widget.js:4673:    el.addEventListener('mousedown', function (e) {
+  public\widget.js:4674:      if (e.target.closest && e.target.closest('.vl-dismiss')) return;
+  public\widget.js:4675:      isDragging = true;
+  public\widget.js:4676:      floatingWasDragged = false;
+  public\widget.js:4677:      startX = e.clientX;
+  public\widget.js:4678:      startY = e.clientY;
+  public\widget.js:4679:      var rect = el.getBoundingClientRect();
+  public\widget.js:4680:      initialRight = window.innerWidth - rect.right;
+  public\widget.js:4681:      initialBottom = window.innerHeight - rect.bottom;
+  public\widget.js:4682:      el.style.transition = 'none';
+  public\widget.js:4683:    });
+  public\widget.js:4684:
+  public\widget.js:4685:    document.addEventListener('mousemove', function (e) {
+  public\widget.js:4686:      if (!isDragging) return;
+
+
