@@ -424,13 +424,14 @@ const findAppearanceForStory = ({
 // NORMALIZAÇÃO DE FORMATO DE STORY
 // ═══════════════════════════════════════════════════════════════
 
-type StoryFormat = 'carousel' | 'grid' | 'floating_widget';
+type StoryFormat = 'carousel' | 'grid' | 'floating_widget' | 'dynamic_carousel';
 
 const normalizeStoryFormat = (raw: string): StoryFormat => {
   const normalized = raw.toLowerCase().trim();
+  if (normalized === 'dynamic_carousel' || normalized === 'carrossel_dinamico') return 'dynamic_carousel';
   if (normalized === 'carrossel') return 'carousel';
   if (normalized === 'floating' || normalized === 'widget') return 'floating_widget';
-  if (normalized === 'carousel' || normalized === 'grid' || normalized === 'floating_widget') return normalized;
+  if (normalized === 'carousel' || normalized === 'grid' || normalized === 'floating_widget' || normalized === 'dynamic_carousel') return normalized;
   return 'carousel';
 };
 // ═══════════════════════════════════════════════════════════════
