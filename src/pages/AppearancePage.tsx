@@ -2467,24 +2467,6 @@ const updateDynamicCarouselConfig = (patch: Partial<DynamicCarouselConfig>) => {
       updatedDeviceConfig = { ...updatedDeviceConfig, shape: newShape, width };
     }
 
-        const autoHighlight = updatedDeviceConfig.auto_highlight ?? false;
-    const autoplayOn = updatedDeviceConfig.autoplay_videos ?? true;
-
-    updatedDeviceConfig = {
-      ...updatedDeviceConfig,
-      highlight_border_color: updatedDeviceConfig.highlight_border_color ?? updatedDeviceConfig.border_color,
-      highlight_border_width: updatedDeviceConfig.highlight_border_width ?? updatedDeviceConfig.border_width,
-      highlight_border_radius: updatedDeviceConfig.highlight_border_radius ?? updatedDeviceConfig.border_radius,
-      highlight_mode: updatedDeviceConfig.highlight_mode ?? (autoHighlight ? 'ring' : 'none'),
-      highlight_shadow: updatedDeviceConfig.highlight_shadow ?? updatedDeviceConfig.shadow_enabled ?? false,
-      highlight_enlarge_active: updatedDeviceConfig.highlight_enlarge_active ?? updatedDeviceConfig.highlight_scale_up ?? false,
-      highlight_dim_inactive: updatedDeviceConfig.highlight_dim_inactive ?? updatedDeviceConfig.highlight_scale_down_others ?? false,
-      autoplay_delay: updatedDeviceConfig.autoplay_delay ?? (autoplayOn ? 5000 : 0),
-      show_title: updatedDeviceConfig.show_title ?? false,
-      show_play_icon: updatedDeviceConfig.show_play_icon ?? true,
-      show_product: updatedDeviceConfig.show_product ?? false,
-    };
-
     updatedDeviceConfig = normalizeCarouselConfigShape(updatedDeviceConfig) as DynamicCarouselConfig;
 
     const nextConfig: ResponsiveConfig<DynamicCarouselConfig> = prev.useGlobalAppearance
