@@ -2,7 +2,7 @@
   var WIDGET_VERSION = '2026.08.21-15';
 
   console.info(
-    '%cVidlytics Widget carregado Ã¢â‚¬â€ versÃƒÂ£o ' + WIDGET_VERSION,
+    '%cVidlytics Widget carregado ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â versÃƒÆ’Ã‚Â£o ' + WIDGET_VERSION,
     'color: #22c55e; font-weight: bold; font-size: 13px;'
   );
 
@@ -28,7 +28,7 @@
 
   var enableFloating = widgetsCfg.floatingVideo !== undefined ? widgetsCfg.floatingVideo : config.floatingVideo !== false;
 
-  // Ã°Å¸â€ â€¢ PLAYER FULLSCREEN (independente do modal de stories)
+  // ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã¢â‚¬Â¢ PLAYER FULLSCREEN (independente do modal de stories)
   var fsPlayerOverlay = null;
   var fsPlayerContainer = null;
 
@@ -45,7 +45,7 @@ function ensureModalStylesInLightDOM(appearance) {
     if (fsPlayerOverlay) return;
 
     // Injeta CSS do player fullscreen no DOM global (light DOM),
-    // pois o overlay ÃƒÂ© anexado em document.body, fora do Shadow DOM
+    // pois o overlay ÃƒÆ’Ã‚Â© anexado em document.body, fora do Shadow DOM
     if (!document.getElementById('vl-fs-player-styles')) {
       var fsStyle = document.createElement('style');
       fsStyle.id = 'vl-fs-player-styles';
@@ -69,13 +69,13 @@ function ensureModalStylesInLightDOM(appearance) {
 
     fsPlayerContainer = fsPlayerOverlay.querySelector('.vl-fs-container');
 
-    // Fechar pelo botÃƒÂ£o X
+    // Fechar pelo botÃƒÆ’Ã‚Â£o X
     fsPlayerOverlay.querySelector('.vl-fs-close').addEventListener('click', function(e) {
       e.stopPropagation();
       closeFullscreenPlayer();
     });
 
-    // Fechar clicando fora do vÃƒÂ­deo
+    // Fechar clicando fora do vÃƒÆ’Ã‚Â­deo
     fsPlayerOverlay.addEventListener('click', function(e) {
       if (e.target === fsPlayerOverlay) closeFullscreenPlayer();
     });
@@ -103,7 +103,7 @@ function ensureModalStylesInLightDOM(appearance) {
     fsPlayerContainer.innerHTML = '';
     sourceType = String(sourceType || '').trim().toLowerCase();
 
-// YouTube (Mutado por padrÃƒÂ£o no autoplay)
+// YouTube (Mutado por padrÃƒÆ’Ã‚Â£o no autoplay)
     if (sourceType === 'youtube' || sourceType === 'yt') {
       var ytId = extractYouTubeId(videoUrl);
       if (ytId) {
@@ -133,7 +133,7 @@ function ensureModalStylesInLightDOM(appearance) {
     else if (sourceType === 'upload' || isDirectVideoUrl(videoUrl)) {
       fsPlayerContainer.innerHTML = '<video src="' + videoUrl + '" controls autoplay playsinline></video>';
     }
-    // Fallback genÃƒÂ©rico: tenta como vÃƒÂ­deo direto
+    // Fallback genÃƒÆ’Ã‚Â©rico: tenta como vÃƒÆ’Ã‚Â­deo direto
     else {
       fsPlayerContainer.innerHTML = '<video src="' + videoUrl + '" controls autoplay playsinline></video>';
     }
@@ -165,7 +165,7 @@ var storeWhatsappNumber = '';
   var currentStories = [];
     var currentStoryIndex = 0;
   var currentVideoIndex = 0;
-var isUserMuted = true; // Controla a persistÃƒÂªncia da preferÃƒÂªncia de som durante a navegaÃƒÂ§ÃƒÂ£o
+var isUserMuted = true; // Controla a persistÃƒÆ’Ã‚Âªncia da preferÃƒÆ’Ã‚Âªncia de som durante a navegaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
 
   var VIDEO_FILE_REGEX = /\.(mp4|webm|ogg|mov|m4v|m3u8)(\?.*)?$/i;
 
@@ -481,7 +481,7 @@ function normalizeAppearanceItem(item) {
   }
 
   function supabaseFetch(path, options) {
-    if (!hasSupabase) return Promise.reject(new Error('Supabase nÃƒÂ£o configurado.'));
+    if (!hasSupabase) return Promise.reject(new Error('Supabase nÃƒÆ’Ã‚Â£o configurado.'));
     options = options || {};
     var headers = {
       'apikey': supabaseAnonKey,
@@ -688,7 +688,7 @@ function getCarouselConfig(appearance) {
     return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
   }
   
-// 1. DefiniÃƒÂ§ÃƒÂµes estruturais do carrossel
+// 1. DefiniÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes estruturais do carrossel
   var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
   var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
   var borderWidth = toNumber(rcv('border_width', 'carousel_border_width', '0'), 0);
@@ -723,7 +723,7 @@ var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
   else if (shape === 'circle') aspect = '1/1';
   else if (shape === 'landscape' || shape === 'paisagem' || shape === '16:9' || shape === '16_9') aspect = '16/9';
 
-  // Leitura consolidada e ÃƒÂºnica das propriedades do card de produto
+  // Leitura consolidada e ÃƒÆ’Ã‚Âºnica das propriedades do card de produto
   var pBg = sanitizeCssValue(rcv('product_card_bg', 'carousel_product_card_bg', '#FFFFFF'), '#FFFFFF', 'color');
   var pBorderColor = sanitizeCssValue(rcv('product_card_border_color', 'carousel_product_card_border_color', '#E2E8F0'), '#E2E8F0', 'color');
   var pBorderWidth = toNumber(rcv('product_card_border_width', 'carousel_product_card_border_width', '1'), 1);
@@ -829,7 +829,7 @@ function getGridConfig(appearance) {
   var borderWidth = safeInt(rcv('border_style', 'grid_border_width', '2'), 2);
   
   var rawBorderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
-  // Se o formato for cÃƒÂ­rculo, forÃƒÂ§a o border-radius para 50%
+  // Se o formato for cÃƒÆ’Ã‚Â­rculo, forÃƒÆ’Ã‚Â§a o border-radius para 50%
   var borderRadius = (shape === 'circle') ? '50%' : (rawBorderRadius + 'px');
 
   var objectFit = String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
@@ -940,28 +940,28 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
       : fetchJson('videos?select=*&store_id=eq.' + encodeURIComponent(storeId));
   }
 
-  // Ã°Å¸â€Â§ NOVA FUNÃƒâ€¡ÃƒÆ’O Ã¢â‚¬â€ Junta vÃƒÂ­deos aos stories via tabela story_videos
+  // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ NOVA FUNÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Junta vÃƒÆ’Ã‚Â­deos aos stories via tabela story_videos
   function joinStoriesWithVideos(stories, storyVideos, videos) {
     if (!stories || !stories.length) return stories;
 
-    // Cria um mapa rÃƒÂ¡pido de vÃƒÂ­deos por ID
+    // Cria um mapa rÃƒÆ’Ã‚Â¡pido de vÃƒÆ’Ã‚Â­deos por ID
     var videoMap = {};
     (videos || []).forEach(function (v) {
       if (v && v.id) videoMap[v.id] = v;
     });
 
-    // Para cada story, monta o array de vÃƒÂ­deos ordenado por position
+    // Para cada story, monta o array de vÃƒÆ’Ã‚Â­deos ordenado por position
     (stories || []).forEach(function (story) {
       var svRows = (storyVideos || []).filter(function (sv) {
         return sv.story_id === story.id;
       });
 
-      // Ordena por position (campo que define a ordem dos vÃƒÂ­deos no story)
+      // Ordena por position (campo que define a ordem dos vÃƒÆ’Ã‚Â­deos no story)
       svRows.sort(function (a, b) {
         return (a.position || 0) - (b.position || 0);
       });
 
-      // Mapeia para os objetos completos de vÃƒÂ­deo
+      // Mapeia para os objetos completos de vÃƒÆ’Ã‚Â­deo
       story.videos = svRows.map(function (sv) {
         return videoMap[sv.video_id];
       }).filter(Boolean);
@@ -1332,7 +1332,7 @@ function getVideoUrl(video) {
     return '';
   }
 
-    // Ã°Å¸â€ â€¢ EXTRAIR ID DO INSTAGRAM REEL
+    // ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã¢â‚¬Â¢ EXTRAIR ID DO INSTAGRAM REEL
   function extractInstagramId(url) {
     if (!url) return '';
     try {
@@ -1342,7 +1342,7 @@ function getVideoUrl(video) {
     } catch (e) { return url; }
   }
 
-  // Ã°Å¸â€ â€¢ EXTRAIR ID DO TIKTOK
+  // ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã¢â‚¬Â¢ EXTRAIR ID DO TIKTOK
   function extractTikTokId(url) {
     if (!url) return '';
     try {
@@ -1352,7 +1352,7 @@ function getVideoUrl(video) {
     } catch (e) { return url; }
   }
 
-  // Ã°Å¸â€ â€¢ EXTRAIR ID DO PIN DO PINTEREST
+  // ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã¢â‚¬Â¢ EXTRAIR ID DO PIN DO PINTEREST
   function extractPinterestId(url) {
     if (!url) return '';
     try {
@@ -1741,7 +1741,7 @@ function applyHostPosition(host, appearance) {
 function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
 
-    // Throttle: evita reenviar o mesmo evento para o mesmo vÃƒÂ­deo em menos de 4s
+    // Throttle: evita reenviar o mesmo evento para o mesmo vÃƒÆ’Ã‚Â­deo em menos de 4s
     sendAnalyticsEvent._lastSent = sendAnalyticsEvent._lastSent || {};
     var throttleKey = String(eventType) + '_' + String(videoId);
     var throttleNow = Date.now();
@@ -1823,7 +1823,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
 
     var wrapper = createEl('div', 'vl-player');
 
-    // 0. Imagem EstÃƒÂ¡tica / Foto no Story
+    // 0. Imagem EstÃƒÆ’Ã‚Â¡tica / Foto no Story
     if (isImage || (url && /\.(jpe?g|png|webp|gif|svg)($|\?|#)/i.test(url))) {
       var imgEl = createEl('img');
       imgEl.src = url || getVideoThumbnail(video);
@@ -1840,7 +1840,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-// 1. YouTube Shorts ou VÃƒÂ­deo Tradicional (Respeita a preferÃƒÂªncia de ÃƒÂ¡udio ativa do usuÃƒÂ¡rio)
+// 1. YouTube Shorts ou VÃƒÆ’Ã‚Â­deo Tradicional (Respeita a preferÃƒÆ’Ã‚Âªncia de ÃƒÆ’Ã‚Â¡udio ativa do usuÃƒÆ’Ã‚Â¡rio)
     if (ytId) {
       var iframe = createEl('iframe');
       var ytMuteParam = isUserMuted ? '1' : '0';
@@ -1854,13 +1854,13 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-    // 1.1. Pinterest Pin Embed com ValidaÃƒÂ§ÃƒÂ£o Defensiva de ID
+    // 1.1. Pinterest Pin Embed com ValidaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o Defensiva de ID
     var pinId = extractPinterestId(url);
     if (sourceType === 'pinterest' || pinId) {
       if (!pinId) {
         var errorMsg = createEl('div');
         errorMsg.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:13px;text-align:center;padding:16px;background:#111;';
-        errorMsg.textContent = 'NÃƒÂ£o foi possÃƒÂ­vel carregar este Pin do Pinterest';
+        errorMsg.textContent = 'NÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel carregar este Pin do Pinterest';
         wrapper.appendChild(errorMsg);
         return wrapper;
       }
@@ -1874,7 +1874,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-    // 2.1. TikTok Embed Oficial (evita erro NotSupportedError em URLs de compartilhamento/pÃƒÂ¡gina)
+    // 2.1. TikTok Embed Oficial (evita erro NotSupportedError em URLs de compartilhamento/pÃƒÆ’Ã‚Â¡gina)
     if (sourceType === 'tiktok' || (tkId && url.indexOf('tiktok.com') !== -1)) {
       var tkIframe = createEl('iframe');
       tkIframe.src = 'https://www.tiktok.com/embed/v2/' + tkId;
@@ -1886,13 +1886,13 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-    // 3. MÃƒÂ­dia MP4 / Upload / CDN / URL Externa (Respeita a preferÃƒÂªncia de ÃƒÂ¡udio ativa do usuÃƒÂ¡rio)
+    // 3. MÃƒÆ’Ã‚Â­dia MP4 / Upload / CDN / URL Externa (Respeita a preferÃƒÆ’Ã‚Âªncia de ÃƒÆ’Ã‚Â¡udio ativa do usuÃƒÆ’Ã‚Â¡rio)
     if (url) {
       var media = createEl('video');
       media.controls = false;
       media.preload = 'auto';
       media.autoplay = true;
-      media.muted = isUserMuted; // MantÃƒÂ©m o som ligado se o usuÃƒÂ¡rio jÃƒÂ¡ tiver desmutado anteriormente
+      media.muted = isUserMuted; // MantÃƒÆ’Ã‚Â©m o som ligado se o usuÃƒÆ’Ã‚Â¡rio jÃƒÆ’Ã‚Â¡ tiver desmutado anteriormente
       media.loop = true;
       media.playsInline = true;
       media.setAttribute('playsinline', '');
@@ -1914,10 +1914,10 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       
       // Tratamento de Erro Fallback (Ex: link 403 Forbidden expirado)
       media.addEventListener('error', function () {
-        console.error('[Vidlytics] Erro fatal ao carregar mÃƒÂ­dia:', url);
+        console.error('[Vidlytics] Erro fatal ao carregar mÃƒÆ’Ã‚Â­dia:', url);
         var errorMsg = createEl('div');
         errorMsg.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#111;color:#ef4444;font-size:13px;font-weight:700;text-align:center;padding:20px;z-index:10;';
-        errorMsg.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>MÃƒÂ­dia indisponÃƒÂ­vel ou expirada.';
+        errorMsg.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>MÃƒÆ’Ã‚Â­dia indisponÃƒÆ’Ã‚Â­vel ou expirada.';
         wrapper.appendChild(errorMsg);
       });
 
@@ -1927,7 +1927,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
         var p = media.play();
         if (p && typeof p.catch === 'function') {
           p.catch(function (err) {
-            console.warn('[Vidlytics] Falha no disparo do vÃƒÂ­deo:', err);
+            console.warn('[Vidlytics] Falha no disparo do vÃƒÆ’Ã‚Â­deo:', err);
           });
         }
       }, 50);
@@ -1935,11 +1935,11 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       return wrapper;
     }
 
-    // 4. Fallback caso nÃƒÂ£o haja nenhuma URL
+    // 4. Fallback caso nÃƒÆ’Ã‚Â£o haja nenhuma URL
     var link = createEl('a');
     link.href = url || '#';
     link.target = '_blank';
-    link.textContent = 'Ver vÃƒÂ­deo';
+    link.textContent = 'Ver vÃƒÆ’Ã‚Â­deo';
     link.className = 'vl-cta';
     wrapper.appendChild(link);
     return wrapper;
@@ -1980,7 +1980,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   }
 
   function getCommentEmojis() {
-    return ['Ã°Å¸ËœÅ½', 'Ã°Å¸â€˜Â', 'Ã°Å¸â€˜Â', 'Ã°Å¸ËœÂ±', 'Ã°Å¸â„¢Â', 'Ã°Å¸â€™Âª', 'Ã°Å¸â€Â¥', 'Ã¢ÂÂ¤Ã¯Â¸Â', 'Ã°Å¸â€™â„¢', 'Ã¢Å“Â¨', 'Ã°Å¸Å½â€°', 'Ã¢Å“â€¦', 'Ã¢Â­Â', 'Ã°Å¸ËœÂ¢', 'Ã°Å¸ËœÂ¡', 'Ã°Å¸Â¤â€', 'Ã°Å¸â€˜â‚¬', 'Ã°Å¸ËœÅ ', 'Ã°Å¸Â¥Â°'];
+    return ['ÃƒÂ°Ã…Â¸Ã‹Å“Ã…Â½', 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â', 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â', 'ÃƒÂ°Ã…Â¸Ã‹Å“Ã‚Â±', 'ÃƒÂ°Ã…Â¸Ã¢â€žÂ¢Ã‚Â', 'ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Âª', 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥', 'ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â', 'ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã¢â€žÂ¢', 'ÃƒÂ¢Ã…â€œÃ‚Â¨', 'ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬Â°', 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦', 'ÃƒÂ¢Ã‚Â­Ã‚Â', 'ÃƒÂ°Ã…Â¸Ã‹Å“Ã‚Â¢', 'ÃƒÂ°Ã…Â¸Ã‹Å“Ã‚Â¡', 'ÃƒÂ°Ã…Â¸Ã‚Â¤Ã¢â‚¬Â', 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â€šÂ¬', 'ÃƒÂ°Ã…Â¸Ã‹Å“Ã…Â ', 'ÃƒÂ°Ã…Â¸Ã‚Â¥Ã‚Â°'];
   }
 
   function getSizingModelId(video) {
@@ -1989,14 +1989,14 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   }
 
   function createComment(commentData) {
-    if (!hasSupabase) return Promise.reject(new Error('Supabase nÃƒÂ£o configurado.'));
+    if (!hasSupabase) return Promise.reject(new Error('Supabase nÃƒÆ’Ã‚Â£o configurado.'));
     commentData = commentData || {};
 
     var authorName = String(commentData.author_name || '').trim();
     var commentText = String(commentData.content || commentData.text || '').trim();
 
     if (!authorName) return Promise.reject(new Error('Informe seu nome.'));
-    if (!commentText) return Promise.reject(new Error('Digite um comentÃƒÂ¡rio.'));
+    if (!commentText) return Promise.reject(new Error('Digite um comentÃƒÆ’Ã‚Â¡rio.'));
 
     var payload = {
       p_store_id: storeId,
@@ -2028,10 +2028,10 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
         return response.text().then(function (rawMessage) {
           var parsed = {};
           try { parsed = JSON.parse(rawMessage || '{}'); } catch (error) {}
-          if (response.status === 401) throw new Error('A chave pÃƒÂºblica ou a URL do Supabase sÃƒÂ£o invÃƒÂ¡lidas.');
-          if (parsed.message === 'rate_limit_exceeded') throw new Error('VocÃƒÂª estÃƒÂ¡ comentando rÃƒÂ¡pido demais. Aguarde um pouco.');
-          if (parsed.message === 'invalid_content') throw new Error('ComentÃƒÂ¡rio invÃƒÂ¡lido.');
-          throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'NÃƒÂ£o foi possÃƒÂ­vel enviar o comentÃƒÂ¡rio.');
+          if (response.status === 401) throw new Error('A chave pÃƒÆ’Ã‚Âºblica ou a URL do Supabase sÃƒÆ’Ã‚Â£o invÃƒÆ’Ã‚Â¡lidas.');
+          if (parsed.message === 'rate_limit_exceeded') throw new Error('VocÃƒÆ’Ã‚Âª estÃƒÆ’Ã‚Â¡ comentando rÃƒÆ’Ã‚Â¡pido demais. Aguarde um pouco.');
+          if (parsed.message === 'invalid_content') throw new Error('ComentÃƒÆ’Ã‚Â¡rio invÃƒÆ’Ã‚Â¡lido.');
+          throw new Error(parsed.message || parsed.error_description || parsed.hint || parsed.details || 'NÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel enviar o comentÃƒÆ’Ã‚Â¡rio.');
         });
       });
   }
@@ -2164,7 +2164,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     if (existing) { existing.remove(); return; }
     var shareUrl = window.location.href;
     var story = currentStories[currentStoryIndex];
-    var shareText = story ? (story.title || 'Confira este vÃƒÂ­deo!') : 'Confira este vÃƒÂ­deo!';
+    var shareText = story ? (story.title || 'Confira este vÃƒÆ’Ã‚Â­deo!') : 'Confira este vÃƒÆ’Ã‚Â­deo!';
     var panel = createEl('div');
     panel.id = 'vl-share-panel';
     panel.style.cssText = 'position:absolute;bottom:calc(100% + 8px);right:-20px;background:#1e293b;border-radius:12px;padding:8px;min-width:180px;box-shadow:0 10px 25px rgba(0,0,0,0.5);z-index:200;animation:vlFadeIn 0.15s ease;';
@@ -2456,7 +2456,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     ].join('');
 
     var panelTitle = createEl('h3');
-    panelTitle.textContent = 'ComentÃƒÂ¡rios' + (hasComments ? ' (' + commentsCount + ')' : '');
+    panelTitle.textContent = 'ComentÃƒÆ’Ã‚Â¡rios' + (hasComments ? ' (' + commentsCount + ')' : '');
     panelTitle.style.cssText = 'margin:0;font-size:16px;font-weight:700;color:#111;';
     panelHeader.appendChild(panelTitle);
 
@@ -2633,7 +2633,7 @@ if (replyIsVisible) {
 
       var ctaBtn = createEl('button');
       ctaBtn.type = 'button';
-      ctaBtn.textContent = 'Deixe seu comentÃƒÂ¡rio';
+      ctaBtn.textContent = 'Deixe seu comentÃƒÆ’Ã‚Â¡rio';
       ctaBtn.style.cssText = 'width:100%;height:40px;border:none;border-radius:12px;background:' + buttonColor + ';color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:' + fontFamily + ';';
       ctaBtn.onmouseenter = function () { ctaBtn.style.opacity = '.9'; };
       ctaBtn.onmouseleave = function () { ctaBtn.style.opacity = '1'; };
@@ -2671,12 +2671,12 @@ if (replyIsVisible) {
       formWrap.appendChild(nameInput);
 
       var commentLabel = createEl('label');
-      commentLabel.textContent = 'Seu comentÃƒÂ¡rio';
+      commentLabel.textContent = 'Seu comentÃƒÆ’Ã‚Â¡rio';
       commentLabel.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px;';
       formWrap.appendChild(commentLabel);
 
       var commentTextarea = createEl('textarea');
-      commentTextarea.placeholder = 'Escreva seu comentÃƒÂ¡rio...';
+      commentTextarea.placeholder = 'Escreva seu comentÃƒÆ’Ã‚Â¡rio...';
       commentTextarea.maxLength = 1000; commentTextarea.rows = 3;
       commentTextarea.style.cssText = 'width:100%;height:70px;min-height:70px;max-height:70px;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#0f172a;resize:none;outline:none;transition:border-color .2s;margin-bottom:8px;box-sizing:border-box;background:#f8fafc;font-family:' + fontFamily + ';';
       commentTextarea.addEventListener('focus', function () {
@@ -2783,7 +2783,7 @@ var sendBtn = createEl('button', 'vl-form-btn-send');
         var text = commentTextarea.value.trim();
 
         if (!text) {
-          statusMsg.textContent = 'Digite um comentÃƒÂ¡rio para enviar.';
+          statusMsg.textContent = 'Digite um comentÃƒÆ’Ã‚Â¡rio para enviar.';
           statusMsg.style.color = '#ef4444';
           return;
         }
@@ -2809,7 +2809,7 @@ if (hasSupabase) {
               var isApproved = Boolean(result && result.status === 'approved');
 
               if (isApproved) {
-                // Ã¢Å“â€¦ AprovaÃƒÂ§ÃƒÂ£o AutomÃƒÂ¡tica: insere imediatamente na lista em memÃƒÂ³ria para exibiÃƒÂ§ÃƒÂ£o instantÃƒÂ¢nea
+                // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ AprovaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o AutomÃƒÆ’Ã‚Â¡tica: insere imediatamente na lista em memÃƒÆ’Ã‚Â³ria para exibiÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o instantÃƒÆ’Ã‚Â¢nea
                 readCommentsData.push({
                   id: 'local_' + Date.now(),
                   video_id: videoId,
@@ -2819,16 +2819,16 @@ if (hasSupabase) {
                   created_at: new Date().toISOString(),
                   status: 'approved'
                 });
-                statusMsg.textContent = 'Seu comentÃƒÂ¡rio foi publicado.';
+                statusMsg.textContent = 'Seu comentÃƒÆ’Ã‚Â¡rio foi publicado.';
                 statusMsg.style.color = '#22c55e';
               } else {
-                // Ã¢ÂÂ³ ModeraÃƒÂ§ÃƒÂ£o Manual: nÃƒÂ£o exibe atÃƒÂ© a aprovaÃƒÂ§ÃƒÂ£o no painel
-                statusMsg.textContent = 'Obrigado pelo seu comentÃƒÂ¡rio. Em breve ele serÃƒÂ¡ publicado.';
+                // ÃƒÂ¢Ã‚ÂÃ‚Â³ ModeraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o Manual: nÃƒÆ’Ã‚Â£o exibe atÃƒÆ’Ã‚Â© a aprovaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o no painel
+                statusMsg.textContent = 'Obrigado pelo seu comentÃƒÆ’Ã‚Â¡rio. Em breve ele serÃƒÆ’Ã‚Â¡ publicado.';
                 statusMsg.style.color = '#f59e0b';
               }
 
               commentsCount = getCommentCountForVideo(videoId);
-              panelTitle.textContent = 'ComentÃƒÂ¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+              panelTitle.textContent = 'ComentÃƒÆ’Ã‚Â¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
 
               trackMetric({
                 event_type: 'comment',
@@ -2837,7 +2837,7 @@ if (hasSupabase) {
                 page_url: window.location.href
               });
 
-              // Ã¢ÂÂ±Ã¯Â¸Â Fecha o painel e volta para o vÃƒÂ­deo apÃƒÂ³s 2 segundos
+              // ÃƒÂ¢Ã‚ÂÃ‚Â±ÃƒÂ¯Ã‚Â¸Ã‚Â Fecha o painel e volta para o vÃƒÆ’Ã‚Â­deo apÃƒÆ’Ã‚Â³s 2 segundos
               setTimeout(function () {
                 restoreVideoView();
               }, 2000);
@@ -2863,15 +2863,15 @@ if (hasSupabase) {
             created_at: new Date().toISOString(),
             status: 'approved'
           });
-          statusMsg.textContent = 'Seu comentÃƒÂ¡rio foi publicado.';
+          statusMsg.textContent = 'Seu comentÃƒÆ’Ã‚Â¡rio foi publicado.';
           statusMsg.style.color = '#22c55e';
         } else {
-          statusMsg.textContent = 'Obrigado pelo seu comentÃƒÂ¡rio. Em breve ele serÃƒÂ¡ publicado.';
+          statusMsg.textContent = 'Obrigado pelo seu comentÃƒÆ’Ã‚Â¡rio. Em breve ele serÃƒÆ’Ã‚Â¡ publicado.';
           statusMsg.style.color = '#f59e0b';
         }
 
         commentsCount = getCommentCountForVideo(videoId);
-        panelTitle.textContent = 'ComentÃƒÂ¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+        panelTitle.textContent = 'ComentÃƒÆ’Ã‚Â¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
 
         setTimeout(function () {
           restoreVideoView();
@@ -2886,7 +2886,7 @@ if (hasSupabase) {
 
     function renderInitialState() {
       commentsCount = getCommentCountForVideo(videoId);
-      panelTitle.textContent = 'ComentÃƒÂ¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
+      panelTitle.textContent = 'ComentÃƒÆ’Ã‚Â¡rios' + (commentsCount > 0 ? ' (' + commentsCount + ')' : '');
       if (commentsCount > 0) { renderCommentList(); } else { renderEmptyState(); }
       renderCommentButton();
     }
@@ -2899,14 +2899,14 @@ if (hasSupabase) {
   }
 
   function closeOverlay() {
-    // Dispara video_close antes de limpar o estado, se havia um vÃƒÂ­deo ativo
+    // Dispara video_close antes de limpar o estado, se havia um vÃƒÆ’Ã‚Â­deo ativo
     try {
       var closingStory = currentStories[currentStoryIndex];
       var closingVideo = closingStory && (closingStory.videos || [])[currentVideoIndex];
       if (closingVideo) {
         sendAnalyticsEvent('video_close', closingVideo.id, null);
       }
-    } catch (err) { /* noop - nÃƒÂ£o deve travar o fechamento */ }
+    } catch (err) { /* noop - nÃƒÆ’Ã‚Â£o deve travar o fechamento */ }
 
     if (overlay) overlay.className = 'vl-overlay';
     if (modalContent) {
@@ -2914,7 +2914,7 @@ if (hasSupabase) {
       if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
       modalContent.innerHTML = '';
     }
-    isUserMuted = true; // Reseta para o padrÃƒÂ£o seguro no prÃƒÂ³ximo clique de abertura
+    isUserMuted = true; // Reseta para o padrÃƒÆ’Ã‚Â£o seguro no prÃƒÆ’Ã‚Â³ximo clique de abertura
     resumePreviews();
   }
 
@@ -2954,12 +2954,12 @@ if (hasSupabase) {
 
     var muteBtn = createEl('button', 'vl-control');
     muteBtn.id = 'vl-mute-btn';
-    // Renderiza o ÃƒÂ­cone de acordo com o estado de ÃƒÂ¡udio ativo no momento
+    // Renderiza o ÃƒÆ’Ã‚Â­cone de acordo com o estado de ÃƒÆ’Ã‚Â¡udio ativo no momento
     muteBtn.innerHTML = isUserMuted ? svgIcon('volumeOff') : svgIcon('volume');
     muteBtn.title = isUserMuted ? 'Ativar som' : 'Mudo';
     muteBtn.onclick = function (e) {
       e.stopPropagation();
-      isUserMuted = !isUserMuted; // Persiste a decisÃƒÂ£o do usuÃƒÂ¡rio para os prÃƒÂ³ximos vÃƒÂ­deos
+      isUserMuted = !isUserMuted; // Persiste a decisÃƒÆ’Ã‚Â£o do usuÃƒÆ’Ã‚Â¡rio para os prÃƒÆ’Ã‚Â³ximos vÃƒÆ’Ã‚Â­deos
 
       var vid = modalContent.querySelector('video');
       var iframe = modalContent.querySelector('iframe');
@@ -3027,7 +3027,7 @@ if (hasSupabase) {
 
       var vidEl = player.querySelector('video');
       
-      // Garante a sincronizaÃƒÂ§ÃƒÂ£o bidirecional entre o vÃƒÂ­deo e os botÃƒÂµes da UI
+      // Garante a sincronizaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o bidirecional entre o vÃƒÆ’Ã‚Â­deo e os botÃƒÆ’Ã‚Âµes da UI
       if (vidEl) {
         vidEl.addEventListener('volumechange', function () {
           var mb = modalContent.querySelector('#vl-mute-btn');
@@ -3048,7 +3048,7 @@ if (hasSupabase) {
     } else {
       var emptyBody = createEl('div');
       emptyBody.style.cssText = 'padding:40px;text-align:center;color:#fff;';
-      emptyBody.textContent = 'Nenhum vÃƒÂ­deo encontrado.';
+      emptyBody.textContent = 'Nenhum vÃƒÆ’Ã‚Â­deo encontrado.';
       body.appendChild(emptyBody);
     }
 
@@ -3112,7 +3112,7 @@ if (hasSupabase) {
       commentBtn.innerHTML = svgIcon(
         commentCountVal > 0 ? 'commentFilled' : 'comment'
       );
-      commentBtn.title = 'ComentÃƒÂ¡rios';
+      commentBtn.title = 'ComentÃƒÆ’Ã‚Â¡rios';
 
       commentBtn.onclick = function (e) {
         e.preventDefault();
@@ -3156,7 +3156,7 @@ if (hasSupabase) {
     container.appendChild(body);
 
 var showVerProduto = appearanceConfig.show_product !== false;
-// WhatsApp segue o mesmo critÃƒÂ©rio do card de produto Ã¢â‚¬â€ sem flag separada
+// WhatsApp segue o mesmo critÃƒÆ’Ã‚Â©rio do card de produto ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â sem flag separada
 var showWhatsAppProduto = showVerProduto;
     if (showVerProduto || showWhatsAppProduto) {
       var videoProductId = video.product_id || (video.productId) || null;
@@ -3218,7 +3218,7 @@ var pButtonBg = appearanceConfig.product_card_button_bg || priColor;
           if (!productUrl) {
             buyBtn.style.opacity = '0.5';
             buyBtn.style.pointerEvents = 'none';
-            buyBtn.title = 'URL do produto nÃƒÂ£o cadastrada';
+            buyBtn.title = 'URL do produto nÃƒÆ’Ã‚Â£o cadastrada';
           }
           buyBtn.onclick = function (e) {
             e.stopPropagation();
@@ -3234,7 +3234,7 @@ var pButtonBg = appearanceConfig.product_card_button_bg || priColor;
             var waNumberClean = waNumber.replace(/\D/g, '');
             var productName = productData.name || 'Produto';
 
-            var waMsgRaw = storeWhatsappMessage || 'OlÃƒÂ¡! Tenho interesse no produto: {{product_name}}';
+            var waMsgRaw = storeWhatsappMessage || 'OlÃƒÆ’Ã‚Â¡! Tenho interesse no produto: {{product_name}}';
             waMsgRaw = waMsgRaw
               .replace(/\{\{story_title\}\}/g, productName)
               .replace(/\{\{product_name\}\}/g, productName)
@@ -3269,7 +3269,7 @@ sendAnalyticsEvent('whatsapp_click', video ? video.id : null, productData ? prod
   }
 
   /* ================================================================
-     NAVEGAÃƒâ€¡ÃƒÆ’O ENTRE STORIES E VÃƒÂDEOS
+     NAVEGAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O ENTRE STORIES E VÃƒÆ’Ã‚ÂDEOS
      ================================================================ */
 
   function nextStoryOrVideo() {
@@ -3383,7 +3383,7 @@ function openStoryModal(storyIndex, videoIndex) {
   if (!currentStories || currentStories.length === 0) return;
   if (storyIndex === undefined || storyIndex === null) storyIndex = 0;
   currentStoryIndex = Math.max(0, Math.min(storyIndex, currentStories.length - 1));
-  // Usa o videoIndex se fornecido, senÃƒÂ£o comeÃƒÂ§a do 0
+  // Usa o videoIndex se fornecido, senÃƒÆ’Ã‚Â£o comeÃƒÆ’Ã‚Â§a do 0
   if (videoIndex !== undefined && videoIndex !== null) {
     var maxVid = (currentStories[currentStoryIndex].videos || []).length - 1;
     currentVideoIndex = Math.max(0, Math.min(videoIndex, maxVid));
@@ -3414,7 +3414,7 @@ function openStoryModal(storyIndex, videoIndex) {
   }
 
   /* ================================================================
-     FUNÃƒâ€¡Ãƒâ€¢ES AUXILIARES DE COR
+     FUNÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã¢â‚¬Â¢ES AUXILIARES DE COR
      ================================================================ */
 
   function adjustColor(hex, amount) {
@@ -3450,7 +3450,7 @@ function openStoryModal(storyIndex, videoIndex) {
   }
 
   /* ================================================================
-     INJEÃƒâ€¡ÃƒÆ’O DE ESTILOS (CSS) NO SHADOW DOM
+     INJEÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O DE ESTILOS (CSS) NO SHADOW DOM
      ================================================================ */
 
   function injectStyles(shadowRoot) {
@@ -3520,7 +3520,7 @@ function openStoryModal(storyIndex, videoIndex) {
   }
 
   /* ================================================================
-     ÃƒÂCONES SVG
+     ÃƒÆ’Ã‚ÂCONES SVG
      ================================================================ */
 
   function svgIcon(name) {
@@ -3547,7 +3547,7 @@ function openStoryModal(storyIndex, videoIndex) {
   }
 
   /* ================================================================
-     RENDERIZAÃƒâ€¡ÃƒÆ’O DAS BOLHAS (STORY BUBBLES)
+     RENDERIZAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O DAS BOLHAS (STORY BUBBLES)
      ================================================================ */
 
   function renderBubbles(container) {
@@ -3556,7 +3556,7 @@ function openStoryModal(storyIndex, videoIndex) {
 
     if (!currentStories || currentStories.length === 0) {
       var emptyMsg = createEl('div');
-      emptyMsg.textContent = 'Nenhum story disponÃƒÂ­vel.';
+      emptyMsg.textContent = 'Nenhum story disponÃƒÆ’Ã‚Â­vel.';
       emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
       container.appendChild(emptyMsg);
       return;
@@ -3670,7 +3670,7 @@ function getWidgetDisplayMode(appearance) {
       var dcCfg = appearance.dynamic_carousel_config;
       if (typeof dcCfg === 'string') { try { dcCfg = JSON.parse(dcCfg); } catch(e) { dcCfg = null; } }
       if (dcCfg && toBoolean(dcCfg.enabled, false)) return 'dynamic_carousel';
-      // enabled=false → cai para o próximo modo (não quebra usuários existentes)
+      // enabled=false â†’ cai para o prÃ³ximo modo (nÃ£o quebra usuÃ¡rios existentes)
     }
     if (mode === 'carousel' || mode === 'carrossel') return 'carousel';
     if (mode === 'grid' || mode === 'grade') return 'grid';
@@ -3691,7 +3691,7 @@ function getWidgetDisplayMode(appearance) {
   var carouselPopulated = carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0;
   var floatingPopulated = floatingCfg && typeof floatingCfg === 'object' && Object.keys(floatingCfg).length > 0;
 
-  // Ã¢Å“â€¦ floating tem prioridade mÃƒÂ¡xima (sempre que configurado)
+  // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ floating tem prioridade mÃƒÆ’Ã‚Â¡xima (sempre que configurado)
   if (floatingPopulated) return 'floating';
   if (gridPopulated && carouselPopulated) return 'stories';
   if (gridPopulated) return 'grid';
@@ -3726,7 +3726,7 @@ function enableDragScroll(el) {
 
 function startMomentum() {
   cancelMomentum();
-  if (Math.abs(velX) < 2) return; // deixa o scroll-snap nativo alinhar, sem forÃƒÂ§ar via JS
+  if (Math.abs(velX) < 2) return; // deixa o scroll-snap nativo alinhar, sem forÃƒÆ’Ã‚Â§ar via JS
   momentumId = requestAnimationFrame(function animate() {
     velX *= 0.92;
     el.scrollLeft -= velX;
@@ -3757,7 +3757,7 @@ function onStart(e) {
   lastX = startX;
   scrollStart = el.scrollLeft;
   currentX = startX;
-  if (e.type === 'mousedown') e.preventDefault(); // Ã°Å¸â€˜Ë† adicionar isso
+  if (e.type === 'mousedown') e.preventDefault(); // ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‹â€  adicionar isso
 }
 
   function onMove(e) {
@@ -3816,7 +3816,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   }
   
   if (!target) {
-    console.warn('[Vidlytics] Target nÃƒÂ£o encontrado para carrossel:', targetOrOptions);
+    console.warn('[Vidlytics] Target nÃƒÆ’Ã‚Â£o encontrado para carrossel:', targetOrOptions);
     return;
   }
   
@@ -3875,7 +3875,7 @@ var itemWidthPx = parseFloat(cfg.itemWidth) || 120;
 var gapPx = parseFloat(cfg.itemSpacing) || 8;
 var visibleItems = cfg.visibleItems || 4;
 
-// Espaço extra para o zoom (scale 1.08 no autoHighlight) não cortar nas bordas
+// EspaÃ§o extra para o zoom (scale 1.08 no autoHighlight) nÃ£o cortar nas bordas
 var zoomBufferPx = itemWidthPx * 0.08 + 8;
 
 var containerWidthPx = (itemWidthPx * visibleItems) + (gapPx * (visibleItems - 1)) + (zoomBufferPx * 2);
@@ -3902,11 +3902,11 @@ trackContainer.style.cssText =
     'will-change:transform !important;';
   track.style.transform = 'translateX(0px)';
   
-// Items renderizam completamente com suporte robusto a vÃƒÂ­deo e imagem
+// Items renderizam completamente com suporte robusto a vÃƒÆ’Ã‚Â­deo e imagem
   stories.forEach(function(story, storyIndex) {
     var videos = (story.videos || []).filter(Boolean);
     videos.forEach(function(video, videoIndex) {
-      // 1. ResoluÃƒÂ§ÃƒÂ£o completa e defensiva de URLs
+      // 1. ResoluÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o completa e defensiva de URLs
       var rawVideoUrl = getVideoUrl(video);
       var thumbUrl = getVideoThumbnail(video) || 
                      (video && (video.thumbnail_url || video.cover_image_url || video.poster_url || video.image_url)) ||
@@ -3928,7 +3928,7 @@ trackContainer.style.cssText =
         'background:transparent !important;' +
         'cursor:pointer !important;';
 
-      // 3. ResoluÃƒÂ§ÃƒÂ£o precisa de bordas e raios (preserva 0 para canto reto)
+      // 3. ResoluÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o precisa de bordas e raios (preserva 0 para canto reto)
       var parsedBorder = parseFloat(cfg.borderWidth);
       var borderWidthNum = !isNaN(parsedBorder) ? Math.max(0, parsedBorder) : 0;
 
@@ -3940,7 +3940,7 @@ trackContainer.style.cssText =
         ? cfg.itemRadius
         : (innerRadiusVal + 'px');
 
-      // 4. Card visual do vÃƒÂ­deo
+      // 4. Card visual do vÃƒÆ’Ã‚Â­deo
       var videoCard = document.createElement('div');
       var carouselBorderCss = (borderWidthNum > 0)
         ? ('box-shadow: inset 0 0 0 ' + borderWidthNum + 'px ' + cfg.borderColor + ' !important;')
@@ -3957,7 +3957,7 @@ videoCard.style.cssText =
   '-webkit-backface-visibility:hidden !important;' +
   carouselBorderCss;
 
-      // 5. MÃƒÂ¡scara interna para corte perfeito da mÃƒÂ­dia (DecisÃƒÂ£o por view_mode)
+      // 5. MÃƒÆ’Ã‚Â¡scara interna para corte perfeito da mÃƒÆ’Ã‚Â­dia (DecisÃƒÆ’Ã‚Â£o por view_mode)
       var innerMask = document.createElement('div');
       innerMask.className = 'vidlytics-carousel-inner-mask';
       innerMask.style.cssText = [
@@ -3972,7 +3972,7 @@ videoCard.style.cssText =
         'background:#000 !important;'
       ].join('');
 
-      // Modo 'playing' (preview): reproduz vÃƒÂ­deo mutado com poster nativo da capa
+      // Modo 'playing' (preview): reproduz vÃƒÆ’Ã‚Â­deo mutado com poster nativo da capa
       // Modo 'static': renderiza exclusivamente tag <img> da capa
       if (cfg.carouselPlayMode === 'playing' && rawVideoUrl) {
         var previewVideo = document.createElement('video');
@@ -4074,7 +4074,7 @@ directFrameVid.src = directUrl;
 
       videoCard.appendChild(innerMask);
 
-      // 6. ÃƒÂcone de Play centralizado
+      // 6. ÃƒÆ’Ã‚Âcone de Play centralizado
       if (cfg.showPlayIcon) {
         var play = document.createElement('div');
         play.className = 'vidlytics-carousel-play';
@@ -4095,7 +4095,7 @@ directFrameVid.src = directUrl;
         videoCard.appendChild(play);
       }
       
-      // 7. TÃƒÂ­tulo do Item sobreposto
+      // 7. TÃƒÆ’Ã‚Â­tulo do Item sobreposto
       if (cfg.showItemTitle && story.title) {
         var titleOverlay = document.createElement('div');
         titleOverlay.className = 'vidlytics-carousel-item-title';
@@ -4225,7 +4225,7 @@ directFrameVid.src = directUrl;
             sendAnalyticsEvent('product_click', video ? video.id : null, productData ? productData.id : null);
           });
 
-          // Registra a visualizaÃƒÂ§ÃƒÂ£o do produto na vitrine do carrossel
+          // Registra a visualizaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o do produto na vitrine do carrossel
           sendAnalyticsEvent('product_view', video ? video.id : null, productData ? productData.id : null);
 
           item.appendChild(prodCard);
@@ -4256,8 +4256,8 @@ track.appendChild(item);
   function getMaxScroll() {
   var trackWidth = track.scrollWidth;
   var containerWidth = trackContainer.offsetWidth;
-  // Desconta o padding lateral (zoomBufferPx x 2) que existe só para o
-  // scale(1.08) do item ativo não cortar nas bordas — não é largura útil.
+  // Desconta o padding lateral (zoomBufferPx x 2) que existe sÃ³ para o
+  // scale(1.08) do item ativo nÃ£o cortar nas bordas â€” nÃ£o Ã© largura Ãºtil.
   var usableWidth = containerWidth - (zoomBufferPx * 2);
   return Math.max(0, trackWidth - usableWidth);
 }
@@ -4394,7 +4394,7 @@ function renderGridWidget(container, stories, appearance) {
 
   if (allVideos.length === 0) {
     var emptyMsg = createEl('div');
-    emptyMsg.textContent = 'Nenhum vÃƒÂ­deo disponÃƒÂ­vel.';
+    emptyMsg.textContent = 'Nenhum vÃƒÆ’Ã‚Â­deo disponÃƒÆ’Ã‚Â­vel.';
     emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
     container.appendChild(emptyMsg);
     return;
@@ -4402,7 +4402,7 @@ function renderGridWidget(container, stories, appearance) {
 
   var cfg = getGridConfig(appearance);
 
-  // Ã°Å¸Ââ€º DEBUG #1 Ã¢â‚¬â€ confirma se autoplayVideos estÃƒÂ¡ true/false vindo da config
+  // ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬Âº DEBUG #1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â confirma se autoplayVideos estÃƒÆ’Ã‚Â¡ true/false vindo da config
 
   var fontFamily = getFontFamily(appearance);
   var columns = cfg.columns || 4;
@@ -4472,7 +4472,7 @@ function renderGridWidget(container, stories, appearance) {
         'background:#000;'
       ].join('');
 
-      // Ã°Å¸Ââ€º DEBUG #3 Ã¢â‚¬â€ mostra qual branch foi escolhida (imagem estÃƒÂ¡tica vs vÃƒÂ­deo autoplay)
+      // ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬Âº DEBUG #3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â mostra qual branch foi escolhida (imagem estÃƒÆ’Ã‚Â¡tica vs vÃƒÆ’Ã‚Â­deo autoplay)
       var willUseImage = isImageItem || !rawVideoUrl || (!cfg.autoplayVideos && thumbUrl);
       if (willUseImage) {
         var img = createEl('img');
@@ -4577,7 +4577,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
   var cfg = getDynamicCarouselConfig(appearance);
   if (!cfg.enabled) return;
 
-  // Coleta itens renderizáveis (vídeo válido OU thumb do vídeo OU thumb do story)
+  // Coleta itens renderizÃ¡veis (vÃ­deo vÃ¡lido OU thumb do vÃ­deo OU thumb do story)
   var items = [];
   (stories || []).forEach(function (story) {
     (story.videos || []).forEach(function (v) {
@@ -4589,9 +4589,9 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     });
   });
 
-  // Guard: mínimo 3 vídeos
+  // Guard: mÃ­nimo 3 vÃ­deos
   if (items.length < 3) {
-    console.warn('[Vidlytics] Carrossel Dinâmico requer no mínimo 3 vídeos. Encontrados:', items.length);
+    console.warn('[Vidlytics] Carrossel DinÃ¢mico requer no mÃ­nimo 3 vÃ­deos. Encontrados:', items.length);
     return;
   }
 
@@ -4735,7 +4735,7 @@ function initInlineWidget(options) {
   
   var target = document.querySelector(selector);
   if (!target) {
-    console.warn('[Vidlytics] Target nÃƒÂ£o encontrado:', selector);
+    console.warn('[Vidlytics] Target nÃƒÆ’Ã‚Â£o encontrado:', selector);
     return;
   }
   
@@ -4769,7 +4769,7 @@ function initInlineWidget(options) {
     var wrapper = document.createElement('div');
     wrapper.id = 'vidlytics-wrapper-' + Date.now();
     
-    // Ã°Å¸â€Â§ CRÃƒÂTICO: altura mÃƒÂ­nima + overflow visible
+    // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ CRÃƒÆ’Ã‚ÂTICO: altura mÃƒÆ’Ã‚Â­nima + overflow visible
     Object.assign(wrapper.style, {
       width: '100%',
       minHeight: '300px',
@@ -4803,7 +4803,7 @@ function initInlineWidget(options) {
         minHeight: 'auto'
       });
       
-      // Ã°Å¸â€Â§ Remove overflow:hidden de TODOS os pais
+      // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ Remove overflow:hidden de TODOS os pais
       var el = wrapper.parentElement;
       while (el && el !== document.body) {
         if (getComputedStyle(el).overflow === 'hidden') {
@@ -4823,7 +4823,7 @@ function initInlineWidget(options) {
 
     }, 200);
 
-  } else if (displayMode === 'grid') { // <--- Ã°Å¸â€Â§ ROTA DO GRID ADICIONADA AQUI
+  } else if (displayMode === 'grid') { // <--- ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ ROTA DO GRID ADICIONADA AQUI
     var container = document.createElement('div');
     container.className = 'vl-container';
     renderGridWidget(container, stories, appearance);
@@ -4839,7 +4839,7 @@ function initInlineWidget(options) {
 }
 
   /* ================================================================
-     INICIALIZAÃƒâ€¡ÃƒÆ’O PRINCIPAL
+     INICIALIZAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O PRINCIPAL
      ================================================================ */
 
   function init(options) {
@@ -4872,7 +4872,7 @@ function initInlineWidget(options) {
   }
 
   /* ================================================================
-     AUTO-INICIALIZAÃƒâ€¡ÃƒÆ’O VIA ATRIBUTO DATA
+     AUTO-INICIALIZAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O VIA ATRIBUTO DATA
      ================================================================ */
 
   function autoInit() {
@@ -4882,7 +4882,7 @@ function initInlineWidget(options) {
         var cfg = JSON.parse(script.getAttribute('data-vidlytics-init') || '{}');
         init(cfg);
       } catch (e) {
-        console.error('[Vidlytics] Erro ao parsear configuraÃƒÂ§ÃƒÂ£o:', e);
+        console.error('[Vidlytics] Erro ao parsear configuraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o:', e);
       }
     });
   }
@@ -4965,7 +4965,7 @@ function initInlineWidget(options) {
   }
 
   /* ================================================================
-     RENDERIZAÃƒâ€¡ÃƒÆ’O DO WIDGET FLUTUANTE
+     RENDERIZAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O DO WIDGET FLUTUANTE
      ================================================================ */
 
 function renderFloatingWidget(floatingStories) {
@@ -4995,7 +4995,7 @@ function renderFloatingWidget(floatingStories) {
   globalShadowRoot = shadowHost.attachShadow({ mode: 'open' });
   injectStyles(globalShadowRoot);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ CONTAINER PRINCIPAL Ã¢â€â‚¬Ã¢â€â‚¬
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ CONTAINER PRINCIPAL ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   var widget = createEl('div', 'vidlytics-floating-widget');
   widget.style.cssText =
     'display:flex !important;' +
@@ -5004,7 +5004,7 @@ function renderFloatingWidget(floatingStories) {
     'gap:8px !important;' +
     'position:relative !important;';
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ BOTÃƒÆ’O FECHAR (X) Ã¢â€â‚¬Ã¢â€â‚¬
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ BOTÃƒÆ’Ã†â€™O FECHAR (X) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   var closeBtn = null;
   if (cfg.allowClose) {
     closeBtn = createEl('div', 'vl-floating-close-btn');
@@ -5042,7 +5042,7 @@ function renderFloatingWidget(floatingStories) {
     });
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ BOLHA / CARD Ã¢â€â‚¬Ã¢â€â‚¬
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ BOLHA / CARD ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   var thumbUrl = story.cover_url || story.thumbnail_url || story.cover || story.thumbnail || '';
   if (!thumbUrl && story.videos && story.videos.length > 0) {
     thumbUrl = getVideoThumbnail(story.videos[0]);
@@ -5119,7 +5119,7 @@ function renderFloatingWidget(floatingStories) {
     cardInner.appendChild(img);
   }
 
-  // ÃƒÂcone de play centralizado
+  // ÃƒÆ’Ã‚Âcone de play centralizado
 if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isImageItem)) {
     var playOverlay = createEl('div', 'vl-floating-play-icon');
     playOverlay.style.cssText =
@@ -5146,7 +5146,7 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
     openStoryModal(0);
   });
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ MONTAR WIDGET Ã¢â€â‚¬Ã¢â€â‚¬
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ MONTAR WIDGET ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   var wrapper = createEl('div', 'vl-floating-wrapper');
   wrapper.style.cssText =
     'position:relative !important;' +
@@ -5156,7 +5156,7 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
   if (closeBtn) wrapper.appendChild(closeBtn);
   widget.appendChild(wrapper);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ TÃƒÂTULO Ã¢â€â‚¬Ã¢â€â‚¬
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ TÃƒÆ’Ã‚ÂTULO ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   if (cfg.showTitle && story.title) {
     var titleEl = createEl('div', 'vl-floating-title');
     titleEl.textContent = story.title;
@@ -5199,7 +5199,7 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
       'background:#1e293b;color:#fff;padding:12px 20px;' +
       'font-family:sans-serif;font-size:14px;font-weight:600;' +
       'text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.2);';
-    bannerEl.textContent = 'Ã°Å¸Å½Â¯ Clique no elemento onde o widget de stories serÃƒÂ¡ exibido';
+    bannerEl.textContent = 'ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯ Clique no elemento onde o widget de stories serÃƒÆ’Ã‚Â¡ exibido';
     document.body.appendChild(bannerEl);
 
     var highlightEl = document.createElement('div');
@@ -5277,7 +5277,7 @@ function sendSelector(selector, storyId) {
       return res.json().then(function (data) {
 
         if (data.success) {
-          alert('Ã¢Å“â€¦ Seletor vinculado com sucesso!\n\nVolte para o painel do Vidlytics para continuar.');
+          alert('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Seletor vinculado com sucesso!\n\nVolte para o painel do Vidlytics para continuar.');
 
           if (window.opener) {
             window.close();
@@ -5285,19 +5285,19 @@ function sendSelector(selector, storyId) {
             document.body.innerHTML =
               '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f8fafc;">' +
               '<div style="text-align:center;padding:40px;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.1);max-width:420px;">' +
-              '<div style="font-size:48px;margin-bottom:16px;">Ã¢Å“â€¦</div>' +
+              '<div style="font-size:48px;margin-bottom:16px;">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦</div>' +
               '<h2 style="margin:0 0 8px;color:#0f172a;">Seletor vinculado!</h2>' +
               '<p style="color:#64748b;margin:0;">Volte para o painel do <strong>Vidlytics</strong> para continuar.</p>' +
               '</div></div>';
           }
         } else {
-          alert('Ã¢ÂÅ’ Erro: ' + (data.message || data.error || 'Falha ao salvar.'));
+          alert('ÃƒÂ¢Ã‚ÂÃ…â€™ Erro: ' + (data.message || data.error || 'Falha ao salvar.'));
         }
       });
     })
     .catch(function (err) {
       console.error('[Vidlytics] Erro de rede:', err);
-      alert('Ã¢ÂÅ’ Erro de conexÃƒÂ£o. Tente novamente.');
+      alert('ÃƒÂ¢Ã‚ÂÃ…â€™ Erro de conexÃƒÆ’Ã‚Â£o. Tente novamente.');
     });
 }
 
@@ -5342,7 +5342,7 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
   }
 
 /* ================================================================
-     VALIDAÃƒâ€¡ÃƒÆ’O DE STATUS DA ASSINATURA / TRIAL & CARÃƒÅ NCIA DE 72H
+     VALIDAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O DE STATUS DA ASSINATURA / TRIAL & CARÃƒÆ’Ã…Â NCIA DE 72H
      ================================================================ */
 
   function isStoreBlocked(store) {
@@ -5354,11 +5354,11 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
       return true;
     }
 
-    // 2. InadimplÃƒÂªncia: avalia a janela de carÃƒÂªncia de 72 horas (Grace Period)
+    // 2. InadimplÃƒÆ’Ã‚Âªncia: avalia a janela de carÃƒÆ’Ã‚Âªncia de 72 horas (Grace Period)
     if (status === 'past_due') {
       var pastDueSince = store.past_due_since;
       if (!pastDueSince) {
-        // Se entrou em past_due sem timestamp registrado, bloqueia por seguranÃƒÂ§a
+        // Se entrou em past_due sem timestamp registrado, bloqueia por seguranÃƒÆ’Ã‚Â§a
         return true;
       }
 
@@ -5375,7 +5375,7 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
       return elapsed > GRACE_PERIOD_MS;
     }
 
-    // 3. PerÃƒÂ­odo de teste (trialing)
+    // 3. PerÃƒÆ’Ã‚Â­odo de teste (trialing)
     if (status === 'trialing') {
       if (!store.trial_ends_at) return true;
       return new Date(store.trial_ends_at).getTime() <= Date.now();
@@ -5386,7 +5386,7 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
       return false;
     }
 
-    // Fail-closed por padrÃƒÂ£o
+    // Fail-closed por padrÃƒÆ’Ã‚Â£o
     return true;
   }
 
@@ -5408,7 +5408,7 @@ return supabaseFetch(
   }
 
   /* ================================================================
-     INICIALIZAÃƒâ€¡ÃƒÆ’O DO WIDGET (COM story_id DA URL)
+     INICIALIZAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O DO WIDGET (COM story_id DA URL)
      ================================================================ */
 
 function initWidget() {
@@ -5423,7 +5423,7 @@ function initWidget() {
 
   readStoreStatus().then(function (storeData) {
     if (hasSupabase && !storeData) {
-      console.warn('[Vidlytics] Widget inativo: nÃƒÂ£o foi possÃƒÂ­vel validar a autenticidade da loja.');
+      console.warn('[Vidlytics] Widget inativo: nÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel validar a autenticidade da loja.');
       return;
     }
 
@@ -5455,7 +5455,7 @@ return readStoreSettings().then(function (settings) {
     }).then(function (stories) {
       currentStories = stories || [];
 
-      // Ã°Å¸â€Â§ Buscar story_videos e videos, depois juntar tudo
+      // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ Buscar story_videos e videos, depois juntar tudo
       return Promise.all([
         readStoryVideos(),
         readVideos()
@@ -5482,7 +5482,7 @@ return readStoreSettings().then(function (settings) {
       likedVideos = likes.likedVideos || {};
       videoLikeCounts = likes.likeCounts || {};
 
-      // Ã°Å¸â€ â€¢ LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
+      // ÃƒÂ°Ã…Â¸Ã¢â‚¬Â Ã¢â‚¬Â¢ LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
       if (!storeId || !hasSupabase) {
         return Promise.resolve();
       }
@@ -5494,30 +5494,33 @@ return readStoreSettings().then(function (settings) {
             return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
           });
 
-          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-          // Ã°Å¸â€œâ€¹ CLASSIFICAR STORIES POR FORMATO
-          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+          // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+          // ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ CLASSIFICAR STORIES POR FORMATO
+          // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
           function getStoryFormat(story) {
             var fmt = String(story.format || story.display_format || story.displayFormat || story.visual_style || story.visualStyle || '').trim().toLowerCase();
             if (fmt === 'carrossel' || fmt === 'carousel') return 'carousel';
             if (fmt === 'grade' || fmt === 'grid') return 'grid';
+            if (fmt === 'carrossel_dinamico' || fmt === 'dynamic_carousel') return 'dynamic_carousel';
             return 'floating_widget';
+            if (fmt === 'carrossel_dinamico' || fmt === 'dynamic_carousel') return 'dynamic_carousel';
+
           }
 
           var floatingStories = currentStories.filter(function (s) { return getStoryFormat(s) === 'floating_widget'; });
           var inlineStories = currentStories.filter(function (s) { return getStoryFormat(s) !== 'floating_widget'; });
 
 
-          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-          // Ã°Å¸Å½Ë† FLUTUANTE Ã¢â‚¬â€ SEMPRE renderiza, ignora seletor
-          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+          // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+          // ÃƒÂ°Ã…Â¸Ã…Â½Ã‹â€  FLUTUANTE ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â SEMPRE renderiza, ignora seletor
+          // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
           if (floatingStories.length > 0) {
             renderFloatingWidget(floatingStories);
           }
 
-          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-          // Ã°Å¸â€œÂ INLINE (carrossel/grade) Ã¢â‚¬â€ precisa de seletor
-          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+          // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+          // ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â INLINE (carrossel/grade) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â precisa de seletor
+          // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
           var injected = false;
 
@@ -5529,13 +5532,13 @@ return readStoreSettings().then(function (settings) {
 
             var story = currentStories.find(function (s) { return idsEqual(s.id, locStoryId); });
             if (!story) {
-              console.warn('[Vidlytics] Ã¢ÂÅ’ Story nÃƒÂ£o encontrada:', locStoryId);
+              console.warn('[Vidlytics] ÃƒÂ¢Ã‚ÂÃ…â€™ Story nÃƒÆ’Ã‚Â£o encontrada:', locStoryId);
               return;
             }
 
             var storyFormat = getStoryFormat(story);
 
-            // Flutuante jÃƒÂ¡ foi renderizado
+            // Flutuante jÃƒÆ’Ã‚Â¡ foi renderizado
             if (storyFormat === 'floating_widget') {
               return;
             }
@@ -5568,13 +5571,13 @@ return readStoreSettings().then(function (settings) {
               });
               injected = true;
             } catch (err) {
-              console.error('[Vidlytics] Ã¢ÂÅ’ Erro:', err);
+              console.error('[Vidlytics] ÃƒÂ¢Ã‚ÂÃ…â€™ Erro:', err);
             }
           });
 
-          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-          // Ã°Å¸â€Â§ FALLBACK Ã¢â‚¬â€ sÃƒÂ³ para stories inline sem seletor
-          // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+          // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+          // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ FALLBACK ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â sÃƒÆ’Ã‚Â³ para stories inline sem seletor
+          // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
           if (!injected && inlineStories.length > 0 && floatingStories.length === 0) {
             var fb = document.querySelector('#vidlytics-stories');
             if (!fb) {
@@ -5594,17 +5597,17 @@ return readStoreSettings().then(function (settings) {
                 storyFormat: getStoryFormat(inlineStories[0])
               });
             } catch (err) {
-              console.error('[Vidlytics] Ã¢ÂÅ’ Erro no fallback:', err);
+              console.error('[Vidlytics] ÃƒÂ¢Ã‚ÂÃ…â€™ Erro no fallback:', err);
             }
           }
         });
       });
 }).then(function () {
     }).catch(function (err) {
-      console.warn('[Vidlytics] Erro na inicializaÃƒÂ§ÃƒÂ£o:', err);
+      console.warn('[Vidlytics] Erro na inicializaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o:', err);
     });
   }).catch(function (err) {
-    console.warn('[Vidlytics] Erro ao carregar aparÃƒÂªncia:', err);
+    console.warn('[Vidlytics] Erro ao carregar aparÃƒÆ’Ã‚Âªncia:', err);
   });
   }).catch(function (err) {
     console.warn('[Vidlytics] Erro ao verificar status da loja:', err);
@@ -5614,3 +5617,4 @@ return readStoreSettings().then(function (settings) {
 initWidget();
 
 })();
+
