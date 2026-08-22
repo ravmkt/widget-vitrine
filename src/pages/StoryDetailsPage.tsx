@@ -41,9 +41,9 @@ type PageRuleCondition = 'home' | 'all_pages' | 'url_contains' | 'url_not_contai
 
 const PAGE_RULE_OPTIONS: Array<{ label: string; value: PageRuleCondition }> = [
   { label: 'Somente na Home', value: 'home' },
-  { label: 'Todas as pÃ¡ginas', value: 'all_pages' },
-  { label: 'URL contÃ©m', value: 'url_contains' },
-  { label: 'URL nÃ£o contÃ©m', value: 'url_not_contains' },
+  { label: 'Todas as páginas', value: 'all_pages' },
+  { label: 'URL contém', value: 'url_contains' },
+  { label: 'URL não contém', value: 'url_not_contains' },
   { label: 'URL diferente', value: 'url_not_equals' },
 ];
 
@@ -342,7 +342,7 @@ const [selectorLoading, setSelectorLoading] = useState(false);
       const validSelectedVideoIds = selectedVideoIds.filter((videoId) => isValidUuid(videoId));
       const storyPayload = { ...(story || ({} as Story)), id: story?.id && isValidUuid(story.id) ? story.id : generateUuid(), store_id: finalStoreId, title: formData.title.trim(), format: formData.format, scroll_direction: formData.scroll_direction, active: formData.active, appearance_id: formData.appearance_id && isValidUuid(formData.appearance_id) ? formData.appearance_id : null, cta_enabled: story?.cta_enabled ?? false, cta_type: story?.cta_type || 'none', cta_text: story?.cta_text || '', cta_url: story?.cta_url || '', whatsapp_message: story?.whatsapp_message || '', view_count: story?.view_count ?? 0, click_count: story?.click_count ?? 0, created_at: story?.created_at || now, updated_at: now } as Story;
       const savedStory = await (db as any).stories.save(storyPayload);
-      // âœ… CORRIGIDO: is_cover agora Ã© 1/0 (nÃºmero) em vez de true/false (booleano)
+      // âœ… CORRIGIDO: is_cover agora é 1/0 (número) em vez de true/false (booleano)
 const newRelations: StoryVideo[] = validSelectedVideoIds.map((videoId, index) => ({
   id: generateUuid(),
   store_id: finalStoreId,
@@ -363,7 +363,7 @@ console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
       setSuccessOpen(true);
     } catch (error) {
       console.error('Erro ao salvar Story:', error);
-      showError('Erro ao salvar as alteraÃ§Ãµes.');
+      showError('Erro ao salvar as alterações.');
     } finally {
       setIsSaving(false);
     }
@@ -423,8 +423,8 @@ console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
     setDragIndex(null);
   };
 
-// ðŸ†• FunÃ§Ã£o do seletor visual
-// ðŸ†• FunÃ§Ã£o do seletor visual
+// ðŸ†• Função do seletor visual
+// ðŸ†• Função do seletor visual
 const handleOpenSelector = async () => {
   const url = selectorUrl.trim();
   if (!url) return;
@@ -484,7 +484,7 @@ const response = await fetch(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-5xl rounded-[28px] bg-white p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-black text-slate-900">Selecionar VÃ­deos</h3>
+          <h3 className="text-lg font-black text-slate-900">Selecionar Vídeos</h3>
           <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-full p-2 text-slate-500 hover:bg-slate-100"><X size={18} /></button>
         </div>
         <div className="max-h-[70vh] overflow-y-auto pr-1">
@@ -517,7 +517,7 @@ const response = await fetch(
                   ) : posterUrl ? (
                     <img
                       src={posterUrl}
-                      alt={video.title || 'VÃ­deo'}
+                      alt={video.title || 'Vídeo'}
                       className="h-full w-full object-cover pointer-events-none"
                       onError={(e) => {
                         if (fileUrl) {
@@ -533,7 +533,7 @@ const response = await fetch(
                     </div>
                   )}
 
-                  {/* Fallback de streaming invisÃ­vel para caso a tag img falhe */}
+                  {/* Fallback de streaming invisível para caso a tag img falhe */}
                   {fileUrl && !isPosterVideo && (
                     <video
                       src={fileUrl}
@@ -549,7 +549,7 @@ const response = await fetch(
                     {selected && <div className="rounded-full bg-[#0094EB] p-1.5 text-white shadow-md"><CheckCircle2 size={16} /></div>}
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2.5 pointer-events-none">
-                    <p className="truncate text-[10px] font-black text-white">{video.title || 'Sem tÃ­tulo'}</p>
+                    <p className="truncate text-[10px] font-black text-white">{video.title || 'Sem título'}</p>
                   </div>
                 </button>
               );
@@ -557,9 +557,9 @@ const response = await fetch(
           </div>
         </div>
         <div className="mt-5 flex items-center justify-end gap-3">
-          <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">Criar novo vÃ­deo</button>
+          <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">Criar novo vídeo</button>
           <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
-            Adicionar {selectedVideoIds.length} vÃ­deo(s) ao Story
+            Adicionar {selectedVideoIds.length} vídeo(s) ao Story
           </button>
         </div>
       </div>
@@ -588,7 +588,7 @@ const SelectorModal = () => {
 
         <div className="space-y-4">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-            URL da pÃ¡gina da loja
+            URL da página da loja
           </label>
           <input
             type="url"
@@ -598,7 +598,7 @@ const SelectorModal = () => {
             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]"
           />
           <p className="text-xs text-slate-500">
-            Uma nova aba abrirÃ¡. Clique no elemento onde o widget deve aparecer
+            Uma nova aba abrirá. Clique no elemento onde o widget deve aparecer
             e pressione <b>Enter</b>.
           </p>
         </div>
@@ -627,7 +627,7 @@ const SelectorModal = () => {
 
   if (loading || tenantLoading) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-[#0094EB]" /></div>;
 
-  if (!isCreate && !story) return <div className="space-y-6 animate-fade-in"><button type="button" onClick={() => navigate('/stories')} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition-all hover:bg-slate-50"><ArrowLeft size={18} />Voltar</button><div className="rounded-[2rem] border border-slate-200 bg-white p-10 text-center shadow-sm"><h1 className="text-xl font-black text-slate-900">Story nÃ£o encontrado</h1><p className="mt-2 text-sm font-bold text-slate-500">NÃ£o foi possÃ­vel localizar esse Story para a loja atual.</p></div></div>;
+  if (!isCreate && !story) return <div className="space-y-6 animate-fade-in"><button type="button" onClick={() => navigate('/stories')} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition-all hover:bg-slate-50"><ArrowLeft size={18} />Voltar</button><div className="rounded-[2rem] border border-slate-200 bg-white p-10 text-center shadow-sm"><h1 className="text-xl font-black text-slate-900">Story não encontrado</h1><p className="mt-2 text-sm font-bold text-slate-500">Não foi possível localizar esse Story para a loja atual.</p></div></div>;
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
@@ -644,7 +644,7 @@ const SelectorModal = () => {
             <span className={cn('text-[10px] font-black uppercase tracking-widest', formData.active ? 'text-emerald-500' : 'text-slate-400')}>{formData.active ? 'Status: Ativo' : 'Status: Inativo'}</span>
             <button type="button" onClick={() => setFormData((prev) => ({ ...prev, active: !prev.active }))} className={cn('h-6 w-12 rounded-full p-1 transition-all duration-300', formData.active ? 'bg-emerald-500' : 'bg-slate-300')}><div className={cn('h-4 w-4 rounded-full bg-white transition-all duration-300', formData.active ? 'translate-x-6' : 'translate-x-0')} /></button>
           </div>
-          <button type="button" onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 transition-all hover:bg-[#0E4787] disabled:opacity-60">{isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}{isSaving ? 'Salvando...' : 'Salvar AlteraÃ§Ãµes'}</button>
+          <button type="button" onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 transition-all hover:bg-[#0E4787] disabled:opacity-60">{isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}{isSaving ? 'Salvando...' : 'Salvar Alterações'}</button>
         </div>
       </div>
 
@@ -657,14 +657,14 @@ const SelectorModal = () => {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome do Story</label>
-                  <input type="text" value={formData.title} onChange={(event) => setFormData((prev) => ({ ...prev, title: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none focus:border-[#0094EB]" placeholder="Ex: LanÃ§amentos" />
+                  <input type="text" value={formData.title} onChange={(event) => setFormData((prev) => ({ ...prev, title: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none focus:border-[#0094EB]" placeholder="Ex: Lançamentos" />
                 </div>
 <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
   {[
     { id: 'floating_widget', label: 'Flutuante' },
     { id: 'carousel', label: 'Carrossel' },
     { id: 'grid', label: 'Grade' },
-    { id: 'dynamic_carousel', label: 'Carrossel DinÃ¢mico' },
+    { id: 'dynamic_carousel', label: 'Carrossel Dinâmico' },
   ].map((format) => {
     const Icon = FORMAT_ICONS[format.id as keyof typeof FORMAT_ICONS] ?? Layout;
     const isDynamic = format.id === 'dynamic_carousel';
@@ -689,7 +689,7 @@ const SelectorModal = () => {
         <span className="text-[10px] font-black uppercase">{format.label}</span>
         {isDynamic && (
           <span className="text-center text-[9px] font-bold leading-tight text-slate-400">
-            {isDisabled ? 'Adicione 3 vÃ­deos para habilitar' : `${selectedVideoIds.length} vÃ­deos selecionados`}
+            {isDisabled ? 'Adicione 3 vídeos para habilitar' : `${selectedVideoIds.length} vídeos selecionados`}
           </span>
         )}
       </button>
@@ -697,8 +697,8 @@ const SelectorModal = () => {
   })}
 </div>
                 </div>
-                <div className="space-y-2 pt-4"><label className="text-[10px] font-black uppercase tracking-widest text-slate-400">DireÃ§Ã£o de Rolagem</label><select value={formData.scroll_direction} onChange={(event) => setFormData((prev) => ({ ...prev, scroll_direction: event.target.value as ScrollDirection }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none"><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
-                <div className="space-y-2 pt-4"><label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Estilo Visual / AparÃªncia</label><select value={formData.appearance_id} onChange={(event) => setFormData((prev) => ({ ...prev, appearance_id: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none"><option value="">Seguir PadrÃ£o do App</option>{appearances.filter((app) => app.id && isValidUuid(app.id)).map((app) => (<option key={app.id} value={app.id}>{app.name} {app.is_default ? '(PadrÃ£o)' : ''}</option>))}</select></div>
+                <div className="space-y-2 pt-4"><label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Direção de Rolagem</label><select value={formData.scroll_direction} onChange={(event) => setFormData((prev) => ({ ...prev, scroll_direction: event.target.value as ScrollDirection }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none"><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
+                <div className="space-y-2 pt-4"><label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Estilo Visual / Aparência</label><select value={formData.appearance_id} onChange={(event) => setFormData((prev) => ({ ...prev, appearance_id: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none"><option value="">Seguir Padrão do App</option>{appearances.filter((app) => app.id && isValidUuid(app.id)).map((app) => (<option key={app.id} value={app.id}>{app.name} {app.is_default ? '(Padrão)' : ''}</option>))}</select></div>
               </div>
 
             {/* â”€â”€ CONTEÃšDO SELECIONADO (COM DRAG-AND-DROP) â”€â”€ */}
@@ -707,14 +707,14 @@ const SelectorModal = () => {
                 <div className="flex items-center gap-3">
                   <Film className="text-[#0094EB]" size={20} />
                   <div>
-                    <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">ConteÃºdo selecionado</h3>
+                    <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">Conteúdo selecionado</h3>
                     {selectedVideoIds.length > 0 && (
-                      <p className="text-[10px] font-bold text-slate-400">Arraste para reordenar os vÃ­deos</p>
+                      <p className="text-[10px] font-bold text-slate-400">Arraste para reordenar os vídeos</p>
                     )}
                   </div>
                 </div>
                 <button type="button" onClick={() => setIsGalleryOpen(true)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
-                  + Adicionar VÃ­deos
+                  + Adicionar Vídeos
                 </button>
               </div>
 
@@ -750,7 +750,7 @@ const SelectorModal = () => {
                         ) : posterUrl ? (
                           <img
                             src={posterUrl}
-                            alt={video.title || 'VÃ­deo'}
+                            alt={video.title || 'Vídeo'}
                             className="h-full w-full object-cover pointer-events-none"
                             onError={(e) => {
                               const fileUrl = getVideoFileUrl(video);
@@ -787,19 +787,19 @@ const SelectorModal = () => {
                           {index + 1}
                         </div>
 
-                        {/* BotÃ£o de remover (hover) */}
+                        {/* Botão de remover (hover) */}
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); handleToggleVideo(video.id); }}
                           className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white opacity-0 transition-all hover:bg-red-500 group-hover:opacity-100"
-                          title="Remover vÃ­deo"
+                          title="Remover vídeo"
                         >
                           <X size={14} />
                         </button>
 
-                        {/* TÃ­tulo do vÃ­deo */}
+                        {/* Título do vídeo */}
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-                          <p className="truncate text-[9px] font-black text-white">{video.title || 'Sem tÃ­tulo'}</p>
+                          <p className="truncate text-[9px] font-black text-white">{video.title || 'Sem título'}</p>
                         </div>
                       </div>
                     );
@@ -808,13 +808,13 @@ const SelectorModal = () => {
               ) : (
                 <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center">
                   <Film size={28} className="mx-auto text-slate-300" />
-                  <p className="mt-2 text-sm font-bold text-slate-400">Nenhum vÃ­deo selecionado</p>
+                  <p className="mt-2 text-sm font-bold text-slate-400">Nenhum vídeo selecionado</p>
                   <button
                     type="button"
                     onClick={() => setIsGalleryOpen(true)}
                     className="mt-3 rounded-xl bg-[#0094EB] px-5 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]"
                   >
-                    + Adicionar VÃ­deos
+                    + Adicionar Vídeos
                   </button>
                 </div>
               )}
@@ -822,7 +822,7 @@ const SelectorModal = () => {
 
             {/* â”€â”€ LOCAL DE EXIBIÃ‡ÃƒO â”€â”€ */}
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2"><MapPin className="text-[#0094EB]" size={18} /><h4 className="text-sm font-black uppercase text-slate-800">Local de exibiÃ§Ã£o</h4></div></div>
+              <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2"><MapPin className="text-[#0094EB]" size={18} /><h4 className="text-sm font-black uppercase text-slate-800">Local de exibição</h4></div></div>
               <div className="grid gap-4 md:grid-cols-[1fr_220px] md:items-end">
 <div className="space-y-2">
   <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
@@ -863,9 +863,9 @@ const SelectorModal = () => {
               </div>
             </div>
 
-            {/* â”€â”€ REGRAS DE PÃGINA â”€â”€ */}
+            {/* ──── REGRAS DE PÁGINA ──── */}
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2"><Globe className="text-[#0094EB]" size={18} /><h4 className="text-sm font-black uppercase text-slate-800">Qual pÃ¡gina irÃ¡ aparecer?</h4></div></div>
+              <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2"><Globe className="text-[#0094EB]" size={18} /><h4 className="text-sm font-black uppercase text-slate-800">Qual página irá aparecer?</h4></div></div>
               <div className="space-y-4">
                 {pageRules.map((rule) => (
                   <div key={rule.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
@@ -876,7 +876,7 @@ const SelectorModal = () => {
                     </div>
                   </div>
                 ))}
-                <button type="button" onClick={handleAddPageRule} className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]">+ Adicionar pÃ¡gina</button>
+                <button type="button" onClick={handleAddPageRule} className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]">+ Adicionar página</button>
               </div>
             </div>
           </div>
@@ -886,7 +886,7 @@ const SelectorModal = () => {
       {isGalleryOpen && <GalleryModal />}
       {selectorModalOpen && <SelectorModal />}
 
-      <ConfirmDeleteDialog isOpen={deleteModal.isOpen} title="Confirmar ExclusÃ£o" itemName={deleteModal.name} onConfirm={() => { if (deleteModal.type === 'location') handleDeleteLocation(deleteModal.id); else handleDeletePageRule(deleteModal.id); setDeleteModal((prev) => ({ ...prev, isOpen: false })); }} onCancel={() => setDeleteModal((prev) => ({ ...prev, isOpen: false }))} />
+      <ConfirmDeleteDialog isOpen={deleteModal.isOpen} title="Confirmar Exclusão" itemName={deleteModal.name} onConfirm={() => { if (deleteModal.type === 'location') handleDeleteLocation(deleteModal.id); else handleDeletePageRule(deleteModal.id); setDeleteModal((prev) => ({ ...prev, isOpen: false })); }} onCancel={() => setDeleteModal((prev) => ({ ...prev, isOpen: false }))} />
       <SuccessDialog isOpen={successOpen} description={isCreate ? 'Story criado com sucesso.' : 'Story atualizado com sucesso.'} onClose={handleSuccessClose} />
     </div>
   );
