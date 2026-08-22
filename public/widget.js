@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.21-15';
+  var WIDGET_VERSION = '2026.08.22-00';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3686,7 +3686,8 @@ function getDynamicCarouselConfig(appearance) {
 
 function renderDynamicCarouselWidget(options, stories, appearance) {
   var cfg = getDynamicCarouselConfig(appearance);
-  if (!cfg.enabled) return;
+  console.log('[DIAG-DC] ENTRADA. enabled check proximo.');
+  if (!cfg.enabled) { console.warn('[DIAG-DC] SAINDO: enabled = FALSE'); return; }
 
   // Coleta itens renderizáveis (vídeo válido OU thumb do vídeo OU thumb do story)
   var items = [];
@@ -3701,7 +3702,8 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
   });
 
   // Guard: mínimo 3 vídeos
-  if (items.length < 3) {
+  console.log('[DIAG-DC] items =', items.length);
+    if (items.length < 3) {
     console.warn('[Vidlytics] Carrossel Dinâmico requer no mínimo 3 vídeos. Encontrados:', items.length);
     return;
   }
@@ -5631,3 +5633,4 @@ return readStoreSettings().then(function (settings) {
 initWidget();
 
 })();
+
