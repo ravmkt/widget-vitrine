@@ -3634,8 +3634,17 @@ function getDynamicCarouselConfig(appearance) {
   }
   if (!raw || typeof raw !== 'object') raw = {};
 
+  // Resolve o device atual (mobile/desktop) e faz merge com o raiz
+  var device = window.innerWidth < 768 ? 'mobile' : 'desktop';
+  var layer = (raw[device] && typeof raw[device] === 'object') ? raw[device] : raw;
+  if (!layer || typeof layer !== 'object') layer = {};
+
   var rcv = function(field, fallback) {
-    var v = raw[field];
+    var v = layer[field];
+    if (v === undefined || v === null || v === '') {
+      // Fallback: tenta no raiz (configs antigas sem mobile/desktop)
+      v = raw[field];
+    }
     return (v !== undefined && v !== null && v !== '') ? v : fallback;
   };
 
