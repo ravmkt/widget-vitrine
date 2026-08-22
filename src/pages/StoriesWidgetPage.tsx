@@ -1407,7 +1407,7 @@ useEffect(() => {
       <div
         className={cn(
           'relative h-full w-full overflow-hidden bg-black',
-          isGridLayout ? 'max-w-[1080px] sm:max-h-screen' : isCarouselLayout ? 'max-w-[420px] sm:aspect-[9/16] sm:max-h-screen' : 'max-w-[380px] sm:aspect-[9/16] sm:max-h-screen',
+isGridLayout ? 'max-w-[1080px] sm:max-h-screen' : isCarouselLayout ? 'max-w-[420px] sm:aspect-[9/16] sm:max-h-screen' : 'max-w-[380px] sm:aspect-[9/16] sm:max-h-screen',
         )}
         style={{
           borderColor: borderWidthNum > 0 ? borderColor : 'transparent',
