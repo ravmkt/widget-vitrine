@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.22-01';
+  var WIDGET_VERSION = '2026.08.22-02';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3842,7 +3842,15 @@ function getWidgetDisplayMode(appearance) {
     if (mode === 'dynamic_carousel' || mode === 'carrossel_dinamico') {
       var dcCfg = appearance.dynamic_carousel_config;
       if (typeof dcCfg === 'string') { try { dcCfg = JSON.parse(dcCfg); } catch(e) { dcCfg = null; } }
-      if (dcCfg && toBoolean(dcCfg.enabled, false)) return 'dynamic_carousel';
+      var dcEnabled = false;
+      if (dcCfg && typeof dcCfg === 'object') {
+        dcEnabled = dcCfg['enabled'] === true || dcCfg['enabled'] === 'true' ||
+          (dcCfg['mobile'] && (dcCfg['mobile']['enabled'] === true || dcCfg['mobile']['enabled'] === 'true')) ||
+          (dcCfg['desktop'] && (dcCfg['desktop']['enabled'] === true || dcCfg['desktop']['enabled'] === 'true'));
+      }
+      // Fallback para campos flattened (caso o flatten tenha destruído o objeto jsonb)
+      if (!dcEnabled) dcEnabled = appearance['enabled'] === true || appearance['enabled'] === 'true';
+      if (dcEnabled) return 'dynamic_carousel';
       // enabled=false cai para o próximo modo (não quebra usuários existentes)
     }
     if (mode === 'carousel' || mode === 'carrossel') return 'carousel';
