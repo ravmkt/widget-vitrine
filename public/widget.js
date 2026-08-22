@@ -433,7 +433,8 @@ console.log('[DEBUG-STRUCT] Item ANTES do flatten:', JSON.stringify(item || {}, 
     flattenAppearanceInto(merged, item || {}, 0);
     delete merged.storageAppearance; delete merged.configAppearance; delete merged.dbAppearance;
     delete merged.widgetsAppearance; delete merged.widgetsAparencia;
-    console.log('[DEBUG] Resultado APÓS flatten - grid_config:', merged.grid_config);
+console.log('[DEBUG-STRUCT] Resultado APÓS flatten (keys):', Object.keys(merged));
+console.log('[DEBUG-STRUCT] Resultado APÓS flatten grid_config:', JSON.stringify(merged.grid_config || null, null, 2));
     return merged;
   }
   var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_config'];
