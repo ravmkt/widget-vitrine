@@ -428,7 +428,7 @@ function normalizeMediaUrl(url) {
   function setStorageItem(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 
 function normalizeAppearanceItem(item) {
-    console.log('[DEBUG] Item ANTES do flatten:', JSON.parse(JSON.stringify(item || {})));
+console.log('[DEBUG-STRUCT] Item ANTES do flatten:', JSON.stringify(item || {}, null, 2));
     var merged = {};
     flattenAppearanceInto(merged, item || {}, 0);
     delete merged.storageAppearance; delete merged.configAppearance; delete merged.dbAppearance;
