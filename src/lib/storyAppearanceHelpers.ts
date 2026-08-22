@@ -445,11 +445,13 @@ export function normalizeModalAppearanceConfig(appearanceRaw: Record<string, any
 // FORMATO DO STORY
 // ═══════════════════════════════════════════════════════
 
-export type StoryFormat = 'floating_widget' | 'carousel' | 'grid';
+export type StoryFormat = 'floating_widget' | 'carousel' | 'grid' | 'dynamic_carousel';
 
 export function normalizeStoryFormat(raw: string): StoryFormat {
   const n = (raw || 'floating_widget').toLowerCase().trim();
+  if (n === 'dynamic_carousel' || n === 'carrossel_dinamico' || n === 'carrossel-dinamico') return 'dynamic_carousel';
   if (n === 'carrossel' || n === 'carousel') return 'carousel';
   if (n === 'grid' || n === 'grade') return 'grid';
   return 'floating_widget';
 }
+
