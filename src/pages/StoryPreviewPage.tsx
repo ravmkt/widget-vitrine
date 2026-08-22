@@ -768,9 +768,9 @@ Preview do Story • {storyFormat === 'floating_widget' ? 'Flutuante' : storyFor
         </div>
       </div>
 
-      {storyFormat === 'floating_widget' && videos.length > 0 && renderFloating()}
-      {storyFormat === 'carousel' && videos.length > 0 && renderInlineWidget(false)}
-      {storyFormat === 'grid' && videos.length > 0 && renderInlineWidget(true)}
+{storyFormat === 'floating_widget' && videos.length > 0 && renderFloating()}
+{(storyFormat === 'carousel' || storyFormat === 'dynamic_carousel') && videos.length > 0 && renderInlineWidget(false)}
+{storyFormat === 'grid' && videos.length > 0 && renderInlineWidget(true)}
 
       {videos.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-slate-400">
