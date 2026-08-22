@@ -659,16 +659,43 @@ const SelectorModal = () => {
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome do Story</label>
                   <input type="text" value={formData.title} onChange={(event) => setFormData((prev) => ({ ...prev, title: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none focus:border-[#0094EB]" placeholder="Ex: Lançamentos" />
                 </div>
-                <div className="space-y-4 pt-4 md:col-span-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Formato de Exibição</label>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    {[
-                      { id: 'floating_widget', label: 'Flutuante' },
-                      { id: 'carousel', label: 'Carrossel' },
-                      { id: 'grid', label: 'Grade' },
-                    ].map((format) => {
-                      const Icon = FORMAT_ICONS[format.id as keyof typeof FORMAT_ICONS];
-                      return (
+<div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+  {[
+    { id: 'floating_widget', label: 'Flutuante' },
+    { id: 'carousel', label: 'Carrossel' },
+    { id: 'grid', label: 'Grade' },
+    { id: 'dynamic_carousel', label: 'Carrossel Dinâmico' },
+  ].map((format) => {
+    const Icon = FORMAT_ICONS[format.id as keyof typeof FORMAT_ICONS] ?? Layout;
+    const isDynamic = format.id === 'dynamic_carousel';
+    const isDisabled = isDynamic && selectedVideoIds.length < 3;
+
+    return (
+      <button
+        key={format.id}
+        type="button"
+        disabled={isDisabled}
+        onClick={() => !isDisabled && setFormData((prev) => ({ ...prev, format: format.id as StoryFormat }))}
+        className={cn(
+          'flex flex-col items-center gap-3 rounded-3xl border-2 p-6 transition-all',
+          isDisabled
+            ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 opacity-60'
+            : formData.format === format.id
+              ? 'border-[#0094EB] bg-blue-50 text-[#0094EB]'
+              : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'
+        )}
+      >
+        <Icon size={24} strokeWidth={1.7} />
+        <span className="text-[10px] font-black uppercase">{format.label}</span>
+        {isDynamic && (
+          <span className="text-center text-[9px] font-bold leading-tight text-slate-400">
+            {isDisabled ? 'Adicione 3 vídeos para habilitar' : `${selectedVideoIds.length} vídeos selecionados`}
+          </span>
+        )}
+      </button>
+    );
+  })}
+</div>
                         <button key={format.id} type="button" onClick={() => setFormData((prev) => ({ ...prev, format: format.id as StoryFormat }))} className={cn('flex flex-col items-center gap-3 rounded-3xl border-2 p-6 transition-all', formData.format === format.id ? 'border-[#0094EB] bg-blue-50 text-[#0094EB]' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200')}>
                           <Icon size={24} strokeWidth={1.7} />
                           <span className="text-[10px] font-black uppercase">{format.label}</span>
