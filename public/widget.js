@@ -3628,40 +3628,34 @@ var bubbleAutoplay = (function () {
   }
 
 function getDynamicCarouselConfig(appearance) {
-  var raw = appearance.dynamic_carousel_config;
-  if (typeof raw === 'string') {
-    try { raw = JSON.parse(raw); } catch(e) { raw = null; }
+  appearance = normalizeAppearanceItem(appearance || {});
+
+  // Dupla leitura (padrão do carousel/grid): jsonb dynamic_carousel_config + campos flattened
+  function rcv(jsonbField, fallback) {
+    return readConfigValue(appearance, 'dynamic_carousel_config', jsonbField, jsonbField, fallback);
   }
-  if (!raw || typeof raw !== 'object') raw = {};
-  try { console.log('[DIAG-CFG] RAW-CRU:', JSON.stringify(appearance.dynamic_carousel_config)); console.log('[DIAG-CFG] RAW-PARSED:', JSON.stringify(raw)); } catch(e){ console.warn('[DIAG-CFG] raw nao serializavel'); }
 
-  // Resolve o device atual (mobile/desktop) e faz merge com o raiz
-  var device = window.innerWidth < 768 ? 'mobile' : 'desktop';
-  var layer = (raw[device] && typeof raw[device] === 'object') ? raw[device] : raw;
-  if (!layer || typeof layer !== 'object') layer = {};
-
-  var rcv = function(field, fallback) {
-    var v = layer[field];
-    if (v === undefined || v === null || v === '') {
-      // Fallback: tenta no raiz (configs antigas sem mobile/desktop)
-      v = raw[field];
+  // enabled vem de "enabled" no jsonb OU do flattened no topo
+  var enabled = toBoolean(rcv('enabled', false), false);
+  if (!enabled) {
+    var rawDc = appearance.dynamic_carousel_config;
+    if (typeof rawDc === 'string') { try { rawDc = JSON.parse(rawDc); } catch(e) { rawDc = null; } }
+    if (rawDc && typeof rawDc === 'object') {
+      var device = window.innerWidth < 768 ? 'mobile' : 'desktop';
+      var layer = (rawDc[device] && typeof rawDc[device] === 'object') ? rawDc[device] : rawDc;
+      if (layer && typeof layer === 'object' && (layer['enabled'] === true || layer['enabled'] === 'true')) {
+        enabled = true;
+      }
     }
-  console.log('[DIAG-CFG] device =', window.innerWidth < 768 ? 'mobile' : 'desktop', '| enabled na ifca:', layer['enabled'], '| enabled no raw:', raw['enabled'], '| typeof config:', typeof appearance.dynamic_carousel_config);
-    return (v !== undefined && v !== null && v !== '') ? v : fallback;
-  };
+  }
 
-  var clamp = function(n, min, max) {
-    n = Number(n);
-    if (!isFinite(n)) return min;
-    return Math.min(max, Math.max(min, n));
-  };
+  var clampNum = function(n, min, max) { n = Number(n); if (!isFinite(n)) return min; return Math.min(max, Math.max(min, n)); };
 
   var shape = String(rcv('shape', 'portrait')).trim().toLowerCase();
   if (['square', 'landscape', 'circle'].indexOf(shape) === -1) shape = 'portrait';
 
   return {
-    enabled: toBoolean(rcv('enabled', false), false),
-
+    enabled: enabled,
     width: toNumber(rcv('width', '160'), 160),
     spacing: toNumber(rcv('spacing', '14'), 14),
     shape: shape,
@@ -3672,17 +3666,17 @@ function getDynamicCarouselConfig(appearance) {
     highlightShadow: toBoolean(rcv('highlight_shadow', false), false),
     highlightBorderColor: rcv('border_color', '#0094EB') || '#0094EB',
     highlightBorderWidth: toNumber(rcv('highlight_border_width', '0'), 0),
-    highlightBorderRadius: toNumber(rcv('highlight_border_radius', rcv('border_radius', '14')), 14),
+    highlightBorderRadius: toNumber(rcv('highlight_border_radius', '14'), 14),
 
     dimInactive: toBoolean(rcv('highlight_dim_inactive', true), true),
-    inactiveScale: clamp(rcv('inactive_scale', '0.85'), 0.5, 1),
-    inactiveOpacity: clamp(rcv('inactive_opacity', '0.5'), 0.1, 1),
+    inactiveScale: clampNum(rcv('inactive_scale', '0.85'), 0.5, 1),
+    inactiveOpacity: clampNum(rcv('inactive_opacity', '0.5'), 0.1, 1),
 
     enlargeActive: toBoolean(rcv('highlight_enlarge_active', false), false),
-    activeScale: clamp(rcv('active_scale', '1.15'), 1, 1.5),
+    activeScale: clampNum(rcv('active_scale', '1.15'), 1, 1.5),
 
-    transitionMs: clamp(rcv('highlight_transition', '300'), 100, 1000),
-    autoplayDelay: clamp(rcv('autoplay_delay', '5000'), 1500, 20000),
+    transitionMs: clampNum(rcv('highlight_transition', '300'), 100, 1000),
+    autoplayDelay: clampNum(rcv('autoplay_delay', '5000'), 1500, 20000),
   };
 }
 
