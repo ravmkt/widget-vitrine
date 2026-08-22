@@ -437,7 +437,7 @@ console.log('[DEBUG-STRUCT] Resultado APÓS flatten (keys):', Object.keys(merged
 console.log('[DEBUG-STRUCT] Resultado APÓS flatten grid_config:', JSON.stringify(merged.grid_config || null, null, 2));
     return merged;
   }
-  var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_config'];
+var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_config', 'dynamic_carousel_config'];
 
   function flattenAppearanceInto(target, source, depth) {
     if (depth === undefined) depth = 0;
