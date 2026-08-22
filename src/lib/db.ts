@@ -717,9 +717,9 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
     'show_title', 'show_play_button', 'show_product', 'show_like_button',
     'show_comment_button', 'show_share_button', 'show_whatsapp_button', 'show_product_button',
     // 📦 JSONB Configs
-'dynamic_carousel_config',
-    'floating_config'
-        // 🔗 Outros
+    'dynamic_carousel_config',
+    'floating_config',
+    // 🔗 Outros
     'url',
   ],
 };
