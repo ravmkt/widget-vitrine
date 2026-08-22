@@ -762,7 +762,7 @@ const closePlayer = () => { setPlayerOpen(false); setPlaying(false); setShowComm
               {storeName || 'Minha Loja'}
             </p>
             <p className="text-[10px] text-slate-400">
-              Preview do Story • {storyFormat === 'floating_widget' ? 'Flutuante' : storyFormat === 'carousel' ? 'Carrossel' : 'Grade'}
+Preview do Story • {storyFormat === 'floating_widget' ? 'Flutuante' : storyFormat === 'carousel' || storyFormat === 'dynamic_carousel' ? 'Carrossel' : 'Grade'}
             </p>
           </div>
         </div>
