@@ -1254,8 +1254,7 @@ const syncGlobalConfig = (
             dynamic_carousel_config: {
         same_for_all: true,
         desktop: prev.dynamic_carousel_config.desktop,
-mobile: prev.dynamic_carousel_config.desktop,   // L.1257
-dynamicCarouselConfig.mobile = dynamicCarouselConfig.desktop;  // L.2671
+        mobile: prev.dynamic_carousel_config.desktop,
       },
 
       grid_config: {
