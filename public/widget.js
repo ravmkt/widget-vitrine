@@ -4240,11 +4240,13 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   wrapper.className = 'vidlytics-carousel-container';
   wrapper.setAttribute('data-vidlytics-widget', 'carousel');
   wrapper.style.cssText =
-    'width:100% !important;' +
-    'max-width:100% !important;' +
-    'margin:' + cfg.marginTop + ' auto ' + cfg.marginBottom + ' !important;' +
-    'padding:' + cfg.padding + ' !important;' +
-    'box-sizing:border-box !important;' +
+'width:100% !important;' +
+'max-width:100% !important;' +
+'margin:' + cfg.marginTop + ' auto ' + cfg.marginBottom + ' !important;' +
+'padding:' + cfg.padding + ' !important;' +
+'padding-left:' + (cfg.marginLeft || 0) + 'px !important;' +
+'padding-right:' + (cfg.marginRight || 0) + 'px !important;' +
+'box-sizing:border-box !important;' +
     'font-family:' + (appearance.font_family || 'inherit') + ' !important;' +
     'display:block !important;' +
     'visibility:visible !important;' +
