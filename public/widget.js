@@ -3856,6 +3856,12 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
 
     card.appendChild(videoFrame);
 
+    // 🆕 Abre o modal de Stories ao clicar no card (exceto se o clique for no card de produto)
+    card.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('.vidlytics-dc-product-card')) return;
+      openStoryModal(item.storyIndex, item.videoIndex);
+    });
+
     if (cfg.showProduct) {
       var vpId = item.product_id || item.productId || null;
       var pData = vpId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, vpId); }) : null;
