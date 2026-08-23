@@ -3707,6 +3707,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
           title: story.title || v.title || '',
           id: v.id || story.id || null,
           product_id: v.product_id || v.productId || null,
+          product_name: v.product_name || v.productName || (v.product && v.product.name) || story.title || v.title || '',
         });
       }
     });
@@ -3717,6 +3718,9 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     console.warn('[Vidlytics] Carrossel Dinâmico requer no mínimo 3 vídeos. Encontrados:', items.length);
     return;
   }
+
+  var visibleCount = Math.min(items.length, Math.max(3, cfg.visibleItems || 3));
+  var clones = items.slice(-visibleCount).concat(items, items.slice(0, visibleCount));
 
   var target = document.querySelector(options.target);
   if (!target) return;
@@ -3761,7 +3765,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
   var cardEls = [];
   var videoEls = [];
 
-  items.forEach(function (item, idx) {
+  clones.forEach(function (item, idx) {
     var card = document.createElement('div');
     card.className = 'vidlytics-dc-card';
     Object.assign(card.style, {
@@ -3781,6 +3785,9 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       cursor: 'pointer',
     });
 
+    var videoFrame = document.createElement('div');
+    videoFrame.style.cssText = 'position:relative;width:100%;aspect-ratio:' + aspectRatio + ';overflow:hidden;border-radius:' + (isCircle ? '999px' : cfg.borderRadius + 'px') + ';background:' + (cfg.bgColor || '#000') + ';';
+
     var video = document.createElement('video');
     video.src = item.url || '';
     if (item.thumb) video.poster = item.thumb;
@@ -3792,36 +3799,41 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       height: '100%',
       objectFit: cfg.objectFit === 'contain' ? 'contain' : cfg.objectFit === 'fill' ? 'fill' : 'cover',
       pointerEvents: 'none',
+      display: 'block',
     });
 
-    card.appendChild(video);
-    // Play central (item 3 - show_play_icon)
+    videoFrame.appendChild(video);
     if (cfg.showPlayIcon) {
       var playOverlay = document.createElement('div');
       playOverlay.className = 'vidlytics-dc-play';
       playOverlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:4;';
       playOverlay.innerHTML = '<div style="width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 14 16" fill="white"><path d="M0 0l14 8-14 8z"/></svg></div>';
-      card.appendChild(playOverlay);
+      videoFrame.appendChild(playOverlay);
     }
+
+    card.appendChild(videoFrame);
 
     if (cfg.showProduct) {
       var vpId = item.product_id || item.productId || null;
       var pData = vpId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, vpId); }) : null;
       if (pData) {
         var pUrl = pData.product_url || pData.url || '';
+        var pWhatsApp = pData.whatsapp_number || pData.whatsappNumber || '';
         var prodCard = document.createElement('div');
         prodCard.className = 'vidlytics-dc-product-card';
-        prodCard.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;padding:5px 6px;box-sizing:border-box;cursor:pointer;z-index:6;' +
+        prodCard.style.cssText = 'display:flex;flex-direction:column;gap:8px;width:100%;padding:8px 10px;box-sizing:border-box;z-index:6;' +
           'background:' + (cfg.productCardBg || '#fff') + ';' +
           'border-radius:' + (cfg.productCardRadius || 12) + 'px;' +
           'border:' + (cfg.productCardBorderWidth || 0) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ';' +
           'box-shadow:0 2px 8px rgba(0,0,0,0.15);';
+        var pHeader = document.createElement('div');
+        pHeader.style.cssText = 'display:flex;align-items:center;gap:8px;min-width:0;';
         var pImgSrc = getThumbnailFromObject(pData) || '';
         if (pImgSrc) {
           var pImg = document.createElement('img');
           pImg.src = pImgSrc;
           pImg.style.cssText = 'width:42px;height:42px;border-radius:6px;object-fit:cover;background:#f1f5f9;flex-shrink:0;display:block;';
-          prodCard.appendChild(pImg);
+          pHeader.appendChild(pImg);
         }
         var pInfo = document.createElement('div');
         pInfo.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:1px;';
@@ -3835,12 +3847,43 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
           pPrice.style.cssText = 'font-size:' + (cfg.productCardPriceSize || 12) + 'px;font-weight:' + (cfg.productCardPriceBold ? '800' : '600') + ';color:' + (cfg.productCardPriceColor || '#0094EB') + ';';
           pInfo.appendChild(pPrice);
         }
-        prodCard.appendChild(pInfo);
-        prodCard.addEventListener('click', function (e) {
+        pHeader.appendChild(pInfo);
+        prodCard.appendChild(pHeader);
+
+        var pActions = document.createElement('div');
+        pActions.style.cssText = 'display:flex;gap:8px;';
+        var siteBtn = document.createElement('button');
+        siteBtn.type = 'button';
+        siteBtn.textContent = 'Ver no site';
+        siteBtn.style.cssText = 'flex:1;border:none;border-radius:999px;padding:9px 10px;font-size:12px;font-weight:800;cursor:pointer;background:' + (cfg.productCardButtonBg || cfg.borderColor || '#0094EB') + ';color:' + (cfg.productCardButtonColor || '#FFFFFF') + ';';
+        siteBtn.addEventListener('click', function (e) {
           e.stopPropagation();
           if (pUrl) window.open(pUrl, '_blank');
           sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
         });
+
+        var whatsappBtn = document.createElement('button');
+        whatsappBtn.type = 'button';
+        whatsappBtn.textContent = 'Comprar no WhatsApp';
+        whatsappBtn.style.cssText = 'flex:1;border:none;border-radius:999px;padding:9px 10px;font-size:12px;font-weight:800;cursor:pointer;background:#25D366;color:#FFFFFF;';
+        whatsappBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var msg = encodeURIComponent('Olá! Quero comprar: ' + (pData.name || 'Produto'));
+          var phone = String(pWhatsApp || storeWhatsappNumber || '').replace(/\D/g, '');
+          if (phone) {
+            window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
+          }
+        });
+
+        pActions.appendChild(siteBtn);
+        pActions.appendChild(whatsappBtn);
+        prodCard.appendChild(pActions);
+
+        prodCard.addEventListener('click', function (e) {
+          if (e.target === siteBtn || e.target === whatsappBtn) return;
+          e.stopPropagation();
+        });
+
         card.appendChild(prodCard);
         sendAnalyticsEvent('product_view', item.id || null, pData.id || null);
       }
@@ -3854,8 +3897,6 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       card.appendChild(vitLabel);
     }
 
-    // Certifica posicionamento relativo para overlays
-    card.style.position = 'relative';
     cardEls.push(card);
     videoEls.push(video);
     track.appendChild(card);
@@ -3865,7 +3906,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
   container.appendChild(wrapper);
   target.insertAdjacentElement('beforeend', container);
 
-  var activeIndex = 0;
+  var activeIndex = visibleCount;
 
   function applyStyles() {
     cardEls.forEach(function (card, idx) {
@@ -3875,7 +3916,6 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       var boxShadow = 'none';
       var border = 'none';
 
-      // Borda permanente do card de produto
       if (cfg.borderWidth > 0) {
         border = cfg.borderWidth + 'px solid ' + cfg.borderColor;
       }
@@ -3912,7 +3952,6 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       }
     });
 
-    // Centraliza o card ativo no track
     var offset = activeIndex * (cfg.width + cfg.spacing);
     var containerWidth = container.getBoundingClientRect().width || 0;
     var centerOffset = containerWidth / 2 - cfg.width / 2;
@@ -3921,7 +3960,15 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
   }
 
   function goNext() {
-    activeIndex = (activeIndex + 1) % items.length;
+    activeIndex += 1;
+    if (activeIndex >= clones.length - visibleCount) {
+      activeIndex = visibleCount;
+      track.style.transition = 'none';
+      applyStyles();
+      track.getBoundingClientRect();
+      track.style.transition = 'transform ' + cfg.transitionMs + 'ms ease';
+      return;
+    }
     applyStyles();
   }
 
