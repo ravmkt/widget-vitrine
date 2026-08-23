@@ -744,6 +744,8 @@ var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
     itemRadius: shape === 'circle' ? '999px' : px(itemRadius),
     marginTop: px(marginTop),
     marginBottom: px(marginBottom),
+    marginLeft: marginLeft,
+    marginRight: marginRight,
     visibleItems: visibleItems,
     borderColor: borderColor,
     borderWidth: borderWidth,
