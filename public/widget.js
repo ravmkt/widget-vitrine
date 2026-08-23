@@ -3685,7 +3685,7 @@ function getDynamicCarouselConfig(appearance) {
     productCardNameSize: toNumber(rcv('product_card_name_size', '11'), 11),
     productCardNameColor: rcv('product_card_name_color', '#FFFFFF') || '#FFFFFF',
     showProduct: toBoolean(rcv('show_product', false), false),
-    showProductButton: toBoolean(rcv('show_product_button', true), true), // 🆕 Lê o botão 'Ver no Site' (padrão true para compatibilidade)
+    showProductButton: toBoolean(rcv('show_product_button', true), true),
 
     // Estilo visual do card (item 5)
     productCardBorderColor: rcv('product_card_border_color', '#E2E8F0') || '#E2E8F0',
