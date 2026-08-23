@@ -428,13 +428,10 @@ function normalizeMediaUrl(url) {
   function setStorageItem(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 
 function normalizeAppearanceItem(item) {
-console.log('[DEBUG-STRUCT] Item ANTES do flatten:', JSON.stringify(item || {}, null, 2));
     var merged = {};
     flattenAppearanceInto(merged, item || {}, 0);
     delete merged.storageAppearance; delete merged.configAppearance; delete merged.dbAppearance;
     delete merged.widgetsAppearance; delete merged.widgetsAparencia;
-console.log('[DEBUG-STRUCT] Resultado APÓS flatten (keys):', Object.keys(merged));
-console.log('[DEBUG-STRUCT] Resultado APÓS flatten grid_config:', JSON.stringify(merged.grid_config || null, null, 2));
     return merged;
   }
 var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_config', 'dynamic_carousel_config'];
@@ -923,7 +920,6 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
       if (story.videos.length === 0) {
         console.warn('[Vidlytics] Story "' + (story.title || story.id) + '" sem videos vinculados.');
       } else {
-        console.log('[Vidlytics] Story "' + (story.title || story.id) + '" com ' + story.videos.length + ' video(s).');
       }
     });
 
@@ -3116,7 +3112,6 @@ var showWhatsAppProduto = showVerProduto;
     // 🔍 DEBUG — colar AQUI (depois das declarações)
     var videoProductId = video ? (video.product_id || video.productId) : null;
     var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
-    console.log('🐛 DEBUG WHATSAPP V2:', {
       showWhatsAppProduto: showWhatsAppProduto,
       storeWhatsappNumber: storeWhatsappNumber,
       videoProductId: videoProductId,
@@ -3677,6 +3672,13 @@ function getDynamicCarouselConfig(appearance) {
 
     transitionMs: clampNum(rcv('highlight_transition', '300'), 100, 1000),
     autoplayDelay: clampNum(rcv('autoplay_delay', '5000'), 1500, 20000),
+    autoplayVideos: toBoolean(rcv('autoplay_videos', true), true),
+    objectFit: String(rcv('object_fit', 'cover')).trim().toLowerCase(),
+    marginTop: toNumber(rcv('margin_top', '0'), 0),
+    marginBottom: toNumber(rcv('margin_bottom', '0'), 0),
+    productCardPriceSize: toNumber(rcv('product_card_price_size', '12'), 12),
+    productCardPriceBold: false,
+    productCardPriceColor: rcv('product_card_price_color', '#0094EB') || '#0094EB',
 
     // NOVOS: conecta ao Carousel 3 "5. Estilo do Card de Produto"
     productCardBg: rcv('product_card_bg', '#FFFFFF') || '#FFFFFF',
@@ -3706,7 +3708,13 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       var url = v.video_url || v.videoUrl || v.url || '';
       var thumb = v.thumbnail_url || v.thumbnailUrl || v.poster_url || story.thumbnail_url || '';
       if (url || thumb) {
-        items.push({ url: url, thumb: thumb, title: story.title || v.title || '' });
+        items.push({
+          url: url,
+          thumb: thumb,
+          title: story.title || v.title || '',
+          id: v.id || story.id || null,
+          product_id: v.product_id || v.productId || null,
+        });
       }
     });
   });
@@ -3730,8 +3738,9 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'visible',
-    padding: '24px 0',
+    overflow: 'hidden',
+    marginTop: cfg.marginTop + 'px',
+    marginBottom: cfg.marginBottom + 'px',
   });
 
   var track = document.createElement('div');
@@ -3755,7 +3764,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       width: cfg.width + 'px',
       aspectRatio: aspectRatio,
       borderRadius: isCircle ? (cfg.productCardRadius + 'px') : Math.max(cfg.borderRadius, cfg.productCardRadius) + 'px',
-      overflow: 'hidden',
+    overflow: 'hidden',
       background: cfg.productCardBg || cfg.bgColor,
       border: cfg.productCardBorderWidth + 'px solid ' + cfg.productCardBorderColor,
       boxShadow: cfg.highlightShadow ? '0 4px 14px rgba(0,0,0,0.15)' : 'none',
@@ -3772,7 +3781,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     Object.assign(video.style, {
       width: '100%',
       height: '100%',
-      objectFit: 'cover',
+      objectFit: cfg.objectFit === 'contain' ? 'contain' : cfg.objectFit === 'fill' ? 'fill' : 'cover',
       pointerEvents: 'none',
     });
 
@@ -3887,6 +3896,8 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     videoEls.forEach(function (video, idx) {
       if (idx === activeIndex) {
         video.currentTime = 0;
+        video.play().catch(function () {});
+      } else if (cfg.autoplayVideos) {
         video.play().catch(function () {});
       } else {
         video.pause();
@@ -4066,7 +4077,6 @@ function onStart(e) {
 }
 
 function renderCarouselWidget(targetOrOptions, stories, appearance) {
-  console.log('[Vidlytics] Iniciando renderCarouselWidget com', stories.length, 'stories');
   
   var target, position;
   
@@ -4578,7 +4588,6 @@ track.appendChild(item);
   });
   
   target.insertAdjacentElement(position, wrapper);
-  console.log('[Vidlytics] ✅ Carrossel injetado no DOM via', position, '| itens:', track.children.length);
 }
 
 function renderGridWidget(container, stories, appearance) {
@@ -4606,8 +4615,6 @@ function renderGridWidget(container, stories, appearance) {
   var cfg = getGridConfig(appearance);
 
   // 🐛 DEBUG #1 — confirma se autoplayVideos está true/false vindo da config
-  console.log('[DEBUG] cfg completo:', cfg);
-  console.log('[DEBUG] cfg.autoplayVideos:', cfg.autoplayVideos);
 
   var fontFamily = getFontFamily(appearance);
   var columns = cfg.columns || 4;
@@ -4657,7 +4664,6 @@ function renderGridWidget(container, stories, appearance) {
     var effectiveMediaUrl = thumbUrl || rawVideoUrl;
 
     // 🐛 DEBUG #2 — confirma se a URL do vídeo está vindo preenchida e o objeto completo
-    console.log('[DEBUG] video item:', {
       title: video.title || story.title,
       rawVideoUrl: rawVideoUrl,
       thumbUrl: thumbUrl,
@@ -4688,7 +4694,6 @@ function renderGridWidget(container, stories, appearance) {
 
       // 🐛 DEBUG #3 — mostra qual branch foi escolhida (imagem estática vs vídeo autoplay)
       var willUseImage = isImageItem || !rawVideoUrl || (!cfg.autoplayVideos && thumbUrl);
-      console.log('[DEBUG] Branch escolhida:', willUseImage ? 'IMAGEM ESTÁTICA' : 'VÍDEO AUTOPLAY');
       if (willUseImage) {
         var img = createEl('img');
         img.src = thumbUrl || rawVideoUrl;
@@ -4786,7 +4791,6 @@ gridVideo.src = gridUrlWithFragment;
   });
 
   container.appendChild(gridWrapper);
-  console.log('[Vidlytics] Grade renderizada com ' + allVideos.length + ' video(s) em ' + columns + ' colunas.');
 }
 
 function initInlineWidget(options) {
@@ -4796,18 +4800,14 @@ function initInlineWidget(options) {
   var stories = options.stories || currentStories;
   var appearance = options.appearance || currentAppearance;
   
-  console.log('[Vidlytics] Seletor:', selector);
-  console.log('[Vidlytics] Posicao:', position);
   
   var target = document.querySelector(selector);
   if (!target) {
     console.warn('[Vidlytics] Target não encontrado:', selector);
     return;
   }
-  console.log('[Vidlytics] Elemento encontrado:', target);
   
   var displayMode = options.storyFormat || getWidgetDisplayMode(appearance);
-  console.log('[Vidlytics] Modo de exibição detectado:', displayMode);
   
   if (displayMode === 'dynamic_carousel') {
     document.querySelectorAll('[id^="vidlytics-wrapper-"]').forEach(function (w) { w.remove(); });
@@ -4887,7 +4887,6 @@ function initInlineWidget(options) {
         });
       });
 
-      console.log('[Vidlytics] ✅ Wrapper fix aplicado!');
     }, 200);
 
   } else if (displayMode === 'grid') { // <--- 🔧 ROTA DO GRID ADICIONADA AQUI
@@ -4903,7 +4902,6 @@ function initInlineWidget(options) {
     target.insertAdjacentElement(position, container);
   }
   
-  console.log('[Vidlytics] ✅ Inline injetado!');
 }
 
   /* ================================================================
@@ -5243,7 +5241,6 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
 
   globalShadowRoot.appendChild(widget);
   applyDraggable(cardOuter, currentAppearance);
-  console.log('[Vidlytics] ✅ Flutuante renderizado em:', cfg.position, '| shape:', cfg.shape, '| size:', cfg.width, 'x', cfg.height);
 }
 
   /* ================================================================
@@ -5336,7 +5333,6 @@ function sendSelector(selector, storyId) {
     endpoint = supabaseUrl.replace(/\/rest\/v1.*/, '') + '/functions/v1/widget-selector';
   }
 
-  console.log('[Vidlytics] Enviando seletor:', payload);
 
   fetch(endpoint, {
     method: 'POST',
@@ -5345,7 +5341,6 @@ function sendSelector(selector, storyId) {
   })
     .then(function (res) {
       return res.json().then(function (data) {
-        console.log('[Vidlytics] Resposta:', data);
 
         if (data.success) {
           alert('✅ Seletor vinculado com sucesso!\n\nVolte para o painel do Vidlytics para continuar.');
@@ -5527,7 +5522,6 @@ return readStoreSettings().then(function (settings) {
       currentStories = stories || [];
 
       // 🔧 Buscar story_videos e videos, depois juntar tudo
-      console.log('[Vidlytics] Buscando videos vinculados aos stories...');
       return Promise.all([
         readStoryVideos(),
         readVideos()
@@ -5535,51 +5529,34 @@ return readStoreSettings().then(function (settings) {
         var storyVideosData = results[0] || [];
         var videosData = results[1] || [];
 
-        console.log('[Vidlytics] story_videos encontrados:', storyVideosData.length);
-        console.log('[Vidlytics] videos encontrados:', videosData.length);
 
         currentStories = joinStoriesWithVideos(currentStories, storyVideosData, videosData);
 
-        console.log('[Vidlytics] Total de stories com videos:', currentStories.filter(function(s) {
           return s.videos && s.videos.length > 0;
         }).length);
 
-        console.log('[Vidlytics] 🔍 Indo buscar products...');
         return readProducts();
       });
     }).then(function (products) {
       readProductsData = products || [];
-      console.log('[Vidlytics] ✅ Products carregados:', readProductsData.length);
-      console.log('[Vidlytics] 🔍 Indo buscar sizing_models...');
       return readSizingModels();
     }).then(function (models) {
       readSizingModelsData = models || [];
-      console.log('[Vidlytics] ✅ Sizing models carregados:', readSizingModelsData.length);
-      console.log('[Vidlytics] 🔍 Indo buscar comments...');
       return readComments();
     }).then(function (comments) {
       readCommentsData = comments || [];
-      console.log('[Vidlytics] ✅ Comments carregados:', readCommentsData.length);
-      console.log('[Vidlytics] 🔍 Indo buscar likes...');
       return readLikesFromDb();
     }).then(function (likes) {
       likedVideos = likes.likedVideos || {};
       videoLikeCounts = likes.likeCounts || {};
-      console.log('[Vidlytics] ✅ Likes carregados. storeId:', storeId, 'hasSupabase:', hasSupabase);
-      console.log('[Vidlytics] 🔍 Indo buscar display_locations...');
 
       // 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
       if (!storeId || !hasSupabase) {
-        console.log('[Vidlytics] ⚠️ storeId ou hasSupabase inválido, pulando display_locations.');
         return Promise.resolve();
       }
 
-      console.log('[Vidlytics] 🔍 Chamando readDisplayLocations()...');
       return readDisplayLocations().then(function (locations) {
-        console.log('[Vidlytics] ✅ readDisplayLocations retornou:', locations ? locations.length : 0, 'locations');
-        console.log('[Vidlytics] 🔍 Chamando readPageRules()...');
         return readPageRules().then(function (rules) {
-          console.log('[Vidlytics] ✅ readPageRules retornou:', rules ? rules.length : 0, 'rules');
 
           var activeLocations = locations.filter(function (loc) {
             return loc.active !== false && loc.active !== 'false' && loc.active !== 0 && loc.active !== '0';
@@ -5599,27 +5576,23 @@ return readStoreSettings().then(function (settings) {
           var floatingStories = currentStories.filter(function (s) { return getStoryFormat(s) === 'floating_widget'; });
           var inlineStories = currentStories.filter(function (s) { return getStoryFormat(s) !== 'floating_widget'; });
 
-          console.log('[Vidlytics] 📋 Stories — floating:', floatingStories.length, '| inline:', inlineStories.length);
 
           // ────────────────────────────────────────────
           // 🎈 FLUTUANTE — SEMPRE renderiza, ignora seletor
           // ────────────────────────────────────────────
           if (floatingStories.length > 0) {
-            console.log('[Vidlytics] 🎈 Renderizando flutuante para', floatingStories.length, 'story(ies).');
             renderFloatingWidget(floatingStories);
           }
 
           // ────────────────────────────────────────────
           // 📍 INLINE (carrossel/grade) — precisa de seletor
           // ────────────────────────────────────────────
-          console.log('[Vidlytics] 📍 Active locations:', activeLocations.length);
 
           var injected = false;
 
           activeLocations.forEach(function (location) {
             var locStoryId = location.story_id;
             if (!locStoryId) {
-              console.log('[Vidlytics] ⚠️ Location sem story_id, pulando.');
               return;
             }
 
@@ -5630,11 +5603,9 @@ return readStoreSettings().then(function (settings) {
             }
 
             var storyFormat = getStoryFormat(story);
-            console.log('[Vidlytics] ✅ Story:', story.title || story.id, '| formato:', storyFormat);
 
             // Flutuante já foi renderizado
             if (storyFormat === 'floating_widget') {
-              console.log('[Vidlytics] ⏭️ Story flutuante já renderizado, pulando inline.');
               return;
             }
 
@@ -5642,22 +5613,17 @@ return readStoreSettings().then(function (settings) {
             if (storyRules.length > 0) {
               var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
               if (!hasMatch) {
-                console.log('[Vidlytics] ❌ Regra não bateu, pulando.');
                 return;
               }
-              console.log('[Vidlytics] ✅ Regra bateu!');
             }
 
             var selector = location.selector;
             var position = location.position || 'beforeend';
-            console.log('[Vidlytics] 🎯 Selector:', selector || '(vazio)', '| Position:', position);
 
             if (!selector) {
-              console.log('[Vidlytics] ⚠️ Location sem selector, pulando.');
               return;
             }
 
-            console.log('[Vidlytics] 🚀 Injetando widget em:', selector);
             try {
               initInlineWidget({
                 target: selector,
@@ -5670,7 +5636,6 @@ return readStoreSettings().then(function (settings) {
                 storyFormat: storyFormat
               });
               injected = true;
-              console.log('[Vidlytics] ✅ Inline injetado!');
             } catch (err) {
               console.error('[Vidlytics] ❌ Erro:', err);
             }
@@ -5680,7 +5645,6 @@ return readStoreSettings().then(function (settings) {
           // 🔧 FALLBACK — só para stories inline sem seletor
           // ────────────────────────────────────────────
           if (!injected && inlineStories.length > 0 && floatingStories.length === 0) {
-            console.log('[Vidlytics] 🔧 Fallback inline.');
             var fb = document.querySelector('#vidlytics-stories');
             if (!fb) {
               fb = document.createElement('div');
@@ -5698,7 +5662,6 @@ return readStoreSettings().then(function (settings) {
                 appearance: currentAppearance,
                 storyFormat: getStoryFormat(inlineStories[0])
               });
-              console.log('[Vidlytics] ✅ Fallback injetado!');
             } catch (err) {
               console.error('[Vidlytics] ❌ Erro no fallback:', err);
             }
@@ -5706,7 +5669,6 @@ return readStoreSettings().then(function (settings) {
         });
       });
 }).then(function () {
-      console.log('[Vidlytics] ✅ Widget inicializado com sucesso.');
     }).catch(function (err) {
       console.warn('[Vidlytics] Erro na inicialização:', err);
     });
