@@ -3678,7 +3678,6 @@ function getDynamicCarouselConfig(appearance) {
     productCardPriceBold: toBoolean(rcv('product_card_price_bold', true), true),
     productCardPriceColor: rcv('product_card_price_color', '#0094EB') || '#0094EB',
 
-    // NOVOS: conecta ao Carousel 3 "5. Estilo do Card de Produto"
     productCardBg: rcv('product_card_bg', '#FFFFFF') || '#FFFFFF',
     borderColor: rcv('border_color', '#0094EB') || '#0094EB',
     borderWidth: borderWidthNumber,
