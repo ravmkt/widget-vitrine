@@ -4037,16 +4037,26 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     activeIndex += 1;
     applyStyles();
 
-    // Ao entrar na zona de clones do final, volta ao índice equivalente real
-    // sem animação (loop infinito, sem "piscada")
     if (activeIndex >= visibleCount + items.length) {
       setTimeout(function () {
+        var cloneVideo = videoEls[activeIndex];
+        var originalVideo = videoEls[visibleCount];
+        if (cloneVideo && originalVideo && !cloneVideo.paused) {
+          originalVideo.currentTime = cloneVideo.currentTime;
+        }
+
         track.style.transition = 'none';
         activeIndex = visibleCount;
         applyStyles();
-        track.getBoundingClientRect();
-        track.style.transition = 'transform ' + cfg.transitionMs + 'ms ease';
-      }, cfg.transitionMs);
+        
+        track.offsetHeight; 
+
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            track.style.transition = 'transform ' + cfg.transitionMs + 'ms ease';
+          });
+        });
+      }, cfg.transitionMs + 20);
     }
   }
 
