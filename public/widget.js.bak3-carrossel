@@ -3736,8 +3736,9 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'visible',
-    padding: '24px 0',
+    overflow: 'hidden',
+    marginTop: cfg.marginTop + 'px',
+    marginBottom: cfg.marginBottom + 'px',
   });
 
   var track = document.createElement('div');
@@ -3761,7 +3762,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       width: cfg.width + 'px',
       aspectRatio: aspectRatio,
       borderRadius: isCircle ? (cfg.productCardRadius + 'px') : Math.max(cfg.borderRadius, cfg.productCardRadius) + 'px',
-      overflow: 'hidden',
+    overflow: 'hidden',
       background: cfg.productCardBg || cfg.bgColor,
       border: cfg.productCardBorderWidth + 'px solid ' + cfg.productCardBorderColor,
       boxShadow: cfg.highlightShadow ? '0 4px 14px rgba(0,0,0,0.15)' : 'none',
@@ -3893,6 +3894,8 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     videoEls.forEach(function (video, idx) {
       if (idx === activeIndex) {
         video.currentTime = 0;
+        video.play().catch(function () {});
+      } else if (cfg.autoplayVideos) {
         video.play().catch(function () {});
       } else {
         video.pause();

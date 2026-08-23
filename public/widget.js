@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.23-03';
+  var WIDGET_VERSION = '2026.08.23-04';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -508,21 +508,31 @@ var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_co
       .catch(function () { return []; });
   }
 
-  function fetchDbAppearance() {
-    if (!storeId || !hasSupabase) return Promise.resolve({});
-    return supabaseFetch(
-      'appearances?select=*&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
-      { method: 'GET' }
-    )
+  function fetchDbAppearanceRow(query) {
+    return supabaseFetch('appearances?' + query, { method: 'GET' })
       .then(function (response) {
         if (!response.ok) return null;
         return response.json();
       })
+      .catch(function () { return null; });
+  }
+
+  function fetchDbAppearance() {
+    if (!storeId || !hasSupabase) return Promise.resolve({});
+    var base = 'select=*&store_id=eq.' + encodeURIComponent(storeId);
+    // 1º: estilo marcado como padrão no painel (mais recente primeiro)
+    return fetchDbAppearanceRow(base + '&is_default=eq.true&order=updated_at.desc&limit=1')
       .then(function (data) {
-        if (Array.isArray(data) && data.length > 0) {
-          return normalizeAppearanceItem(data[0]);
-        }
-        return {};
+        if (Array.isArray(data) && data.length > 0) return data[0];
+        // Fallback: estilo mais recentemente atualizado
+        return fetchDbAppearanceRow(base + '&order=updated_at.desc&limit=1')
+          .then(function (fallbackData) {
+            if (Array.isArray(fallbackData) && fallbackData.length > 0) return fallbackData[0];
+            return null;
+          });
+      })
+      .then(function (row) {
+        return row ? normalizeAppearanceItem(row) : {};
       })
       .catch(function () { return {}; });
   }
@@ -3649,6 +3659,10 @@ function getDynamicCarouselConfig(appearance) {
   var shape = String(rcv('shape', 'portrait')).trim().toLowerCase();
   if (['square', 'landscape', 'circle'].indexOf(shape) === -1) shape = 'portrait';
 
+  // O painel salva a largura da borda em 'border_style' (legado) — aceitar ambas
+  var borderWidthNumber = toNumber(firstDefined(rcv('border_width', null), rcv('border_style', null), '0'), 0);
+  var highlightBorderWidthNumber = toNumber(firstDefined(rcv('highlight_border_width', null), borderWidthNumber > 0 ? String(borderWidthNumber) : null, '0'), 0);
+
   return {
     enabled: enabled,
     width: toNumber(rcv('width', '160'), 160),
@@ -3660,7 +3674,7 @@ function getDynamicCarouselConfig(appearance) {
     highlightMode: String(rcv('highlight_mode', 'ring')).trim().toLowerCase(),
     highlightShadow: toBoolean(rcv('highlight_shadow', false), false),
     highlightBorderColor: rcv('border_color', '#0094EB') || '#0094EB',
-    highlightBorderWidth: toNumber(rcv('highlight_border_width', '0'), 0),
+    highlightBorderWidth: highlightBorderWidthNumber,
     highlightBorderRadius: toNumber(rcv('highlight_border_radius', '14'), 14),
 
     dimInactive: toBoolean(rcv('highlight_dim_inactive', true), true),
@@ -3677,13 +3691,13 @@ function getDynamicCarouselConfig(appearance) {
     marginTop: toNumber(rcv('margin_top', '0'), 0),
     marginBottom: toNumber(rcv('margin_bottom', '0'), 0),
     productCardPriceSize: toNumber(rcv('product_card_price_size', '12'), 12),
-    productCardPriceBold: false,
+    productCardPriceBold: toBoolean(rcv('product_card_price_bold', true), true),
     productCardPriceColor: rcv('product_card_price_color', '#0094EB') || '#0094EB',
 
     // NOVOS: conecta ao Carousel 3 "5. Estilo do Card de Produto"
     productCardBg: rcv('product_card_bg', '#FFFFFF') || '#FFFFFF',
     borderColor: rcv('border_color', '#0094EB') || '#0094EB',
-    borderWidth: toNumber(rcv('border_width', '0'), 0),
+    borderWidth: borderWidthNumber,
     productCardRadius: toNumber(rcv('product_card_border_radius', '12'), 0),
     productCardNameSize: toNumber(rcv('product_card_name_size', '11'), 11),
     productCardNameColor: rcv('product_card_name_color', '#FFFFFF') || '#FFFFFF',
@@ -3763,7 +3777,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       flex: '0 0 ' + cfg.width + 'px',
       width: cfg.width + 'px',
       aspectRatio: aspectRatio,
-      borderRadius: isCircle ? (cfg.productCardRadius + 'px') : Math.max(cfg.borderRadius, cfg.productCardRadius) + 'px',
+      borderRadius: isCircle ? '999px' : cfg.borderRadius + 'px',
     overflow: 'hidden',
       background: cfg.productCardBg || cfg.bgColor,
       border: cfg.productCardBorderWidth + 'px solid ' + cfg.productCardBorderColor,
@@ -3889,7 +3903,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       card.style.boxShadow = boxShadow;
       card.style.border = border;
       card.style.background = cfg.productCardBg;
-      card.style.borderRadius = cfg.productCardRadius + 'px';
+      card.style.borderRadius = isCircle ? '999px' : cfg.borderRadius + 'px';
       card.style.zIndex = isActive ? '10' : '1';
     });
 
