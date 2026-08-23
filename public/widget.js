@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.23-06';
+  var WIDGET_VERSION = '2026.08.23-07';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3656,12 +3656,14 @@ function getDynamicCarouselConfig(appearance) {
     highlightBorderWidth: highlightBorderWidthNumber,
     highlightBorderRadius: toNumber(rcv('highlight_border_radius', '14'), 14),
 
-    dimInactive: toBoolean(rcv('highlight_dim_inactive', true), true),
-    inactiveScale: clampNum(rcv('inactive_scale', '0.85'), 0.5, 1),
-    inactiveOpacity: clampNum(rcv('inactive_opacity', '0.5'), 0.1, 1),
+    // "Reduzir vídeos inativos" apenas reduz a escala — não altera cor nem opacidade
+    dimInactive: toBoolean(rcv('highlight_dim_inactive', false), false),
+    inactiveScale: clampNum(rcv('inactive_scale', '0.88'), 0.5, 1),
+    // Opção independente: dessatura os vídeos inativos (50%)
+    desaturateInactive: toBoolean(rcv('highlight_desaturate_inactive', false), false),
 
     enlargeActive: toBoolean(rcv('highlight_enlarge_active', false), false),
-    activeScale: clampNum(rcv('active_scale', '1.15'), 1, 1.5),
+    activeScale: clampNum(rcv('active_scale', '1.08'), 1, 1.3),
 
     transitionMs: clampNum(rcv('highlight_transition', '300'), 100, 1000),
     autoplayDelay: clampNum(rcv('autoplay_delay', '5000'), 1500, 20000),
@@ -3736,8 +3738,8 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'visible',
-    paddingTop: '28px',
-    paddingBottom: '44px',
+    paddingTop: '8px',
+    paddingBottom: '8px',
     marginTop: cfg.marginTop + 'px',
     marginBottom: cfg.marginBottom + 'px',
   });
@@ -3767,6 +3769,9 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     width: '100%',
     overflow: 'hidden',
     display: 'block',
+    // O padding vertical é recalculado dinamicamente para o card ampliado não ser cortado
+    paddingTop: '24px',
+    paddingBottom: '24px',
   });
 
   var track = document.createElement('div');
@@ -3800,12 +3805,12 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       background: 'transparent',
       border: 'none',
       boxShadow: 'none',
-      transition: 'transform ' + cfg.transitionMs + 'ms ease, opacity ' + cfg.transitionMs + 'ms ease',
+      transition: 'transform ' + cfg.transitionMs + 'ms ease, margin ' + cfg.transitionMs + 'ms ease',
       cursor: 'pointer',
     });
 
     var videoFrame = document.createElement('div');
-    videoFrame.style.cssText = 'position:relative;width:100%;aspect-ratio:' + aspectRatio + ';overflow:hidden;border-radius:' + (isCircle ? '999px' : cfg.borderRadius + 'px') + ';background:' + (cfg.bgColor || '#000') + ';';
+    videoFrame.style.cssText = 'position:relative;width:100%;aspect-ratio:' + aspectRatio + ';overflow:hidden;border-radius:' + (isCircle ? '999px' : cfg.borderRadius + 'px') + ';background:' + (cfg.bgColor || '#000') + ';transition:filter ' + cfg.transitionMs + 'ms ease;';
 
     var video = document.createElement('video');
     video.src = item.url || '';
@@ -3851,7 +3856,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
         if (pImgSrc) {
           var pImg = document.createElement('img');
           pImg.src = pImgSrc;
-          pImg.style.cssText = 'width:42px;height:42px;border-radius:6px;object-fit:cover;background:#f1f5f9;flex-shrink:0;display:block;';
+          pImg.style.cssText = 'width:58px;height:58px;border-radius:8px;object-fit:cover;background:#f1f5f9;flex-shrink:0;display:block;';
           pHeader.appendChild(pImg);
         }
         var pInfo = document.createElement('div');
@@ -3922,13 +3927,26 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
 
   var activeIndex = visibleCount;
 
+  // Largura extra ocupada pelo card ampliado — usada como margem lateral para
+  // que os vídeos inativos nunca fiquem por baixo do destaque
+  var extraWidth = cfg.enlargeActive ? cfg.width * (cfg.activeScale - 1) : 0;
+
+  function updateViewportPadding() {
+    var activeCard = cardEls[activeIndex];
+    var cardHeight = activeCard ? activeCard.offsetHeight : 0;
+    var grow = cfg.enlargeActive ? Math.ceil((cardHeight * (cfg.activeScale - 1)) / 2) : 0;
+    var pad = grow + 16;
+    viewport.style.paddingTop = pad + 'px';
+    viewport.style.paddingBottom = pad + 'px';
+  }
+
   function applyStyles() {
     cardEls.forEach(function (card, idx) {
       var isActive = idx === activeIndex;
       var scale = 1;
-      var opacity = 1;
       var boxShadow = 'none';
       var border = 'none';
+      var filter = 'none';
 
       if (cfg.borderWidth > 0) {
         border = cfg.borderWidth + 'px solid ' + cfg.borderColor;
@@ -3940,20 +3958,22 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
           border = cfg.highlightBorderWidth + 'px solid ' + cfg.highlightBorderColor;
         }
       } else {
-        if (cfg.dimInactive) {
-          scale = cfg.inactiveScale;
-          opacity = cfg.inactiveOpacity;
-        }
+        // "Reduzir vídeos inativos": apenas escala. Dessaturação é opção separada.
+        if (cfg.dimInactive) scale = cfg.inactiveScale;
+        if (cfg.desaturateInactive) filter = 'saturate(50%)';
       }
 
       card.style.transform = 'scale(' + scale + ')';
-      card.style.opacity = String(opacity);
+      card.style.opacity = '1';
       card.style.zIndex = isActive ? '10' : '1';
+      card.style.marginLeft = (isActive ? extraWidth / 2 : 0) + 'px';
+      card.style.marginRight = (isActive ? extraWidth / 2 : 0) + 'px';
 
       var frame = frameEls[idx];
       if (frame) {
         frame.style.border = border;
         frame.style.boxShadow = boxShadow;
+        frame.style.filter = filter;
         frame.style.borderRadius = isCircle ? '999px' : cfg.borderRadius + 'px';
       }
     });
@@ -3969,10 +3989,13 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       }
     });
 
-    var offset = activeIndex * (cfg.width + cfg.spacing);
+    updateViewportPadding();
+
+    // Centro do card ativo medido a partir do início do track
+    var activeCenter =
+      activeIndex * (cfg.width + cfg.spacing) + extraWidth / 2 + cfg.width / 2;
     var viewportWidth = viewport.getBoundingClientRect().width || 0;
-    var centerOffset = viewportWidth / 2 - cfg.width / 2;
-    track.style.transform = 'translateX(' + (centerOffset - offset) + 'px)';
+    track.style.transform = 'translateX(' + (viewportWidth / 2 - activeCenter) + 'px)';
   }
 
   function goNext() {

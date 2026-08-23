@@ -151,6 +151,7 @@ type DynamicCarouselConfig = CarouselConfig & {
   highlight_mode: 'ring' | 'grow' | 'none';
   highlight_enlarge_active: boolean;
   highlight_dim_inactive: boolean;
+  highlight_desaturate_inactive?: boolean;
   active_scale: number;
   inactive_scale: number;
   inactive_opacity: number;
@@ -3641,8 +3642,15 @@ if (activeFloatingConfig.shape === 'portrait') {
                           />
                           <ToggleSwitch
                             label="Reduzir vídeos inativos"
+                            description="Apenas diminui o tamanho — não altera as cores do vídeo."
                             checked={activeDynamicCarouselConfig.highlight_dim_inactive ?? false}
                             onChange={e => updateDynamicCarouselConfig({ highlight_dim_inactive: e.target.checked })}
+                          />
+                          <ToggleSwitch
+                            label="Dessaturar vídeos inativos (50%)"
+                            description="Reduz pela metade a saturação das cores dos vídeos que não estão em destaque."
+                            checked={activeDynamicCarouselConfig.highlight_desaturate_inactive ?? false}
+                            onChange={e => updateDynamicCarouselConfig({ highlight_desaturate_inactive: e.target.checked })}
                           />
                         </div>
                       </div>
