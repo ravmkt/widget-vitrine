@@ -993,4 +993,19 @@ const dynamicCarouselConfig = normalizeResponsiveConfig<DynamicCarouselConfig>({
 
 ---
 
+## 7. Adendum (23/08/2026) — Correções aplicadas e dívida técnica registrada
+
+### 7.1 Status das correções da Seção 6
+- ✅ `dynamic_carousel_config` adicionado à whitelist `TABLE_ALLOWED_FIELDS.appearances` (db.ts).
+- ✅ `dynamic_carousel_config` incluído em `JSONB_KEYS` do widget.js (flatten preserva o wrapper).
+- ✅ `fetchDbAppearance` (widget.js) agora usa `order=is_default.desc,updated_at.desc&limit=1` — 1 requisição, estilo padrão primeiro.
+
+### 7.2 Dívida técnica: `border_style` guarda LARGURA (px), não estilo
+No painel e no banco, o campo `border_style` dentro de `floating_config` / `carousel_config` / `dynamic_carousel_config` / `grid_config` armazena a **largura da borda em px** (ex.: `"5"`), apesar do nome sugerir `solid/dashed`. O widget já lê ambos (`border_width` com fallback `border_style`). **Migração futura recomendada:** renomear para `border_width` no painel + normalização no save, mantendo leitura de compatibilidade por um ciclo.
+
+### 7.3 Lição aprendida: limpeza de logs quebrou o widget (23/08 ~13:19)
+A "limpeza" que removeu `console.log`s multilinha deixou 3 corpos órfãos (`Unexpected token ':'` — widget inteiro morto em produção). **Regra daqui em diante:** qualquer edição em `public/widget.js` DEVE passar por validação de sintaxe (parser com suporte a regex literais) antes do deploy — o arquivo não passa por build/CI.
+
+---
+
 *Documento gerado por análise estática do código + inspeção ao vivo do schema/policies do Supabase (projeto `wznvecurmisgoaijykbt`). Referências de linha baseadas no estado atual dos arquivos.*

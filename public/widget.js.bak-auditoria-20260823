@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.23-05';
+  var WIDGET_VERSION = '2026.08.23-04';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -508,22 +508,31 @@ var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_co
       .catch(function () { return []; });
   }
 
-  function fetchDbAppearance() {
-    if (!storeId || !hasSupabase) return Promise.resolve({});
-    // Uma única query: is_default DESC coloca o estilo padrão primeiro (true > false no Postgres),
-    // desempatando pelo mais recentemente atualizado
-    return supabaseFetch(
-      'appearances?select=*&store_id=eq.' + encodeURIComponent(storeId) +
-      '&order=is_default.desc,updated_at.desc&limit=1',
-      { method: 'GET' }
-    )
+  function fetchDbAppearanceRow(query) {
+    return supabaseFetch('appearances?' + query, { method: 'GET' })
       .then(function (response) {
         if (!response.ok) return null;
         return response.json();
       })
+      .catch(function () { return null; });
+  }
+
+  function fetchDbAppearance() {
+    if (!storeId || !hasSupabase) return Promise.resolve({});
+    var base = 'select=*&store_id=eq.' + encodeURIComponent(storeId);
+    // 1º: estilo marcado como padrão no painel (mais recente primeiro)
+    return fetchDbAppearanceRow(base + '&is_default=eq.true&order=updated_at.desc&limit=1')
       .then(function (data) {
-        if (Array.isArray(data) && data.length > 0) return normalizeAppearanceItem(data[0]);
-        return {};
+        if (Array.isArray(data) && data.length > 0) return data[0];
+        // Fallback: estilo mais recentemente atualizado
+        return fetchDbAppearanceRow(base + '&order=updated_at.desc&limit=1')
+          .then(function (fallbackData) {
+            if (Array.isArray(fallbackData) && fallbackData.length > 0) return fallbackData[0];
+            return null;
+          });
+      })
+      .then(function (row) {
+        return row ? normalizeAppearanceItem(row) : {};
       })
       .catch(function () { return {}; });
   }
@@ -3110,7 +3119,19 @@ var showVerProduto = appearanceConfig.show_product !== false;
 // WhatsApp segue o mesmo critério do card de produto — sem flag separada
 var showWhatsAppProduto = showVerProduto;
 
-if (showVerProduto || showWhatsAppProduto) {
+    // 🔍 DEBUG — colar AQUI (depois das declarações)
+    var videoProductId = video ? (video.product_id || video.productId) : null;
+    var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
+      showWhatsAppProduto: showWhatsAppProduto,
+      storeWhatsappNumber: storeWhatsappNumber,
+      videoProductId: videoProductId,
+      productDataFound: !!productData,
+      productWhatsapp: productData ? (productData.whatsapp_number || productData.whatsappNumber) : null,
+      modalConfigRaw: currentAppearance.modal_config
+    });
+    // FIM DEBUG
+
+    if (showVerProduto || showWhatsAppProduto) {
       var videoProductId = video.product_id || (video.productId) || null;
       var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
 
@@ -4607,6 +4628,8 @@ function renderGridWidget(container, stories, appearance) {
 
   var cfg = getGridConfig(appearance);
 
+  // 🐛 DEBUG #1 — confirma se autoplayVideos está true/false vindo da config
+
   var fontFamily = getFontFamily(appearance);
   var columns = cfg.columns || 4;
   var gapPx = cfg.spacing + 'px';
@@ -4654,6 +4677,15 @@ function renderGridWidget(container, stories, appearance) {
     var isImageItem = sourceType === 'image' || (video && video.type === 'image');
     var effectiveMediaUrl = thumbUrl || rawVideoUrl;
 
+    // 🐛 DEBUG #2 — confirma se a URL do vídeo está vindo preenchida e o objeto completo
+      title: video.title || story.title,
+      rawVideoUrl: rawVideoUrl,
+      thumbUrl: thumbUrl,
+      sourceType: sourceType,
+      isImageItem: isImageItem,
+      videoObjectRaw: video
+    });
+
     if (effectiveMediaUrl) {
       var innerMask = createEl('div', 'vl-grid-img-mask');
 
@@ -4674,6 +4706,7 @@ function renderGridWidget(container, stories, appearance) {
         'background:#000;'
       ].join('');
 
+      // 🐛 DEBUG #3 — mostra qual branch foi escolhida (imagem estática vs vídeo autoplay)
       var willUseImage = isImageItem || !rawVideoUrl || (!cfg.autoplayVideos && thumbUrl);
       if (willUseImage) {
         var img = createEl('img');
@@ -5512,6 +5545,9 @@ return readStoreSettings().then(function (settings) {
 
 
         currentStories = joinStoriesWithVideos(currentStories, storyVideosData, videosData);
+
+          return s.videos && s.videos.length > 0;
+        }).length);
 
         return readProducts();
       });

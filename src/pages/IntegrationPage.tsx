@@ -51,7 +51,7 @@ const IntegrationPage = () => {
   const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
   const canInstall = hasStoreId && hasSupabaseConfig && Boolean(publicUrl);
 
-  const widgetVersion = '2026.08.23-04';
+  const widgetVersion = '2026.08.23-05';
 
   // Busca o token de segurança da loja (usado no script de rastreamento)
   useEffect(() => {
