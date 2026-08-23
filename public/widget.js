@@ -3668,6 +3668,8 @@ function getDynamicCarouselConfig(appearance) {
     objectFit: String(rcv('object_fit', 'cover')).trim().toLowerCase(),
     marginTop: toNumber(rcv('margin_top', '0'), 0),
     marginBottom: toNumber(rcv('margin_bottom', '0'), 0),
+    marginLeft: toNumber(rcv('margin_left', '0'), 0),
+    marginRight: toNumber(rcv('margin_right', '0'), 0),
     productCardPriceSize: toNumber(rcv('product_card_price_size', '12'), 12),
     productCardPriceBold: toBoolean(rcv('product_card_price_bold', true), true),
     productCardPriceColor: rcv('product_card_price_color', '#0094EB') || '#0094EB',
