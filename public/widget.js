@@ -3747,7 +3747,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
   var isCircle = cfg.shape === 'circle';
   var aspectRatio = cfg.shape === 'landscape' ? '16 / 9' : cfg.shape === 'square' || isCircle ? '1 / 1' : '9 / 16';
 
-  var container = document.createElement('div');
+    var container = document.createElement('div');
   container.className = 'vidlytics-dynamic-carousel-container';
   Object.assign(container.style, {
     width: '100%',
@@ -3761,7 +3761,8 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     marginBottom: cfg.marginBottom + 'px',
     paddingLeft: cfg.marginLeft + 'px',
     paddingRight: cfg.marginRight + 'px',
-    });
+    boxSizing: 'border-box',
+  });
 
   var wrapper = document.createElement('div');
   wrapper.className = 'vidlytics-dynamic-carousel-wrapper';
