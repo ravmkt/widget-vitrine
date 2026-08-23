@@ -3753,6 +3753,14 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     overflow: 'visible',
   });
 
+  if (cfg.showTitle && items.length > 0) {
+    var carouselTitle = document.createElement('div');
+    carouselTitle.className = 'vidlytics-dynamic-carousel-title';
+    carouselTitle.textContent = stories[0] && (stories[0].title || stories[0].name) ? (stories[0].title || stories[0].name) : 'Destaques';
+    carouselTitle.style.cssText = 'width:100%;max-width:100%;margin:0 auto 14px;text-align:center;font-size:14px;font-weight:800;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    wrapper.appendChild(carouselTitle);
+  }
+
   var track = document.createElement('div');
   track.className = 'vidlytics-dynamic-carousel-track';
   Object.assign(track.style, {
@@ -3818,7 +3826,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       var pData = vpId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, vpId); }) : null;
       if (pData) {
         var pUrl = pData.product_url || pData.url || '';
-        var pWhatsApp = pData.whatsapp_number || pData.whatsappNumber || '';
+        var pWhatsApp = storeWhatsappNumber || '';
         var prodCard = document.createElement('div');
         prodCard.className = 'vidlytics-dc-product-card';
         prodCard.style.cssText = 'display:flex;flex-direction:column;gap:8px;width:100%;padding:8px 10px;box-sizing:border-box;z-index:6;' +
@@ -3862,39 +3870,33 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
           sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
         });
 
-        var whatsappBtn = document.createElement('button');
-        whatsappBtn.type = 'button';
-        whatsappBtn.textContent = 'Comprar no WhatsApp';
-        whatsappBtn.style.cssText = 'flex:1;border:none;border-radius:999px;padding:9px 10px;font-size:12px;font-weight:800;cursor:pointer;background:#25D366;color:#FFFFFF;';
-        whatsappBtn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          var msg = encodeURIComponent('Olá! Quero comprar: ' + (pData.name || 'Produto'));
-          var phone = String(pWhatsApp || storeWhatsappNumber || '').replace(/\D/g, '');
-          if (phone) {
-            window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
-          }
-        });
+        if (pWhatsApp) {
+          var whatsappBtn = document.createElement('button');
+          whatsappBtn.type = 'button';
+          whatsappBtn.textContent = 'Comprar no WhatsApp';
+          whatsappBtn.style.cssText = 'flex:1;border:none;border-radius:999px;padding:9px 10px;font-size:12px;font-weight:800;cursor:pointer;background:#25D366;color:#FFFFFF;';
+          whatsappBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var msg = encodeURIComponent('Olá! Quero comprar: ' + (pData.name || 'Produto'));
+            var phone = String(pWhatsApp).replace(/\D/g, '');
+            if (phone) {
+              window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
+            }
+          });
+          pActions.appendChild(whatsappBtn);
+        }
 
         pActions.appendChild(siteBtn);
-        pActions.appendChild(whatsappBtn);
         prodCard.appendChild(pActions);
 
         prodCard.addEventListener('click', function (e) {
-          if (e.target === siteBtn || e.target === whatsappBtn) return;
+          if (e.target === siteBtn) return;
           e.stopPropagation();
         });
 
         card.appendChild(prodCard);
         sendAnalyticsEvent('product_view', item.id || null, pData.id || null);
       }
-    }
-
-    if (cfg.showTitle && item.title) {
-      var vitLabel = document.createElement('div');
-      vitLabel.className = 'vidlytics-dc-title';
-      vitLabel.style.cssText = 'width:100%;padding:0 8px 2px;color:#334155;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;';
-      vitLabel.textContent = item.title;
-      card.appendChild(vitLabel);
     }
 
     cardEls.push(card);

@@ -164,6 +164,11 @@ type DynamicCarouselConfig = CarouselConfig & {
   product_card_border_width: number;
   product_card_border_radius: number;
   product_card_name_size: number;
+  product_card_price_size: number;
+  product_card_price_color: string;
+  product_card_price_bold: boolean;
+  product_card_button_bg: string;
+  product_card_button_color: string;
 };
 
 type GridConfig = {
@@ -658,6 +663,8 @@ const createDefaultDynamicCarouselDesktopConfig = (): DynamicCarouselConfig => (
   highlight_shadow: false,
   highlight_scale_up: false,
   highlight_scale_down_others: false,
+  product_card_button_bg: '#0094EB',
+  product_card_button_color: '#FFFFFF',
 });
 
 const createDefaultDynamicCarouselMobileConfig = (): DynamicCarouselConfig => ({
@@ -666,6 +673,8 @@ const createDefaultDynamicCarouselMobileConfig = (): DynamicCarouselConfig => ({
   highlight_shadow: false,
   highlight_scale_up: false,
   highlight_scale_down_others: false,
+  product_card_button_bg: '#0094EB',
+  product_card_button_color: '#FFFFFF',
 });
 
 const createDefaultGridDesktopConfig = (): GridConfig => ({
@@ -3677,6 +3686,14 @@ if (activeFloatingConfig.shape === 'portrait') {
 
                               <FormField label="Cor Preço">
                                 <ColorInput label="Cor do preço" value={activeDynamicCarouselConfig.product_card_price_color || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ product_card_price_color: e.target.value })} />
+                              </FormField>
+
+                              <FormField label="Cor Botão Ver no Site">
+                                <ColorInput label="Cor do botão Ver no site" value={(activeDynamicCarouselConfig as any).product_card_button_bg || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ product_card_button_bg: e.target.value } as any)} />
+                              </FormField>
+
+                              <FormField label="Cor Texto do Botão Ver no Site">
+                                <ColorInput label="Cor do texto do botão Ver no site" value={(activeDynamicCarouselConfig as any).product_card_button_color || '#FFFFFF'} onChange={e => updateDynamicCarouselConfig({ product_card_button_color: e.target.value } as any)} />
                               </FormField>
                             </div>
                           </div>
