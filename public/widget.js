@@ -3865,7 +3865,6 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
 
     card.appendChild(videoFrame);
 
-    // 🆕 Abre o modal de Stories ao clicar no card (exceto se o clique for no card de produto)
     card.addEventListener('click', function (e) {
       if (e.target.closest && e.target.closest('.vidlytics-dc-product-card')) return;
       openStoryModal(item.storyIndex, item.videoIndex);
@@ -3877,13 +3876,17 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       if (pData) {
         var pUrl = pData.product_url || pData.url || '';
         var pWhatsApp = storeWhatsappNumber || '';
+        
+        var initialShadow = cfg.highlightShadow ? '0 2px 8px rgba(0,0,0,0.15)' : 'none';
+
         var prodCard = document.createElement('div');
         prodCard.className = 'vidlytics-dc-product-card';
         prodCard.style.cssText = 'display:flex;flex-direction:column;gap:6px;width:100%;padding:8px;box-sizing:border-box;z-index:6;' +
           'background:' + (cfg.productCardBg || '#fff') + ';' +
           'border-radius:' + (cfg.productCardRadius || 12) + 'px;' +
           'border:' + (cfg.productCardBorderWidth || 0) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ';' +
-          'box-shadow:0 2px 8px rgba(0,0,0,0.15);';
+          'box-shadow:' + initialShadow + ';'; // 👈 Aplicando a sombra condicional
+
         var pHeader = document.createElement('div');
         pHeader.style.cssText = 'display:flex;align-items:flex-start;gap:8px;min-width:0;';
         var pImgSrc = getThumbnailFromObject(pData) || '';
@@ -3905,42 +3908,56 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
           pPrice.style.cssText = 'font-size:' + (cfg.productCardPriceSize || 12) + 'px;font-weight:' + (cfg.productCardPriceBold ? '800' : '600') + ';color:' + (cfg.productCardPriceColor || '#0094EB') + ';';
           pInfo.appendChild(pPrice);
         }
-        var pActions = document.createElement('div');
-        pActions.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;';
-        var siteBtn = document.createElement('button');
-        siteBtn.type = 'button';
-        siteBtn.innerHTML = '<span style="font-size:11px;line-height:1;">&#8599;</span> Ver no site';
-        siteBtn.style.cssText = 'display:inline-flex;align-items:center;gap:4px;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;background:' + (cfg.productCardButtonBg || '#0094EB') + ';color:' + (cfg.productCardButtonColor || '#FFFFFF') + ';';
-        siteBtn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          if (pUrl) window.open(pUrl, '_blank');
-          sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
-        });
-        pActions.appendChild(siteBtn);
 
-        if (pWhatsApp) {
-          var whatsappBtn = document.createElement('button');
-          whatsappBtn.type = 'button';
-          whatsappBtn.innerHTML = '<span style="font-size:11px;line-height:1;">&#9742;</span> WhatsApp';
-          whatsappBtn.style.cssText = 'display:inline-flex;align-items:center;gap:4px;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;background:#25D366;color:#FFFFFF;';
-          whatsappBtn.addEventListener('click', function (e) {
+        var siteBtn = null;
+        var whatsappBtn = null;
+
+        if (cfg.showProductButton) {
+          var pActions = document.createElement('div');
+          pActions.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;';
+          
+          siteBtn = document.createElement('button');
+          siteBtn.type = 'button';
+          siteBtn.innerHTML = '<span style="font-size:11px;line-height:1;">&#8599;</span> Ver no site';
+          siteBtn.style.cssText = 'display:inline-flex;align-items:center;gap:4px;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;background:' + (cfg.productCardButtonBg || '#0094EB') + ';color:' + (cfg.productCardButtonColor || '#FFFFFF') + ';';
+          siteBtn.addEventListener('click', function (e) {
             e.stopPropagation();
-            var msg = encodeURIComponent('Olá! Quero comprar: ' + (pData.name || 'Produto'));
-            var phone = String(pWhatsApp).replace(/\D/g, '');
-            if (phone) {
-              window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
-            }
+            if (pUrl) window.open(pUrl, '_blank');
+            sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
           });
-          pActions.appendChild(whatsappBtn);
+          pActions.appendChild(siteBtn);
+
+          if (pWhatsApp) {
+            whatsappBtn = document.createElement('button');
+            whatsappBtn.type = 'button';
+            whatsappBtn.innerHTML = '<span style="font-size:11px;line-height:1;">&#9742;</span> WhatsApp';
+            whatsappBtn.style.cssText = 'display:inline-flex;align-items:center;gap:4px;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;background:#25D366;color:#FFFFFF;';
+            whatsappBtn.addEventListener('click', function (e) {
+              e.stopPropagation();
+              var msg = encodeURIComponent('Olá! Quero comprar: ' + (pData.name || 'Produto'));
+              var phone = String(pWhatsApp).replace(/\D/g, '');
+              if (phone) {
+                window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
+              }
+            });
+            pActions.appendChild(whatsappBtn);
+          }
+
+          pInfo.appendChild(pActions);
         }
 
-        pInfo.appendChild(pActions);
         pHeader.appendChild(pInfo);
         prodCard.appendChild(pHeader);
 
         prodCard.addEventListener('click', function (e) {
-          if (e.target === siteBtn) return;
           e.stopPropagation();
+          var clickedButton = e.target.closest('button');
+          if (!clickedButton) {
+            if (pUrl) {
+              window.open(pUrl, '_blank');
+              sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
+            }
+          }
         });
 
         card.appendChild(prodCard);
