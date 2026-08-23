@@ -152,6 +152,11 @@ type DynamicCarouselConfig = CarouselConfig & {
   highlight_enlarge_active: boolean;
   highlight_dim_inactive: boolean;
   highlight_desaturate_inactive?: boolean;
+  // Título da vitrine
+  title_text?: string;
+  title_font_size?: number;
+  title_bold?: boolean;
+  title_align?: 'left' | 'center' | 'right';
   active_scale: number;
   inactive_scale: number;
   inactive_opacity: number;
@@ -3613,6 +3618,50 @@ if (activeFloatingConfig.shape === 'portrait') {
                         
                         <div className="space-y-1.5">
                           <ToggleSwitch label="Exibir título da vitrine" checked={activeDynamicCarouselConfig.show_title ?? false} onChange={e => updateDynamicCarouselConfig({ show_title: e.target.checked })} />
+
+                          {activeDynamicCarouselConfig.show_title && (
+                            <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-2.5">
+                              <FormField label="Texto do título">
+                                <input
+                                  type="text"
+                                  value={activeDynamicCarouselConfig.title_text ?? ''}
+                                  onChange={e => updateDynamicCarouselConfig({ title_text: e.target.value })}
+                                  placeholder="Ex: Nossos destaques"
+                                  className={inputClass}
+                                />
+                              </FormField>
+
+                              <div className="grid grid-cols-2 gap-2.5">
+                                <FormField label="Tamanho da fonte (px)">
+                                  <input
+                                    type="number" min="8" max="48" step="1"
+                                    value={activeDynamicCarouselConfig.title_font_size ?? 14}
+                                    onChange={e => updateDynamicCarouselConfig({ title_font_size: safeNumber(e.target.value, 14, 8) })}
+                                    className={inputClass}
+                                  />
+                                </FormField>
+
+                                <FormField label="Alinhamento">
+                                  <select
+                                    value={activeDynamicCarouselConfig.title_align ?? 'center'}
+                                    onChange={e => updateDynamicCarouselConfig({ title_align: e.target.value as 'left' | 'center' | 'right' })}
+                                    className={selectClass}
+                                  >
+                                    <option value="left">Esquerda</option>
+                                    <option value="center">Centro</option>
+                                    <option value="right">Direita</option>
+                                  </select>
+                                </FormField>
+                              </div>
+
+                              <ToggleSwitch
+                                label="Título em negrito"
+                                checked={activeDynamicCarouselConfig.title_bold ?? true}
+                                onChange={e => updateDynamicCarouselConfig({ title_bold: e.target.checked })}
+                              />
+                            </div>
+                          )}
+
                           <ToggleSwitch label="Exibir ícone de Play no centro do vídeo" checked={activeDynamicCarouselConfig.show_play_icon} onChange={e => updateDynamicCarouselConfig({ show_play_icon: e.target.checked })} />
                           <ToggleSwitch label="Reproduzir vídeos inativos" checked={activeDynamicCarouselConfig.autoplay_videos ?? true} onChange={e => updateDynamicCarouselConfig({ autoplay_videos: e.target.checked })} />
                         </div>
@@ -3639,12 +3688,6 @@ if (activeFloatingConfig.shape === 'portrait') {
                             label="Ampliar vídeo em destaque"
                             checked={activeDynamicCarouselConfig.highlight_enlarge_active ?? false}
                             onChange={e => updateDynamicCarouselConfig({ highlight_enlarge_active: e.target.checked })}
-                          />
-                          <ToggleSwitch
-                            label="Reduzir vídeos inativos"
-                            description="Apenas diminui o tamanho — não altera as cores do vídeo."
-                            checked={activeDynamicCarouselConfig.highlight_dim_inactive ?? false}
-                            onChange={e => updateDynamicCarouselConfig({ highlight_dim_inactive: e.target.checked })}
                           />
                           <ToggleSwitch
                             label="Dessaturar vídeos inativos (50%)"

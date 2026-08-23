@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.23-07';
+  var WIDGET_VERSION = '2026.08.23-08';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3656,10 +3656,7 @@ function getDynamicCarouselConfig(appearance) {
     highlightBorderWidth: highlightBorderWidthNumber,
     highlightBorderRadius: toNumber(rcv('highlight_border_radius', '14'), 14),
 
-    // "Reduzir vídeos inativos" apenas reduz a escala — não altera cor nem opacidade
-    dimInactive: toBoolean(rcv('highlight_dim_inactive', false), false),
-    inactiveScale: clampNum(rcv('inactive_scale', '0.88'), 0.5, 1),
-    // Opção independente: dessatura os vídeos inativos (50%)
+    // Dessatura os vídeos inativos (50%)
     desaturateInactive: toBoolean(rcv('highlight_desaturate_inactive', false), false),
 
     enlargeActive: toBoolean(rcv('highlight_enlarge_active', false), false),
@@ -3687,8 +3684,20 @@ function getDynamicCarouselConfig(appearance) {
     // Estilo visual do card (item 5)
     productCardBorderColor: rcv('product_card_border_color', '#E2E8F0') || '#E2E8F0',
     productCardBorderWidth: toNumber(rcv('product_card_border_width', '0'), 0),
+    productCardButtonBg: rcv('product_card_button_bg', '#0094EB') || '#0094EB',
+    productCardButtonColor: rcv('product_card_button_color', '#FFFFFF') || '#FFFFFF',
     showPlayIcon: toBoolean(rcv('show_play_icon', true), true),
+
+    // Título da vitrine
     showTitle: toBoolean(rcv('show_title', true), true),
+    titleText: String(rcv('title_text', '') || '').trim(),
+    titleFontSize: toNumber(rcv('title_font_size', '14'), 14),
+    titleBold: toBoolean(rcv('title_bold', true), true),
+    titleColor: rcv('title_color', '#0F172A') || '#0F172A',
+    titleAlign: (function () {
+      var a = String(rcv('title_align', 'center')).trim().toLowerCase();
+      return ['left', 'center', 'right'].indexOf(a) === -1 ? 'center' : a;
+    })(),
   };
 }
 
@@ -3755,11 +3764,19 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     overflow: 'visible',
   });
 
-  if (cfg.showTitle && items.length > 0) {
+  var resolvedTitle = cfg.titleText ||
+    (stories[0] && (stories[0].title || stories[0].name) ? (stories[0].title || stories[0].name) : '');
+
+  if (cfg.showTitle && items.length > 0 && resolvedTitle) {
     var carouselTitle = document.createElement('div');
     carouselTitle.className = 'vidlytics-dynamic-carousel-title';
-    carouselTitle.textContent = stories[0] && (stories[0].title || stories[0].name) ? (stories[0].title || stories[0].name) : 'Destaques';
-    carouselTitle.style.cssText = 'width:100%;max-width:100%;margin:0 auto 14px;text-align:center;font-size:14px;font-weight:800;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    carouselTitle.textContent = resolvedTitle;
+    carouselTitle.style.cssText = 'width:100%;max-width:100%;margin:0 auto 14px;' +
+      'text-align:' + cfg.titleAlign + ';' +
+      'font-size:' + cfg.titleFontSize + 'px;' +
+      'font-weight:' + (cfg.titleBold ? '800' : '400') + ';' +
+      'color:' + cfg.titleColor + ';' +
+      'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
     wrapper.appendChild(carouselTitle);
   }
 
@@ -3958,8 +3975,6 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
           border = cfg.highlightBorderWidth + 'px solid ' + cfg.highlightBorderColor;
         }
       } else {
-        // "Reduzir vídeos inativos": apenas escala. Dessaturação é opção separada.
-        if (cfg.dimInactive) scale = cfg.inactiveScale;
         if (cfg.desaturateInactive) filter = 'saturate(50%)';
       }
 
