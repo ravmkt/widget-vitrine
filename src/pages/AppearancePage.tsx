@@ -3529,6 +3529,14 @@ if (activeFloatingConfig.shape === 'portrait') {
       </select>
     </FormField>
 
+    <FormField label="Ajuste Imagem">
+      <select value={activeDynamicCarouselConfig.object_fit || 'cover'} onChange={e => updateDynamicCarouselConfig({ object_fit: e.target.value })} className={selectClass}>
+        <option value="cover">Cover (Preencher)</option>
+        <option value="contain">Contain (Ajustar)</option>
+        <option value="fill">Fill (Esticar)</option>
+      </select>
+    </FormField>
+
     <FormField label="Largura Card (px)">
       <input
         type="number" min="20" step="1"
@@ -3586,14 +3594,6 @@ if (activeFloatingConfig.shape === 'portrait') {
                               className={inputClass}
                             />
                           </FormField>
-
-                          <FormField label="Ajuste Imagem">
-                            <select value={activeDynamicCarouselConfig.object_fit || 'cover'} onChange={e => updateDynamicCarouselConfig({ object_fit: e.target.value })} className={selectClass}>
-                              <option value="cover">Cover (Preencher)</option>
-                              <option value="contain">Contain (Ajustar)</option>
-                              <option value="fill">Fill (Esticar)</option>
-                            </select>
-                          </FormField>
                         </div>
                       </div>
 
@@ -3603,134 +3603,88 @@ if (activeFloatingConfig.shape === 'portrait') {
                         
                         <div className="space-y-1.5">
                           <ToggleSwitch label="Exibir título da vitrine" checked={activeDynamicCarouselConfig.show_title ?? false} onChange={e => updateDynamicCarouselConfig({ show_title: e.target.checked })} />
-<ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeDynamicCarouselConfig.autoplay_videos ?? true} onChange={e => updateDynamicCarouselConfig({ autoplay_videos: e.target.checked })} />
-<ToggleSwitch label="Destaque automático central (avança a cada 5s)" checked={activeDynamicCarouselConfig.auto_highlight ?? false} onChange={e => updateDynamicCarouselConfig({ auto_highlight: e.target.checked, highlight_mode: (e.target.checked ? (activeDynamicCarouselConfig.highlight_mode && activeDynamicCarouselConfig.highlight_mode !== "none" ? activeDynamicCarouselConfig.highlight_mode : "ring") : "none") })} />
-<ToggleSwitch label="Exibir ícone de Play no centro do vídeo" checked={activeDynamicCarouselConfig.show_play_icon} onChange={e => updateDynamicCarouselConfig({ show_play_icon: e.target.checked })} />
-                          <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeDynamicCarouselConfig.show_product} onChange={e => updateDynamicCarouselConfig({ show_product: e.target.checked })} />
+                          <ToggleSwitch label="Exibir ícone de Play no centro do vídeo" checked={activeDynamicCarouselConfig.show_play_icon} onChange={e => updateDynamicCarouselConfig({ show_play_icon: e.target.checked })} />
+                          <ToggleSwitch label="Reproduzir vídeos inativos" checked={activeDynamicCarouselConfig.autoplay_videos ?? true} onChange={e => updateDynamicCarouselConfig({ autoplay_videos: e.target.checked })} />
                         </div>
                       </div>
 
-{/* 4. Destaque de Vídeo */}
-<div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-2.5">
-  <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">4. Destaque de Vídeo</h4>
-
-  <div className="space-y-1.5">
-    <ToggleSwitch
-      label="Aplicar sombra no vídeo em destaque"
-      checked={activeDynamicCarouselConfig.highlight_shadow ?? false}
-      onChange={e => updateDynamicCarouselConfig({ highlight_shadow: e.target.checked })}
-    />
-    <ToggleSwitch
-      label="Ampliar vídeo em destaque"
-      checked={activeDynamicCarouselConfig.highlight_enlarge_active ?? false}
-      onChange={e => updateDynamicCarouselConfig({ highlight_enlarge_active: e.target.checked })}
-    />
-    <ToggleSwitch
-      label="Reduzir vídeos inativos"
-      checked={activeDynamicCarouselConfig.highlight_dim_inactive ?? false}
-      onChange={e => updateDynamicCarouselConfig({ highlight_dim_inactive: e.target.checked })}
-    />
-    <div className="pt-1 border-t border-slate-200/70 space-y-2">
-      <div>
-        <label className="block text-xs font-semibold text-slate-600 mb-1">Modo de destaque</label>
-        <select
-          value={activeDynamicCarouselConfig.highlight_mode || (activeDynamicCarouselConfig.auto_highlight ? 'ring' : 'none')}
-          onChange={e => updateDynamicCarouselConfig({ highlight_mode: e.target.value as 'ring' | 'grow' | 'none', auto_highlight: e.target.value !== 'none' })}
-          className={selectClass}
-        >
-          <option value="ring">Anel (borda)</option>
-          <option value="grow">Crescer (scale)</option>
-          <option value="none">Nenhum</option>
-        </select>
-      </div>
-      {activeDynamicCarouselConfig.highlight_mode !== 'none' && activeDynamicCarouselConfig.highlight_mode !== undefined && (
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Escala do ativo (1.0 - 1.5)</label>
-            <input type="number" min="1" max="1.5" step="0.05"
-              value={toNumberInputValue(activeDynamicCarouselConfig.active_scale)}
-              onChange={e => updateDynamicCarouselConfig({ active_scale: Number(e.target.value) })}
-              placeholder="Ex: 1.15" className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Escala dos inativos (0.5 - 1.0)</label>
-            <input type="number" min="0.5" max="1" step="0.05"
-              value={toNumberInputValue(activeDynamicCarouselConfig.inactive_scale)}
-              onChange={e => updateDynamicCarouselConfig({ inactive_scale: Number(e.target.value) })}
-              placeholder="Ex: 0.85" className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Opacidade dos inativos (0.1 - 1.0)</label>
-            <input type="number" min="0.1" max="1" step="0.05"
-              value={toNumberInputValue(activeDynamicCarouselConfig.inactive_opacity)}
-              onChange={e => updateDynamicCarouselConfig({ inactive_opacity: Number(e.target.value) })}
-              placeholder="Ex: 0.5" className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Velocidade da transição (ms)</label>
-            <input type="number" min="100" max="1000" step="50"
-              value={toNumberInputValue(activeDynamicCarouselConfig.highlight_transition)}
-              onChange={e => updateDynamicCarouselConfig({ highlight_transition: Number(e.target.value) })}
-              placeholder="Ex: 300" className={inputClass} />
-          </div>
-        </div>
-      )}
-      <div>
-        <label className="block text-xs font-semibold text-slate-600 mb-1">Intervalo de avanço automático (ms)</label>
-        <input type="number" min="1500" max="20000" step="500"
-          value={toNumberInputValue(activeDynamicCarouselConfig.autoplay_delay)}
-          onChange={e => updateDynamicCarouselConfig({ autoplay_delay: Number(e.target.value) })}
-          placeholder="Ex: 5000" className={inputClass} />
-      </div>
-    </div>
-  </div>
-</div>
+                      {/* 4. Destaque de Vídeo */}
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-2.5">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">4. Destaque de Vídeo</h4>
+                        
+                        <div className="space-y-1.5">
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">Intervalo de avanço automático (seg)</label>
+                            <input type="number" min="1" max="20" step="0.5"
+                              value={activeDynamicCarouselConfig.autoplay_delay ? activeDynamicCarouselConfig.autoplay_delay / 1000 : 5}
+                              onChange={e => updateDynamicCarouselConfig({ autoplay_delay: Number(e.target.value) * 1000 })}
+                              placeholder="Ex: 5" className={inputClass} />
+                          </div>
+                          <ToggleSwitch
+                            label="Aplicar sombra no vídeo em destaque"
+                            checked={activeDynamicCarouselConfig.highlight_shadow ?? false}
+                            onChange={e => updateDynamicCarouselConfig({ highlight_shadow: e.target.checked })}
+                          />
+                          <ToggleSwitch
+                            label="Ampliar vídeo em destaque"
+                            checked={activeDynamicCarouselConfig.highlight_enlarge_active ?? false}
+                            onChange={e => updateDynamicCarouselConfig({ highlight_enlarge_active: e.target.checked })}
+                          />
+                          <ToggleSwitch
+                            label="Reduzir vídeos inativos"
+                            checked={activeDynamicCarouselConfig.highlight_dim_inactive ?? false}
+                            onChange={e => updateDynamicCarouselConfig({ highlight_dim_inactive: e.target.checked })}
+                          />
+                        </div>
+                      </div>
 
                       {/* 5. Estilo do Card de Produto */}
-                      {activeDynamicCarouselConfig.show_product && (
-                        <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-3">
-                          <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">
-                            5. Estilo do Card de Produto
-                          </h4>
-                          
-<div className="grid grid-cols-2 gap-2.5">
-                            <FormField label="Fundo do Card">
-                              <ColorInput label="Fundo do card" value={activeDynamicCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateDynamicCarouselConfig({ product_card_bg: e.target.value })} />
-                            </FormField>
+                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-2.5">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">5. Estilo do Card de Produto</h4>
+                        
+                        <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeDynamicCarouselConfig.show_product} onChange={e => updateDynamicCarouselConfig({ show_product: e.target.checked })} />
+                        
+                        {activeDynamicCarouselConfig.show_product && (
+                          <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-3">
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <FormField label="Cor do fundo">
+                                <ColorInput label="Cor do fundo do card" value={activeDynamicCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateDynamicCarouselConfig({ product_card_bg: e.target.value })} />
+                              </FormField>
 
-                            <FormField label="Cor da Borda">
-                              <ColorInput label="Cor da borda" value={activeDynamicCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateDynamicCarouselConfig({ product_card_border_color: e.target.value })} />
-                            </FormField>
+                              <FormField label="Cor da Borda">
+                                <ColorInput label="Cor da borda" value={activeDynamicCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateDynamicCarouselConfig({ product_card_border_color: e.target.value })} />
+                              </FormField>
 
-                            <FormField label="Largura Borda (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_border_width)} onChange={e => updateDynamicCarouselConfig({ product_card_border_width: e.target.value })} placeholder="Ex: 1" className={inputClass} />
-                            </FormField>
+                              <FormField label="Largura Borda (px)">
+                                <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_border_width)} onChange={e => updateDynamicCarouselConfig({ product_card_border_width: e.target.value })} placeholder="Ex: 1" className={inputClass} />
+                              </FormField>
 
-                            <FormField label="Raio Borda (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_border_radius)} onChange={e => updateDynamicCarouselConfig({ product_card_border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                            </FormField>
+                              <FormField label="Raio Borda (px)">
+                                <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_border_radius)} onChange={e => updateDynamicCarouselConfig({ product_card_border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                              </FormField>
 
-                            <FormField label="Tamanho Título">
-                              <input type="number" min="8" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_name_size)} onChange={e => updateDynamicCarouselConfig({ product_card_name_size: e.target.value })} placeholder="Ex: 11" className={inputClass} />
-                            </FormField>
+                              <FormField label="Tamanho Título">
+                                <input type="number" min="8" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_name_size)} onChange={e => updateDynamicCarouselConfig({ product_card_name_size: e.target.value })} placeholder="Ex: 11" className={inputClass} />
+                              </FormField>
 
-                            <FormField label="Cor Título">
-                              <ColorInput label="Cor do título" value={activeDynamicCarouselConfig.product_card_name_color || '#0F172A'} onChange={e => updateDynamicCarouselConfig({ product_card_name_color: e.target.value })} />
-                            </FormField>
+                              <FormField label="Cor Título">
+                                <ColorInput label="Cor do título" value={activeDynamicCarouselConfig.product_card_name_color || '#0F172A'} onChange={e => updateDynamicCarouselConfig({ product_card_name_color: e.target.value })} />
+                              </FormField>
 
-                            <FormField label="Tamanho Preço">
-                              <input type="number" min="8" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_price_size)} onChange={e => updateDynamicCarouselConfig({ product_card_price_size: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                            </FormField>
+                              <FormField label="Tamanho Preço">
+                                <input type="number" min="8" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_price_size)} onChange={e => updateDynamicCarouselConfig({ product_card_price_size: e.target.value })} placeholder="Ex: 12" className={inputClass} />
+                              </FormField>
 
-<FormField label="Cor Preço">
-                              <ColorInput label="Cor do preço" value={activeDynamicCarouselConfig.product_card_price_color || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ product_card_price_color: e.target.value })} />
-                            </FormField>
+                              <FormField label="Cor Preço">
+                                <ColorInput label="Cor do preço" value={activeDynamicCarouselConfig.product_card_price_color || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ product_card_price_color: e.target.value })} />
+                              </FormField>
+                            </div>
                           </div>
-                        </div>
-                      )}
-
+                        )}
+                      </div>
                     </SectionCard>
                   )}
+
 
                   {/* ── Grade ── */}
                   {activeTab === 'grid' && (
@@ -4035,3 +3989,4 @@ if (activeFloatingConfig.shape === 'portrait') {
 };
 
 export default AppearancePage;
+
