@@ -141,40 +141,29 @@ product_card_bg: string;
   product_card_price_bold: boolean;
 };
 
-type DynamicCarouselConfig = CarouselConfig & {
+type DynamicCarouselConfig = Omit<
+  CarouselConfig,
+  'product_card_border_width' | 'product_card_border_radius' | 'product_card_name_size' | 'product_card_price_size'
+> & {
   enabled: boolean;
   highlight_shadow: boolean;
-  highlight_scale_up: boolean;
-  highlight_scale_down_others: boolean;
-  // ── Espelha exatamente o que o widget lê em getDynamicCarouselConfig ──
-  bg_color: string;
-  highlight_mode: 'ring' | 'grow' | 'none';
-  highlight_enlarge_active: boolean;
-  highlight_dim_inactive: boolean;
+  highlight_enlarge_active?: boolean;
+  highlight_dim_inactive?: boolean;
   highlight_desaturate_inactive?: boolean;
-  // Título da vitrine
+  highlight_mode?: 'ring' | 'none';
+  highlight_border_color?: string;
+  margin_left?: string;
+  margin_right?: string;
+  product_card_border_width?: string;
+  product_card_border_radius?: string;
+  product_card_name_size?: string;
+  product_card_price_size?: string;
+  product_card_button_bg?: string;
+  product_card_button_color?: string;
   title_text?: string;
   title_font_size?: number;
-  title_bold?: boolean;
   title_align?: 'left' | 'center' | 'right';
-  active_scale: number;
-  inactive_scale: number;
-  inactive_opacity: number;
-  highlight_transition: number;
-  autoplay_delay: number;
-  highlight_border_width: number;
-  highlight_border_radius: number;
-  // ── Card de produto (Carousel 3 "5. Estilo do Card de Produto") ──
-  product_card_bg: string;
-  product_card_border_color: string;
-  product_card_border_width: number;
-  product_card_border_radius: number;
-  product_card_name_size: number;
-  product_card_price_size: number;
-  product_card_price_color: string;
-  product_card_price_bold: boolean;
-  product_card_button_bg: string;
-  product_card_button_color: string;
+  title_bold?: boolean;
 };
 
 type GridConfig = {
@@ -3569,6 +3558,14 @@ if (activeFloatingConfig.shape === 'portrait') {
         onChange={e => updateDynamicCarouselConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
         className={inputClass}
       />
+    </FormField>
+
+    <FormField label="Margem Esquerda (px)">
+      <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.margin_left)} onChange={e => updateDynamicCarouselConfig({ margin_left: e.target.value })} placeholder="Ex: 0" className={inputClass} />
+    </FormField>
+
+    <FormField label="Margem Direita (px)">
+      <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.margin_right)} onChange={e => updateDynamicCarouselConfig({ margin_right: e.target.value })} placeholder="Ex: 0" className={inputClass} />
     </FormField>
 
     <FormField label="Margem Superior (px)">
