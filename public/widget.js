@@ -4025,6 +4025,15 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
         frame.style.filter = filter;
         frame.style.borderRadius = isCircle ? '999px' : cfg.borderRadius + 'px';
       }
+
+      var prodCardEl = card.querySelector('.vidlytics-dc-product-card');
+      if (prodCardEl) {
+        if (!cfg.highlightShadow) {
+          prodCardEl.style.boxShadow = 'none';
+        } else {
+          prodCardEl.style.boxShadow = isActive ? '0 6px 18px rgba(0,0,0,0.18)' : '0 2px 8px rgba(0,0,0,0.12)';
+        }
+      }
     });
 
     videoEls.forEach(function (video, idx) {
