@@ -4012,10 +4012,13 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
 
     videoEls.forEach(function (video, idx) {
       if (idx === activeIndex) {
-        video.currentTime = 0;
-        video.play().catch(function () {});
+        if (video.paused) {
+          video.play().catch(function () {});
+        }
       } else if (cfg.autoplayVideos) {
-        video.play().catch(function () {});
+        if (video.paused) {
+          video.play().catch(function () {});
+        }
       } else {
         video.pause();
       }
