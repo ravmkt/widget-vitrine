@@ -3680,8 +3680,8 @@ function getDynamicCarouselConfig(appearance) {
 
     // NOVOS: conecta ao Carousel 3 "5. Estilo do Card de Produto"
     productCardBg: rcv('product_card_bg', '#FFFFFF') || '#FFFFFF',
-    borderColor: rcv('product_card_border_color', '#E2E8F0') || '#E2E8F0',
-    borderWidth: toNumber(rcv('product_card_border_width', '0'), 0),
+    borderColor: rcv('border_color', '#0094EB') || '#0094EB',
+    borderWidth: toNumber(rcv('border_width', '0'), 0),
     productCardRadius: toNumber(rcv('product_card_border_radius', '12'), 0),
     productCardNameSize: toNumber(rcv('product_card_name_size', '11'), 11),
     productCardNameColor: rcv('product_card_name_color', '#FFFFFF') || '#FFFFFF',
@@ -3776,28 +3776,69 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       pointerEvents: 'none',
     });
 
-    // Card de produto: título (condicionado a show_product)
-    if (cfg.showProduct && item.title) {
-      var prodLabel = document.createElement('div');
-      prodLabel.className = 'vidlytics-dc-product';
-      Object.assign(prodLabel.style, {
-        position: 'absolute', left: '0', right: '0', bottom: '0',
-        padding: '6px 8px', background: 'rgba(0,0,0,.5)',
-        color: cfg.productCardNameColor, fontSize: cfg.productCardNameSize + 'px',
-        textAlign: 'center', whiteSpace: 'nowrap',
-        overflow: 'hidden', textOverflow: 'ellipsis',
-        pointerEvents: 'none', zIndex: '5',
-      });
-      prodLabel.textContent = item.title;
-      card.appendChild(prodLabel);
+    // Play central (item 3 - show_play_icon)
+    if (cfg.showPlayIcon) {
+      var playOverlay = document.createElement('div');
+      playOverlay.className = 'vidlytics-dc-play';
+      playOverlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:4;';
+      playOverlay.innerHTML = '<div style="width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 14 16" fill="white"><path d="M0 0l14 8-14 8z"/></svg></div>';
+      card.appendChild(playOverlay);
     }
+
+    // Título da vitrine (item 3 - show_title)
+    if (cfg.showTitle && item.title) {
+      var vitLabel = document.createElement('div');
+      vitLabel.className = 'vidlytics-dc-title';
+      vitLabel.style.cssText = 'position:absolute;left:0;right:0;top:0;padding:5px 8px;background:rgba(0,0,0,.45);color:#fff;font-size:11px;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:5;';
+      vitLabel.textContent = item.title;
+      card.appendChild(vitLabel);
+    }
+
+    // Card de produto (item 5 - show_product)
+    if (cfg.showProduct) {
+      var vpId = item.product_id || item.productId || null;
+      var pData = vpId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, vpId); }) : null;
+      if (pData) {
+        var pUrl = pData.product_url || pData.url || '';
+        var prodCard = document.createElement('div');
+        prodCard.className = 'vidlytics-dc-product-card';
+        prodCard.style.cssText = 'position:absolute;left:6px;right:6px;bottom:6px;display:flex;align-items:center;gap:6px;padding:5px;box-sizing:border-box;cursor:pointer;z-index:6;' + 
+          'background:' + (cfg.productCardBg || '#fff') + ';' + 
+          'border-radius:' + (cfg.productCardRadius || 12) + 'px;' + 
+          'border:' + (cfg.productCardBorderWidth || 0) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ';' + 
+          'box-shadow:0 2px 8px rgba(0,0,0,0.15);';
+        var pImgSrc = getThumbnailFromObject(pData) || '';
+        if (pImgSrc) {
+          var pImg = document.createElement('img');
+          pImg.src = pImgSrc;
+          pImg.style.cssText = 'width:42px;height:42px;border-radius:6px;object-fit:cover;background:#f1f5f9;flex-shrink:0;display:block;';
+          prodCard.appendChild(pImg);
+        }
+        var pInfo = document.createElement('div');
+        pInfo.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:1px;';
+        var pName = document.createElement('div');
+        pName.textContent = pData.name || 'Produto';
+        pName.style.cssText = 'font-size:' + (cfg.productCardNameSize || 11) + 'px;font-weight:700;color:' + (cfg.productCardNameColor || '#0f172a') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;';
+        pInfo.appendChild(pName);
+        if (pData.price) {
+          var pPrice = document.createElement('div');
+          pPrice.textContent = 'R$ ' + parseFloat(pData.price).toFixed(2).replace('.', ',');
+          pPrice.style.cssText = 'font-size:' + (cfg.productCardPriceSize || 12) + 'px;font-weight:' + (cfg.productCardPriceBold ? '800' : '600') + ';color:' + (cfg.productCardPriceColor || '#0094EB') + ';';
+          pInfo.appendChild(pPrice);
+        }
+        prodCard.appendChild(pInfo);
+        prodCard.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (pUrl) window.open(pUrl, '_blank');
+          sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
+        });
+        card.appendChild(prodCard);
+        sendAnalyticsEvent('product_view', item.id || null, pData.id || null);
+      }
+    }
+
     // Certifica posicionamento relativo para overlays
     card.style.position = 'relative';
-
-    card.appendChild(video);
-    track.appendChild(card);
-    cardEls.push(card);
-    videoEls.push(video);
   });
 
   container.appendChild(track);
