@@ -3731,16 +3731,29 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
+    overflow: 'visible',
+    paddingTop: '28px',
+    paddingBottom: '44px',
     marginTop: cfg.marginTop + 'px',
     marginBottom: cfg.marginBottom + 'px',
+  });
+
+  var wrapper = document.createElement('div');
+  wrapper.className = 'vidlytics-dynamic-carousel-wrapper';
+  Object.assign(wrapper.style, {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    overflow: 'visible',
   });
 
   var track = document.createElement('div');
   track.className = 'vidlytics-dynamic-carousel-track';
   Object.assign(track.style, {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: cfg.spacing + 'px',
     transition: 'transform ' + cfg.transitionMs + 'ms ease',
   });
@@ -3755,11 +3768,14 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       position: 'relative',
       flex: '0 0 ' + cfg.width + 'px',
       width: cfg.width + 'px',
-      aspectRatio: aspectRatio,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      gap: '10px',
       borderRadius: isCircle ? '999px' : cfg.borderRadius + 'px',
-    overflow: 'hidden',
-      background: cfg.productCardBg || cfg.bgColor,
-      border: cfg.productCardBorderWidth + 'px solid ' + cfg.productCardBorderColor,
+      overflow: 'visible',
+      background: 'transparent',
       boxShadow: cfg.highlightShadow ? '0 4px 14px rgba(0,0,0,0.15)' : 'none',
       transition: 'transform ' + cfg.transitionMs + 'ms ease, box-shadow ' + cfg.transitionMs + 'ms ease, opacity ' + cfg.transitionMs + 'ms ease',
       cursor: 'pointer',
@@ -3788,16 +3804,6 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       card.appendChild(playOverlay);
     }
 
-    // Título da vitrine (item 3 - show_title)
-    if (cfg.showTitle && item.title) {
-      var vitLabel = document.createElement('div');
-      vitLabel.className = 'vidlytics-dc-title';
-      vitLabel.style.cssText = 'position:absolute;left:0;right:0;top:0;padding:5px 8px;background:rgba(0,0,0,.45);color:#fff;font-size:11px;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;z-index:5;';
-      vitLabel.textContent = item.title;
-      card.appendChild(vitLabel);
-    }
-
-    // Card de produto (item 5 - show_product)
     if (cfg.showProduct) {
       var vpId = item.product_id || item.productId || null;
       var pData = vpId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, vpId); }) : null;
@@ -3805,10 +3811,10 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
         var pUrl = pData.product_url || pData.url || '';
         var prodCard = document.createElement('div');
         prodCard.className = 'vidlytics-dc-product-card';
-        prodCard.style.cssText = 'position:absolute;left:6px;right:6px;bottom:6px;display:flex;align-items:center;gap:6px;padding:5px;box-sizing:border-box;cursor:pointer;z-index:6;' + 
-          'background:' + (cfg.productCardBg || '#fff') + ';' + 
-          'border-radius:' + (cfg.productCardRadius || 12) + 'px;' + 
-          'border:' + (cfg.productCardBorderWidth || 0) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ';' + 
+        prodCard.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;padding:5px 6px;box-sizing:border-box;cursor:pointer;z-index:6;' +
+          'background:' + (cfg.productCardBg || '#fff') + ';' +
+          'border-radius:' + (cfg.productCardRadius || 12) + 'px;' +
+          'border:' + (cfg.productCardBorderWidth || 0) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ';' +
           'box-shadow:0 2px 8px rgba(0,0,0,0.15);';
         var pImgSrc = getThumbnailFromObject(pData) || '';
         if (pImgSrc) {
@@ -3840,6 +3846,14 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       }
     }
 
+    if (cfg.showTitle && item.title) {
+      var vitLabel = document.createElement('div');
+      vitLabel.className = 'vidlytics-dc-title';
+      vitLabel.style.cssText = 'width:100%;padding:0 8px 2px;color:#334155;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;';
+      vitLabel.textContent = item.title;
+      card.appendChild(vitLabel);
+    }
+
     // Certifica posicionamento relativo para overlays
     card.style.position = 'relative';
     cardEls.push(card);
@@ -3847,7 +3861,8 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     track.appendChild(card);
   });
 
-  container.appendChild(track);
+  wrapper.appendChild(track);
+  container.appendChild(wrapper);
   target.insertAdjacentElement('beforeend', container);
 
   var activeIndex = 0;
@@ -3902,6 +3917,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     var containerWidth = container.getBoundingClientRect().width || 0;
     var centerOffset = containerWidth / 2 - cfg.width / 2;
     track.style.transform = 'translateX(' + (centerOffset - offset) + 'px)';
+    track.style.marginTop = '8px';
   }
 
   function goNext() {
