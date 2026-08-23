@@ -3905,7 +3905,7 @@ if (activeFloatingConfig.shape === 'portrait') {
                     </SectionCard>
                   )}
 
-                  {/* ── Modal ── */}
+                  {/* ── Modal (Player) ── */}
                   {activeTab === 'modal' && (
                     <SectionCard title="Configurações do Player">
                       
@@ -3950,6 +3950,17 @@ if (activeFloatingConfig.shape === 'portrait') {
                           <ToggleSwitch label="Exibir botão de Comentários" checked={formData.modal_config.show_comment_button} onChange={e => updateModalConfig({ show_comment_button: e.target.checked })} />
                           <ToggleSwitch label="Exibir botão de Compartilhar" checked={formData.modal_config.show_share_button} onChange={e => updateModalConfig({ show_share_button: e.target.checked })} />
                           <ToggleSwitch label="Exibir card de produto" checked={formData.modal_config.show_product} onChange={e => updateModalConfig({ show_product: e.target.checked })} />
+                          
+                          {/* NOVO: Toggle Switch alinhado para o Botão do Produto */}
+                          {formData.modal_config.show_product && (
+                            <div className="ml-4 pl-3 border-l-2 border-slate-200 dark:border-slate-700 transition-all">
+                              <ToggleSwitch 
+                                label="Exibir botão Ver Produto" 
+                                checked={formData.modal_config.show_product_button ?? true} 
+                                onChange={e => updateModalConfig({ show_product_button: e.target.checked })} 
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -3989,17 +4000,22 @@ if (activeFloatingConfig.shape === 'portrait') {
                               <input type="number" min="8" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_price_size)} onChange={e => updateModalConfig({ product_card_price_size: e.target.value } as any)} placeholder="Ex: 12" className={inputClass} />
                             </FormField>
 
-<FormField label="Cor Preço">
+                            <FormField label="Cor Preço">
                               <ColorInput label="Cor do preço" value={(formData.modal_config as any).product_card_price_color || formData.primary_color} onChange={e => updateModalConfig({ product_card_price_color: e.target.value } as any)} />
                             </FormField>
 
-                            <FormField label="Cor Botão Produto">
-                              <ColorInput label="Cor do botão do produto" value={(formData.modal_config as any).product_card_button_bg || formData.primary_color} onChange={e => updateModalConfig({ product_card_button_bg: e.target.value } as any)} />
-                            </FormField>
+                            {/* CONDICIONAL: Apenas exibe a configuração das cores do botão se ele estiver ativo */}
+                            {formData.modal_config.show_product_button && (
+                              <>
+                                <FormField label="Cor Botão Produto">
+                                  <ColorInput label="Cor do botão do produto" value={(formData.modal_config as any).product_card_button_bg || formData.primary_color} onChange={e => updateModalConfig({ product_card_button_bg: e.target.value } as any)} />
+                                </FormField>
 
-                            <FormField label="Cor Texto Botão">
-                              <ColorInput label="Cor do texto do botão" value={(formData.modal_config as any).product_card_button_color || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_button_color: e.target.value } as any)} />
-                            </FormField>
+                                <FormField label="Cor Texto Botão">
+                                  <ColorInput label="Cor do texto do botão" value={(formData.modal_config as any).product_card_button_color || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_button_color: e.target.value } as any)} />
+                                </FormField>
+                              </>
+                            )}
                           </div>
                         </div>
                       )}
