@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.23-05';
+  var WIDGET_VERSION = '2026.08.23-06';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -3761,17 +3761,28 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     wrapper.appendChild(carouselTitle);
   }
 
+  var viewport = document.createElement('div');
+  viewport.className = 'vidlytics-dynamic-carousel-viewport';
+  Object.assign(viewport.style, {
+    width: '100%',
+    overflow: 'hidden',
+    display: 'block',
+  });
+
   var track = document.createElement('div');
   track.className = 'vidlytics-dynamic-carousel-track';
   Object.assign(track.style, {
     display: 'flex',
     alignItems: 'flex-start',
+    justifyContent: 'flex-start',
     gap: cfg.spacing + 'px',
+    willChange: 'transform',
     transition: 'transform ' + cfg.transitionMs + 'ms ease',
   });
 
   var cardEls = [];
   var videoEls = [];
+  var frameEls = [];
 
   clones.forEach(function (item, idx) {
     var card = document.createElement('div');
@@ -3784,12 +3795,12 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'flex-start',
-      gap: '10px',
-      borderRadius: isCircle ? '999px' : cfg.borderRadius + 'px',
+      gap: '12px',
       overflow: 'visible',
       background: 'transparent',
-      boxShadow: cfg.highlightShadow ? '0 4px 14px rgba(0,0,0,0.15)' : 'none',
-      transition: 'transform ' + cfg.transitionMs + 'ms ease, box-shadow ' + cfg.transitionMs + 'ms ease, opacity ' + cfg.transitionMs + 'ms ease',
+      border: 'none',
+      boxShadow: 'none',
+      transition: 'transform ' + cfg.transitionMs + 'ms ease, opacity ' + cfg.transitionMs + 'ms ease',
       cursor: 'pointer',
     });
 
@@ -3829,13 +3840,13 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
         var pWhatsApp = storeWhatsappNumber || '';
         var prodCard = document.createElement('div');
         prodCard.className = 'vidlytics-dc-product-card';
-        prodCard.style.cssText = 'display:flex;flex-direction:column;gap:8px;width:100%;padding:8px 10px;box-sizing:border-box;z-index:6;' +
+        prodCard.style.cssText = 'display:flex;flex-direction:column;gap:6px;width:100%;padding:8px;box-sizing:border-box;z-index:6;' +
           'background:' + (cfg.productCardBg || '#fff') + ';' +
           'border-radius:' + (cfg.productCardRadius || 12) + 'px;' +
           'border:' + (cfg.productCardBorderWidth || 0) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ';' +
           'box-shadow:0 2px 8px rgba(0,0,0,0.15);';
         var pHeader = document.createElement('div');
-        pHeader.style.cssText = 'display:flex;align-items:center;gap:8px;min-width:0;';
+        pHeader.style.cssText = 'display:flex;align-items:flex-start;gap:8px;min-width:0;';
         var pImgSrc = getThumbnailFromObject(pData) || '';
         if (pImgSrc) {
           var pImg = document.createElement('img');
@@ -3855,26 +3866,24 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
           pPrice.style.cssText = 'font-size:' + (cfg.productCardPriceSize || 12) + 'px;font-weight:' + (cfg.productCardPriceBold ? '800' : '600') + ';color:' + (cfg.productCardPriceColor || '#0094EB') + ';';
           pInfo.appendChild(pPrice);
         }
-        pHeader.appendChild(pInfo);
-        prodCard.appendChild(pHeader);
-
         var pActions = document.createElement('div');
-        pActions.style.cssText = 'display:flex;gap:8px;';
+        pActions.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;';
         var siteBtn = document.createElement('button');
         siteBtn.type = 'button';
-        siteBtn.textContent = 'Ver no site';
-        siteBtn.style.cssText = 'flex:1;border:none;border-radius:999px;padding:9px 10px;font-size:12px;font-weight:800;cursor:pointer;background:' + (cfg.productCardButtonBg || cfg.borderColor || '#0094EB') + ';color:' + (cfg.productCardButtonColor || '#FFFFFF') + ';';
+        siteBtn.innerHTML = '<span style="font-size:11px;line-height:1;">&#8599;</span> Ver no site';
+        siteBtn.style.cssText = 'display:inline-flex;align-items:center;gap:4px;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;background:' + (cfg.productCardButtonBg || '#0094EB') + ';color:' + (cfg.productCardButtonColor || '#FFFFFF') + ';';
         siteBtn.addEventListener('click', function (e) {
           e.stopPropagation();
           if (pUrl) window.open(pUrl, '_blank');
           sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
         });
+        pActions.appendChild(siteBtn);
 
         if (pWhatsApp) {
           var whatsappBtn = document.createElement('button');
           whatsappBtn.type = 'button';
-          whatsappBtn.textContent = 'Comprar no WhatsApp';
-          whatsappBtn.style.cssText = 'flex:1;border:none;border-radius:999px;padding:9px 10px;font-size:12px;font-weight:800;cursor:pointer;background:#25D366;color:#FFFFFF;';
+          whatsappBtn.innerHTML = '<span style="font-size:11px;line-height:1;">&#9742;</span> WhatsApp';
+          whatsappBtn.style.cssText = 'display:inline-flex;align-items:center;gap:4px;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;background:#25D366;color:#FFFFFF;';
           whatsappBtn.addEventListener('click', function (e) {
             e.stopPropagation();
             var msg = encodeURIComponent('Olá! Quero comprar: ' + (pData.name || 'Produto'));
@@ -3886,8 +3895,9 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
           pActions.appendChild(whatsappBtn);
         }
 
-        pActions.appendChild(siteBtn);
-        prodCard.appendChild(pActions);
+        pInfo.appendChild(pActions);
+        pHeader.appendChild(pInfo);
+        prodCard.appendChild(pHeader);
 
         prodCard.addEventListener('click', function (e) {
           if (e.target === siteBtn) return;
@@ -3901,10 +3911,12 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
 
     cardEls.push(card);
     videoEls.push(video);
+    frameEls.push(videoFrame);
     track.appendChild(card);
   });
 
-  wrapper.appendChild(track);
+  viewport.appendChild(track);
+  wrapper.appendChild(viewport);
   container.appendChild(wrapper);
   target.insertAdjacentElement('beforeend', container);
 
@@ -3936,11 +3948,14 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
 
       card.style.transform = 'scale(' + scale + ')';
       card.style.opacity = String(opacity);
-      card.style.boxShadow = boxShadow;
-      card.style.border = border;
-      card.style.background = cfg.productCardBg;
-      card.style.borderRadius = isCircle ? '999px' : cfg.borderRadius + 'px';
       card.style.zIndex = isActive ? '10' : '1';
+
+      var frame = frameEls[idx];
+      if (frame) {
+        frame.style.border = border;
+        frame.style.boxShadow = boxShadow;
+        frame.style.borderRadius = isCircle ? '999px' : cfg.borderRadius + 'px';
+      }
     });
 
     videoEls.forEach(function (video, idx) {
@@ -3955,32 +3970,39 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     });
 
     var offset = activeIndex * (cfg.width + cfg.spacing);
-    var containerWidth = container.getBoundingClientRect().width || 0;
-    var centerOffset = containerWidth / 2 - cfg.width / 2;
+    var viewportWidth = viewport.getBoundingClientRect().width || 0;
+    var centerOffset = viewportWidth / 2 - cfg.width / 2;
     track.style.transform = 'translateX(' + (centerOffset - offset) + 'px)';
-    track.style.marginTop = '8px';
   }
 
   function goNext() {
     activeIndex += 1;
-    if (activeIndex >= clones.length - visibleCount) {
-      activeIndex = visibleCount;
-      track.style.transition = 'none';
-      applyStyles();
-      track.getBoundingClientRect();
-      track.style.transition = 'transform ' + cfg.transitionMs + 'ms ease';
-      return;
-    }
     applyStyles();
+
+    // Ao entrar na zona de clones do final, volta ao índice equivalente real
+    // sem animação (loop infinito, sem "piscada")
+    if (activeIndex >= visibleCount + items.length) {
+      setTimeout(function () {
+        track.style.transition = 'none';
+        activeIndex = visibleCount;
+        applyStyles();
+        track.getBoundingClientRect();
+        track.style.transition = 'transform ' + cfg.transitionMs + 'ms ease';
+      }, cfg.transitionMs);
+    }
   }
 
   applyStyles();
+  requestAnimationFrame(function () { applyStyles(); });
+  var onResize = function () { applyStyles(); };
+  window.addEventListener('resize', onResize);
   var interval = setInterval(goNext, cfg.autoplayDelay);
 
   // Limpa interval se o wrapper for removido do DOM (evita leak em SPA)
   var observer = new MutationObserver(function () {
     if (!document.body.contains(container)) {
       clearInterval(interval);
+      window.removeEventListener('resize', onResize);
       observer.disconnect();
     }
   });
