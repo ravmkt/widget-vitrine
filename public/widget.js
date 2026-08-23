@@ -4063,26 +4063,18 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     activeIndex += 1;
     applyStyles();
 
+    var transitionMs = parseFloat(cfg.transitionMs) || 300;
+
     if (activeIndex >= visibleCount + items.length) {
       setTimeout(function () {
-        var cloneVideo = videoEls[activeIndex];
-        var originalVideo = videoEls[visibleCount];
-        if (cloneVideo && originalVideo && !cloneVideo.paused) {
-          originalVideo.currentTime = cloneVideo.currentTime;
-        }
-
         track.style.transition = 'none';
         activeIndex = visibleCount;
         applyStyles();
         
-        track.offsetHeight; 
-
-        requestAnimationFrame(function() {
-          requestAnimationFrame(function() {
-            track.style.transition = 'transform ' + cfg.transitionMs + 'ms ease';
-          });
-        });
-      }, cfg.transitionMs + 20);
+        track.getBoundingClientRect(); 
+        
+        track.style.transition = 'transform ' + transitionMs + 'ms ease';
+      }, transitionMs);
     }
   }
 
