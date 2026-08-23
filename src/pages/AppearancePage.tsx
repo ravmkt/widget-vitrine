@@ -3739,15 +3739,29 @@ if (activeFloatingConfig.shape === 'portrait') {
                               <FormField label="Cor Preço">
                                 <ColorInput label="Cor do preço" value={activeDynamicCarouselConfig.product_card_price_color || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ product_card_price_color: e.target.value })} />
                               </FormField>
-
-                              <FormField label="Cor Botão Ver no Site">
-                                <ColorInput label="Cor do botão Ver no site" value={(activeDynamicCarouselConfig as any).product_card_button_bg || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ product_card_button_bg: e.target.value } as any)} />
-                              </FormField>
-
-                              <FormField label="Cor Texto do Botão Ver no Site">
-                                <ColorInput label="Cor do texto do botão Ver no site" value={(activeDynamicCarouselConfig as any).product_card_button_color || '#FFFFFF'} onChange={e => updateDynamicCarouselConfig({ product_card_button_color: e.target.value } as any)} />
-                              </FormField>
                             </div>
+
+                            {/* 🆕 NOVO: Toggle Switch para Exibir/Ocultar o botão 'Ver no Site' do Carrossel Dinâmico */}
+                            <div className="mt-3 pt-3 border-t border-slate-200/50">
+                              <ToggleSwitch 
+                                label="Exibir botão Ver no Site" 
+                                checked={activeDynamicCarouselConfig.show_product_button ?? true} 
+                                onChange={e => updateDynamicCarouselConfig({ show_product_button: e.target.checked })} 
+                              />
+                            </div>
+
+                            {/* 🆕 CONDICIONAL: Cores do botão aparecem apenas se ele estiver ativo */}
+                            {(activeDynamicCarouselConfig.show_product_button ?? true) && (
+                              <div className="grid grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-slate-200/50">
+                                <FormField label="Cor Botão Ver no Site">
+                                  <ColorInput label="Cor do botão Ver no site" value={(activeDynamicCarouselConfig as any).product_card_button_bg || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ product_card_button_bg: e.target.value } as any)} />
+                                </FormField>
+
+                                <FormField label="Cor Texto do Botão">
+                                  <ColorInput label="Cor do texto do botão Ver no site" value={(activeDynamicCarouselConfig as any).product_card_button_color || '#FFFFFF'} onChange={e => updateDynamicCarouselConfig({ product_card_button_color: e.target.value } as any)} />
+                                </FormField>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
