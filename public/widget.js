@@ -3839,6 +3839,9 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
 
     // Certifica posicionamento relativo para overlays
     card.style.position = 'relative';
+    cardEls.push(card);
+    videoEls.push(video);
+    track.appendChild(card);
   });
 
   container.appendChild(track);
