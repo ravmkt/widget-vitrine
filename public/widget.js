@@ -3755,7 +3755,9 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     paddingBottom: '8px',
     marginTop: cfg.marginTop + 'px',
     marginBottom: cfg.marginBottom + 'px',
-  });
+    paddingLeft: cfg.marginLeft + 'px',
+    paddingRight: cfg.marginRight + 'px',
+    });
 
   var wrapper = document.createElement('div');
   wrapper.className = 'vidlytics-dynamic-carousel-wrapper';
