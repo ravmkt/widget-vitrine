@@ -703,8 +703,10 @@ function getCarouselConfig(appearance) {
   var safeRadiusNum = !isNaN(parsedRadiusVal) ? Math.max(0, parsedRadiusVal) : 12;
   var itemRadius = (String(rawRadiusInput).trim() === '0' || rawRadiusInput === 0) ? '0px' : px(safeRadiusNum, 12);
     
-  var marginTop = toNumber(rcv('margin_top', 'carousel_margin_top', '0'), 0);
+    var marginTop = toNumber(rcv('margin_top', 'carousel_margin_top', '0'), 0);
   var marginBottom = toNumber(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
+  var marginLeft = toNumber(rcv('margin_left', 'carousel_margin_left', '0'), 0);
+  var marginRight = toNumber(rcv('margin_right', 'carousel_margin_right', '0'), 0);
   
 var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false);
   var showPlayIcon = toBoolean(rcv('show_play_icon', 'carousel_show_play_icon', true), true);
