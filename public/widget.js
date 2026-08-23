@@ -3776,6 +3776,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       pointerEvents: 'none',
     });
 
+    card.appendChild(video);
     // Play central (item 3 - show_play_icon)
     if (cfg.showPlayIcon) {
       var playOverlay = document.createElement('div');
