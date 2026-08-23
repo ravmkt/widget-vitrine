@@ -3707,8 +3707,8 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
 
   // Coleta itens renderizáveis (vídeo válido OU thumb do vídeo OU thumb do story)
   var items = [];
-  (stories || []).forEach(function (story) {
-    (story.videos || []).forEach(function (v) {
+  (stories || []).forEach(function (story, storyIdx) {
+    (story.videos || []).forEach(function (v, videoIdx) {
       var url = v.video_url || v.videoUrl || v.url || '';
       var thumb = v.thumbnail_url || v.thumbnailUrl || v.poster_url || story.thumbnail_url || '';
       if (url || thumb) {
@@ -3719,6 +3719,8 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
           id: v.id || story.id || null,
           product_id: v.product_id || v.productId || null,
           product_name: v.product_name || v.productName || (v.product && v.product.name) || story.title || v.title || '',
+          storyIndex: storyIdx,
+          videoIndex: videoIdx
         });
       }
     });
