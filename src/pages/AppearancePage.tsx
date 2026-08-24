@@ -242,6 +242,9 @@ type ExtendedAppearance = Appearance & {
   url?: string | null;
 
   show_product_button: boolean;
+
+target_selector?: string;
+  insert_position?: 'after' | 'before' | 'prepend' | 'append';
 };
 
 type PreviewColors = {
