@@ -2405,6 +2405,19 @@ const PreviewCard = ({
           {activeTab === 'basic' && <VisualPreview formData={formData} colors={colors} />}
         </div>
       </div>
+
+      {/* 💡 AVISO: Preview Meramente Visual */}
+      <div className="mt-4 p-3 bg-slate-50 border border-slate-200/60 rounded-xl flex items-start gap-2.5 text-xs text-slate-500 leading-relaxed shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 shrink-0 mt-0.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4"/>
+          <path d="M12 8h.01"/>
+        </svg>
+        <span>
+          Este painel é um <strong>preview meramente visual</strong> das configurações de estilo. Para interagir de forma real com os vídeos e testar os cliques do player, acesse diretamente a listagem ou visualização do Story.
+        </span>
+      </div>
+
     </aside>
   );
 };
