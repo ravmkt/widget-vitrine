@@ -4069,27 +4069,54 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     var activeCenter =
       activeIndex * (cfg.width + cfg.spacing) + extraWidth / 2 + cfg.width / 2;
     var viewportWidth = viewport.getBoundingClientRect().width || 0;
-    track.style.transform = 'translateX(' + (viewportWidth / 2 - activeCenter) + 'px)';
-  }
+  track.style.transform = 'translateX(' + (viewportWidth / 2 - activeCenter) + 'px)';
+}
 
-  function goNext() {
-    activeIndex += 1;
+// ✅ NOVO LISTENER: Adicionado do zero aqui para eliminar a piscada e o zoom duplo!
+track.addEventListener('transitionend', function (e) {
+  if (e.target !== track || e.propertyName !== 'transform') return;
+
+  if (activeIndex >= visibleCount + items.length) {
+    var slides = track.children;
+    var cloneVideo = slides[activeIndex] ? slides[activeIndex].querySelector('video') : null;
+    var originalVideo = slides[visibleCount] ? slides[visibleCount].querySelector('video') : null;
+
+    // 1. Sincroniza o vídeo clone com o original
+    if (cloneVideo && originalVideo) {
+      originalVideo.currentTime = cloneVideo.currentTime;
+      if (!cloneVideo.paused) {
+        originalVideo.play().catch(function () {});
+      }
+    }
+
+    // 2. DESATIVA as transições de movimento (track) E de zoom (cards) simultaneamente para o salto
+    track.style.transition = 'none';
+    cardEls.forEach(function (card) {
+      card.style.transition = 'none'; // Congela o zoom do card durante o salto
+    });
+
+    // 3. Executa o salto invisível
+    activeIndex = visibleCount;
     applyStyles();
 
-    var transitionMs = parseFloat(cfg.transitionMs) || 300;
+    // Força o navegador a renderizar o novo estado instantaneamente (reflow)
+    track.offsetHeight;
 
-    if (activeIndex >= visibleCount + items.length) {
-      setTimeout(function () {
-        track.style.transition = 'none';
-        activeIndex = visibleCount;
-        applyStyles();
-        
-        track.getBoundingClientRect(); 
-        
-        track.style.transition = 'transform ' + transitionMs + 'ms ease';
-      }, transitionMs);
-    }
+    // 4. RESTAURA as transições para os próximos cliques ficarem suaves
+    var transitionMs = parseFloat(cfg.transitionMs) || 300;
+    track.style.transition = 'transform ' + transitionMs + 'ms ease';
+    
+    cardEls.forEach(function (card) {
+      card.style.transition = 'transform ' + transitionMs + 'ms ease, margin ' + transitionMs + 'ms ease';
+    });
   }
+});
+
+// ✅ NOVA FUNÇÃO GONEXT: Extremamente limpa e sem setTimeouts!
+function goNext() {
+  activeIndex += 1;
+  applyStyles();
+}
 
   applyStyles();
   requestAnimationFrame(function () { applyStyles(); });
