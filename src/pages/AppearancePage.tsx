@@ -2372,6 +2372,11 @@ const AppearancePage = () => {
 
   const [gridDevice, setGridDevice] = useState<DeviceType>('desktop');
   const [activeTab, setActiveTab] = useState<ModalTab>('basic');
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+
+  useEffect(() => {
+    setActiveSection(null);
+  }, [activeTab]);
 
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
