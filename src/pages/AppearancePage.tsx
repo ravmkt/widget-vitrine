@@ -2162,106 +2162,76 @@ const ModalPreview = ({
 
 const VisualPreview = ({
   formData,
-  colors,
 }: {
   formData: ExtendedAppearance;
   colors: PreviewColors;
 }) => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[380px] p-6 bg-slate-50/80 rounded-[1.25rem] border border-slate-200/80 shadow-inner animate-fade-in space-y-6">
+    <div className="flex flex-col items-center justify-center min-h-[420px] p-8 bg-white rounded-[1.25rem] border border-slate-200/60 shadow-xs animate-fade-in space-y-8 w-full max-w-lg mx-auto">
       
       {/* Badge de Padrão da Loja */}
       {formData.is_default && (
-        <div className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-600 text-[10px] font-black uppercase tracking-wider shadow-xs flex items-center gap-1">
-          <Star size={11} className="fill-emerald-500 text-emerald-500" />
+        <div className="px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-black uppercase tracking-wider shadow-xs flex items-center gap-1.5">
+          <Star size={12} className="fill-emerald-500 text-emerald-500 animate-pulse" />
           Estilo Padrão da Loja
         </div>
       )}
 
-      {/* Título com Nome do Estilo */}
-      <div className="text-center max-w-[280px]">
-        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Identificação</span>
-        <h3 className="mt-1 text-lg font-black text-slate-900 truncate" style={{ fontFamily: formData.font_family }}>
+      {/* Identificação do Estilo */}
+      <div className="text-center">
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Identificação</span>
+        <h3 className="mt-1 text-2xl font-black text-slate-900 truncate max-w-[300px]">
           {formData.name || 'Nome do Estilo'}
         </h3>
-        <p className="text-[10px] text-slate-500 font-bold font-mono mt-0.5">
-          Família: {formData.font_family}
-        </p>
       </div>
 
-      {/* Visualizador de Sincronização */}
-      <div className="relative w-full max-w-sm p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-4">
-        {/* Linha de conexão */}
-        <div className="flex items-center justify-around">
-          
-          {/* Desktop */}
-          <div className="flex flex-col items-center">
-            <div className="p-3 bg-slate-100 rounded-xl border border-slate-200/80 text-slate-600">
-              <Monitor size={18} />
-            </div>
-            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider mt-1.5">Desktop</span>
+      {/* Conexão Gigante Desktop <-> Mobile */}
+      <div className="w-full flex items-center justify-between px-8 py-10 bg-slate-50/60 rounded-2xl border border-slate-100">
+        
+        {/* Desktop Gigante */}
+        <div className="flex flex-col items-center gap-3.5">
+          <div className="p-5.5 bg-white rounded-2xl border border-slate-200 text-slate-700 shadow-xs transition-all hover:scale-105 duration-200">
+            <Monitor size={48} className="stroke-[1.5]" />
           </div>
-
-          {/* Indicador de sincronismo */}
-          <div className="flex-1 flex flex-col items-center justify-center px-4">
-            {formData.useGlobalAppearance ? (
-              <>
-                <div className="h-0.5 w-full bg-[#0094EB] relative mb-1.5 flex items-center justify-center">
-                  <span className="absolute bg-white px-2 py-0.5 border border-slate-200 rounded-full shadow-xs text-[10px]" title="Sincronizado">
-                    🔗
-                  </span>
-                </div>
-                <span className="text-[9px] font-black text-[#0094EB] uppercase tracking-wider">Unificados</span>
-              </>
-            ) : (
-              <>
-                <div className="h-0.5 w-full bg-slate-200 border-dashed border-t-2 mb-1.5" />
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Separados</span>
-              </>
-            )}
-          </div>
-
-          {/* Mobile */}
-          <div className="flex flex-col items-center">
-            <div className="p-3 bg-slate-100 rounded-xl border border-slate-200/80 text-slate-600">
-              <Smartphone size={18} />
-            </div>
-            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider mt-1.5">Mobile</span>
-          </div>
+          <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Desktop</span>
         </div>
 
-        {/* Texto explicativo */}
-        <p className="text-[11px] text-slate-500 font-medium leading-relaxed text-center border-t border-slate-100 pt-3">
-          {formData.useGlobalAppearance
-            ? 'Configuração sincronizada: Alterações salvas no Desktop são replicadas automaticamente no Mobile.'
-            : 'Design independente: Você pode personalizar Desktop e Mobile separadamente em suas respectivas abas.'}
-        </p>
-      </div>
-
-      {/* Amostras Rápidas de Cores */}
-      <div className="w-full max-w-sm grid grid-cols-2 gap-2">
-        <div className="rounded-xl border border-slate-200/80 bg-white p-3 flex items-center gap-2.5">
-          <span 
-            className="w-4.5 h-4.5 rounded-lg border border-slate-200 shrink-0 shadow-xs" 
-            style={{ backgroundColor: colors.primary }} 
-          />
-          <div className="min-w-0">
-            <p className="text-[9px] font-black text-slate-400 uppercase leading-none">Cor Primária</p>
-            <p className="text-[11px] font-black text-slate-700 font-mono mt-0.5 truncate">{colors.primary}</p>
-          </div>
+        {/* Linha de Conexão de Sincronismo */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4">
+          {formData.useGlobalAppearance ? (
+            <>
+              {/* Linha de conexão ativa em azul */}
+              <div className="h-1 w-full bg-[#0094EB] rounded-full relative mb-3 flex items-center justify-center shadow-[0_0_8px_rgba(0,148,235,0.2)]">
+                <span className="absolute bg-white px-3 py-1 border-2 border-[#0094EB] rounded-full shadow-md text-sm animate-bounce">
+                  🔗
+                </span>
+              </div>
+              <span className="text-xs font-black text-[#0094EB] uppercase tracking-widest">Unificados</span>
+            </>
+          ) : (
+            <>
+              {/* Linha separada cinza */}
+              <div className="h-0.5 w-full border-dashed border-t-2 border-slate-300 mb-3" />
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Separados</span>
+            </>
+          )}
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-3 flex items-center gap-2.5">
-          <span 
-            className="w-4.5 h-4.5 rounded-lg border border-slate-200 shrink-0 shadow-xs" 
-            style={{ backgroundColor: colors.button }} 
-          />
-          <div className="min-w-0">
-            <p className="text-[9px] font-black text-slate-400 uppercase leading-none">Cor Botão</p>
-            <p className="text-[11px] font-black text-slate-700 font-mono mt-0.5 truncate">{colors.button}</p>
+        {/* Mobile Gigante */}
+        <div className="flex flex-col items-center gap-3.5">
+          <div className="p-5.5 bg-white rounded-2xl border border-slate-200 text-slate-700 shadow-xs transition-all hover:scale-105 duration-200">
+            <Smartphone size={48} className="stroke-[1.5]" />
           </div>
+          <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Mobile</span>
         </div>
       </div>
+
+      {/* Texto explicativo */}
+      <p className="text-xs text-slate-500 font-semibold leading-relaxed text-center max-w-[360px]">
+        {formData.useGlobalAppearance
+          ? 'Configuração unificada: As alterações que você fizer em Desktop serão aplicadas automaticamente ao Mobile.'
+          : 'Configuração independente: Personalize aparências diferentes para Desktop e Mobile de forma isolada.'}
+      </p>
     </div>
   );
 };
