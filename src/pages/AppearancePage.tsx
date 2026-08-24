@@ -2315,6 +2315,7 @@ const AppearancePage = () => {
   const [appearances, setAppearances] = useState<Appearance[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeStoriesCount, setActiveStoriesCount] = useState<number>(0);
 
   const [showModal, setShowModal] = useState(false);
   const [editingStyle, setEditingStyle] = useState<Appearance | null>(null);
@@ -2344,8 +2345,35 @@ const AppearancePage = () => {
         return;
       }
       setResolvedStoreId(finalStoreId);
-      const styles = await getAppearancesSafe(finalStoreId);
+            const styles = await getAppearancesSafe(finalStoreId);
       setAppearances(styles);
+
+      // 🔍 Sincroniza em tempo real a contagem de stories ativos da loja para exibição inteligente de avisos
+      try {
+        if (supabase) {
+          const { data: storiesData, error: storiesError } = await supabase
+            .from('stories')
+            .select('id, is_active, status')
+            .eq('store_id', finalStoreId);
+
+          if (!storiesError && storiesData) {
+            const count = storiesData.filter((item: any) => 
+              !(item.is_active === false || item.active === false || item.status === 'inactive' || item.status === 'inativo')
+            ).length;
+            setActiveStoriesCount(count);
+          } else {
+            const localStories = await (db as any).stories?.getAll(finalStoreId);
+            if (localStories) {
+              const count = localStories.filter((item: any) => 
+                !(item.is_active === false || item.active === false || item.status === 'inactive' || item.status === 'inativo')
+              ).length;
+              setActiveStoriesCount(count);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Erro ao sincronizar stories count:', err);
+      }
     } catch (error) {
       console.error('Erro ao carregar aparências:', error);
       showError('Erro ao carregar aparências.');
@@ -3509,15 +3537,26 @@ if (activeFloatingConfig.shape === 'portrait') {
                         )}
                       </div>
 
-{/* Aviso obrigatório de vídeos mínimos */}
-<div className="flex items-start gap-2.5 rounded-xl border-2 border-amber-300 bg-amber-50 px-3.5 py-3">
-  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-400 text-white text-xs font-black">
-    !
-  </span>
-  <p className="text-xs font-bold text-amber-800 leading-snug">
-    Atenção: são necessários no mínimo <span className="underline">3 vídeos</span> na loja para que o Carrossel Dinâmico seja ativado e exibido.
-  </p>
-</div>
+{/* Aviso obrigatório de vídeos mínimos dinâmico */}
+{activeStoriesCount < 3 ? (
+  <div className="flex items-start gap-2.5 rounded-xl border-2 border-amber-300 bg-amber-50 px-3.5 py-3">
+    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-400 text-white text-xs font-black">
+      !
+    </span>
+    <p className="text-xs font-bold text-amber-800 leading-snug">
+      Atenção: são necessários no mínimo <span className="underline">3 vídeos ativos</span> na loja para que o Carrossel Dinâmico seja ativado e exibido. <span className="opacity-70 font-semibold">(Atual: {activeStoriesCount})</span>
+    </p>
+  </div>
+) : (
+  <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-200 bg-blue-50/70">
+    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white text-xs font-extrabold">
+      i
+    </span>
+    <p className="text-xs font-bold text-blue-800 leading-none">
+      Recomendamos no mínimo <span className="underline">6 vídeos ativos</span> para a melhor exibição do Carrossel Dinâmico. <span className="text-blue-600/90 font-semibold">(Atual: {activeStoriesCount})</span>
+    </p>
+  </div>
+)}
 
 {/* 1. Layout & Dimensões */}
 <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
@@ -4008,7 +4047,7 @@ if (activeFloatingConfig.shape === 'portrait') {
 
                             <FormField label="Cor Título">
                               <ColorInput label="Cor do título" value={(formData.modal_config as any).product_card_name_color || '#0F172A'} onChange={e => updateModalConfig({ product_card_name_color: e.target.value } as any)} />
-                            </FormField>
+                            </FormField>s
 
                             <FormField label="Tamanho Preço">
                               <input type="number" min="8" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_price_size)} onChange={e => updateModalConfig({ product_card_price_size: e.target.value } as any)} placeholder="Ex: 12" className={inputClass} />
