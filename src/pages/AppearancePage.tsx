@@ -1576,16 +1576,36 @@ function usePreviewScale(containerRef: React.RefObject<HTMLDivElement>) {
   return scale;
 }
 
-// ── PREVIEWS ATUALIZADOS COM SUPORTE A SIMULAÇÃO DE E-COMMERCE ──
+// ── PREVIEWS TURBINADOS COM SIMULADOR DE SITE REAL E PROXY IFRAME ──
+
+type PreviewBackground = 'clean' | 'fashion' | 'tech';
+
+const MOCK_STORE_BACKGROUNDS: Record<PreviewBackground, React.CSSProperties> = {
+  clean: {
+    backgroundColor: '#FFFFFF',
+  },
+  fashion: {
+    backgroundImage: 'url("https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    position: 'relative',
+  },
+  tech: {
+    backgroundImage: 'url("https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=800&q=80")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    position: 'relative',
+  }
+};
 
 const FloatingPreview = ({
   floating,
   colors,
-  bgStyle = {},
+  bgType = 'clean',
 }: {
   floating: FloatingConfig;
   colors: PreviewColors;
-  bgStyle?: React.CSSProperties;
+  bgType?: PreviewBackground;
 }) => {
   const mockupRef = useRef<HTMLDivElement>(null);
   const scale = usePreviewScale(mockupRef);
@@ -1628,27 +1648,28 @@ const FloatingPreview = ({
     floating.position === 'fixed_bottom_left' ? 'bottom left' :
     floating.position === 'fixed_top_right' ? 'top right' : 'top left';
 
+  const isClean = bgType === 'clean';
+
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
       <div 
         ref={mockupRef} 
-        className="relative h-[480px] overflow-hidden rounded-[1rem] border border-slate-200 bg-white"
-        style={bgStyle}
+        className="relative h-[480px] overflow-hidden rounded-[1rem] border border-slate-200"
+        style={MOCK_STORE_BACKGROUNDS[bgType]}
       >
-        {/* Camada de conteúdo mockado apenas se não houver background de imagem */}
-        {!bgStyle.backgroundImage && (
-          <div className="p-5">
-            <div className="h-3 w-28 rounded-full bg-slate-200" />
-            <div className="mt-2 h-3 w-48 rounded-full bg-slate-100" />
-            <div className="mt-8 grid grid-cols-2 gap-4">
-              <div className="h-24 rounded-2xl bg-slate-100" />
-              <div className="h-24 rounded-2xl bg-slate-100" />
-            </div>
+        {!isClean && <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] pointer-events-none" />}
+
+        <div className="relative z-10 p-5">
+          <div className={cn("h-3 w-28 rounded-full", isClean ? "bg-slate-200" : "bg-white/40")} />
+          <div className={cn("mt-2 h-3 w-48 rounded-full", isClean ? "bg-slate-100" : "bg-white/20")} />
+          <div className="mt-8 grid grid-cols-2 gap-4">
+            <div className={cn("h-24 rounded-2xl", isClean ? "bg-slate-100" : "bg-white/10")} />
+            <div className={cn("h-24 rounded-2xl", isClean ? "bg-slate-100" : "bg-white/10")} />
           </div>
-        )}
+        </div>
 
         <div
-          className="absolute flex items-center justify-center overflow-hidden bg-white shadow-xl"
+          className="absolute flex items-center justify-center overflow-hidden bg-white shadow-xl transition-all duration-300"
           style={{
             width: finalWidth,
             height: finalHeight,
@@ -1683,7 +1704,9 @@ const FloatingPreview = ({
           )}
           {floating.show_title && (
             <div className="absolute bottom-2 left-3 right-3 z-10">
-              <p className="truncate text-[11px] font-black text-white drop-shadow">Story</p>
+              <p className="truncate text-[11px] font-black text-white drop-shadow">
+                Story
+              </p>
             </div>
           )}
         </div>
@@ -1695,11 +1718,11 @@ const FloatingPreview = ({
 const CarouselPreview = ({
   carousel,
   colors,
-  bgStyle = {},
+  bgType = 'clean',
 }: {
   carousel: CarouselConfig;
   colors: PreviewColors;
-  bgStyle?: React.CSSProperties;
+  bgType?: PreviewBackground;
 }) => {
   const trackWrapperRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
@@ -1761,6 +1784,7 @@ const CarouselPreview = ({
   const cardWidth = `${rawWidth}px`;
   const cardHeight = `${cardHeightPx}px`;
   const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
+  const isClean = bgType === 'clean';
 
   return (
     <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50 flex flex-col h-[500px]">
@@ -1775,22 +1799,24 @@ const CarouselPreview = ({
 
       <div 
         className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 [&::-webkit-scrollbar]:hidden relative"
-        style={bgStyle}
+        style={MOCK_STORE_BACKGROUNDS[bgType]}
       >
+        {!isClean && <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] pointer-events-none" />}
+
         <div className="relative z-10 space-y-4">
           <div
             className="h-16 w-full rounded-lg"
             style={{
-              background: bgStyle.backgroundImage ? 'rgba(255,255,255,0.85)' : `linear-gradient(135deg, ${colors.primary}20, ${colors.secondary}35)`,
-              border: `1px solid ${colors.primary}30`,
-              backdropFilter: bgStyle.backgroundImage ? 'blur(4px)' : 'none',
+              background: isClean ? `linear-gradient(135deg, ${colors.primary}20, ${colors.secondary}35)` : 'rgba(255,255,255,0.15)',
+              border: `1px solid ${isClean ? colors.primary + '30' : 'rgba(255,255,255,0.2)'}`,
+              backdropFilter: 'blur(4px)',
             }}
           />
 
           <div className="space-y-2">
             {carousel.show_title && (
-              <div className="h-4 px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-bold w-fit">
-                CONFIRA NOSSOS STORIES
+              <div className={cn("h-4 px-2 py-0.5 rounded text-[10px] font-bold w-fit", isClean ? "bg-slate-800 text-white" : "bg-white text-slate-900")}>
+                NOVIDADES DO DIA
               </div>
             )}
 
@@ -1811,87 +1837,80 @@ const CarouselPreview = ({
                       style={{
                         width: cardWidth,
                         height: cardHeight,
-                      borderColor: carousel.border_color || colors.primary,
-                      borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
-                      borderStyle: 'solid',
-                      borderRadius,
-                      transform: carousel.auto_highlight && index === highlightIndex ? 'scale(1.08)' : 'scale(1)',
-                      zIndex: carousel.auto_highlight && index === highlightIndex ? 10 : 1,
-                      boxShadow: carousel.auto_highlight && index === highlightIndex ? `0 0 0 2px ${colors.primary}` : undefined,
-                      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                    }}
-                  >
-                    <video
-                      ref={(el) => {
-                        if (el) videoRefs.current.set(index, el);
-                        else videoRefs.current.delete(index);
+                        borderColor: carousel.border_color || colors.primary,
+                        borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
+                        borderStyle: 'solid',
+                        borderRadius,
+                        transform: carousel.auto_highlight && index === highlightIndex ? 'scale(1.08)' : 'scale(1)',
+                        zIndex: carousel.auto_highlight && index === highlightIndex ? 10 : 1,
+                        boxShadow: carousel.auto_highlight && index === highlightIndex ? `0 0 0 2px ${colors.primary}` : undefined,
+                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                       }}
-                      src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
-                      loop={carousel.autoplay_videos ?? true}
-                      muted
-                      playsInline
-                      preload="auto"
-                      poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-                      className="h-full w-full object-cover pointer-events-none"
-                    />
+                    >
+                      <video
+                        ref={(el) => {
+                          if (el) videoRefs.current.set(index, el);
+                          else videoRefs.current.delete(index);
+                        }}
+                        src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
+                        loop={carousel.autoplay_videos ?? true}
+                        muted
+                        playsInline
+                        preload="auto"
+                        poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+                        className="h-full w-full object-cover pointer-events-none"
+                      />
 
-                    {carousel.show_play_icon && (
-                      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-                          <PlaySquare size={12} />
+                      {carousel.show_play_icon && (
+                        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                            <PlaySquare size={12} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {carousel.show_product && !isCircle && (
+                      <div
+                        className="flex items-center gap-1.5 p-1 shadow-sm"
+                        style={{
+                          backgroundColor: carousel.product_card_bg || '#FFFFFF',
+                          borderColor: carousel.product_card_border_color || '#E2E8F0',
+                          borderWidth: `${safeNumber(carousel.product_card_border_width, 1, 0)}px`,
+                          borderStyle: 'solid',
+                          borderRadius: `${safeNumber(carousel.product_card_border_radius, 8, 0)}px`,
+                        }}
+                      >
+                        <div className="h-7 w-7 shrink-0 rounded bg-slate-200" />
+                        <div className="min-w-0 flex-1 flex flex-col justify-center">
+                          <div
+                            className="truncate font-bold leading-tight"
+                            style={{
+                              fontSize: `${safeNumber(carousel.product_card_name_size, 10, 8)}px`,
+                              color: carousel.product_card_name_color || '#0F172A',
+                            }}
+                          >
+                            Calça Confort
+                          </div>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span
+                              style={{
+                                fontSize: `${safeNumber(carousel.product_card_price_size, 10, 8)}px`,
+                                fontWeight: carousel.product_card_price_bold ?? true ? '800' : '600',
+                                color: carousel.product_card_price_color || colors.primary,
+                              }}
+                            >
+                              R$ 149,95
+                            </span>
+                          </div>
                         </div>
                       </div>
                     )}
                   </div>
-
-                  {carousel.show_product && !isCircle && (
-                    <div
-                      className="flex items-center gap-1.5 p-1 shadow-sm bg-white"
-                      style={{
-                        backgroundColor: carousel.product_card_bg || '#FFFFFF',
-                        borderColor: carousel.product_card_border_color || '#E2E8F0',
-                        borderWidth: `${safeNumber(carousel.product_card_border_width, 1, 0)}px`,
-                        borderStyle: 'solid',
-                        borderRadius: `${safeNumber(carousel.product_card_border_radius, 8, 0)}px`,
-                      }}
-                    >
-                      <div className="h-7 w-7 shrink-0 rounded bg-slate-200" />
-                      <div className="min-w-0 flex-1 flex flex-col justify-center">
-                        <div
-                          className="truncate font-bold leading-tight"
-                          style={{
-                            fontSize: `${safeNumber(carousel.product_card_name_size, 10, 8)}px`,
-                            color: carousel.product_card_name_color || '#0F172A',
-                          }}
-                        >
-                          Calça Confort
-                        </div>
-                        <div className="flex items-center justify-between mt-0.5">
-                          <span
-                            style={{
-                              fontSize: `${safeNumber(carousel.product_card_price_size, 10, 8)}px`,
-                              fontWeight: carousel.product_card_price_bold ?? true ? '800' : '600',
-                              color: carousel.product_card_price_color || colors.primary,
-                            }}
-                          >
-                            R$ 149,95
-                          </span>
-                          <span className="font-extrabold text-[9px]" style={{ color: carousel.product_card_price_color || colors.primary }}>
-                            &rarr;
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 pt-2">
-          <div className="h-28 rounded-lg bg-white border border-slate-100 shadow-sm" />
-          <div className="h-28 rounded-lg bg-white border border-slate-100 shadow-sm" />
         </div>
       </div>
     </div>
@@ -1901,13 +1920,14 @@ const CarouselPreview = ({
 const GridPreview = ({
   grid,
   colors,
+  bgType = 'clean',
 }: {
   grid: GridConfig;
   colors: PreviewColors;
+  bgType?: PreviewBackground;
 }) => {
   const mockupRef = useRef<HTMLDivElement>(null);
   const scale = usePreviewScale(mockupRef);
-
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
 
   const cols = limitNumber(grid.visible_items, 10, 1, 10);
@@ -1947,9 +1967,9 @@ const GridPreview = ({
   const cardWidth = `${rawWidth}px`;
   const shape = normalizeWidgetShape(grid.shape, 'portrait');
   const isCircle = shape === 'circle';
-  const isSquare = shape === 'square';
   const isPortrait = shape === 'portrait';
   const isLandscape = shape === 'landscape';
+  const isClean = bgType === 'clean';
 
   return (
     <div ref={mockupRef} className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50 flex flex-col h-[500px]">
@@ -1962,63 +1982,69 @@ const GridPreview = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 [&::-webkit-scrollbar]:hidden">
-        <div
-          className="grid justify-center"
-          style={{
-gridTemplateColumns: `repeat(${cols}, ${cardWidth})`,
-            gap: `${safeNumber(grid.spacing, 8, 0)}px`,
-            transform: `scale(${scale})`,
-            transformOrigin: 'top center',
-          }}
-        >
-          {items.map((_, index) => (
-            <div key={index} className="flex min-w-0 justify-center">
-<div
-                className={cn(
-                  'relative overflow-hidden shadow-sm flex items-center justify-center bg-slate-900',
-                  isCircle && 'rounded-full',
-                  !isCircle && 'rounded-xl'
-                )}
-style={{
-  width: cardWidth,
-  aspectRatio: isPortrait ? '9 / 16' : isLandscape ? '16 / 9' : '1 / 1',
+      <div 
+        className="flex-1 overflow-y-auto p-4 space-y-4 [&::-webkit-scrollbar]:hidden relative"
+        style={MOCK_STORE_BACKGROUNDS[bgType]}
+      >
+        {!isClean && <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] pointer-events-none" />}
+
+        <div className="relative z-10">
+          <div
+            className="grid justify-center mx-auto"
+            style={{
+              gridTemplateColumns: `repeat(${cols}, ${cardWidth})`,
+              gap: `${safeNumber(grid.spacing, 8, 0)}px`,
+              transform: `scale(${scale})`,
+              transformOrigin: 'top center',
+            }}
+          >
+            {items.map((_, index) => (
+              <div key={index} className="flex min-w-0 justify-center">
+                <div
+                  className={cn(
+                    'relative overflow-hidden shadow-sm flex items-center justify-center bg-slate-900',
+                    isCircle && 'rounded-full',
+                    !isCircle && 'rounded-xl'
+                  )}
+                  style={{
+                    width: cardWidth,
+                    aspectRatio: isPortrait ? '9 / 16' : isLandscape ? '16 / 9' : '1 / 1',
                     borderColor: grid.border_color || colors.primary,
-                  borderWidth: `${safeNumber(grid.border_style, 2, 0)}px`,
-                  borderStyle: 'solid',
-                  borderRadius: isCircle ? '999px' : cssSize(grid.border_radius, '12px'),
-                  opacity: grid.sequential_playback && index !== activeIndex ? 0.4 : 1,
-                  transition: 'opacity 0.3s ease',
-                }}
-              >
-<video
-  ref={(el) => {
-    if (el) videoRefs.current.set(index, el);
-    else videoRefs.current.delete(index);
-  }}
-  src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
-  loop={grid.autoplay_videos ?? true}
-  muted
-  playsInline
-  preload="auto"
-  poster="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"
-  className="h-full w-full object-cover pointer-events-none"
-/>
-                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-                    <PlaySquare size={12} />
+                    borderWidth: `${safeNumber(grid.border_style, 2, 0)}px`,
+                    borderStyle: 'solid',
+                    borderRadius: isCircle ? '999px' : cssSize(grid.border_radius, '12px'),
+                    opacity: grid.sequential_playback && index !== activeIndex ? 0.4 : 1,
+                    transition: 'opacity 0.3s ease',
+                  }}
+                >
+                  <video
+                    ref={(el) => {
+                      if (el) videoRefs.current.set(index, el);
+                      else videoRefs.current.delete(index);
+                    }}
+                    src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
+                    loop={grid.autoplay_videos ?? true}
+                    muted
+                    playsInline
+                    preload="auto"
+                    poster="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"
+                    className="h-full w-full object-cover pointer-events-none"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                      <PlaySquare size={12} />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-// trecho novo
 const ModalPreview = ({
   formData,
   colors,
@@ -2031,29 +2057,27 @@ const ModalPreview = ({
 
   return (
     <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-900/80 p-3 flex flex-col items-center justify-center h-[500px] relative">
-      {/* Moldura do Player Centralizado */}
-<div
-          className="relative h-[420px] w-[230px] overflow-hidden rounded-[1.25rem] shadow-2xl shrink-0 bg-slate-900"
-          style={{
-            color: '#FFFFFF',
-            fontFamily: formData.font_family,
-            borderColor: m.border_color || colors.primary,
-            borderWidth: `${borderW}px`,
-            borderStyle: borderW > 0 ? 'solid' : 'none',
-            borderRadius: cssSize(m.border_radius, '1.25rem'),
-          }}
-        >
-<video
-  src={DEMO_PREVIEW_VIDEOS[0]}
-  autoPlay
-  loop
-  muted
-  playsInline
-  preload="auto"
-  onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
-  poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-  className="absolute inset-0 h-full w-full object-cover pointer-events-none"
-/>
+      <div
+        className="relative h-[420px] w-[230px] overflow-hidden rounded-[1.25rem] shadow-2xl shrink-0 bg-slate-900"
+        style={{
+          color: '#FFFFFF',
+          fontFamily: formData.font_family,
+          borderColor: m.border_color || colors.primary,
+          borderWidth: `${borderW}px`,
+          borderStyle: borderW > 0 ? 'solid' : 'none',
+          borderRadius: cssSize(m.border_radius, '1.25rem'),
+        }}
+      >
+        <video
+          src={DEMO_PREVIEW_VIDEOS[0]}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+          className="absolute inset-0 h-full w-full object-cover pointer-events-none"
+        />
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
 
@@ -2147,12 +2171,6 @@ const ModalPreview = ({
                       Ver produto
                     </button>
                   )}
-                  <button
-                    type="button"
-                    className="flex-1 rounded px-1.5 py-1 text-[8px] font-black text-white bg-[#25D366]"
-                  >
-                    WhatsApp
-                  </button>
                 </div>
               </div>
             </div>
@@ -2172,8 +2190,6 @@ const VisualPreview = ({
 }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[420px] p-8 bg-white rounded-[1.25rem] border border-slate-200/60 shadow-xs animate-fade-in space-y-8 w-full max-w-lg mx-auto">
-      
-      {/* Badge de Padrão da Loja */}
       {formData.is_default && (
         <div className="px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-black uppercase tracking-wider shadow-xs flex items-center gap-1.5">
           <Star size={12} className="fill-emerald-500 text-emerald-500 animate-pulse" />
@@ -2181,7 +2197,6 @@ const VisualPreview = ({
         </div>
       )}
 
-      {/* Identificação do Estilo */}
       <div className="text-center">
         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Identificação</span>
         <h3 className="mt-1 text-2xl font-black text-slate-900 truncate max-w-[300px]">
@@ -2189,24 +2204,19 @@ const VisualPreview = ({
         </h3>
       </div>
 
-      {/* Conexão Gigante Desktop <-> Mobile */}
       <div className="w-full flex items-center justify-between px-8 py-10 bg-slate-50/60 rounded-2xl border border-slate-100">
-        
-        {/* Desktop Gigante */}
         <div className="flex flex-col items-center gap-3.5">
-          <div className="p-5.5 bg-white rounded-2xl border border-slate-200 text-slate-700 shadow-xs transition-all hover:scale-105 duration-200">
+          <div className="p-5 bg-white rounded-2xl border border-slate-200 text-slate-700 shadow-xs transition-all hover:scale-105 duration-200">
             <Monitor size={48} className="stroke-[1.5]" />
           </div>
           <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Desktop</span>
         </div>
 
-        {/* Linha de Conexão de Sincronismo */}
         <div className="flex-1 flex flex-col items-center justify-center px-4">
           {formData.useGlobalAppearance ? (
             <>
-              {/* Linha de conexão ativa em azul */}
               <div className="h-1 w-full bg-[#0094EB] rounded-full relative mb-3 flex items-center justify-center shadow-[0_0_8px_rgba(0,148,235,0.2)]">
-                <span className="absolute bg-white px-3 py-1 border-2 border-[#0094EB] rounded-full shadow-md text-sm animate-bounce">
+                <span className="absolute bg-white px-3 py-1 border-2 border-[#0094EB] rounded-full shadow-md text-sm">
                   🔗
                 </span>
               </div>
@@ -2214,23 +2224,20 @@ const VisualPreview = ({
             </>
           ) : (
             <>
-              {/* Linha separada cinza */}
               <div className="h-0.5 w-full border-dashed border-t-2 border-slate-300 mb-3" />
               <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Separados</span>
             </>
           )}
         </div>
 
-        {/* Mobile Gigante */}
         <div className="flex flex-col items-center gap-3.5">
-          <div className="p-5.5 bg-white rounded-2xl border border-slate-200 text-slate-700 shadow-xs transition-all hover:scale-105 duration-200">
+          <div className="p-5 bg-white rounded-2xl border border-slate-200 text-slate-700 shadow-xs transition-all hover:scale-105 duration-200">
             <Smartphone size={48} className="stroke-[1.5]" />
           </div>
           <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Mobile</span>
         </div>
       </div>
 
-      {/* Texto explicativo */}
       <p className="text-xs text-slate-500 font-semibold leading-relaxed text-center max-w-[360px]">
         {formData.useGlobalAppearance
           ? 'Configuração unificada: As alterações que você fizer em Desktop serão aplicadas automaticamente ao Mobile.'
@@ -2255,26 +2262,29 @@ const PreviewCard = ({
   gridDevice: DeviceType;
   activeTab: ModalTab;
 }) => {
-const floating = getActiveResponsiveConfig(
-  formData.floating_config,
-  floatingDevice,
-  formData.useGlobalAppearance,
-);
-const carousel = getActiveResponsiveConfig(
-  formData.carousel_config,
-  carouselDevice,
-  formData.useGlobalAppearance,
-);
-const dynamicCarousel = getActiveResponsiveConfig(
-  formData.dynamic_carousel_config,
-  dynamicCarouselDevice,
-  formData.useGlobalAppearance,
-);
-const grid = getActiveResponsiveConfig(
-  formData.grid_config,
-  gridDevice,
-  formData.useGlobalAppearance,
-);
+  const [bgType, setBgType] = useState<PreviewBackground>('clean');
+  const [viewMode, setViewMode] = useState<'mockup' | 'mystore'>('mockup');
+
+  const floating = getActiveResponsiveConfig(
+    formData.floating_config,
+    floatingDevice,
+    formData.useGlobalAppearance,
+  );
+  const carousel = getActiveResponsiveConfig(
+    formData.carousel_config,
+    carouselDevice,
+    formData.useGlobalAppearance,
+  );
+  const dynamicCarousel = getActiveResponsiveConfig(
+    formData.dynamic_carousel_config,
+    dynamicCarouselDevice,
+    formData.useGlobalAppearance,
+  );
+  const grid = getActiveResponsiveConfig(
+    formData.grid_config,
+    gridDevice,
+    formData.useGlobalAppearance,
+  );
 
   const colors: PreviewColors = {
     primary: isValidHexColor(formData.primary_color) ? formData.primary_color : '#0094EB',
@@ -2285,33 +2295,146 @@ const grid = getActiveResponsiveConfig(
     floatingBorder: isValidHexColor(floating.border_color) ? floating.border_color : '#0094EB',
   };
 
+  const handleOpenLivePreview = () => {
+    const previewUrl = `/stories/preview/live`;
+    window.open(previewUrl, '_blank');
+  };
+
+  const iframeSrc = useMemo(() => {
+    if (viewMode === 'mystore' && formData.url) {
+      const proxyBase = 'https://wznvecurmisgoaijykbt.supabase.co/functions/v1/proxy-preview';
+      return `${proxyBase}?url=${encodeURIComponent(formData.url)}`;
+    }
+    return '';
+  }, [viewMode, formData.url]);
+
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  useEffect(() => {
+    if (viewMode === 'mystore' && iframeRef.current) {
+      const activeFloating = getActiveResponsiveConfig(formData.floating_config, floatingDevice, formData.useGlobalAppearance);
+      const activeCarousel = getActiveResponsiveConfig(formData.carousel_config, carouselDevice, formData.useGlobalAppearance);
+      const activeDynamic = getActiveResponsiveConfig(formData.dynamic_carousel_config, dynamicCarouselDevice, formData.useGlobalAppearance);
+      const activeGrid = getActiveResponsiveConfig(formData.grid_config, gridDevice, formData.useGlobalAppearance);
+
+      const message = {
+        type: 'VIDLYTICS_PREVIEW_UPDATE',
+        config: {
+          activeTab,
+          primary_color: formData.primary_color,
+          secondary_color: formData.secondary_color,
+          target_selector: formData.target_selector || 'body',
+          insert_position: formData.insert_position || 'append',
+          floating: activeFloating,
+          carousel: activeCarousel,
+          dynamic_carousel: activeDynamic,
+          grid: activeGrid,
+          modal: formData.modal_config,
+        }
+      };
+
+      const timer = setTimeout(() => {
+        iframeRef.current?.contentWindow?.postMessage(message, '*');
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [formData, activeTab, viewMode, floatingDevice, carouselDevice, dynamicCarouselDevice, gridDevice]);
+
   return (
-    <aside className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex shrink-0 items-center justify-between border-b border-slate-100 pb-2">
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-full bg-rose-400" />
-            <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-            <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+    <aside className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm space-y-4">
+      <div className="flex shrink-0 flex-col gap-3 border-b border-slate-100 pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              <div className="h-2.5 w-2.5 rounded-full bg-rose-400" />
+              <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+              <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+            </div>
+            <span className="font-mono text-[10px] font-bold text-slate-400">Live Preview</span>
           </div>
-          <span className="ml-2 font-mono text-[11px] font-bold text-slate-400">sualoja.com.br</span>
+
+          <button
+            type="button"
+            onClick={handleOpenLivePreview}
+            className="flex items-center gap-1 text-[10px] font-black uppercase text-[#0094EB] hover:text-[#0E4787] bg-blue-50/50 hover:bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 transition-colors"
+          >
+            <Share2 size={11} />
+            Tela Cheia
+          </button>
         </div>
-        <span
-          className="h-6 w-6 rounded-full border border-slate-200 shadow-sm"
-          style={{ backgroundColor: colors.primary }}
-        />
+
+        <div className="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200/50">
+          <button
+            type="button"
+            onClick={() => setViewMode('mockup')}
+            className={cn(
+              "py-1.5 text-[10px] font-black uppercase rounded-lg transition-all",
+              viewMode === 'mockup' ? "bg-[#0094EB] text-white shadow-xs" : "text-slate-500 hover:text-slate-800"
+            )}
+          >
+            Visualizar Tema
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('mystore')}
+            disabled={!formData.url}
+            title={!formData.url ? "Defina a URL da sua loja nas configurações Básicas para liberar esta visualização." : "Carregar widget na sua própria loja"}
+            className={cn(
+              "py-1.5 text-[10px] font-black uppercase rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+              viewMode === 'mystore' ? "bg-[#0094EB] text-white shadow-xs" : "text-slate-500 hover:text-slate-800"
+            )}
+          >
+            Ver na minha Loja
+          </button>
+        </div>
+
+        {viewMode === 'mockup' && activeTab !== 'basic' && activeTab !== 'modal' && (
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase text-slate-400">Simulador de Fundo</span>
+            <div className="flex gap-1">
+              {(['clean', 'fashion', 'tech'] as PreviewBackground[]).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setBgType(type)}
+                  className={cn(
+                    "text-[9px] font-black uppercase px-2.5 py-1 rounded-lg border transition-all",
+                    bgType === type
+                      ? "bg-slate-800 text-white border-slate-800 shadow-xs"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+                  )}
+                >
+                  {type === 'clean' ? 'Neutro' : type === 'fashion' ? 'Moda' : 'Tech'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="space-y-4">
-        {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} />}
-        {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
-                {activeTab === 'dynamic_carousel' && <CarouselPreview carousel={dynamicCarousel} colors={colors} />}
-        {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
-        {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
-        {activeTab === 'basic' && (
-          <VisualPreview formData={formData} colors={colors} />
+      <div className="relative flex-1 rounded-2xl overflow-hidden min-h-[480px]">
+        {viewMode === 'mystore' && formData.url ? (
+          <div className="absolute inset-0 bg-white">
+            <iframe
+              ref={iframeRef}
+              src={iframeSrc}
+              title="Preview da sua loja"
+              className="h-full w-full border-none"
+              sandbox="allow-scripts allow-same-origin"
+            />
+            <div className="absolute inset-0 bg-transparent pointer-events-none" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} bgType={bgType} />}
+            {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} bgType={bgType} />}
+            {activeTab === 'dynamic_carousel' && <CarouselPreview carousel={dynamicCarousel} colors={colors} bgType={bgType} />}
+            {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} bgType={bgType} />}
+            {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
+            {activeTab === 'basic' && <VisualPreview formData={formData} colors={colors} />}
+          </div>
         )}
-              </div>
+      </div>
     </aside>
   );
 };
