@@ -1,4 +1,4 @@
-'use client';s
+'use client';
 
 import React, {
   useCallback,
