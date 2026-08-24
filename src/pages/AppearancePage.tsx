@@ -3539,21 +3539,17 @@ if (activeFloatingConfig.shape === 'portrait') {
 
 {/* Aviso obrigatório de vídeos mínimos dinâmico */}
 {activeStoriesCount < 3 ? (
-  <div className="flex items-start gap-2.5 rounded-xl border-2 border-amber-300 bg-amber-50 px-3.5 py-3">
-    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-400 text-white text-xs font-black">
-      !
-    </span>
-    <p className="text-xs font-bold text-amber-800 leading-snug">
-      Atenção: são necessários no mínimo <span className="underline">3 vídeos ativos</span> na loja para que o Carrossel Dinâmico seja ativado e exibido. <span className="opacity-70 font-semibold">(Atual: {activeStoriesCount})</span>
+  <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-300 bg-amber-50/70 mb-4">
+    <span className="shrink-0 text-sm">⚠️</span>
+    <p className="text-xs font-bold text-amber-800 leading-none">
+      Mínimo de <span className="underline">3 vídeos no History</span> para funcionar. <span className="text-amber-600/90 font-semibold">(Atual: {activeStoriesCount})</span>
     </p>
   </div>
 ) : (
-  <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-200 bg-blue-50/70">
-    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white text-xs font-extrabold">
-      i
-    </span>
+  <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-200 bg-blue-50/70 mb-4">
+    <span className="shrink-0 text-sm">💡</span>
     <p className="text-xs font-bold text-blue-800 leading-none">
-      Recomendamos no mínimo <span className="underline">6 vídeos ativos</span> para a melhor exibição do Carrossel Dinâmico. <span className="text-blue-600/90 font-semibold">(Atual: {activeStoriesCount})</span>
+      Recomendamos pelo menos <span className="underline">6 vídeos</span> para um melhor resultado. <span className="text-blue-600/90 font-semibold">(Atual: {activeStoriesCount})</span>
     </p>
   </div>
 )}
