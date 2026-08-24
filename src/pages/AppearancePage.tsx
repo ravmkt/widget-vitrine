@@ -33,6 +33,7 @@ import {
   Settings2,
   Heart,
   MessageCircle,
+  ChevronDown,
   Share2,
   Link,
   Link2Off,
