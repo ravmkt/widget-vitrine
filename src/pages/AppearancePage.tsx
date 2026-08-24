@@ -2162,6 +2162,7 @@ const ModalPreview = ({
 
 const VisualPreview = ({
   formData,
+  colors,
 }: {
   formData: ExtendedAppearance;
   colors: PreviewColors;
