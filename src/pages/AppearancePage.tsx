@@ -4038,7 +4038,7 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                     <SectionCard title="Configurações do Player">
                       
                       {/* Seletor Inteligente de Dispositivo */}
-                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60">
+                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
                         
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold" title="Configuração vinculada entre Desktop e Mobile">
@@ -4048,105 +4048,109 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                         </div>
                       </div>
 
-                      {/* 1. Moldura & Borda */}
-                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
-                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">1. Moldura & Borda</h4>
-                        
-                        <div className="grid grid-cols-2 gap-2.5">
-                          <FormField label="Cor da Borda" className="col-span-2">
-                            <ColorInput label="Cor da borda" value={formData.modal_config.border_color || formData.primary_color} onChange={e => updateModalConfig({ border_color: e.target.value })} />
-                          </FormField>
-
-                          <FormField label="Largura Borda (px)">
-                            <input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_width)} onChange={e => updateModalConfig({ border_width: e.target.value })} placeholder="Ex: 2" className={inputClass} />
-                          </FormField>
-
-                          <FormField label="Raio Borda (px)">
-                            <input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_radius)} onChange={e => updateModalConfig({ border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                          </FormField>
-                        </div>
-                      </div>
-
-                      {/* 2. Elementos no Player */}
-                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-2.5">
-                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">2. Elementos no Player</h4>
-                        
-                        <div className="space-y-1.5">
-                          <ToggleSwitch label="Exibir título do vídeo" checked={formData.modal_config.show_title} onChange={e => updateModalConfig({ show_title: e.target.checked })} />
-                          <ToggleSwitch label="Exibir botão Play/Pause central" checked={formData.modal_config.show_play_button} onChange={e => updateModalConfig({ show_play_button: e.target.checked })} />
-                          <ToggleSwitch label="Exibir botão Like (Curtir)" checked={formData.modal_config.show_like_button} onChange={e => updateModalConfig({ show_like_button: e.target.checked })} />
-                          <ToggleSwitch label="Exibir botão de Comentários" checked={formData.modal_config.show_comment_button} onChange={e => updateModalConfig({ show_comment_button: e.target.checked })} />
-                          <ToggleSwitch label="Exibir botão de Compartilhar" checked={formData.modal_config.show_share_button} onChange={e => updateModalConfig({ show_share_button: e.target.checked })} />
-                          <ToggleSwitch label="Exibir card de produto" checked={formData.modal_config.show_product} onChange={e => updateModalConfig({ show_product: e.target.checked })} />
-                          
-                          {/* NOVO: Toggle Switch alinhado para o Botão do Produto */}
-                          {formData.modal_config.show_product && (
-                            <div className="ml-4 pl-3 border-l-2 border-slate-200 dark:border-slate-700 transition-all">
-                              <ToggleSwitch 
-                                label="Exibir botão Ver Produto" 
-                                checked={formData.modal_config.show_product_button ?? true} 
-                                onChange={e => updateModalConfig({ show_product_button: e.target.checked })} 
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* 3. Estilo do Card de Produto */}
-                      {formData.modal_config.show_product && (
-                        <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-3">
-                          <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">
-                            3. Estilo do Card de Produto
-                          </h4>
-                          
+                      <div className="space-y-3">
+                        {/* 1. Moldura & Borda */}
+                        <AccordionSection
+                          title="1. Moldura & Borda"
+                          isOpen={activeSection === 'modal-borders'}
+                          onToggle={() => setActiveSection(activeSection === 'modal-borders' ? null : 'modal-borders')}
+                        >
                           <div className="grid grid-cols-2 gap-2.5">
-                            <FormField label="Fundo do Card">
-                              <ColorInput label="Fundo do card" value={(formData.modal_config as any).product_card_bg || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_bg: e.target.value } as any)} />
-                            </FormField>
-
-                            <FormField label="Cor da Borda">
-                              <ColorInput label="Cor da borda" value={(formData.modal_config as any).product_card_border_color || '#E2E8F0'} onChange={e => updateModalConfig({ product_card_border_color: e.target.value } as any)} />
+                            <FormField label="Cor da Borda" className="col-span-2">
+                              <ColorInput label="Cor da borda" value={formData.modal_config.border_color || formData.primary_color} onChange={e => updateModalConfig({ border_color: e.target.value })} />
                             </FormField>
 
                             <FormField label="Largura Borda (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_border_width)} onChange={e => updateModalConfig({ product_card_border_width: e.target.value } as any)} placeholder="Ex: 1" className={inputClass} />
+                              <input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_width)} onChange={e => updateModalConfig({ border_width: e.target.value })} placeholder="Ex: 2" className={inputClass} />
                             </FormField>
 
                             <FormField label="Raio Borda (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_border_radius)} onChange={e => updateModalConfig({ product_card_border_radius: e.target.value } as any)} placeholder="Ex: 12" className={inputClass} />
+                              <input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_radius)} onChange={e => updateModalConfig({ border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
                             </FormField>
+                          </div>
+                        </AccordionSection>
 
-                            <FormField label="Tamanho Título">
-                              <input type="number" min="8" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_name_size)} onChange={e => updateModalConfig({ product_card_name_size: e.target.value } as any)} placeholder="Ex: 11" className={inputClass} />
-                            </FormField>
-
-                            <FormField label="Cor Título">
-                              <ColorInput label="Cor do título" value={(formData.modal_config as any).product_card_name_color || '#0F172A'} onChange={e => updateModalConfig({ product_card_name_color: e.target.value } as any)} />
-                            </FormField>
-
-                            <FormField label="Tamanho Preço">
-                              <input type="number" min="8" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_price_size)} onChange={e => updateModalConfig({ product_card_price_size: e.target.value } as any)} placeholder="Ex: 12" className={inputClass} />
-                            </FormField>
-
-                            <FormField label="Cor Preço">
-                              <ColorInput label="Cor do preço" value={(formData.modal_config as any).product_card_price_color || formData.primary_color} onChange={e => updateModalConfig({ product_card_price_color: e.target.value } as any)} />
-                            </FormField>
-
-                            {/* CONDICIONAL: Apenas exibe a configuração das cores do botão se ele estiver ativo */}
-                            {formData.modal_config.show_product_button && (
-                              <>
-                                <FormField label="Cor Botão Produto">
-                                  <ColorInput label="Cor do botão do produto" value={(formData.modal_config as any).product_card_button_bg || formData.primary_color} onChange={e => updateModalConfig({ product_card_button_bg: e.target.value } as any)} />
-                                </FormField>
-
-                                <FormField label="Cor Texto Botão">
-                                  <ColorInput label="Cor do texto do botão" value={(formData.modal_config as any).product_card_button_color || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_button_color: e.target.value } as any)} />
-                                </FormField>
-                              </>
+                        {/* 2. Elementos no Player */}
+                        <AccordionSection
+                          title="2. Elementos no Player"
+                          isOpen={activeSection === 'modal-elements'}
+                          onToggle={() => setActiveSection(activeSection === 'modal-elements' ? null : 'modal-elements')}
+                        >
+                          <div className="space-y-1.5">
+                            <ToggleSwitch label="Exibir título do vídeo" checked={formData.modal_config.show_title} onChange={e => updateModalConfig({ show_title: e.target.checked })} />
+                            <ToggleSwitch label="Exibir botão Play/Pause central" checked={formData.modal_config.show_play_button} onChange={e => updateModalConfig({ show_play_button: e.target.checked })} />
+                            <ToggleSwitch label="Exibir botão Like (Curtir)" checked={formData.modal_config.show_like_button} onChange={e => updateModalConfig({ show_like_button: e.target.checked })} />
+                            <ToggleSwitch label="Exibir botão de Comentários" checked={formData.modal_config.show_comment_button} onChange={e => updateModalConfig({ show_comment_button: e.target.checked })} />
+                            <ToggleSwitch label="Exibir botão de Compartilhar" checked={formData.modal_config.show_share_button} onChange={e => updateModalConfig({ show_share_button: e.target.checked })} />
+                            <ToggleSwitch label="Exibir card de produto" checked={formData.modal_config.show_product} onChange={e => updateModalConfig({ show_product: e.target.checked })} />
+                            
+                            {formData.modal_config.show_product && (
+                              <div className="ml-4 pl-3 border-l-2 border-slate-200 dark:border-slate-700 transition-all">
+                                <ToggleSwitch 
+                                  label="Exibir botão Ver Produto" 
+                                  checked={formData.modal_config.show_product_button ?? true} 
+                                  onChange={e => updateModalConfig({ show_product_button: e.target.checked })} 
+                                />
+                              </div>
                             )}
                           </div>
-                        </div>
-                      )}
+                        </AccordionSection>
+
+                        {/* 3. Estilo do Card de Produto */}
+                        {formData.modal_config.show_product && (
+                          <AccordionSection
+                            title="3. Estilo do Card de Produto"
+                            isOpen={activeSection === 'modal-product'}
+                            onToggle={() => setActiveSection(activeSection === 'modal-product' ? null : 'modal-product')}
+                          >
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <FormField label="Fundo do Card">
+                                <ColorInput label="Fundo do card" value={(formData.modal_config as any).product_card_bg || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_bg: e.target.value } as any)} />
+                              </FormField>
+
+                              <FormField label="Cor da Borda">
+                                <ColorInput label="Cor da borda" value={(formData.modal_config as any).product_card_border_color || '#E2E8F0'} onChange={e => updateModalConfig({ product_card_border_color: e.target.value } as any)} />
+                              </FormField>
+
+                              <FormField label="Largura Borda (px)">
+                                <input type="number" min="0" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_border_width)} onChange={e => updateModalConfig({ product_card_border_width: e.target.value } as any)} placeholder="Ex: 1" className={inputClass} />
+                              </FormField>
+
+                              <FormField label="Raio Borda (px)">
+                                <input type="number" min="0" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_border_radius)} onChange={e => updateModalConfig({ product_card_border_radius: e.target.value } as any)} placeholder="Ex: 12" className={inputClass} />
+                              </FormField>
+
+                              <FormField label="Tamanho Título">
+                                <input type="number" min="8" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_name_size)} onChange={e => updateModalConfig({ product_card_name_size: e.target.value } as any)} placeholder="Ex: 11" className={inputClass} />
+                              </FormField>
+
+                              <FormField label="Cor Título">
+                                <ColorInput label="Cor do título" value={(formData.modal_config as any).product_card_name_color || '#0F172A'} onChange={e => updateModalConfig({ product_card_name_color: e.target.value } as any)} />
+                              </FormField>
+
+                              <FormField label="Tamanho Preço">
+                                <input type="number" min="8" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_price_size)} onChange={e => updateModalConfig({ product_card_price_size: e.target.value } as any)} placeholder="Ex: 12" className={inputClass} />
+                              </FormField>
+
+                              <FormField label="Cor Preço">
+                                <ColorInput label="Cor do preço" value={(formData.modal_config as any).product_card_price_color || formData.primary_color} onChange={e => updateModalConfig({ product_card_price_color: e.target.value } as any)} />
+                              </FormField>
+
+                              {formData.modal_config.show_product_button && (
+                                <>
+                                  <FormField label="Cor Botão Produto">
+                                    <ColorInput label="Cor do botão do produto" value={(formData.modal_config as any).product_card_button_bg || formData.primary_color} onChange={e => updateModalConfig({ product_card_button_bg: e.target.value } as any)} />
+                                  </FormField>
+
+                                  <FormField label="Cor Texto Botão">
+                                    <ColorInput label="Cor do texto do botão" value={(formData.modal_config as any).product_card_button_color || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_button_color: e.target.value } as any)} />
+                                  </FormField>
+                                </>
+                              )}
+                            </div>
+                          </AccordionSection>
+                        )}
+                      </div>
 
                     </SectionCard>
                   )}
