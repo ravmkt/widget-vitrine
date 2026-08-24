@@ -2296,6 +2296,52 @@ const grid = getActiveResponsiveConfig(
 // COMPONENTE PRINCIPAL
 // ════════════════════════════════════════════════════════════════
 
+// 1. Adicione o ChevronDown no topo junto com os outros imports do lucide-react:
+// import { ..., ChevronDown } from 'lucide-react';
+
+// 2. Cole este componente logo acima do "const AppearancePage = () => {"
+interface AccordionSectionProps {
+  title: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}
+
+const AccordionSection = ({ title, isOpen, onToggle, children }: AccordionSectionProps) => {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden transition-all duration-300">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between bg-slate-50/60 px-4 py-3.5 text-left text-xs font-black uppercase tracking-wider text-[#0094EB] hover:bg-slate-50 transition-colors"
+      >
+        <span>{title}</span>
+        <ChevronDown
+          size={16}
+          className={cn(
+            "text-slate-400 transition-transform duration-300",
+            isOpen && "rotate-180 text-[#0094EB]"
+          )}
+        />
+      </button>
+      
+      {/* Container de Animação Suave com CSS Grid */}
+      <div
+        className={cn(
+          "grid transition-all duration-300 ease-in-out",
+          isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="p-4 bg-white border-t border-slate-100 space-y-4">
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AppearancePage = () => {
   const tenantContext = useTenant() as any;
   const storeId =
