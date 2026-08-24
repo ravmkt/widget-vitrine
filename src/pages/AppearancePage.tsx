@@ -2849,10 +2849,12 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
         use_global_appearance: formData.useGlobalAppearance,
         url: formData.url || null,
 
+        target_selector: formData.target_selector || 'body',
+        insert_position: formData.insert_position || 'append',
+
         created_at: formData.created_at || editingStyle?.created_at || now,
         updated_at: now,
       };
-
       if (stylePayload.is_default) {
         await Promise.all(
           appearances
