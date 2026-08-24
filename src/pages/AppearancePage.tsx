@@ -1551,16 +1551,16 @@ const getShapeLabel = (shape: WidgetShape) => {
   }
 };
 
-// ──────────────────── PREVIEWS ────────────────────
-
-// Previews limpos focados em Sandbox Real (Pixel-Perfect) sem mockups ou layouts extras
+// ──────────────────── PREVIEWS (SANDBOX REAL) ────────────────────
 
 const FloatingPreview = ({
   floating,
   colors,
+  device,
 }: {
   floating: FloatingConfig;
   colors: PreviewColors;
+  device: DeviceType;
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -1580,27 +1580,37 @@ const FloatingPreview = ({
   const circleSize = cssSize(floating.border_radius || floating.width, '80px');
   const finalWidth = isCircle ? circleSize : width;
   const finalHeight = isCircle ? circleSize : height;
-  const lateralSpacing = cssSize(floating.left_spacing, '16px');
-  const positionStyle: React.CSSProperties = {};
 
-  // Posicionamento absoluto real nos cantos do container Sandbox
+  const positionStyle: React.CSSProperties = {};
+  const gapBottom = cssSize(floating.bottom_spacing, '20px');
+  const gapTop = cssSize(floating.top_spacing, '20px');
+  const gapLeft = cssSize(floating.left_spacing, '20px');
+  const gapRight = cssSize(floating.right_spacing, '20px');
+
   if (floating.position === 'fixed_bottom_right' || floating.position === 'fixed_bottom_left') {
-    positionStyle.bottom = cssSize(floating.bottom_spacing, '16px');
+    positionStyle.bottom = gapBottom;
   }
   if (floating.position === 'fixed_top_right' || floating.position === 'fixed_top_left') {
-    positionStyle.top = cssSize(floating.top_spacing, '16px');
+    positionStyle.top = gapTop;
   }
   if (floating.position === 'fixed_bottom_left' || floating.position === 'fixed_top_left') {
-    positionStyle.left = lateralSpacing;
+    positionStyle.left = gapLeft;
   }
   if (floating.position === 'fixed_bottom_right' || floating.position === 'fixed_top_right') {
-    positionStyle.right = lateralSpacing;
+    positionStyle.right = gapRight;
   }
 
   return (
-    <div className="relative w-full h-[480px] rounded-[1rem] border border-dashed border-slate-200 bg-slate-50 overflow-hidden">
+    <div 
+      className="relative w-full h-[440px] overflow-hidden rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50"
+      style={{
+        backgroundImage: 'radial-gradient(#e2e8f0 1.5px, transparent 1.5px)',
+        backgroundSize: '16px 16px',
+      }}
+    >
+      {/* Widget Flutuante Puro com Tamanho 100% Real */}
       <div
-        className="absolute flex items-center justify-center overflow-hidden bg-white shadow-lg transition-all duration-300"
+        className="absolute flex items-center justify-center overflow-hidden bg-white shadow-xl transition-all duration-300 animate-fade-in"
         style={{
           width: finalWidth,
           height: finalHeight,
@@ -1651,23 +1661,12 @@ const CarouselPreview = ({
   colors: PreviewColors;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
-
   const visibleItems = safeNumber(carousel.visible_items, 4, 1);
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
-  const items = Array.from({ length: Math.max(1, visibleItems) });
+  const items = Array.from({ length: Math.max(1, visibleItems + 2) }); // Margem para scroll visível
   const isCircle = shape === 'circle';
   const isPortrait = shape === 'portrait';
   const isLandscape = shape === 'landscape';
-
-  const [highlightIndex, setHighlightIndex] = useState(0);
-
-  useEffect(() => {
-    if (!carousel.auto_highlight) return;
-    const interval = setInterval(() => {
-      setHighlightIndex((prev) => (prev + 1) % items.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [carousel.auto_highlight, items.length]);
 
   useEffect(() => {
     videoRefs.current.forEach((vid) => {
@@ -1693,17 +1692,15 @@ const CarouselPreview = ({
   const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
 
   return (
-    <div className="flex h-[480px] w-full items-center justify-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50 p-6 overflow-auto">
-      <div
-        className="flex items-start"
-        style={{
-          gap: `${spacing}px`,
-        }}
+    <div className="relative w-full h-[440px] flex items-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 p-6 overflow-hidden">
+      <div 
+        className="w-full flex items-start overflow-x-auto py-6 px-2 scrollbar-none"
+        style={{ gap: `${spacing}px` }}
       >
         {items.map((_, index) => (
-          <div key={index} className="flex flex-col gap-2 shrink-0" style={{ width: cardWidth }}>
+          <div key={index} className="flex flex-col gap-1.5 shrink-0" style={{ width: cardWidth }}>
             <div
-              className="relative overflow-hidden shadow-sm bg-slate-900"
+              className="relative overflow-hidden shadow-sm bg-slate-900 transition-all"
               style={{
                 width: cardWidth,
                 height: cardHeight,
@@ -1711,10 +1708,6 @@ const CarouselPreview = ({
                 borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
                 borderStyle: 'solid',
                 borderRadius,
-                transform: carousel.auto_highlight && index === highlightIndex ? 'scale(1.05)' : 'scale(1)',
-                zIndex: carousel.auto_highlight && index === highlightIndex ? 10 : 1,
-                boxShadow: carousel.auto_highlight && index === highlightIndex ? `0 0 0 2px ${colors.primary}` : undefined,
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
               }}
             >
               <video
@@ -1783,6 +1776,192 @@ const CarouselPreview = ({
   );
 };
 
+const DynamicCarouselPreview = ({
+  carousel,
+  colors,
+}: {
+  carousel: DynamicCarouselConfig;
+  colors: PreviewColors;
+}) => {
+  const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+  const shape = normalizeWidgetShape(carousel.shape, 'portrait');
+  const items = Array.from({ length: 6 }); // Sempre renderiza múltiplos itens para permitir a transição
+  const isCircle = shape === 'circle';
+  const isPortrait = shape === 'portrait';
+  const isLandscape = shape === 'landscape';
+
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  // Intervalo de troca e animação automática (Direita para Esquerda)
+  useEffect(() => {
+    const delay = carousel.autoplay_delay || 5000;
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % items.length);
+    }, delay);
+    return () => clearInterval(interval);
+  }, [carousel.autoplay_delay, items.length]);
+
+  useEffect(() => {
+    videoRefs.current.forEach((vid, index) => {
+      if (!vid) return;
+      if (carousel.autoplay_videos ?? true) {
+        vid.play().catch(() => {});
+      } else {
+        vid.pause();
+      }
+    });
+  }, [carousel.autoplay_videos, activeIndex]);
+
+  const rawWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
+  const spacing = safeNumber(carousel.spacing, 12, 0);
+  const cardHeightPx = isPortrait
+    ? Math.round((rawWidth * 16) / 9)
+    : isLandscape
+      ? Math.round((rawWidth * 9) / 16)
+      : rawWidth;
+
+  const cardWidth = `${rawWidth}px`;
+  const cardHeight = `${cardHeightPx}px`;
+  const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
+
+  // Cálculo de translação contínua do container interno
+  const translateOffset = -activeIndex * (rawWidth + spacing);
+
+  return (
+    <div className="relative w-full h-[440px] flex flex-col items-center justify-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 p-6 overflow-hidden">
+      {carousel.show_title && carousel.title_text && (
+        <div 
+          className="w-full mb-4 px-2"
+          style={{
+            textAlign: carousel.title_align || 'center',
+            fontSize: `${carousel.title_font_size || 14}px`,
+            fontWeight: carousel.title_bold ? 'bold' : 'normal',
+            color: colors.text,
+          }}
+        >
+          {carousel.title_text}
+        </div>
+      )}
+
+      {/* Janela de Máscara de Corte para simular o Carrossel Passando */}
+      <div className="w-full overflow-hidden py-4">
+        <div
+          className="flex transition-transform duration-700 ease-in-out"
+          style={{
+            transform: `translateX(${translateOffset}px)`,
+            gap: `${spacing}px`,
+            paddingLeft: '35%', // Centraliza visualmente o item ativo
+          }}
+        >
+          {items.map((_, index) => {
+            const isActive = index === activeIndex;
+            
+            // Configurações e estilos dinâmicos de destaque
+            const applyScale = isActive && carousel.highlight_enlarge_active ? 'scale(1.12)' : 'scale(1)';
+            const applyShadow = isActive && carousel.highlight_shadow ? '0 10px 25px -5px rgba(0,0,0,0.25), 0 8px 10px -6px rgba(0,0,0,0.25)' : 'none';
+            const applySaturation = !isActive && carousel.highlight_desaturate_inactive ? 'grayscale(50%) opacity(60%)' : 'grayscale(0%) opacity(100%)';
+
+            return (
+              <div 
+                key={index} 
+                className="flex flex-col gap-1.5 shrink-0 transition-all duration-500" 
+                style={{ 
+                  width: cardWidth,
+                  transform: applyScale,
+                  filter: applySaturation,
+                }}
+              >
+                <div
+                  className="relative overflow-hidden bg-slate-900 transition-all duration-500"
+                  style={{
+                    width: cardWidth,
+                    height: cardHeight,
+                    borderColor: isActive && carousel.highlight_border_color ? carousel.highlight_border_color : (carousel.border_color || colors.primary),
+                    borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
+                    borderStyle: 'solid',
+                    borderRadius,
+                    boxShadow: applyShadow,
+                  }}
+                >
+                  <video
+                    ref={(el) => {
+                      if (el) videoRefs.current.set(index, el);
+                      else videoRefs.current.delete(index);
+                    }}
+                    src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
+                    loop={carousel.autoplay_videos ?? true}
+                    muted
+                    playsInline
+                    preload="auto"
+                    poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+                    className="h-full w-full object-cover pointer-events-none"
+                  />
+
+                  {carousel.show_play_icon && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+                        <PlaySquare size={12} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {carousel.show_product && !isCircle && (
+                  <div
+                    className="flex flex-col gap-1 p-1.5 shadow-sm transition-all duration-500"
+                    style={{
+                      backgroundColor: carousel.product_card_bg || '#FFFFFF',
+                      borderColor: carousel.product_card_border_color || '#E2E8F0',
+                      borderWidth: `${safeNumber(carousel.product_card_border_width, 1, 0)}px`,
+                      borderStyle: 'solid',
+                      borderRadius: `${safeNumber(carousel.product_card_border_radius, 8, 0)}px`,
+                    }}
+                  >
+                    <div className="min-w-0 flex-1 flex flex-col justify-center">
+                      <div
+                        className="truncate font-bold leading-tight"
+                        style={{
+                          fontSize: `${safeNumber(carousel.product_card_name_size, 10, 8)}px`,
+                          color: carousel.product_card_name_color || '#0F172A',
+                        }}
+                      >
+                        Calça Confort
+                      </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span
+                          style={{
+                            fontSize: `${safeNumber(carousel.product_card_price_size, 10, 8)}px`,
+                            fontWeight: '800',
+                            color: carousel.product_card_price_color || colors.primary,
+                          }}
+                        >
+                          R$ 149,95
+                        </span>
+                      </div>
+                    </div>
+                    {carousel.show_product_button && (
+                      <button
+                        type="button"
+                        className="w-full rounded py-0.5 text-[8px] font-black uppercase text-center mt-1"
+                        style={{
+                          backgroundColor: carousel.product_card_button_bg || colors.button,
+                          color: carousel.product_card_button_color || '#FFFFFF',
+                        }}
+                      >
+                        Ver No Site
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const GridPreview = ({
   grid,
   colors,
@@ -1793,7 +1972,7 @@ const GridPreview = ({
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
 
   const cols = limitNumber(grid.visible_items, 10, 1, 10);
-  const rows = safeNumber(grid.rows, 1, 1);
+  const rows = 2; // Forçamos pelo menos 2 linhas para exibir o distanciamento vertical!
   const totalItems = cols * rows;
   const items = Array.from({ length: totalItems });
 
@@ -1833,11 +2012,12 @@ const GridPreview = ({
   const isLandscape = shape === 'landscape';
 
   return (
-    <div className="flex h-[480px] w-full items-center justify-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50 p-6 overflow-auto">
+    <div className="flex h-[440px] w-full items-center justify-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 p-6 overflow-auto">
       <div
         className="grid justify-center mx-auto"
         style={{
           gridTemplateColumns: `repeat(${cols}, ${cardWidth})`,
+          gridTemplateRows: `repeat(${rows}, auto)`,
           gap: `${safeNumber(grid.spacing, 8, 0)}px`,
         }}
       >
@@ -1896,9 +2076,9 @@ const ModalPreview = ({
   const borderW = safeNumber(m.border_width, 0, 0);
 
   return (
-    <div className="overflow-hidden rounded-[1rem] border border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center h-[480px] w-full">
+    <div className="overflow-hidden rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center h-[440px] w-full">
       <div
-        className="relative h-[420px] w-[230px] overflow-hidden rounded-[1.25rem] shadow-2xl shrink-0 bg-slate-900"
+        className="relative h-[400px] w-[220px] overflow-hidden rounded-[1.25rem] shadow-2xl shrink-0 bg-slate-900"
         style={{
           color: '#FFFFFF',
           fontFamily: formData.font_family,
@@ -2029,7 +2209,7 @@ const VisualPreview = ({
   colors: PreviewColors;
 }) => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[420px] p-8 bg-white rounded-[1.25rem] border border-dashed border-slate-200/60 shadow-xs space-y-8 w-full max-w-lg mx-auto">
+    <div className="flex flex-col items-center justify-center min-h-[400px] p-6 bg-white rounded-[1.25rem] border border-dashed border-slate-200 shadow-xs space-y-6 w-full max-w-lg mx-auto">
       {formData.is_default && (
         <div className="px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-black uppercase tracking-wider shadow-xs flex items-center gap-1.5">
           <Star size={12} className="fill-emerald-500 text-emerald-500" />
@@ -2044,12 +2224,12 @@ const VisualPreview = ({
         </h3>
       </div>
 
-      <div className="w-full flex items-center justify-between px-8 py-10 bg-slate-50/60 rounded-2xl border border-slate-100">
+      <div className="w-full flex items-center justify-between px-6 py-8 bg-slate-50/60 rounded-2xl border border-slate-100">
         <div className="flex flex-col items-center gap-3.5">
-          <div className="p-5 bg-white rounded-2xl border border-slate-200 text-slate-700 shadow-xs transition-all hover:scale-105 duration-200">
-            <Monitor size={48} className="stroke-[1.5]" />
+          <div className="p-4 bg-white rounded-2xl border border-slate-200 text-slate-700 shadow-xs transition-all hover:scale-105 duration-200">
+            <Monitor size={40} className="stroke-[1.5]" />
           </div>
-          <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Desktop</span>
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Desktop</span>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center px-4">
@@ -2060,25 +2240,25 @@ const VisualPreview = ({
                   🔗
                 </span>
               </div>
-              <span className="text-xs font-black text-[#0094EB] uppercase tracking-widest">Unificados</span>
+              <span className="text-[10px] font-black text-[#0094EB] uppercase tracking-widest">Unificados</span>
             </>
           ) : (
             <>
               <div className="h-0.5 w-full border-dashed border-t-2 border-slate-300 mb-3" />
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Separados</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Separados</span>
             </>
           )}
         </div>
 
         <div className="flex flex-col items-center gap-3.5">
-          <div className="p-5 bg-white rounded-2xl border border-slate-200 text-slate-700 shadow-xs transition-all hover:scale-105 duration-200">
-            <Smartphone size={48} className="stroke-[1.5]" />
+          <div className="p-4 bg-white rounded-2xl border border-slate-200 text-slate-700 shadow-xs transition-all hover:scale-105 duration-200">
+            <Smartphone size={40} className="stroke-[1.5]" />
           </div>
-          <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Mobile</span>
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Mobile</span>
         </div>
       </div>
 
-      <p className="text-xs text-slate-500 font-semibold leading-relaxed text-center max-w-[360px]">
+      <p className="text-[11px] text-slate-500 font-semibold leading-relaxed text-center max-w-[360px]">
         {formData.useGlobalAppearance
           ? 'Configuração unificada: As alterações que você fizer em Desktop serão aplicadas automaticamente ao Mobile.'
           : 'Configuração independente: Personalize aparências diferentes para Desktop e Mobile de forma isolada.'}
@@ -2102,6 +2282,13 @@ const PreviewCard = ({
   gridDevice: DeviceType;
   activeTab: ModalTab;
 }) => {
+  // Identifica dinamicamente qual é o dispositivo (Mobile/Desktop) ativo para a tab atual
+  const activeDevice = 
+    activeTab === 'floating' ? floatingDevice :
+    activeTab === 'carousel' ? carouselDevice :
+    activeTab === 'dynamic_carousel' ? dynamicCarouselDevice :
+    activeTab === 'grid' ? gridDevice : 'desktop';
+
   const floating = getActiveResponsiveConfig(
     formData.floating_config,
     floatingDevice,
@@ -2132,26 +2319,38 @@ const PreviewCard = ({
     floatingBorder: floating.border_color || formData.primary_color,
   };
 
+  const isMobileFrame = !formData.useGlobalAppearance && activeDevice === 'mobile';
+
   return (
     <aside className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm space-y-4">
-      <div className="flex shrink-0 flex-col gap-3 border-b border-slate-100 pb-3">
+      <div className="flex shrink-0 flex-col gap-1 border-b border-slate-100 pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
-              <div className="h-2.5 w-2.5 rounded-full bg-rose-400" />
+              <div className="h-2.5 w-2.5 rounded-full bg-rose-400 animate-pulse" />
               <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
               <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
             </div>
-            <span className="font-mono text-[10px] font-bold text-slate-400">Sandbox Preview (1:1 Size)</span>
+            <span className="font-mono text-[10px] font-bold text-slate-400">
+              Live Sandbox Preview — {activeDevice === 'desktop' ? 'Desktop' : 'Mobile'}
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="relative flex-1 rounded-2xl overflow-hidden min-h-[480px] flex flex-col justify-center">
-        <div className="w-full">
-          {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} />}
+      {/* Container de Visualização Inteligente que simula a proporção do Dispositivo Real */}
+      <div className="relative flex-1 flex items-center justify-center p-2 min-h-[460px] bg-slate-100/10 rounded-2xl border border-slate-100 transition-all duration-300">
+        <div 
+          className={cn(
+            "w-full transition-all duration-500 ease-in-out",
+            isMobileFrame 
+              ? "max-w-[340px] rounded-[2.5rem] border-[10px] border-slate-900 shadow-2xl overflow-hidden bg-white" 
+              : "max-w-full"
+          )}
+        >
+          {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} device={activeDevice} />}
           {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
-          {activeTab === 'dynamic_carousel' && <CarouselPreview carousel={dynamicCarousel} colors={colors} />}
+          {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} />}
           {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
           {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
           {activeTab === 'basic' && <VisualPreview formData={formData} colors={colors} />}
