@@ -3110,11 +3110,9 @@ if (hasSupabase) {
     body.appendChild(social);
     container.appendChild(body);
 
-var showVerProduto = appearanceConfig.show_product !== false;
-// WhatsApp segue o mesmo critério do card de produto — sem flag separada
-var showWhatsAppProduto = showVerProduto;
+    var showVerProduto = appearanceConfig.show_product !== false;
 
-if (showVerProduto || showWhatsAppProduto) {
+    if (showVerProduto) {
       var videoProductId = video.product_id || (video.productId) || null;
       var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
 
@@ -3135,16 +3133,16 @@ if (showVerProduto || showWhatsAppProduto) {
         var pPriceColor = appearanceConfig.product_card_price_color || priColor;
 
         var prodCard = createEl('div', 'vl-product');
-        prodCard.style.cssText = 'display:flex !important;align-items:center !important;gap:12px !important;width:100% !important;padding:10px 12px !important;border-radius:' + pRadius + 'px !important;border:' + pBorderWidth + 'px solid ' + pBorderColor + ' !important;background:' + pBg + ' !important;box-sizing:border-box !important;';
+        prodCard.style.cssText = 'display:flex !important;align-items:center !important;justify-content:space-between !important;gap:12px !important;width:100% !important;padding:10px 12px !important;border-radius:' + pRadius + 'px !important;border:' + pBorderWidth + 'px solid ' + pBorderColor + ' !important;background:' + pBg + ' !important;box-sizing:border-box !important;cursor:pointer !important;transition:all 0.2s ease-in-out !important;';
 
         var prodImg = createEl('img', 'vl-product-img');
         prodImg.src = getThumbnailFromObject(productData) || '';
         prodImg.alt = productData.name || 'Produto';
-        prodImg.style.cssText = 'width:52px !important;height:52px !important;border-radius:10px !important;object-fit:cover !important;flex-shrink:0 !important;';
+        prodImg.style.cssText = 'width:48px !important;height:48px !important;border-radius:8px !important;object-fit:cover !important;flex-shrink:0 !important;';
         prodCard.appendChild(prodImg);
 
         var prodInfo = createEl('div', 'vl-product-info');
-        prodInfo.style.cssText = 'flex:1 !important;min-width:0 !important;display:flex !important;flex-direction:column !important;gap:2px !important;';
+        prodInfo.style.cssText = 'flex:1 !important;min-width:0 !important;display:flex !important;flex-direction:column !important;justify-content:center !important;gap:2px !important;';
 
         var pName = createEl('div', 'vl-product-name');
         pName.textContent = productData.name || 'Produto';
@@ -3157,64 +3155,35 @@ if (showVerProduto || showWhatsAppProduto) {
           pPrice.style.cssText = 'font-size:' + pPriceSize + 'px !important;font-weight:800 !important;color:' + pPriceColor + ' !important;';
           prodInfo.appendChild(pPrice);
         }
-
-        var pActions = createEl('div', 'vl-product-actions');
-        pActions.style.cssText = 'display:flex;gap:8px;flex-shrink:0;margin-top:4px;';
-
-var pButtonBg = appearanceConfig.product_card_button_bg || priColor;
-        var pButtonColor = appearanceConfig.product_card_button_color || '#FFFFFF';
-
-        if (showVerProduto) {
-          var buyBtn = createEl('a', 'vl-product-btn');
-          buyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Ver no site';
-          buyBtn.href = productUrl || '#';
-          buyBtn.target = '_blank';
-          buyBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:8px 14px;background:' + pButtonBg + ';color:' + pButtonColor + ';border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
-          
-          if (!productUrl) {
-            buyBtn.style.opacity = '0.5';
-            buyBtn.style.pointerEvents = 'none';
-            buyBtn.title = 'URL do produto não cadastrada';
-          }
-          buyBtn.onclick = function (e) {
-            e.stopPropagation();
-            sendAnalyticsEvent('website_click', video ? video.id : null, productData ? productData.id : null);
-
-          };
-          pActions.appendChild(buyBtn);
-        }
-
-        if (showWhatsAppProduto) {
-          var waNumber = storeWhatsappNumber || productData.whatsapp_number || productData.whatsappNumber || '';
-          if (waNumber) {
-            var waNumberClean = waNumber.replace(/\D/g, '');
-            var productName = productData.name || 'Produto';
-
-            var waMsgRaw = storeWhatsappMessage || 'Olá! Tenho interesse no produto: {{product_name}}';
-            waMsgRaw = waMsgRaw
-              .replace(/\{\{story_title\}\}/g, productName)
-              .replace(/\{\{product_name\}\}/g, productName)
-              .replace(/\{\{product_url\}\}/g, productUrl);
-
-            if (productUrl && waMsgRaw.indexOf(productUrl) === -1) {
-              waMsgRaw += '\n\n' + productUrl;
-            }
-
-            var waBtn = createEl('a', 'vl-product-whatsapp-btn');
-            waBtn.textContent = 'Comprar pelo WhatsApp';
-            waBtn.href = 'https://wa.me/' + waNumberClean + '?text=' + encodeURIComponent(waMsgRaw);
-            waBtn.target = '_blank';
-            waBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;background:#25D366;color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
-            waBtn.onclick = function (e) {
-              e.stopPropagation();
-sendAnalyticsEvent('whatsapp_click', video ? video.id : null, productData ? productData.id : null);
-            };
-            pActions.appendChild(waBtn);
-          }
-        }
-
-        prodInfo.appendChild(pActions);
         prodCard.appendChild(prodInfo);
+
+        // Setinha (Chevron) elegante na extrema direita do card do rodapé
+        var chevron = createEl('div', 'vl-product-chevron');
+        chevron.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + pPriceColor + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+        chevron.style.cssText = 'display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;transition:transform 0.2s ease !important;';
+        prodCard.appendChild(chevron);
+
+        // Micro-interações de Hover no rodapé
+        prodCard.addEventListener('mouseenter', function() {
+          prodCard.style.transform = 'translateY(-2px)';
+          prodCard.style.boxShadow = '0 6px 16px rgba(0,0,0,0.1)';
+          chevron.style.transform = 'translateX(2px)';
+        });
+        prodCard.addEventListener('mouseleave', function() {
+          prodCard.style.transform = 'none';
+          prodCard.style.boxShadow = 'none';
+          chevron.style.transform = 'none';
+        });
+
+        // Clique no Card do Rodapé
+        prodCard.onclick = function (e) {
+          e.stopPropagation();
+          if (productUrl) {
+            window.open(productUrl, '_blank');
+            sendAnalyticsEvent('product_click', video ? video.id : null, productData ? productData.id : null);
+          }
+        };
+
         footerInner.appendChild(prodCard);
         footer.appendChild(footerInner);
         container.appendChild(footer);
