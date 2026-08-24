@@ -4029,13 +4029,15 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       var video = card.querySelector('video');
       if (video) {
         if (isActive) {
-          if (video.paused || video.currentTime > 0.1) {
+          if (video.paused) {
             video.currentTime = 0;
             video.play().catch(function () {});
           }
         } else {
-          video.pause();
-          video.currentTime = 0;
+          if (!video.paused || video.currentTime > 0) {
+            video.pause();
+            video.currentTime = 0;
+          }
         }
       }
 
