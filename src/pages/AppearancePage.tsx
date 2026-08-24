@@ -2296,8 +2296,16 @@ const PreviewCard = ({
   };
 
   const handleOpenLivePreview = () => {
-    const previewUrl = `/stories/preview/live`;
-    window.open(previewUrl, '_blank');
+    if (viewMode === 'mystore' && formData.url) {
+      // Abre o proxy do seu site com o widget injetado direto em tela cheia
+      const proxyBase = 'https://wznvecurmisgoaijykbt.supabase.co/functions/v1/proxy-preview';
+      const proxyUrl = `${proxyBase}?url=${encodeURIComponent(formData.url)}`;
+      window.open(proxyUrl, '_blank');
+    } else {
+      // Fallback para o modo mockup (caso queira manter a rota original de live)
+      const previewUrl = `/stories/preview/live`;
+      window.open(previewUrl, '_blank');
+    }
   };
 
   const iframeSrc = useMemo(() => {
