@@ -1187,9 +1187,10 @@ const normalizeAppearance = (
     mobile_rows: gridMobile.rows,
     mobile_gap: gridMobile.spacing,
     font_size: anyItem.font_size ?? defaults.font_size,
+    target_selector: anyItem.target_selector || 'body',
+    insert_position: anyItem.insert_position || 'append',
   } as ExtendedAppearance;
 };
-
 // ──────────────────── DB helpers ────────────────────
 
 const getAppearancesSafe = async (storeId: string): Promise<Appearance[]> => {
