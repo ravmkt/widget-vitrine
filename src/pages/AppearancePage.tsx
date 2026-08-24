@@ -3542,14 +3542,14 @@ if (activeFloatingConfig.shape === 'portrait') {
   <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-300 bg-amber-50/70 mb-4">
     <span className="shrink-0 text-sm">⚠️</span>
     <p className="text-xs font-bold text-amber-800 leading-none">
-      Mínimo de <span className="underline">3 vídeos no History</span> para funcionar. <span className="text-amber-600/90 font-semibold">(Atual: {activeStoriesCount})</span>
+      Mínimo de <span className="underline">3 vídeos no Story</span> para funcionar.
     </p>
   </div>
 ) : (
   <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-200 bg-blue-50/70 mb-4">
     <span className="shrink-0 text-sm">💡</span>
     <p className="text-xs font-bold text-blue-800 leading-none">
-      Recomendamos pelo menos <span className="underline">6 vídeos</span> para um melhor resultado. <span className="text-blue-600/90 font-semibold">(Atual: {activeStoriesCount})</span>
+      Recomendamos pelo menos <span className="underline">6 vídeos</span> para um melhor resultado.
     </p>
   </div>
 )}
