@@ -1,4 +1,4 @@
-'use client';
+'use client';s
 
 import React, {
   useCallback,
@@ -4088,4 +4088,5 @@ if (activeFloatingConfig.shape === 'portrait') {
 };
 
 export default AppearancePage;
+
 
