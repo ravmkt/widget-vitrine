@@ -3548,17 +3548,17 @@ if (activeFloatingConfig.shape === 'portrait') {
       </p>
     </div>
     {/* Linha 2: Recomendação */}
-    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-200 bg-blue-50/70">
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-green-200 bg-green-50/70">
       <span className="shrink-0 text-sm">💡</span>
-      <p className="text-xs font-bold text-blue-800 leading-none">
+      <p className="text-xs font-bold text-green-800 leading-none">
         Recomendamos pelo menos <span className="underline">6 vídeos</span> para um melhor resultado.
       </p>
     </div>
   </div>
 ) : (
-  <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-200 bg-blue-50/70 mb-4">
+  <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-green-200 bg-green-50/70 mb-4">
     <span className="shrink-0 text-sm">💡</span>
-    <p className="text-xs font-bold text-blue-800 leading-none">
+    <p className="text-xs font-bold text-green-800 leading-none">
       Recomendamos pelo menos <span className="underline">6 vídeos</span> para um melhor resultado.
     </p>
   </div>
