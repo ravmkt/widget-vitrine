@@ -5008,8 +5008,8 @@ function initInlineWidget(options) {
     if (displayMode === 'dynamic_carousel') {
     // 🔒 REGRA DE NEGÓCIO: Mínimo de 3 vídeos ativos para exibição do Carrossel Dinâmico
     var activeStoriesCount = (stories || []).length;
-    if (activeStoriesCount < 3) {
-      console.warn('[Vidlytics] Carrossel Dinâmico ocultado: mínimo de 3 vídeos ativos necessário (atual: ' + activeStoriesCount + ').');
+    if (activeStoriesCount < 1) {
+      console.warn('[Vidlytics] Carrossel Dinâmico ocultado: mínimo de 1 vídeo ativo necessário (atual: ' + activeStoriesCount + ').');
       return;
     }
 
