@@ -4047,7 +4047,7 @@ if (activeFloatingConfig.shape === 'portrait') {
 
                             <FormField label="Cor Título">
                               <ColorInput label="Cor do título" value={(formData.modal_config as any).product_card_name_color || '#0F172A'} onChange={e => updateModalConfig({ product_card_name_color: e.target.value } as any)} />
-                            </FormField>s
+                            </FormField>
 
                             <FormField label="Tamanho Preço">
                               <input type="number" min="8" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_price_size)} onChange={e => updateModalConfig({ product_card_price_size: e.target.value } as any)} placeholder="Ex: 12" className={inputClass} />
