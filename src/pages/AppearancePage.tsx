@@ -2263,7 +2263,6 @@ const PreviewCard = ({
   activeTab: ModalTab;
 }) => {
   const [bgType, setBgType] = useState<PreviewBackground>('clean');
-  const [viewMode, setViewMode] = useState<'mockup' | 'mystore'>('mockup');
 
   const floating = getActiveResponsiveConfig(
     formData.floating_config,
@@ -2286,67 +2285,10 @@ const PreviewCard = ({
     formData.useGlobalAppearance,
   );
 
-  const colors: PreviewColors = {
-    primary: isValidHexColor(formData.primary_color) ? formData.primary_color : '#0094EB',
-    secondary: isValidHexColor(formData.secondary_color) ? formData.secondary_color : '#0094EB',
-    text: isValidHexColor(formData.text_color) ? formData.text_color : '#0F172A',
-    background: isValidHexColor(formData.background_color) ? formData.background_color : '#FFFFFF',
-    button: isValidHexColor(formData.button_color) ? formData.button_color : '#0094EB',
-    floatingBorder: isValidHexColor(floating.border_color) ? floating.border_color : '#0094EB',
+  const colors = {
+    primary: formData.primary_color,
+    secondary: formData.secondary_color,
   };
-
-  const handleOpenLivePreview = () => {
-    if (viewMode === 'mystore' && formData.url) {
-      // Abre o proxy do seu site com o widget injetado direto em tela cheia
-      const proxyBase = 'https://wznvecurmisgoaijykbt.supabase.co/functions/v1/proxy-preview';
-      const proxyUrl = `${proxyBase}?url=${encodeURIComponent(formData.url)}`;
-      window.open(proxyUrl, '_blank');
-    } else {
-      // Fallback para o modo mockup (caso queira manter a rota original de live)
-      const previewUrl = `/stories/preview/live`;
-      window.open(previewUrl, '_blank');
-    }
-  };
-
-  const iframeSrc = useMemo(() => {
-    if (viewMode === 'mystore' && formData.url) {
-      const proxyBase = 'https://wznvecurmisgoaijykbt.supabase.co/functions/v1/proxy-preview';
-      return `${proxyBase}?url=${encodeURIComponent(formData.url)}`;
-    }
-    return '';
-  }, [viewMode, formData.url]);
-
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  useEffect(() => {
-    if (viewMode === 'mystore' && iframeRef.current) {
-      const activeFloating = getActiveResponsiveConfig(formData.floating_config, floatingDevice, formData.useGlobalAppearance);
-      const activeCarousel = getActiveResponsiveConfig(formData.carousel_config, carouselDevice, formData.useGlobalAppearance);
-      const activeDynamic = getActiveResponsiveConfig(formData.dynamic_carousel_config, dynamicCarouselDevice, formData.useGlobalAppearance);
-      const activeGrid = getActiveResponsiveConfig(formData.grid_config, gridDevice, formData.useGlobalAppearance);
-
-      const message = {
-        type: 'VIDLYTICS_PREVIEW_UPDATE',
-        config: {
-          activeTab,
-          primary_color: formData.primary_color,
-          secondary_color: formData.secondary_color,
-          target_selector: formData.target_selector || 'body',
-          insert_position: formData.insert_position || 'append',
-          floating: activeFloating,
-          carousel: activeCarousel,
-          dynamic_carousel: activeDynamic,
-          grid: activeGrid,
-          modal: formData.modal_config,
-        }
-      };
-
-      const timer = setTimeout(() => {
-        iframeRef.current?.contentWindow?.postMessage(message, '*');
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [formData, activeTab, viewMode, floatingDevice, carouselDevice, dynamicCarouselDevice, gridDevice]);
 
   return (
     <aside className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm space-y-4">
@@ -2360,43 +2302,9 @@ const PreviewCard = ({
             </div>
             <span className="font-mono text-[10px] font-bold text-slate-400">Live Preview</span>
           </div>
-
-          <button
-            type="button"
-            onClick={handleOpenLivePreview}
-            className="flex items-center gap-1 text-[10px] font-black uppercase text-[#0094EB] hover:text-[#0E4787] bg-blue-50/50 hover:bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 transition-colors"
-          >
-            <Share2 size={11} />
-            Tela Cheia
-          </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200/50">
-          <button
-            type="button"
-            onClick={() => setViewMode('mockup')}
-            className={cn(
-              "py-1.5 text-[10px] font-black uppercase rounded-lg transition-all",
-              viewMode === 'mockup' ? "bg-[#0094EB] text-white shadow-xs" : "text-slate-500 hover:text-slate-800"
-            )}
-          >
-            Visualizar Tema
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('mystore')}
-            disabled={!formData.url}
-            title={!formData.url ? "Defina a URL da sua loja nas configurações Básicas para liberar esta visualização." : "Carregar widget na sua própria loja"}
-            className={cn(
-              "py-1.5 text-[10px] font-black uppercase rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed",
-              viewMode === 'mystore' ? "bg-[#0094EB] text-white shadow-xs" : "text-slate-500 hover:text-slate-800"
-            )}
-          >
-            Ver na minha Loja
-          </button>
-        </div>
-
-        {viewMode === 'mockup' && activeTab !== 'basic' && activeTab !== 'modal' && (
+        {activeTab !== 'basic' && activeTab !== 'modal' && (
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-black uppercase text-slate-400">Simulador de Fundo</span>
             <div className="flex gap-1">
@@ -2421,27 +2329,14 @@ const PreviewCard = ({
       </div>
 
       <div className="relative flex-1 rounded-2xl overflow-hidden min-h-[480px]">
-        {viewMode === 'mystore' && formData.url ? (
-          <div className="absolute inset-0 bg-white">
-            <iframe
-              ref={iframeRef}
-              src={iframeSrc}
-              title="Preview da sua loja"
-              className="h-full w-full border-none"
-              sandbox="allow-scripts allow-same-origin"
-            />
-            <div className="absolute inset-0 bg-transparent pointer-events-none" />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} bgType={bgType} />}
-            {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} bgType={bgType} />}
-            {activeTab === 'dynamic_carousel' && <CarouselPreview carousel={dynamicCarousel} colors={colors} bgType={bgType} />}
-            {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} bgType={bgType} />}
-            {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
-            {activeTab === 'basic' && <VisualPreview formData={formData} colors={colors} />}
-          </div>
-        )}
+        <div className="space-y-4">
+          {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} bgType={bgType} />}
+          {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} bgType={bgType} />}
+          {activeTab === 'dynamic_carousel' && <CarouselPreview carousel={dynamicCarousel} colors={colors} bgType={bgType} />}
+          {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} bgType={bgType} />}
+          {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
+          {activeTab === 'basic' && <VisualPreview formData={formData} colors={colors} />}
+        </div>
       </div>
     </aside>
   );
