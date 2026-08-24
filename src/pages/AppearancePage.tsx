@@ -3882,7 +3882,7 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                     <SectionCard title="Configurações da Grade">
                       
                       {/* Seletor Inteligente de Dispositivo */}
-                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60">
+                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
                         
                         {formData.useGlobalAppearance ? (
@@ -3902,7 +3902,6 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                                   ? 'bg-[#0094EB] text-white'
                                   : 'text-slate-500 hover:text-slate-800'
                               )}
-                              title="Editar configurações Desktop"
                             >
                               <Monitor size={13} />
                               Desktop
@@ -3917,7 +3916,6 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                                   ? 'bg-[#0094EB] text-white'
                                   : 'text-slate-500 hover:text-slate-800'
                               )}
-                              title="Editar configurações Mobile"
                             >
                               <Smartphone size={13} />
                               Mobile
@@ -3926,102 +3924,110 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                         )}
                       </div>
 
-                      {/* 1. Layout & Dimensões */}
-                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
-                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">1. Layout & Dimensões</h4>
-                        
-                        <div className="grid grid-cols-2 gap-2.5">
-                          <FormField label="Formato dos Cards">
-<select
-                              value={activeGridConfig.shape}
-                              onChange={e => updateGridConfig({ shape: e.target.value as WidgetShape })}
-                              className={selectClass}
-                            >
-                              <option value="circle">Circular</option>
-                              <option value="square">Quadrado</option>
-                              <option value="portrait">Retrato 9:16</option>
-                              <option value="landscape">Paisagem 16:9</option>
-                            </select>
-                          </FormField>
+                      <div className="space-y-3">
+                        {/* 1. Layout & Dimensões */}
+                        <AccordionSection
+                          title="1. Layout & Dimensões"
+                          isOpen={activeSection === 'grid-dimensions'}
+                          onToggle={() => setActiveSection(activeSection === 'grid-dimensions' ? null : 'grid-dimensions')}
+                        >
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <FormField label="Formato dos Cards">
+                              <select
+                                value={activeGridConfig.shape}
+                                onChange={e => updateGridConfig({ shape: e.target.value as WidgetShape })}
+                                className={selectClass}
+                              >
+                                <option value="circle">Circular</option>
+                                <option value="square">Quadrado</option>
+                                <option value="portrait">Retrato 9:16</option>
+                                <option value="landscape">Paisagem 16:9</option>
+                              </select>
+                            </FormField>
 
-                          <FormField label="Largura Card (px)">
-                            <input
-                              type="number" min="20" step="1"
-                              value={toNumberInputValue(activeGridConfig.width)}
-                              onChange={e => updateGridConfig({ width: e.target.value })}
-                              placeholder="Ex: 80"
-                              className={inputClass}
-                            />
-                          </FormField>
+                            <FormField label="Largura Card (px)">
+                              <input
+                                type="number" min="20" step="1"
+                                value={toNumberInputValue(activeGridConfig.width)}
+                                onChange={e => updateGridConfig({ width: e.target.value })}
+                                placeholder="Ex: 80"
+                                className={inputClass}
+                              />
+                            </FormField>
 
-                          <FormField label="Colunas por Linha">
-                            <input
-                              type="number" min="1" max="10" step="1"
-                              value={activeGridConfig.visible_items}
-                              onChange={e => updateGridConfig({ visible_items: limitNumber(e.target.value, 1, 1, 10) })}
-                              className={inputClass}
-                            />
-                          </FormField>
+                            <FormField label="Colunas por Linha">
+                              <input
+                                type="number" min="1" max="10" step="1"
+                                value={activeGridConfig.visible_items}
+                                onChange={e => updateGridConfig({ visible_items: limitNumber(e.target.value, 1, 1, 10) })}
+                                className={inputClass}
+                              />
+                            </FormField>
 
-                          <FormField label="Espaçamento (px)">
-                            <input
-                              type="number" min="0" step="1"
-                              value={activeGridConfig.spacing}
-                              onChange={e => updateGridConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
-                              className={inputClass}
-                            />
-                          </FormField>
-                        </div>
-                      </div>
+                            <FormField label="Espaçamento (px)">
+                              <input
+                                type="number" min="0" step="1"
+                                value={activeGridConfig.spacing}
+                                onChange={e => updateGridConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
+                                className={inputClass}
+                              />
+                            </FormField>
+                          </div>
+                        </AccordionSection>
 
-                      {/* 2. Bordas & Ajustes */}
-                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-3">
-                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">2. Bordas & Ajustes</h4>
-                        
-                        <div className="grid grid-cols-2 gap-2.5">
-                          <FormField label="Cor da Borda">
-                            <ColorInput label="Cor da borda" value={activeGridConfig.border_color || formData.primary_color} onChange={e => updateGridConfig({ border_color: e.target.value })} />
-                          </FormField>
+                        {/* 2. Bordas & Ajustes */}
+                        <AccordionSection
+                          title="2. Bordas & Ajustes"
+                          isOpen={activeSection === 'grid-borders'}
+                          onToggle={() => setActiveSection(activeSection === 'grid-borders' ? null : 'grid-borders')}
+                        >
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <FormField label="Cor da Borda">
+                              <ColorInput label="Cor da borda" value={activeGridConfig.border_color || formData.primary_color} onChange={e => updateGridConfig({ border_color: e.target.value })} />
+                            </FormField>
 
-                          <FormField label="Largura Borda (px)">
-                            <input
-                              type="number" min="0" step="1"
-                              value={toNumberInputValue(activeGridConfig.border_style)}
-                              onChange={e => updateGridConfig({ border_style: e.target.value })}
-                              placeholder="Ex: 2"
-                              className={inputClass}
-                            />
-                          </FormField>
+                            <FormField label="Largura Borda (px)">
+                              <input
+                                type="number" min="0" step="1"
+                                value={toNumberInputValue(activeGridConfig.border_style)}
+                                onChange={e => updateGridConfig({ border_style: e.target.value })}
+                                placeholder="Ex: 2"
+                                className={inputClass}
+                              />
+                            </FormField>
 
-                          <FormField label="Raio da Borda (px)">
-                            <input
-                              type="number" min="0" step="1"
-                              value={toNumberInputValue(activeGridConfig.border_radius)}
-                              onChange={e => updateGridConfig({ border_radius: e.target.value })}
-                              placeholder="Ex: 12"
-                              className={inputClass}
-                            />
-                          </FormField>
+                            <FormField label="Raio da Borda (px)">
+                              <input
+                                type="number" min="0" step="1"
+                                value={toNumberInputValue(activeGridConfig.border_radius)}
+                                onChange={e => updateGridConfig({ border_radius: e.target.value })}
+                                placeholder="Ex: 12"
+                                className={inputClass}
+                              />
+                            </FormField>
 
-                          <FormField label="Ajuste Imagem">
-                            <select value={activeGridConfig.object_fit || 'cover'} onChange={e => updateGridConfig({ object_fit: e.target.value })} className={selectClass}>
-                              <option value="cover">Cover (Preencher)</option>
-                              <option value="contain">Contain (Ajustar)</option>
-                              <option value="fill">Fill (Esticar)</option>
-                            </select>
-                          </FormField>
-                        </div>
-                      </div>
+                            <FormField label="Ajuste Imagem">
+                              <select value={activeGridConfig.object_fit || 'cover'} onChange={e => updateGridConfig({ object_fit: e.target.value })} className={selectClass}>
+                                <option value="cover">Cover (Preencher)</option>
+                                <option value="contain">Contain (Ajustar)</option>
+                                <option value="fill">Fill (Esticar)</option>
+                              </select>
+                            </FormField>
+                          </div>
+                        </AccordionSection>
 
-                      {/* 3. Elementos Visíveis */}
-                      <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 space-y-2.5">
-                        <h4 className="text-xs font-black uppercase tracking-wider text-[#0094EB]">3. Elementos Visíveis</h4>
-                        
-                        <div className="space-y-1.5">
-<ToggleSwitch label="Exibir título da grade" checked={activeGridConfig.show_title ?? false} onChange={e => updateGridConfig({ show_title: e.target.checked })} />
-<ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeGridConfig.autoplay_videos ?? true} onChange={e => updateGridConfig({ autoplay_videos: e.target.checked })} />
-<ToggleSwitch label="Reprodução sequencial (1 vídeo por vez, 5s cada)" checked={activeGridConfig.sequential_playback ?? false} onChange={e => updateGridConfig({ sequential_playback: e.target.checked })} />
-                        </div>
+                        {/* 3. Elementos Visíveis */}
+                        <AccordionSection
+                          title="3. Elementos Visíveis"
+                          isOpen={activeSection === 'grid-elements'}
+                          onToggle={() => setActiveSection(activeSection === 'grid-elements' ? null : 'grid-elements')}
+                        >
+                          <div className="space-y-1.5">
+                            <ToggleSwitch label="Exibir título da grade" checked={activeGridConfig.show_title ?? false} onChange={e => updateGridConfig({ show_title: e.target.checked })} />
+                            <ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeGridConfig.autoplay_videos ?? true} onChange={e => updateGridConfig({ autoplay_videos: e.target.checked })} />
+                            <ToggleSwitch label="Reprodução sequencial (1 vídeo por vez, 5s cada)" checked={activeGridConfig.sequential_playback ?? false} onChange={e => updateGridConfig({ sequential_playback: e.target.checked })} />
+                          </div>
+                        </AccordionSection>
                       </div>
 
                     </SectionCard>
