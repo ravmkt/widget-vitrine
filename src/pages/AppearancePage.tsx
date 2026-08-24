@@ -1786,15 +1786,16 @@ const DynamicCarouselPreview = ({
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
   
-  // Criamos um buffer maior para simular o carrossel infinito sem interrupções
-  const items = Array.from({ length: 15 }); 
+  // Criamos uma lista de 18 itens para preencher as laterais perfeitamente sem nunca mostrar fundo vazio
+  const items = Array.from({ length: 18 }); 
   const isCircle = shape === 'circle';
   const isPortrait = shape === 'portrait';
   const isLandscape = shape === 'landscape';
 
-  const [activeIndex, setActiveIndex] = useState(2); // Começa ligeiramente deslocado para centralizar bem
+  // Começa no índice 4 para garantir que já existam itens renderizados preenchendo o lado esquerdo
+  const [activeIndex, setActiveIndex] = useState(4); 
 
-  // Intervalo de troca automática (Passando da direita para a esquerda)
+  // Troca automática infinita
   useEffect(() => {
     const delay = carousel.autoplay_delay || 4000;
     const interval = setInterval(() => {
@@ -1803,20 +1804,20 @@ const DynamicCarouselPreview = ({
     return () => clearInterval(interval);
   }, [carousel.autoplay_delay, items.length]);
 
-  // Controle dinâmico do estado dos vídeos (Destaque vs Inativos)
+  // Controle de reprodução dos vídeos (Ativo vs Inativos)
   useEffect(() => {
     videoRefs.current.forEach((vid, index) => {
       if (!vid) return;
       const isActive = index === activeIndex;
       
-      // O vídeo destaque SEMPRE roda. Os inativos dependem da configuração correspondente
+      // O destaque sempre roda. Os outros dependem da flag de autoplay inativo
       const shouldPlay = isActive || (carousel.autoplay_inactive_videos ?? false);
 
       if (shouldPlay) {
         vid.play().catch(() => {});
       } else {
         vid.pause();
-        vid.currentTime = 0; // Reseta para o frame inicial se estiver pausado
+        vid.currentTime = 0; // Pausa estática no frame inicial
       }
     });
   }, [carousel.autoplay_inactive_videos, activeIndex]);
@@ -1833,22 +1834,23 @@ const DynamicCarouselPreview = ({
   const cardHeight = `${cardHeightPx}px`;
   const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
 
-  // Offset para manter o item ativo sempre no campo visual centralizado
-  const translateOffset = -activeIndex * (rawWidth + spacing);
+  // Ajuste matemático de centralização absoluta do item ativo de ponta a ponta
+  const centerAdjustment = `calc(50% - ${rawWidth / 2}px)`;
+  const translateOffset = `${-activeIndex * (rawWidth + spacing)}px`;
 
-  // Array de fotos reais de produtos para deixar o preview super realista
+  // Fotos reais para o carrossel ficar perfeito
   const productImages = [
-    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&auto=format&fit=crop&q=80", // Tênis
-    "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=120&auto=format&fit=crop&q=80", // Camiseta
-    "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&auto=format&fit=crop&q=80", // Camisa
-    "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=120&auto=format&fit=crop&q=80"  // Salto
+    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=120&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=120&auto=format&fit=crop&q=80"
   ];
 
   return (
-    <div className="relative w-full h-[440px] flex flex-col items-center justify-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 p-4 overflow-hidden">
+    <div className="relative w-full h-[440px] flex flex-col items-center justify-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 py-4 px-0 overflow-hidden">
       {carousel.show_title && carousel.title_text && (
         <div 
-          className="w-full mb-4 px-2"
+          className="w-full mb-4 px-6 z-10"
           style={{
             textAlign: carousel.title_align || 'center',
             fontSize: `${carousel.title_font_size || 14}px`,
@@ -1860,25 +1862,35 @@ const DynamicCarouselPreview = ({
         </div>
       )}
 
-      {/* Janela de Máscara de Corte para simular o Carrossel Passando */}
+      {/* Viewport 100% de largura (Ponta a ponta do site) */}
       <div className="w-full overflow-hidden py-4">
         <div
           className="flex transition-transform duration-700 ease-in-out"
           style={{
-            transform: `translateX(${translateOffset}px)`,
+            transform: `translateX(calc(${centerAdjustment} + ${translateOffset}))`,
             gap: `${spacing}px`,
-            paddingLeft: '35%', // Mantém o elemento em foco centralizado
           }}
         >
           {items.map((_, index) => {
             const isActive = index === activeIndex;
             
-            // Configurações e estilos dinâmicos de destaque
+            // 1. Efeito de Escala
             const applyScale = isActive && carousel.highlight_enlarge_active ? 'scale(1.12)' : 'scale(1)';
+            
+            // 2. Sombra isolada na moldura do vídeo (Sem invadir ou sobrepor o card do produto)
             const applyShadow = isActive && carousel.highlight_shadow 
-              ? '0 12px 20px -8px rgba(0, 0, 0, 0.4)' // Sombra suave que não se projeta acima do card
+              ? '0 10px 20px -6px rgba(0, 0, 0, 0.35)' 
               : 'none';
-            const applySaturation = !isActive && carousel.highlight_desaturate_inactive ? 'grayscale(80%) opacity(50%)' : 'grayscale(0%) opacity(100%)';
+              
+            // 3. Dessaturação de inativos
+            const applySaturation = !isActive && carousel.highlight_desaturate_inactive 
+              ? 'grayscale(60%) opacity(60%)' 
+              : 'grayscale(0%) opacity(100%)';
+
+            // 4. Espaçamento extra dinâmico para evitar colisão quando o item ativo expande
+            const dynamicMarginX = isActive && carousel.highlight_enlarge_active
+              ? '10px' 
+              : '0px';
 
             return (
               <div 
@@ -1888,10 +1900,12 @@ const DynamicCarouselPreview = ({
                   width: cardWidth,
                   transform: applyScale,
                   filter: applySaturation,
-                  zIndex: isActive ? 30 : 10 // Elemento ativo se sobrepõe aos vizinhos
+                  marginLeft: dynamicMarginX,
+                  marginRight: dynamicMarginX,
+                  zIndex: isActive ? 30 : 10,
                 }}
               >
-                {/* 1. MOLDURA DO VÍDEO (A sombra é aplicada estritamente aqui) */}
+                {/* MOLDURA DO VÍDEO */}
                 <div
                   className="relative overflow-hidden bg-slate-900 transition-all duration-500"
                   style={{
@@ -1901,7 +1915,7 @@ const DynamicCarouselPreview = ({
                     borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
                     borderStyle: 'solid',
                     borderRadius,
-                    boxShadow: applyShadow, // Sombra local, não vaza sobre o card de produto abaixo
+                    boxShadow: applyShadow,
                   }}
                 >
                   <video
@@ -1927,7 +1941,7 @@ const DynamicCarouselPreview = ({
                   )}
                 </div>
 
-                {/* 2. CARD DO PRODUTO (Renderizado com z-index maior para evitar que a sombra o cubra) */}
+                {/* CARD DO PRODUTO (Z-INDEX SUPERIOR PARA IMUNIDADE DE SOMBRA) */}
                 {carousel.show_product && !isCircle && (
                   <div
                     className="flex flex-col gap-1.5 p-1.5 shadow-md transition-all duration-500 relative z-40 bg-white"
@@ -1937,14 +1951,14 @@ const DynamicCarouselPreview = ({
                       borderWidth: `${safeNumber(carousel.product_card_border_width, 1, 0)}px`,
                       borderStyle: 'solid',
                       borderRadius: `${safeNumber(carousel.product_card_border_radius, 8, 0)}px`,
-                      marginTop: '6px', // Espaçamento consistente do vídeo
+                      marginTop: '8px',
                     }}
                   >
-                    {/* Header do Card: Imagem de Produto à Esquerda + Info à Direita */}
+                    {/* Linha Horizontal: Foto Esquerda + Textos Direita */}
                     <div className="flex items-center gap-2">
                       <img
                         src={productImages[index % productImages.length]}
-                        alt="Produto Preview"
+                        alt="Preview Produto"
                         className="w-9 h-9 rounded object-cover bg-slate-100 shrink-0 border border-slate-100"
                       />
                       <div className="min-w-0 flex-1 flex flex-col justify-center">
@@ -1971,13 +1985,15 @@ const DynamicCarouselPreview = ({
                       </div>
                     </div>
 
-                    {/* Botão de Ação "Ver No Site" */}
+                    {/* Botão de Redirecionamento */}
                     {carousel.show_product_button && (
                       <button
                         type="button"
-                        className="w-full rounded py-1 text-[9px] font-black uppercase text-center tracking-wider transition-colors duration-200"
+                        className="w-full rounded py-1 text-[9px] font-black uppercase text-center tracking-wider transition-colors duration-300"
                         style={{
-                          backgroundColor: carousel.product_card_button_bg || colors.button,
+                          backgroundColor: isActive 
+                            ? (carousel.product_card_button_bg || colors.button) 
+                            : '#94A3B8', // Cinza sutil (Slate 400) para cards inativos
                           color: carousel.product_card_button_color || '#FFFFFF',
                         }}
                       >
