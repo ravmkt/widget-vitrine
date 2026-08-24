@@ -2296,10 +2296,6 @@ const grid = getActiveResponsiveConfig(
 // COMPONENTE PRINCIPAL
 // ════════════════════════════════════════════════════════════════
 
-// 1. Adicione o ChevronDown no topo junto com os outros imports do lucide-react:
-// import { ..., ChevronDown } from 'lucide-react';
-
-// 2. Cole este componente logo acima do "const AppearancePage = () => {"
 interface AccordionSectionProps {
   title: string;
   isOpen: boolean;
