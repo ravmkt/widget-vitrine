@@ -2168,50 +2168,99 @@ const VisualPreview = ({
   colors: PreviewColors;
 }) => {
   return (
-    <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
-      <div
-        className="rounded-[1rem] border border-slate-200 p-5"
-        style={{
-          backgroundColor: colors.background,
-          color: colors.text,
-          fontFamily: formData.font_family,
-          fontSize: cssSize(formData.font_size, '14px'),
-        }}
-      >
-        <div className="mb-5 flex items-center gap-3">
-          <div
-            className="h-12 w-12 rounded-2xl"
-            style={{ backgroundColor: colors.primary }}
-          />
-          <div>
-            <h4 className="font-black">Preview visual</h4>
-            <p className="text-xs font-medium opacity-70">Fonte, cores e botões</p>
+    <div className="flex flex-col items-center justify-center min-h-[380px] p-6 bg-slate-50/80 rounded-[1.25rem] border border-slate-200/80 shadow-inner animate-fade-in space-y-6">
+      
+      {/* Badge de Padrão da Loja */}
+      {formData.is_default && (
+        <div className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-600 text-[10px] font-black uppercase tracking-wider shadow-xs flex items-center gap-1">
+          <Star size={11} className="fill-emerald-500 text-emerald-500" />
+          Estilo Padrão da Loja
+        </div>
+      )}
+
+      {/* Título com Nome do Estilo */}
+      <div className="text-center max-w-[280px]">
+        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Identificação</span>
+        <h3 className="mt-1 text-lg font-black text-slate-900 truncate" style={{ fontFamily: formData.font_family }}>
+          {formData.name || 'Nome do Estilo'}
+        </h3>
+        <p className="text-[10px] text-slate-500 font-bold font-mono mt-0.5">
+          Família: {formData.font_family}
+        </p>
+      </div>
+
+      {/* Visualizador de Sincronização */}
+      <div className="relative w-full max-w-sm p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-4">
+        {/* Linha de conexão */}
+        <div className="flex items-center justify-around">
+          
+          {/* Desktop */}
+          <div className="flex flex-col items-center">
+            <div className="p-3 bg-slate-100 rounded-xl border border-slate-200/80 text-slate-600">
+              <Monitor size={18} />
+            </div>
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider mt-1.5">Desktop</span>
+          </div>
+
+          {/* Indicador de sincronismo */}
+          <div className="flex-1 flex flex-col items-center justify-center px-4">
+            {formData.useGlobalAppearance ? (
+              <>
+                <div className="h-0.5 w-full bg-[#0094EB] relative mb-1.5 flex items-center justify-center">
+                  <span className="absolute bg-white px-2 py-0.5 border border-slate-200 rounded-full shadow-xs text-[10px]" title="Sincronizado">
+                    🔗
+                  </span>
+                </div>
+                <span className="text-[9px] font-black text-[#0094EB] uppercase tracking-wider">Unificados</span>
+              </>
+            ) : (
+              <>
+                <div className="h-0.5 w-full bg-slate-200 border-dashed border-t-2 mb-1.5" />
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Separados</span>
+              </>
+            )}
+          </div>
+
+          {/* Mobile */}
+          <div className="flex flex-col items-center">
+            <div className="p-3 bg-slate-100 rounded-xl border border-slate-200/80 text-slate-600">
+              <Smartphone size={18} />
+            </div>
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider mt-1.5">Mobile</span>
           </div>
         </div>
-        <div
-          className="mb-5 rounded-2xl p-4"
-          style={{
-            background: `linear-gradient(135deg, ${colors.primary}25, ${colors.secondary}25)`,
-          }}
-        >
-          <p className="font-black">Título do widget</p>
-          <p className="mt-1 text-sm opacity-70">
-            Exemplo de texto usando a identidade visual configurada.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="w-full rounded-2xl px-4 py-3 text-sm font-black text-white"
-          style={{ backgroundColor: colors.button }}
-        >
-          Botão principal
-        </button>
+
+        {/* Texto explicativo */}
+        <p className="text-[11px] text-slate-500 font-medium leading-relaxed text-center border-t border-slate-100 pt-3">
+          {formData.useGlobalAppearance
+            ? 'Configuração sincronizada: Alterações salvas no Desktop são replicadas automaticamente no Mobile.'
+            : 'Design independente: Você pode personalizar Desktop e Mobile separadamente em suas respectivas abas.'}
+        </p>
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-        <PreviewInfo label="Principal" value={colors.primary} />
-        <PreviewInfo label="Secundária" value={colors.secondary} />
-        <PreviewInfo label="Texto" value={colors.text} />
-        <PreviewInfo label="Fonte" value={formData.font_family} />
+
+      {/* Amostras Rápidas de Cores */}
+      <div className="w-full max-w-sm grid grid-cols-2 gap-2">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-3 flex items-center gap-2.5">
+          <span 
+            className="w-4.5 h-4.5 rounded-lg border border-slate-200 shrink-0 shadow-xs" 
+            style={{ backgroundColor: colors.primary }} 
+          />
+          <div className="min-w-0">
+            <p className="text-[9px] font-black text-slate-400 uppercase leading-none">Cor Primária</p>
+            <p className="text-[11px] font-black text-slate-700 font-mono mt-0.5 truncate">{colors.primary}</p>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-slate-200/80 bg-white p-3 flex items-center gap-2.5">
+          <span 
+            className="w-4.5 h-4.5 rounded-lg border border-slate-200 shrink-0 shadow-xs" 
+            style={{ backgroundColor: colors.button }} 
+          />
+          <div className="min-w-0">
+            <p className="text-[9px] font-black text-slate-400 uppercase leading-none">Cor Botão</p>
+            <p className="text-[11px] font-black text-slate-700 font-mono mt-0.5 truncate">{colors.button}</p>
+          </div>
+        </div>
       </div>
     </div>
   );
