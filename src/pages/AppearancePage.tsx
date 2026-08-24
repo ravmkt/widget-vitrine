@@ -1785,32 +1785,41 @@ const DynamicCarouselPreview = ({
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
-  const items = Array.from({ length: 6 }); // Sempre renderiza múltiplos itens para permitir a transição
+  
+  // Criamos um buffer maior para simular o carrossel infinito sem interrupções
+  const items = Array.from({ length: 15 }); 
   const isCircle = shape === 'circle';
   const isPortrait = shape === 'portrait';
   const isLandscape = shape === 'landscape';
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(2); // Começa ligeiramente deslocado para centralizar bem
 
-  // Intervalo de troca e animação automática (Direita para Esquerda)
+  // Intervalo de troca automática (Passando da direita para a esquerda)
   useEffect(() => {
-    const delay = carousel.autoplay_delay || 5000;
+    const delay = carousel.autoplay_delay || 4000;
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % items.length);
     }, delay);
     return () => clearInterval(interval);
   }, [carousel.autoplay_delay, items.length]);
 
+  // Controle dinâmico do estado dos vídeos (Destaque vs Inativos)
   useEffect(() => {
     videoRefs.current.forEach((vid, index) => {
       if (!vid) return;
-      if (carousel.autoplay_videos ?? true) {
+      const isActive = index === activeIndex;
+      
+      // O vídeo destaque SEMPRE roda. Os inativos dependem da configuração correspondente
+      const shouldPlay = isActive || (carousel.autoplay_inactive_videos ?? false);
+
+      if (shouldPlay) {
         vid.play().catch(() => {});
       } else {
         vid.pause();
+        vid.currentTime = 0; // Reseta para o frame inicial se estiver pausado
       }
     });
-  }, [carousel.autoplay_videos, activeIndex]);
+  }, [carousel.autoplay_inactive_videos, activeIndex]);
 
   const rawWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
   const spacing = safeNumber(carousel.spacing, 12, 0);
@@ -1824,11 +1833,19 @@ const DynamicCarouselPreview = ({
   const cardHeight = `${cardHeightPx}px`;
   const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
 
-  // Cálculo de translação contínua do container interno
+  // Offset para manter o item ativo sempre no campo visual centralizado
   const translateOffset = -activeIndex * (rawWidth + spacing);
 
+  // Array de fotos reais de produtos para deixar o preview super realista
+  const productImages = [
+    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&auto=format&fit=crop&q=80", // Tênis
+    "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=120&auto=format&fit=crop&q=80", // Camiseta
+    "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&auto=format&fit=crop&q=80", // Camisa
+    "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=120&auto=format&fit=crop&q=80"  // Salto
+  ];
+
   return (
-    <div className="relative w-full h-[440px] flex flex-col items-center justify-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 p-6 overflow-hidden">
+    <div className="relative w-full h-[440px] flex flex-col items-center justify-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 p-4 overflow-hidden">
       {carousel.show_title && carousel.title_text && (
         <div 
           className="w-full mb-4 px-2"
@@ -1850,7 +1867,7 @@ const DynamicCarouselPreview = ({
           style={{
             transform: `translateX(${translateOffset}px)`,
             gap: `${spacing}px`,
-            paddingLeft: '35%', // Centraliza visualmente o item ativo
+            paddingLeft: '35%', // Mantém o elemento em foco centralizado
           }}
         >
           {items.map((_, index) => {
@@ -1858,19 +1875,23 @@ const DynamicCarouselPreview = ({
             
             // Configurações e estilos dinâmicos de destaque
             const applyScale = isActive && carousel.highlight_enlarge_active ? 'scale(1.12)' : 'scale(1)';
-            const applyShadow = isActive && carousel.highlight_shadow ? '0 10px 25px -5px rgba(0,0,0,0.25), 0 8px 10px -6px rgba(0,0,0,0.25)' : 'none';
-            const applySaturation = !isActive && carousel.highlight_desaturate_inactive ? 'grayscale(50%) opacity(60%)' : 'grayscale(0%) opacity(100%)';
+            const applyShadow = isActive && carousel.highlight_shadow 
+              ? '0 12px 20px -8px rgba(0, 0, 0, 0.4)' // Sombra suave que não se projeta acima do card
+              : 'none';
+            const applySaturation = !isActive && carousel.highlight_desaturate_inactive ? 'grayscale(80%) opacity(50%)' : 'grayscale(0%) opacity(100%)';
 
             return (
               <div 
                 key={index} 
-                className="flex flex-col gap-1.5 shrink-0 transition-all duration-500" 
+                className="flex flex-col shrink-0 transition-all duration-500 relative" 
                 style={{ 
                   width: cardWidth,
                   transform: applyScale,
                   filter: applySaturation,
+                  zIndex: isActive ? 30 : 10 // Elemento ativo se sobrepõe aos vizinhos
                 }}
               >
+                {/* 1. MOLDURA DO VÍDEO (A sombra é aplicada estritamente aqui) */}
                 <div
                   className="relative overflow-hidden bg-slate-900 transition-all duration-500"
                   style={{
@@ -1880,7 +1901,7 @@ const DynamicCarouselPreview = ({
                     borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
                     borderStyle: 'solid',
                     borderRadius,
-                    boxShadow: applyShadow,
+                    boxShadow: applyShadow, // Sombra local, não vaza sobre o card de produto abaixo
                   }}
                 >
                   <video
@@ -1889,7 +1910,7 @@ const DynamicCarouselPreview = ({
                       else videoRefs.current.delete(index);
                     }}
                     src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
-                    loop={carousel.autoplay_videos ?? true}
+                    loop
                     muted
                     playsInline
                     preload="auto"
@@ -1906,43 +1927,55 @@ const DynamicCarouselPreview = ({
                   )}
                 </div>
 
+                {/* 2. CARD DO PRODUTO (Renderizado com z-index maior para evitar que a sombra o cubra) */}
                 {carousel.show_product && !isCircle && (
                   <div
-                    className="flex flex-col gap-1 p-1.5 shadow-sm transition-all duration-500"
+                    className="flex flex-col gap-1.5 p-1.5 shadow-md transition-all duration-500 relative z-40 bg-white"
                     style={{
                       backgroundColor: carousel.product_card_bg || '#FFFFFF',
                       borderColor: carousel.product_card_border_color || '#E2E8F0',
                       borderWidth: `${safeNumber(carousel.product_card_border_width, 1, 0)}px`,
                       borderStyle: 'solid',
                       borderRadius: `${safeNumber(carousel.product_card_border_radius, 8, 0)}px`,
+                      marginTop: '6px', // Espaçamento consistente do vídeo
                     }}
                   >
-                    <div className="min-w-0 flex-1 flex flex-col justify-center">
-                      <div
-                        className="truncate font-bold leading-tight"
-                        style={{
-                          fontSize: `${safeNumber(carousel.product_card_name_size, 10, 8)}px`,
-                          color: carousel.product_card_name_color || '#0F172A',
-                        }}
-                      >
-                        Calça Confort
-                      </div>
-                      <div className="flex items-center justify-between mt-0.5">
-                        <span
+                    {/* Header do Card: Imagem de Produto à Esquerda + Info à Direita */}
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={productImages[index % productImages.length]}
+                        alt="Produto Preview"
+                        className="w-9 h-9 rounded object-cover bg-slate-100 shrink-0 border border-slate-100"
+                      />
+                      <div className="min-w-0 flex-1 flex flex-col justify-center">
+                        <div
+                          className="truncate font-bold leading-tight"
                           style={{
-                            fontSize: `${safeNumber(carousel.product_card_price_size, 10, 8)}px`,
-                            fontWeight: '800',
-                            color: carousel.product_card_price_color || colors.primary,
+                            fontSize: `${safeNumber(carousel.product_card_name_size, 10, 8)}px`,
+                            color: carousel.product_card_name_color || '#0F172A',
                           }}
                         >
-                          R$ 149,95
-                        </span>
+                          Calça Confort
+                        </div>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <span
+                            className="font-black"
+                            style={{
+                              fontSize: `${safeNumber(carousel.product_card_price_size, 10, 8)}px`,
+                              color: carousel.product_card_price_color || colors.primary,
+                            }}
+                          >
+                            R$ 149,95
+                          </span>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Botão de Ação "Ver No Site" */}
                     {carousel.show_product_button && (
                       <button
                         type="button"
-                        className="w-full rounded py-0.5 text-[8px] font-black uppercase text-center mt-1"
+                        className="w-full rounded py-1 text-[9px] font-black uppercase text-center tracking-wider transition-colors duration-200"
                         style={{
                           backgroundColor: carousel.product_card_button_bg || colors.button,
                           color: carousel.product_card_button_color || '#FFFFFF',
