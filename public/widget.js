@@ -3844,88 +3844,68 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
       var pData = vpId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, vpId); }) : null;
       if (pData) {
         var pUrl = pData.product_url || pData.url || '';
-        var pWhatsApp = storeWhatsappNumber || '';
-        
         var initialShadow = cfg.highlightShadow ? '0 2px 8px rgba(0,0,0,0.15)' : 'none';
 
         var prodCard = document.createElement('div');
         prodCard.className = 'vidlytics-dc-product-card';
-        prodCard.style.cssText = 'display:flex;flex-direction:column;gap:6px;width:100%;padding:8px;box-sizing:border-box;z-index:6;' +
+        prodCard.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 12px;box-sizing:border-box;z-index:6;cursor:pointer;transition:all 0.2s ease-in-out;' +
           'background:' + (cfg.productCardBg || '#fff') + ';' +
           'border-radius:' + (cfg.productCardRadius || 12) + 'px;' +
           'border:' + (cfg.productCardBorderWidth || 0) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ';' +
-          'box-shadow:' + initialShadow + ';'; // 👈 Aplicando a sombra condicional
+          'box-shadow:' + initialShadow + ';';
 
         var pHeader = document.createElement('div');
-        pHeader.style.cssText = 'display:flex;align-items:flex-start;gap:8px;min-width:0;';
+        pHeader.style.cssText = 'display:flex;align-items:center;gap:10px;flex:1;min-width:0;';
+        
         var pImgSrc = getThumbnailFromObject(pData) || '';
         if (pImgSrc) {
           var pImg = document.createElement('img');
           pImg.src = pImgSrc;
-          pImg.style.cssText = 'width:58px;height:58px;border-radius:8px;object-fit:cover;background:#f1f5f9;flex-shrink:0;display:block;';
+          pImg.style.cssText = 'width:48px;height:48px;border-radius:8px;object-fit:cover;background:#f1f5f9;flex-shrink:0;display:block;';
           pHeader.appendChild(pImg);
         }
+
         var pInfo = document.createElement('div');
-        pInfo.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:1px;';
+        pInfo.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px;';
+        
         var pName = document.createElement('div');
         pName.textContent = pData.name || 'Produto';
         pName.style.cssText = 'font-size:' + (cfg.productCardNameSize || 11) + 'px;font-weight:700;color:' + (cfg.productCardNameColor || '#0f172a') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;';
         pInfo.appendChild(pName);
+
         if (pData.price) {
           var pPrice = document.createElement('div');
           pPrice.textContent = 'R$ ' + parseFloat(pData.price).toFixed(2).replace('.', ',');
           pPrice.style.cssText = 'font-size:' + (cfg.productCardPriceSize || 12) + 'px;font-weight:' + (cfg.productCardPriceBold ? '800' : '600') + ';color:' + (cfg.productCardPriceColor || '#0094EB') + ';';
           pInfo.appendChild(pPrice);
         }
-
-        var siteBtn = null;
-        var whatsappBtn = null;
-
-        if (cfg.showProductButton) {
-          var pActions = document.createElement('div');
-          pActions.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;';
-          
-          siteBtn = document.createElement('button');
-          siteBtn.type = 'button';
-          siteBtn.innerHTML = '<span style="font-size:11px;line-height:1;">&#8599;</span> Ver no site';
-          siteBtn.style.cssText = 'display:inline-flex;align-items:center;gap:4px;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;background:' + (cfg.productCardButtonBg || '#0094EB') + ';color:' + (cfg.productCardButtonColor || '#FFFFFF') + ';';
-          siteBtn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            if (pUrl) window.open(pUrl, '_blank');
-            sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
-          });
-          pActions.appendChild(siteBtn);
-
-          if (pWhatsApp) {
-            whatsappBtn = document.createElement('button');
-            whatsappBtn.type = 'button';
-            whatsappBtn.innerHTML = '<span style="font-size:11px;line-height:1;">&#9742;</span> WhatsApp';
-            whatsappBtn.style.cssText = 'display:inline-flex;align-items:center;gap:4px;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;background:#25D366;color:#FFFFFF;';
-            whatsappBtn.addEventListener('click', function (e) {
-              e.stopPropagation();
-              var msg = encodeURIComponent('Olá! Quero comprar: ' + (pData.name || 'Produto'));
-              var phone = String(pWhatsApp).replace(/\D/g, '');
-              if (phone) {
-                window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
-              }
-            });
-            pActions.appendChild(whatsappBtn);
-          }
-
-          pInfo.appendChild(pActions);
-        }
-
         pHeader.appendChild(pInfo);
         prodCard.appendChild(pHeader);
 
+        // Setinha (Chevron) elegante na extrema direita do card
+        var chevron = document.createElement('div');
+        chevron.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + (cfg.productCardPriceColor || '#0094EB') + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+        chevron.style.cssText = 'display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.2s ease;';
+        prodCard.appendChild(chevron);
+
+        // Micro-interações de Hover
+        prodCard.addEventListener('mouseenter', function() {
+          prodCard.style.transform = 'translateY(-2px)';
+          prodCard.style.boxShadow = '0 6px 16px rgba(0,0,0,0.12)';
+          chevron.style.transform = 'translateX(2px)';
+        });
+        prodCard.addEventListener('mouseleave', function() {
+          prodCard.style.transform = 'none';
+          prodCard.style.boxShadow = initialShadow;
+          chevron.style.transform = 'none';
+        });
+
+        // Clique direcionando diretamente para o site
         prodCard.addEventListener('click', function (e) {
           e.stopPropagation();
-          var clickedButton = e.target.closest('button');
-          if (!clickedButton) {
-            if (pUrl) {
-              window.open(pUrl, '_blank');
-              sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
-            }
+          if (pUrl) {
+            window.open(pUrl, '_blank');
+            sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
           }
         });
 
