@@ -2398,6 +2398,35 @@ const AppearancePage = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
   useEffect(() => {
+    const activeFloating = getActiveResponsiveConfig(formData.floating_config, floatingDevice, formData.useGlobalAppearance);
+    const activeCarousel = getActiveResponsiveConfig(formData.carousel_config, carouselDevice, formData.useGlobalAppearance);
+    const activeDynamic = getActiveResponsiveConfig(formData.dynamic_carousel_config, dynamicCarouselDevice, formData.useGlobalAppearance);
+    const activeGrid = getActiveResponsiveConfig(formData.grid_config, gridDevice, formData.useGlobalAppearance);
+
+    const livePreviewConfig = {
+      activeTab,
+      primary_color: formData.primary_color,
+      secondary_color: formData.secondary_color,
+      text_color: formData.text_color,
+      background_color: formData.background_color,
+      button_color: formData.button_color,
+      font_family: formData.font_family,
+      target_selector: formData.target_selector || 'body',
+      insert_position: formData.insert_position || 'append',
+      floating: activeFloating,
+      carousel: activeCarousel,
+      dynamic_carousel: activeDynamic,
+      grid: activeGrid,
+      modal: formData.modal_config,
+    };
+
+    localStorage.setItem('vidlytics_live_preview', JSON.stringify(livePreviewConfig));
+    // Dispara o evento 'storage' local para atualizar outras abas abertas
+    window.dispatchEvent(new Event('storage'));
+  }, [formData, activeTab, floatingDevice, carouselDevice, dynamicCarouselDevice, gridDevice]);
+  // ── ATÉ AQUI ──
+
+  useEffect(() => {
     setActiveSection(null);
   }, [activeTab]);
 
