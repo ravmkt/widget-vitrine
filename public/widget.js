@@ -4026,6 +4026,19 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
         frame.style.borderRadius = isCircle ? '999px' : cfg.borderRadius + 'px';
       }
 
+      var video = card.querySelector('video');
+      if (video) {
+        if (isActive) {
+          if (video.paused || video.currentTime > 0.1) {
+            video.currentTime = 0;
+            video.play().catch(function () {});
+          }
+        } else {
+          video.pause();
+          video.currentTime = 0;
+        }
+      }
+
       var prodCardEl = card.querySelector('.vidlytics-dc-product-card');
       if (prodCardEl) {
         if (!cfg.highlightShadow) {
