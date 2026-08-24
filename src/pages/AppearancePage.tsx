@@ -1576,18 +1576,21 @@ function usePreviewScale(containerRef: React.RefObject<HTMLDivElement>) {
   return scale;
 }
 
-const FloatingPreview = ({
+// ── PREVIEWS ATUALIZADOS COM SUPORTE A SIMULAÇÃO DE E-COMMERCE ──
 
+const FloatingPreview = ({
   floating,
   colors,
+  bgStyle = {},
 }: {
   floating: FloatingConfig;
   colors: PreviewColors;
+  bgStyle?: React.CSSProperties;
 }) => {
   const mockupRef = useRef<HTMLDivElement>(null);
   const scale = usePreviewScale(mockupRef);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-    const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const vid = videoRef.current;
     if (!vid) return;
@@ -1607,28 +1610,16 @@ const FloatingPreview = ({
   const lateralSpacing = cssSize(floating.left_spacing, '20px');
   const positionStyle: React.CSSProperties = {};
 
-  if (
-    floating.position === 'fixed_bottom_right' ||
-    floating.position === 'fixed_bottom_left'
-  ) {
+  if (floating.position === 'fixed_bottom_right' || floating.position === 'fixed_bottom_left') {
     positionStyle.bottom = cssSize(floating.bottom_spacing, '20px');
   }
-  if (
-    floating.position === 'fixed_top_right' ||
-    floating.position === 'fixed_top_left'
-  ) {
+  if (floating.position === 'fixed_top_right' || floating.position === 'fixed_top_left') {
     positionStyle.top = cssSize(floating.top_spacing, '20px');
   }
-  if (
-    floating.position === 'fixed_bottom_left' ||
-    floating.position === 'fixed_top_left'
-  ) {
+  if (floating.position === 'fixed_bottom_left' || floating.position === 'fixed_top_left') {
     positionStyle.left = lateralSpacing;
   }
-  if (
-    floating.position === 'fixed_bottom_right' ||
-    floating.position === 'fixed_top_right'
-  ) {
+  if (floating.position === 'fixed_bottom_right' || floating.position === 'fixed_top_right') {
     positionStyle.right = lateralSpacing;
   }
 
@@ -1639,17 +1630,23 @@ const FloatingPreview = ({
 
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-100 p-4">
-      <div ref={mockupRef} className="relative h-[480px] overflow-hidden rounded-[1rem] border border-slate-200 bg-white">
-        <div className="p-5">
-          <div className="h-3 w-28 rounded-full bg-slate-200" />
-          <div className="mt-2 h-3 w-48 rounded-full bg-slate-100" />
-          <div className="mt-8 grid grid-cols-2 gap-4">
-            <div className="h-24 rounded-2xl bg-slate-100" />
-            <div className="h-24 rounded-2xl bg-slate-100" />
-            <div className="h-24 rounded-2xl bg-slate-100" />
-            <div className="h-24 rounded-2xl bg-slate-100" />
+      <div 
+        ref={mockupRef} 
+        className="relative h-[480px] overflow-hidden rounded-[1rem] border border-slate-200 bg-white"
+        style={bgStyle}
+      >
+        {/* Camada de conteúdo mockado apenas se não houver background de imagem */}
+        {!bgStyle.backgroundImage && (
+          <div className="p-5">
+            <div className="h-3 w-28 rounded-full bg-slate-200" />
+            <div className="mt-2 h-3 w-48 rounded-full bg-slate-100" />
+            <div className="mt-8 grid grid-cols-2 gap-4">
+              <div className="h-24 rounded-2xl bg-slate-100" />
+              <div className="h-24 rounded-2xl bg-slate-100" />
+            </div>
           </div>
-        </div>
+        )}
+
         <div
           className="absolute flex items-center justify-center overflow-hidden bg-white shadow-xl"
           style={{
@@ -1663,8 +1660,8 @@ const FloatingPreview = ({
             ...positionStyle,
           }}
         >
-           <video
-ref={videoRef}
+          <video
+            ref={videoRef}
             src={DEMO_PREVIEW_VIDEOS[0]}
             loop={floating.autoplay_videos ?? true}
             muted
@@ -1686,25 +1683,24 @@ ref={videoRef}
           )}
           {floating.show_title && (
             <div className="absolute bottom-2 left-3 right-3 z-10">
-              <p className="truncate text-[11px] font-black text-white drop-shadow">
-                Story
-              </p>
+              <p className="truncate text-[11px] font-black text-white drop-shadow">Story</p>
             </div>
           )}
         </div>
       </div>
-</div>
+    </div>
   );
 };
 
 const CarouselPreview = ({
   carousel,
   colors,
+  bgStyle = {},
 }: {
   carousel: CarouselConfig;
   colors: PreviewColors;
+  bgStyle?: React.CSSProperties;
 }) => {
-  const mockupRef = useRef<HTMLDivElement>(null);
   const trackWrapperRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
 
@@ -1746,7 +1742,6 @@ const CarouselPreview = ({
 
   const totalContentWidth = visibleItems * rawWidth + (visibleItems - 1) * spacing;
 
-  // Escala dinâmica: ajusta para caber TODOS os itens sem cortar, sem scroll
   const [scale, setScale] = useState(1);
   useEffect(() => {
     const el = trackWrapperRef.current;
@@ -1768,7 +1763,7 @@ const CarouselPreview = ({
   const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
 
   return (
-    <div ref={mockupRef} className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50 flex flex-col h-[500px]">
+    <div className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50 flex flex-col h-[500px]">
       <div className="flex items-center justify-between bg-white px-4 py-2.5 shadow-sm shrink-0 border-b border-slate-100">
         <div className="flex items-center gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-md" style={{ backgroundColor: colors.primary }}>
@@ -1776,44 +1771,46 @@ const CarouselPreview = ({
           </div>
           <div className="h-2 w-14 rounded-full bg-slate-200" />
         </div>
-        <div className="flex gap-1.5">
-          <div className="h-3 w-3 rounded-full bg-slate-200" />
-          <div className="h-3 w-3 rounded-full bg-slate-200" />
-        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4 [&::-webkit-scrollbar]:hidden">
-        <div
-          className="h-16 w-full rounded-lg"
-          style={{
-            background: `linear-gradient(135deg, ${colors.primary}20, ${colors.secondary}35)`,
-            border: `1px solid ${colors.primary}30`
-          }}
-        />
+      <div 
+        className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 [&::-webkit-scrollbar]:hidden relative"
+        style={bgStyle}
+      >
+        <div className="relative z-10 space-y-4">
+          <div
+            className="h-16 w-full rounded-lg"
+            style={{
+              background: bgStyle.backgroundImage ? 'rgba(255,255,255,0.85)' : `linear-gradient(135deg, ${colors.primary}20, ${colors.secondary}35)`,
+              border: `1px solid ${colors.primary}30`,
+              backdropFilter: bgStyle.backgroundImage ? 'blur(4px)' : 'none',
+            }}
+          />
 
-        <div className="space-y-2">
-          {carousel.show_title && (
-            <div className="h-3 w-28 rounded bg-slate-700" style={{ opacity: 0.8 }} />
-          )}
+          <div className="space-y-2">
+            {carousel.show_title && (
+              <div className="h-4 px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-bold w-fit">
+                CONFIRA NOSSOS STORIES
+              </div>
+            )}
 
-          {/* Wrapper que mede a largura disponível real */}
-          <div ref={trackWrapperRef} className="w-full">
-            <div
-              className="flex mx-auto"
-              style={{
-                gap: `${spacing}px`,
-                width: `${totalContentWidth}px`,
-                transform: `scale(${scale})`,
-                transformOrigin: 'top center',
-              }}
-            >
-              {items.map((_, index) => (
-                <div key={index} className="flex flex-col gap-1 shrink-0" style={{ width: cardWidth }}>
-                  <div
-                    className="relative overflow-hidden shadow-sm bg-slate-900"
-                    style={{
-                      width: cardWidth,
-                      height: cardHeight,
+            <div ref={trackWrapperRef} className="w-full">
+              <div
+                className="flex mx-auto"
+                style={{
+                  gap: `${spacing}px`,
+                  width: `${totalContentWidth}px`,
+                  transform: `scale(${scale})`,
+                  transformOrigin: 'top center',
+                }}
+              >
+                {items.map((_, index) => (
+                  <div key={index} className="flex flex-col gap-1 shrink-0" style={{ width: cardWidth }}>
+                    <div
+                      className="relative overflow-hidden shadow-sm bg-slate-900"
+                      style={{
+                        width: cardWidth,
+                        height: cardHeight,
                       borderColor: carousel.border_color || colors.primary,
                       borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
                       borderStyle: 'solid',
