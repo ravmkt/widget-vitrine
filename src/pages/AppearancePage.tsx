@@ -3540,7 +3540,7 @@ if (activeFloatingConfig.shape === 'portrait') {
 {/* Aviso obrigatório de vídeos mínimos dinâmico */}
 {activeStoriesCount < 3 ? (
   <div className="space-y-2 mb-4">
-    {/* Linha 1: Atenção */}
+    {/* Linha 1: Mínimo de vídeos */}
     <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-300 bg-amber-50/70">
       <span className="shrink-0 text-sm">⚠️</span>
       <p className="text-xs font-bold text-amber-800 leading-none">
@@ -3556,7 +3556,6 @@ if (activeFloatingConfig.shape === 'portrait') {
     </div>
   </div>
 ) : (
-  /* Se tiver 3 ou mais, o de atenção some e exibe apenas o de recomendação */
   <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-200 bg-blue-50/70 mb-4">
     <span className="shrink-0 text-sm">💡</span>
     <p className="text-xs font-bold text-blue-800 leading-none">
