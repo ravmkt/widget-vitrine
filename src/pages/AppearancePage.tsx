@@ -902,6 +902,8 @@ const createDefaultFormData = (storeId?: string): ExtendedAppearance => {
     mobile_rows: gridMobile.rows,
     mobile_gap: gridMobile.spacing,
     font_size: '14',
+    target_selector: 'body',
+    insert_position: 'append',
   } as ExtendedAppearance;
 };
 
