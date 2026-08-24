@@ -4074,7 +4074,6 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
   track.style.transform = 'translateX(' + (viewportWidth / 2 - activeCenter) + 'px)';
 }
 
-// ✅ NOVO LISTENER: Adicionado do zero aqui para eliminar a piscada e o zoom duplo!
 track.addEventListener('transitionend', function (e) {
   if (e.target !== track || e.propertyName !== 'transform') return;
 
