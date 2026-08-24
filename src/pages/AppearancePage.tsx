@@ -3207,62 +3207,24 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                         </FormField>
                       </div>
 
-                      <FormField label="URL da Loja para Preview">
-                        <input
-                          type="url"
-                          value={formData.url || ''}
-                          onChange={e => setFormData({ ...formData, url: e.target.value })}
-                          placeholder="Ex: https://minhaloja.com.br"
-                          className={inputClass}
-                        />
-                      </FormField>
-
-                      <div className="border-t border-slate-100 pt-4 space-y-4">
-                        <h4 className="text-xs font-black uppercase tracking-widest text-[#0094EB]">Posicionamento do Widget (Integração)</h4>
-                        <p className="text-[11px] text-slate-500 leading-normal font-medium">
-                          Configure em qual elemento do e-commerce este widget de carrossel ou grade será inserido automaticamente.
-                        </p>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                          <FormField label="Seletor CSS Alvo">
-                            <input
-                              type="text"
-                              value={formData.target_selector || ''}
-                              onChange={e => setFormData({ ...formData, target_selector: e.target.value })}
-                              placeholder="Ex: #banner, .main-container, body"
-                              className={inputClass}
-                            />
-                          </FormField>
-                          <FormField label="Posição de Inserção">
-                            <select
-                              value={formData.insert_position || 'append'}
-                              onChange={e => setFormData({ ...formData, insert_position: e.target.value as any })}
-                              className={selectClass}
-                            >
-                              <option value="after">Inserir depois (Recomendado para banners)</option>
-                              <option value="before">Inserir antes</option>
-                              <option value="prepend">Inserir no início (dentro do elemento)</option>
-                              <option value="append">Inserir no final (dentro do elemento)</option>
-                            </select>
-                          </FormField>
-                        </div>
+                      <div className="pt-2">
+                        <FormField label="Usar aparência em todos os dispositivos">
+                          <ToggleSwitch
+                            label="Usar aparência em todos os dispositivos"
+                            checked={formData.useGlobalAppearance}
+                            onChange={e => {
+                              const checked = e.target.checked;
+                              setFormData(prev => syncGlobalConfig(checked, prev));
+                              if (checked) {
+                                setFloatingDevice('desktop');
+                                setCarouselDevice('desktop');
+                                setGridDevice('desktop');
+                              }
+                            }}
+                            description="Quando ativado, as configurações de Desktop serão aplicadas também no Mobile."
+                          />
+                        </FormField>
                       </div>
-
-                      <FormField label="Usar aparência em todos os dispositivos">
-                        <ToggleSwitch
-                          label="Usar aparência em todos os dispositivos"
-                          checked={formData.useGlobalAppearance}
-                          onChange={e => {
-                            const checked = e.target.checked;
-                            setFormData(prev => syncGlobalConfig(checked, prev));
-                            if (checked) {
-                              setFloatingDevice('desktop');
-                              setCarouselDevice('desktop');
-                              setGridDevice('desktop');
-                            }
-                          }}
-                          description="Quando ativado, as configurações de Desktop serão aplicadas também no Mobile."
-                        />
-                      </FormField>
                     </SectionCard>
                   )}
 
