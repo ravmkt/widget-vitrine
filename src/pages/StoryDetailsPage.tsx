@@ -877,11 +877,16 @@ const SelectorModal = () => {
     <button
       type="button"
       onClick={() => setSelectorModalOpen(true)}
-      className="whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-[#0094EB] hover:bg-blue-50 transition-colors"
+className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-[#0094EB] hover:bg-blue-50 transition-colors"
     >
-      ðŸŽ¯ Selecionar
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <circle cx="12" cy="12" r="6"></circle>
+        <circle cx="12" cy="12" r="2"></circle>
+      </svg>
+      Selecionar
     </button>
-  </div>
+      </div>
 </div>
                 <div className="space-y-2"><label className="text-[9px] font-black uppercase tracking-widest text-slate-400">POSIÃ‡ÃƒO</label><select value={locations[0]?.position || 'beforeend'} onChange={(event) => setLocations((prev) => [{ ...(prev[0] || { id: generateUuid(), store_id: resolvedStoreId || '', story_id: story?.id || '', selector: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }), position: event.target.value as DisplayPosition }])} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none">{POSITION_OPTIONS.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}</select></div>
               </div>
