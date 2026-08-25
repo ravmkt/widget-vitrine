@@ -5533,22 +5533,33 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
     document.body.style.cursor = '';
   }
 
-  function buildSelector(el) {
+    function buildSelector(el) {
     if (!el) return '';
     var path = [];
+    // Ignora classes dinâmicas, estados temporários e hashes de frameworks (ex: vue, react, angular, slick, swiper, etc)
+    var ignorePattern = /(?:^|-)(active|loading|loaded|current|selected|focus|hover|disabled|show|hide|visible|hidden|open|close|transition|anim|js-|svelte-|ng-|v-|css-|jsx-|_temp|swiper-slide|slick-slide)/i;
+
     while (el && el !== document.body && el !== document.documentElement) {
       var selector = el.tagName ? el.tagName.toLowerCase() : '';
-      if (el.id) {
+      
+      // 1. ID estável (ignora IDs puramente numéricos ou temporários de frameworks)
+      if (el.id && typeof el.id === 'string' && !/^(?:[0-9]+|__next|__nuxt|ember|meteor|react-)/.test(el.id)) {
         selector += '#' + el.id;
         path.unshift(selector);
-        break;
+        break; // ID único e estável interrompe a subida na árvore DOM
       }
+      
+      // 2. Classes estáveis (ignora classes dinâmicas/temporárias)
       if (el.className && typeof el.className === 'string') {
-        var classes = el.className.trim().split(/\s+/).filter(function (c) { return c && !c.startsWith('vl-'); });
+        var classes = el.className.trim().split(/\s+/).filter(function (c) {
+          return c && !c.startsWith('vl-') && !ignorePattern.test(c) && c.length > 2;
+        });
         if (classes.length > 0) {
           selector += '.' + classes.slice(0, 2).join('.');
         }
       }
+      
+      // 3. Índice exato (usa :nth-of-type em vez de :nth-child para precisão com múltiplos irmãos de outras tags)
       var parent = el.parentElement;
       if (parent) {
         var siblings = Array.from(parent.children).filter(function (s) {
@@ -5556,9 +5567,10 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
         });
         if (siblings.length > 1) {
           var index = siblings.indexOf(el) + 1;
-          selector += ':nth-child(' + index + ')';
+          selector += ':nth-of-type(' + index + ')';
         }
       }
+      
       path.unshift(selector);
       el = el.parentElement;
     }
