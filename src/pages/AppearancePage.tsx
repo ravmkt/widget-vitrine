@@ -2429,50 +2429,44 @@ const PreviewCard = ({
     floatingBorder: floating.border_color || formData.primary_color,
   };
 
-    const isMobileFrame = !formData.useGlobalAppearance && activeDevice === 'mobile';
+  const isMobileFrame = !formData.useGlobalAppearance && activeDevice === 'mobile';
 
-    return (
-      <aside className="flex h-full flex-col overflow-y-auto rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm space-y-4">
-        
-        {/* Container de Visualização Inteligente sem o cabeçalho simulado */}
-        <div className="relative flex-1 flex items-center justify-center p-2 bg-slate-100/10 rounded-2xl border border-slate-100 transition-all duration-300">
-          <div
-            className={cn(
-              "w-full transition-all duration-500 ease-in-out",
-              isMobileFrame
-                ? "max-w-[340px] rounded-[2.5rem] border-[10px] border-slate-900 shadow-2xl overflow-hidden bg-white"
-                : "max-w-full"
-            )}
-          >
-            {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} device={activeDevice} />}
-            {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
-            {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} />}
-            {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
-            {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
-            {activeTab === 'basic' && <VisualPreview formData={formData} colors={colors} />}
-          </div>
+  return (
+    <aside className="flex h-full flex-col overflow-y-auto rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm space-y-4">
+      
+      {/* Container de Visualização Inteligente sem o cabeçalho simulado */}
+      <div className="relative flex-1 flex items-center justify-center p-2 bg-slate-100/10 rounded-2xl border border-slate-100 transition-all duration-300">
+        <div
+          className={cn(
+            "w-full transition-all duration-500 ease-in-out",
+            isMobileFrame
+              ? "max-w-[340px] rounded-[2.5rem] border-[10px] border-slate-900 shadow-2xl overflow-hidden bg-white"
+              : "max-w-full"
+          )}
+        >
+          {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} device={activeDevice} />}
+          {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
+          {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} />}
+          {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
+          {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
+          {activeTab === 'basic' && <VisualPreview formData={formData} colors={colors} />}
         </div>
+      </div>
 
-            {/* 💡 AVISO: Reduzido e com shrink-0 para nunca cortar */}
-            <div className="p-3 bg-slate-50 border border-slate-200/60 rounded-xl flex items-start gap-2.5 text-xs text-slate-500 leading-relaxed shadow-sm shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 shrink-0 mt-0.5">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M12 16v-4"/>
-                <path d="M12 8h.01"/>
-              </svg>
-              <span>
-                Este painel é um <strong>preview meramente visual</strong>. Para interagir de verdade e testar os cliques do player, use a visualização direta do Story.
-              </span>
-            </div>
-
-          </aside>
-        );
-}; // <═══ ADICIONE ESSA CHAVE E PONTO E VÍRGULA AQUI! (Linha faltante que quebrava o arquivo)
-
-// ════════════════════════════════════════════════════════════════
-// COMPONENTE PRINCIPAL
-// ════════════════════════════════════════════════════════════════
-
+      {/* AVISO: Reduzido e com shrink-0 para nunca cortar */}
+      <div className="p-3 bg-slate-50 border border-slate-200/60 rounded-xl flex items-start gap-2.5 text-xs text-slate-500 leading-relaxed shadow-sm shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 shrink-0 mt-0.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4"/>
+          <path d="M12 8h.01"/>
+        </svg>
+        <span>
+          Este painel é um <strong>preview meramente visual</strong>. Para interagir de verdade e testar os cliques do player, use a visualização direta do Story.
+        </span>
+      </div>
+    </aside>
+  );
+};
 
 interface AccordionSectionProps {
   title: string;
