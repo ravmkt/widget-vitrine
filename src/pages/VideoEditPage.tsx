@@ -965,7 +965,7 @@ const VideoEditPage = () => {
       <SuccessDialog
         isOpen={showSuccessModal}
         description="Vídeo salvo com sucesso."
-        onClose={() => navigate('/gallery')}
+        onClose={() => setShowSuccessModal(false)}
       />
     </div>
   );

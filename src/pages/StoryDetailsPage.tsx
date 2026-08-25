@@ -403,7 +403,12 @@ console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
     setPageRules((prev) => prev.filter((rule) => rule.id !== ruleId));
   };
 
-  const handleSuccessClose = () => navigate('/stories');
+  const handleSuccessClose = () => {
+    setSuccessOpen(false);
+    if (isCreate && story?.id) {
+      navigate(`/stories/${story.id}`, { replace: true });
+    }
+  };
 
   // ──────────────── DRAG-AND-DROP ──────────────
   const handleDragStart = (e: React.DragEvent, index: number) => {
