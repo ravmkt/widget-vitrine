@@ -2540,8 +2540,8 @@ const AppearancePage = () => {
   const [floatingDevice, setFloatingDevice] = useState<DeviceType>('desktop');
   const [carouselDevice, setCarouselDevice] = useState<DeviceType>('desktop');
   const [dynamicCarouselDevice, setDynamicCarouselDevice] = useState<DeviceType>('desktop');
-
   const [gridDevice, setGridDevice] = useState<DeviceType>('desktop');
+  
   const [activeTab, setActiveTab] = useState<ModalTab>('basic');
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
@@ -2569,7 +2569,6 @@ const AppearancePage = () => {
     };
 
     localStorage.setItem('vidlytics_live_preview', JSON.stringify(livePreviewConfig));
-    // Dispara o evento 'storage' local para atualizar outras abas abertas
     window.dispatchEvent(new Event('storage'));
   }, [formData, activeTab, floatingDevice, carouselDevice, dynamicCarouselDevice, gridDevice]);
 
@@ -2577,11 +2576,7 @@ const AppearancePage = () => {
     setActiveSection(null);
   }, [activeTab]);
 
-  const [deleteModal, setDeleteModal] = useState({
-    isOpen: false,
-    id: '',
-    name: '',
-  });
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: '', name: '' });
 
   const loadData = useCallback(async () => {
     try {
@@ -2595,7 +2590,6 @@ const AppearancePage = () => {
       const styles = await getAppearancesSafe(finalStoreId);
       setAppearances(styles);
 
-      // Sincroniza em tempo real a contagem de stories ativos da loja para exibição inteligente de avisos
       try {
         if (supabase) {
           const { data: storiesData, error: storiesError } = await supabase
@@ -2608,14 +2602,6 @@ const AppearancePage = () => {
               !(item.is_active === false || item.active === false || item.status === 'inactive' || item.status === 'inativo')
             ).length;
             setActiveStoriesCount(count);
-          } else {
-            const localStories = await (db as any).stories?.getAll(finalStoreId);
-            if (localStories) {
-              const count = localStories.filter((item: any) => 
-                !(item.is_active === false || item.active === false || item.status === 'inactive' || item.status === 'inativo')
-              ).length;
-              setActiveStoriesCount(count);
-            }
           }
         }
       } catch (err) {
@@ -2649,40 +2635,13 @@ const AppearancePage = () => {
           floating_position: positionToFloatingPosition(patch.position),
         };
       }
-      if (patch.floating_position) {
-        updatedDeviceConfig = {
-          ...updatedDeviceConfig,
-          floating_position: normalizeFloatingPosition(patch.floating_position),
-          position: floatingPositionToPosition(patch.floating_position),
-        };
-      }
       updatedDeviceConfig = normalizeFloatingShapeValues(updatedDeviceConfig);
 
-      const nextConfig: ResponsiveConfig<FloatingConfig> = prev.useGlobalAppearance
+      const nextConfig = prev.useGlobalAppearance
         ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
         : { ...prev.floating_config, same_for_all: false, [device]: updatedDeviceConfig };
 
-      const desktop = nextConfig.desktop;
-      return {
-        ...prev,
-        floating_config: nextConfig,
-        width: desktop.width,
-        height: desktop.height,
-        widget_shape: desktop.shape as any,
-        position: desktop.position,
-        floating_position: desktop.floating_position,
-        bottom_spacing: desktop.bottom_spacing,
-        top_spacing: desktop.top_spacing,
-        left_spacing: desktop.left_spacing,
-        right_spacing: desktop.right_spacing,
-        color: desktop.border_color,
-        border_style: desktop.border_style,
-        show_play_icon: desktop.show_play_icon,
-        draggable: desktop.draggable,
-        allow_close: desktop.allow_close,
-        object_fit: desktop.object_fit,
-        z_index: desktop.z_index,
-      };
+      return { ...prev, floating_config: nextConfig };
     });
   };
 
@@ -2690,76 +2649,11 @@ const AppearancePage = () => {
     setFormData(prev => {
       const device = prev.useGlobalAppearance ? 'desktop' : carouselDevice;
       const current = prev.carousel_config[device];
-
       let updatedDeviceConfig: CarouselConfig = {
         ...current,
         ...patch,
         spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
-        visible_items: safeNumber(
-          patch.visible_items ?? current.visible_items,
-          current.visible_items || 1,
-          1,
-        ),
-        auto_center: patch.auto_center ?? current.auto_center ?? true,
-      };
-
-      if (patch.shape !== undefined) {
-        const newShape = normalizeWidgetShape(patch.shape, 'portrait');
-        const width = formatNumberLikeCurrent(
-          patch.width ?? current.width ?? '80',
-          '80',
-        );
-        updatedDeviceConfig = {
-          ...updatedDeviceConfig,
-          shape: newShape,
-          width,
-        };
-      }
-
-      updatedDeviceConfig = normalizeCarouselConfigShape(updatedDeviceConfig);
-
-      const nextConfig: ResponsiveConfig<CarouselConfig> = prev.useGlobalAppearance
-        ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
-        : { ...prev.carousel_config, same_for_all: false, [device]: updatedDeviceConfig };
-
-      const desktop = nextConfig.desktop;
-      return {
-        ...prev,
-        carousel_config: nextConfig,
-        carousel_spacing: desktop.spacing,
-        carousel_shape: desktop.shape,
-        carousel_size: desktop.width,
-        carousel_border_color: desktop.border_color,
-        carousel_border_width: desktop.border_style,
-        carousel_border_radius: desktop.border_radius,
-        carousel_object_fit: desktop.object_fit,
-        carousel_view_mode: desktop.view_mode,
-        carousel_margin_top: desktop.margin_top,
-        carousel_margin_bottom: desktop.margin_bottom,
-        carousel_visible_items: desktop.visible_items,
-        carousel_show_product: desktop.show_product,
-        carousel_show_play_button: desktop.show_play_icon,
-        carousel_show_title: desktop.show_title,
-        carousel_auto_center: desktop.auto_center,
-      };
-    });
-  };
-
-  const updateDynamicCarouselConfig = (patch: Partial<DynamicCarouselConfig>) => {
-    setFormData(prev => {
-      const device = prev.useGlobalAppearance ? 'desktop' : dynamicCarouselDevice;
-      const current = prev.dynamic_carousel_config[device];
-
-      let updatedDeviceConfig: DynamicCarouselConfig = {
-        ...current,
-        ...patch,
-        enabled: true, // sempre ativo
-        spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
-        visible_items: safeNumber(
-          patch.visible_items ?? current.visible_items,
-          current.visible_items || 1,
-          1,
-        ),
+        visible_items: safeNumber(patch.visible_items ?? current.visible_items, current.visible_items || 1, 1),
       };
 
       if (patch.shape !== undefined) {
@@ -2768,25 +2662,36 @@ const AppearancePage = () => {
         updatedDeviceConfig = { ...updatedDeviceConfig, shape: newShape, width };
       }
 
-      const autoHighlight = updatedDeviceConfig.auto_highlight ?? false;
-      const autoplayOn = updatedDeviceConfig.autoplay_videos ?? true;
+      updatedDeviceConfig = normalizeCarouselConfigShape(updatedDeviceConfig);
 
-      updatedDeviceConfig = {
-        ...updatedDeviceConfig,
-        highlight_border_color: updatedDeviceConfig.highlight_border_color ?? updatedDeviceConfig.border_color,
-        highlight_mode: updatedDeviceConfig.highlight_mode ?? (autoHighlight ? 'ring' : 'none'),
-        highlight_shadow: updatedDeviceConfig.highlight_shadow ?? false,
-        highlight_enlarge_active: updatedDeviceConfig.highlight_enlarge_active ?? updatedDeviceConfig.highlight_scale_up ?? false,
-        highlight_dim_inactive: updatedDeviceConfig.highlight_dim_inactive ?? updatedDeviceConfig.highlight_scale_down_others ?? false,
-        autoplay_delay: updatedDeviceConfig.autoplay_delay ?? (autoplayOn ? 5000 : 0),
-        show_title: updatedDeviceConfig.show_title ?? false,
-        show_play_icon: updatedDeviceConfig.show_play_icon ?? true,
-        show_product: updatedDeviceConfig.show_product ?? false,
+      const nextConfig = prev.useGlobalAppearance
+        ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
+        : { ...prev.carousel_config, same_for_all: false, [device]: updatedDeviceConfig };
+
+      return { ...prev, carousel_config: nextConfig };
+    });
+  };
+
+  const updateDynamicCarouselConfig = (patch: Partial<DynamicCarouselConfig>) => {
+    setFormData(prev => {
+      const device = prev.useGlobalAppearance ? 'desktop' : dynamicCarouselDevice;
+      const current = prev.dynamic_carousel_config[device];
+      let updatedDeviceConfig: DynamicCarouselConfig = {
+        ...current,
+        ...patch,
+        enabled: true,
+        spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
       };
+
+      if (patch.shape !== undefined) {
+        const newShape = normalizeWidgetShape(patch.shape, 'portrait');
+        const width = formatNumberLikeCurrent(patch.width ?? current.width ?? '80', '80');
+        updatedDeviceConfig = { ...updatedDeviceConfig, shape: newShape, width };
+      }
 
       updatedDeviceConfig = normalizeCarouselConfigShape(updatedDeviceConfig) as DynamicCarouselConfig;
 
-      const nextConfig: ResponsiveConfig<DynamicCarouselConfig> = prev.useGlobalAppearance
+      const nextConfig = prev.useGlobalAppearance
         ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
         : { ...prev.dynamic_carousel_config, same_for_all: false, [device]: updatedDeviceConfig };
 
@@ -2798,52 +2703,26 @@ const AppearancePage = () => {
     setFormData(prev => {
       const device = prev.useGlobalAppearance ? 'desktop' : gridDevice;
       const current = prev.grid_config[device];
-
       const updatedDeviceConfig: GridConfig = normalizeGridConfigShape({
         ...current,
         ...patch,
-        visible_items: limitNumber(
-          patch.visible_items ?? current.visible_items,
-          current.visible_items || 1,
-          1,
-          10,
-        ),
-        rows: safeNumber(patch.rows ?? current.rows, current.rows || 1, 1),
+        visible_items: limitNumber(patch.visible_items ?? current.visible_items, current.visible_items || 1, 1, 10),
         spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
       });
 
-      const nextConfig: ResponsiveConfig<GridConfig> = prev.useGlobalAppearance
+      const nextConfig = prev.useGlobalAppearance
         ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
         : { ...prev.grid_config, same_for_all: false, [device]: updatedDeviceConfig };
 
-      return {
-        ...prev,
-        grid_config: nextConfig,
-        desktop_columns: nextConfig.desktop.visible_items,
-        desktop_rows: nextConfig.desktop.rows,
-        desktop_gap: nextConfig.desktop.spacing,
-        mobile_columns: nextConfig.mobile.visible_items,
-        mobile_rows: nextConfig.mobile.rows,
-        mobile_gap: nextConfig.mobile.spacing,
-      };
+      return { ...prev, grid_config: nextConfig };
     });
   };
 
   const updateModalConfig = (patch: Partial<ModalConfig>) => {
-    setFormData(prev => {
-      const modalConfig: ModalConfig = { ...prev.modal_config, ...patch };
-      return {
-        ...prev,
-        modal_config: modalConfig,
-        show_title: modalConfig.show_title,
-        show_play_button: modalConfig.show_play_button,
-        show_product: modalConfig.show_product,
-        show_like_button: modalConfig.show_like_button,
-        show_comment_button: modalConfig.show_comment_button,
-        show_share_button: modalConfig.show_share_button,
-        show_product_button: modalConfig.show_product_button,
-      } as ExtendedAppearance;
-    });
+    setFormData(prev => ({
+      ...prev,
+      modal_config: { ...prev.modal_config, ...patch }
+    } as ExtendedAppearance));
   };
 
   const handleSetDefault = async (id: string) => {
@@ -2856,12 +2735,7 @@ const AppearancePage = () => {
       const now = new Date().toISOString();
       await Promise.all(
         appearances.map(style =>
-          db.appearances.save({
-            ...style,
-            store_id: finalStoreId,
-            is_default: style.id === id,
-            updated_at: now,
-          } as Appearance),
+          db.appearances.save({ ...style, store_id: finalStoreId, is_default: style.id === id, updated_at: now } as Appearance),
         ),
       );
       await syncDefaultAppearanceId(finalStoreId, id);
@@ -2889,12 +2763,7 @@ const AppearancePage = () => {
         const nextDefault = remainingAppearances[0];
         if (nextDefault) {
           const now = new Date().toISOString();
-          await db.appearances.save({
-            ...nextDefault,
-            store_id: finalStoreId,
-            is_default: true,
-            updated_at: now,
-          } as Appearance);
+          await db.appearances.save({ ...nextDefault, store_id: finalStoreId, is_default: true, updated_at: now } as Appearance);
           await syncDefaultAppearanceId(finalStoreId, nextDefault.id);
         } else if (finalStoreId) {
           await syncDefaultAppearanceId(finalStoreId, null);
@@ -2951,36 +2820,10 @@ const AppearancePage = () => {
       const now = new Date().toISOString();
       const id = editingStyle?.id || formData.id || generateUuid();
 
-      const floatingConfig: ResponsiveConfig<FloatingConfig> = {
-        ...formData.floating_config,
-        desktop: normalizeFloatingShapeValues(formData.floating_config.desktop),
-        mobile: normalizeFloatingShapeValues(formData.floating_config.mobile),
-        same_for_all: formData.useGlobalAppearance,
-      };
-
-      const carouselConfig: ResponsiveConfig<CarouselConfig> = {
-        ...formData.carousel_config,
-        desktop: normalizeCarouselConfigShape(formData.carousel_config.desktop),
-        mobile: normalizeCarouselConfigShape(formData.carousel_config.mobile),
-        same_for_all: formData.useGlobalAppearance,
-      };
-
-      const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
-        ...formData.dynamic_carousel_config,
-        desktop: { ...normalizeCarouselConfigShape(formData.dynamic_carousel_config.desktop), enabled: true } as DynamicCarouselConfig,
-        mobile: { ...normalizeCarouselConfigShape(formData.dynamic_carousel_config.mobile), enabled: true } as DynamicCarouselConfig,
-        same_for_all: formData.useGlobalAppearance,
-      };
-
-      const gridConfig: ResponsiveConfig<GridConfig> = {
-        ...formData.grid_config,
-        desktop: normalizeGridConfigShape(formData.grid_config.desktop),
-        mobile: normalizeGridConfigShape(formData.grid_config.mobile),
-        same_for_all: formData.useGlobalAppearance,
-      };
-
-      gridConfig.desktop = { ...gridConfig.desktop, visible_items: limitNumber(gridConfig.desktop.visible_items, 10, 1, 10) };
-      gridConfig.mobile = { ...gridConfig.mobile, visible_items: limitNumber(gridConfig.mobile.visible_items, 2, 1, 10) };
+      const floatingConfig = { ...formData.floating_config, same_for_all: formData.useGlobalAppearance };
+      const carouselConfig = { ...formData.carousel_config, same_for_all: formData.useGlobalAppearance };
+      const dynamicCarouselConfig = { ...formData.dynamic_carousel_config, same_for_all: formData.useGlobalAppearance };
+      const gridConfig = { ...formData.grid_config, same_for_all: formData.useGlobalAppearance };
 
       if (formData.useGlobalAppearance) {
         floatingConfig.mobile = floatingConfig.desktop;
@@ -2989,13 +2832,6 @@ const AppearancePage = () => {
         gridConfig.mobile = gridConfig.desktop;
       }
 
-      floatingConfig.desktop = normalizeFloatingConfigForSave(floatingConfig.desktop);
-      floatingConfig.mobile = normalizeFloatingConfigForSave(floatingConfig.mobile);
-      if (formData.useGlobalAppearance) {
-        floatingConfig.mobile = floatingConfig.desktop;
-      }
-
-      const modalConfig = formData.modal_config;
       const shouldBeDefault = formData.is_default || appearances.length === 0;
 
       const stylePayload = {
@@ -3003,62 +2839,34 @@ const AppearancePage = () => {
         store_id: finalStoreId,
         name: formData.name.trim(),
         is_default: shouldBeDefault,
-
         primary_color: formData.primary_color,
         secondary_color: formData.secondary_color,
         text_color: formData.text_color,
         background_color: formData.background_color,
         button_color: formData.button_color,
         font_family: formData.font_family,
-        font_size: String(formData.font_size || '14'),
-
         floating_config: floatingConfig,
         carousel_config: carouselConfig,
         dynamic_carousel_config: dynamicCarouselConfig,
         grid_config: gridConfig,
-        modal_config: modalConfig,
-
+        modal_config: formData.modal_config,
         use_global_appearance: formData.useGlobalAppearance,
-        url: formData.url || null,
-
-        target_selector: formData.target_selector || 'body',
-        insert_position: formData.insert_position || 'append',
-
         created_at: formData.created_at || editingStyle?.created_at || now,
         updated_at: now,
       };
 
       if (stylePayload.is_default) {
         await Promise.all(
-          appearances
-            .filter(style => style.id !== id)
-            .map(style =>
-              db.appearances.save({
-                ...style,
-                store_id: finalStoreId,
-                is_default: false,
-                updated_at: now,
-              } as Appearance),
-            ),
+          appearances.filter(style => style.id !== id).map(style =>
+            db.appearances.save({ ...style, store_id: finalStoreId, is_default: false, updated_at: now } as Appearance),
+          ),
         );
       }
 
       await db.appearances.save(stylePayload as unknown as Appearance);
 
       if (supabase) {
-        const { error: storeSettingsError } = await supabase
-          .from('store_settings')
-          .upsert(
-            {
-              store_id: finalStoreId,
-              default_appearance_id: shouldBeDefault ? id : null,
-              updated_at: now,
-            },
-            { onConflict: 'store_id' },
-          );
-        if (storeSettingsError) {
-          console.error('Erro ao sincronizar store_settings:', storeSettingsError);
-        }
+        await supabase.from('store_settings').upsert({ store_id: finalStoreId, default_appearance_id: shouldBeDefault ? id : null, updated_at: now }, { onConflict: 'store_id' });
       }
 
       if (stylePayload.is_default) {
@@ -3084,29 +2892,10 @@ const AppearancePage = () => {
     setEditingStyle(null);
   };
 
-  const activeFloatingConfig = useMemo(
-    () =>
-      getActiveResponsiveConfig(formData.floating_config, floatingDevice, formData.useGlobalAppearance),
-    [formData.floating_config, floatingDevice, formData.useGlobalAppearance],
-  );
-
-  const activeCarouselConfig = useMemo(
-    () =>
-      getActiveResponsiveConfig(formData.carousel_config, carouselDevice, formData.useGlobalAppearance),
-    [formData.carousel_config, carouselDevice, formData.useGlobalAppearance],
-  );
-
-  const activeDynamicCarouselConfig = useMemo(
-    () =>
-      getActiveResponsiveConfig(formData.dynamic_carousel_config, dynamicCarouselDevice, formData.useGlobalAppearance),
-    [formData.dynamic_carousel_config, dynamicCarouselDevice, formData.useGlobalAppearance],
-  );
-
-  const activeGridConfig = useMemo(
-    () =>
-      getActiveResponsiveConfig(formData.grid_config, gridDevice, formData.useGlobalAppearance),
-    [formData.grid_config, gridDevice, formData.useGlobalAppearance],
-  );
+  const activeFloatingConfig = useMemo(() => getActiveResponsiveConfig(formData.floating_config, floatingDevice, formData.useGlobalAppearance), [formData.floating_config, floatingDevice, formData.useGlobalAppearance]);
+  const activeCarouselConfig = useMemo(() => getActiveResponsiveConfig(formData.carousel_config, carouselDevice, formData.useGlobalAppearance), [formData.carousel_config, carouselDevice, formData.useGlobalAppearance]);
+  const activeDynamicCarouselConfig = useMemo(() => getActiveResponsiveConfig(formData.dynamic_carousel_config, dynamicCarouselDevice, formData.useGlobalAppearance), [formData.dynamic_carousel_config, dynamicCarouselDevice, formData.useGlobalAppearance]);
+  const activeGridConfig = useMemo(() => getActiveResponsiveConfig(formData.grid_config, gridDevice, formData.useGlobalAppearance), [formData.grid_config, gridDevice, formData.useGlobalAppearance]);
 
   if (loading || tenantLoading) {
     return (
@@ -3121,48 +2910,31 @@ const AppearancePage = () => {
       {/* Header com Estética Dashboard Vidlytics */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Aparência
-          </h1>
-          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">
-            Customize a identidade visual, widgets, carrosséis, grades e player da sua loja.
-          </p>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">Aparência</h1>
+          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">Customize a identidade visual, widgets, carrosséis, grades e player da sua loja.</p>
         </div>
-        <button
-          type="button"
-          onClick={handleNewStyle}
-          className="flex items-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer"
-        >
-          <Plus size={16} className="!text-white stroke-[2.5]" />
-          Novo Estilo
+        <button type="button" onClick={handleNewStyle} className="flex items-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer">
+          <Plus size={16} className="!text-white stroke-[2.5]" /> Novo Estilo
         </button>
       </div>
 
       {/* Módulo de Estilos Cadastrados no Padrão Modular do Dashboard */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
-        
-        {/* Cabeçalho do Módulo */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white bg-[#0094EB] dark:bg-[#ff7a29] shadow-[0_0_15px_rgba(0,148,235,0.35)] dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
               <Palette size={18} className="!text-white stroke-[2.5]" />
             </div>
             <div>
-              <h3 className="text-base font-black text-slate-900 dark:text-white">
-                Estilos Cadastrados
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-[#8a90a0] font-medium">
-                Templates e temas ativos configurados para a sua vitrine.
-              </p>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Estilos Cadastrados</h3>
+              <p className="text-xs text-slate-500 dark:text-[#8a90a0] font-medium">Templates e temas ativos configurados para a sua vitrine.</p>
             </div>
           </div>
-          
           <span className="text-xs font-black uppercase tracking-widest text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/20">
             {appearances.length} {appearances.length === 1 ? 'Tema' : 'Temas'}
           </span>
         </div>
 
-        {/* Tabela Limpa e Modular */}
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
@@ -3182,74 +2954,37 @@ const AppearancePage = () => {
                 </tr>
               ) : (
                 appearances.map(app => (
-                  <tr 
-                    key={app.id} 
-                    className="transition-colors hover:bg-slate-50/60 dark:hover:bg-white/[0.02]"
-                  >
+                  <tr key={app.id} className="transition-colors hover:bg-slate-50/60 dark:hover:bg-white/[0.02]">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3.5">
-                        <div
-                          className="h-9 w-9 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm shrink-0 flex items-center justify-center"
-                          style={{ backgroundColor: app.primary_color || '#0094EB' }}
-                        />
+                        <div className="h-9 w-9 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm shrink-0 flex items-center justify-center" style={{ backgroundColor: app.primary_color || '#0094EB' }} />
                         <div>
-                          <span className="text-xs font-black text-slate-800 dark:text-[#e8ecf4] block">
-                            {app.name}
-                          </span>
-                          <span className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0] uppercase">
-                            Identidade Visual
-                          </span>
+                          <span className="text-xs font-black text-slate-800 dark:text-[#e8ecf4] block">{app.name}</span>
+                          <span className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0] uppercase">Identidade Visual</span>
                         </div>
                       </div>
                     </td>
-
                     <td className="px-6 py-4 text-center">
                       <span className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-slate-600 dark:text-[#c0c5d4] bg-slate-100 dark:bg-[#0f1220] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-white/5">
-                        <span 
-                          className="w-2.5 h-2.5 rounded-full shrink-0" 
-                          style={{ backgroundColor: app.primary_color || '#0094EB' }}
-                        />
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: app.primary_color || '#0094EB' }} />
                         {app.primary_color || '#0094EB'}
                       </span>
                     </td>
-
                     <td className="px-6 py-4 text-center">
                       {app.is_default ? (
                         <span className="mx-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-blue-50 dark:bg-[#ff7a29]/15 border border-blue-200 dark:border-[#ff7a29]/30 px-3.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] shadow-xs">
-                          <Star size={11} className="fill-[#0094EB] text-[#0094EB] dark:fill-[#ff7a29] dark:text-[#ff7a29]" />
-                          Padrão
+                          <Star size={11} className="fill-[#0094EB] text-[#0094EB] dark:fill-[#ff7a29] dark:text-[#ff7a29]" /> Padrão
                         </span>
                       ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleSetDefault(app.id)}
-                          className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-[#8a90a0] hover:text-[#0094EB] dark:hover:text-[#ff7a29] transition-colors cursor-pointer"
-                        >
+                        <button type="button" onClick={() => handleSetDefault(app.id)} className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-[#8a90a0] hover:text-[#0094EB] dark:hover:text-[#ff7a29] transition-colors cursor-pointer">
                           Definir Padrão
                         </button>
                       )}
                     </td>
-                    
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleEditStyle(app)}
-                          className="p-2 rounded-xl text-slate-400 hover:text-[#0094EB] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
-                          aria-label="Editar estilo"
-                          title="Editar estilo"
-                        >
-                          <Edit3 size={15} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteClick(app)}
-                          className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all"
-                          aria-label="Excluir estilo"
-                          title="Excluir estilo"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        <button type="button" onClick={() => handleEditStyle(app)} className="p-2 rounded-xl text-slate-400 hover:text-[#0094EB] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all" aria-label="Editar estilo"><Edit3 size={15} /></button>
+                        <button type="button" onClick={() => handleDeleteClick(app)} className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all" aria-label="Excluir estilo"><Trash2 size={15} /></button>
                       </div>
                     </td>
                   </tr>
@@ -3264,29 +2999,14 @@ const AppearancePage = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 sm:p-6 md:p-8 backdrop-blur-sm">
           <div className="flex h-[90vh] w-full max-w-7xl flex-col overflow-hidden rounded-[1.5rem] bg-white shadow-2xl transition-all duration-300">
-
-            {/* Header do modal */}
             <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-3 shrink-0">
               <div>
-                <h2 className="text-xl font-black text-slate-900">
-                  {editingStyle ? 'Editar Estilo' : 'Criar Novo Estilo'}
-                </h2>
-                <p className="mt-1 text-sm font-medium text-slate-500">
-                  Configure a identidade visual por área: global, flutuante, carrossel, grade e player.
-                </p>
+                <h2 className="text-xl font-black text-slate-900">{editingStyle ? 'Editar Estilo' : 'Criar Novo Estilo'}</h2>
+                <p className="mt-1 text-sm font-medium text-slate-500">Configure a identidade visual por área: global, flutuante, carrossel, grade e player.</p>
               </div>
-              <button
-                type="button"
-                onClick={handleCancel}
-                disabled={saving}
-                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-60"
-                aria-label="Fechar modal"
-              >
-                <X size={20} />
-              </button>
+              <button type="button" onClick={handleCancel} disabled={saving} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-60"><X size={20} /></button>
             </div>
 
-            {/* Tabs */}
             <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-4 shrink-0">
               <div className="flex flex-wrap gap-2">
                 <ModalTabButton active={activeTab === 'basic'} icon={<Settings2 size={16} />} label="Básico" onClick={() => setActiveTab('basic')} />
@@ -3298,176 +3018,73 @@ const AppearancePage = () => {
               </div>
             </div>
 
-            {/* Conteúdo */}
             <div className="flex-1 overflow-hidden bg-slate-50/60 p-6 xl:p-8">
               <div className="grid h-full grid-cols-1 gap-8 items-start xl:grid-cols-[380px_minmax(0,1fr)]">
-                
-                {/* Painel Esquerdo com Scroll */}
                 <div className="h-full overflow-y-auto pr-4 pb-12 space-y-6 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
                   
-                  {/* ── Básico ── */}
+                  {/* BÁSICO */}
                   {activeTab === 'basic' && (
                     <SectionCard title="Dados Básicos" description="Defina o nome do estilo e o comportamento global entre Desktop e Mobile.">
                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <FormField label="Nome do Estilo">
-                          <input
-                            type="text"
-                            value={formData.name}
-                            onChange={e => setFormData({ ...formData, name: e.target.value })}
-                            placeholder="Ex: Estilo padrão"
-                            className={inputClass}
-                          />
+                          <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ex: Estilo padrão" className={inputClass} />
                         </FormField>
                         <FormField label="Definir como padrão">
-                          <ToggleSwitch
-                            label="Definir como padrão da loja"
-                            checked={formData.is_default}
-                            onChange={e => setFormData({ ...formData, is_default: e.target.checked })}
-                          />
+                          <ToggleSwitch label="Definir como padrão da loja" checked={formData.is_default} onChange={e => setFormData({ ...formData, is_default: e.target.checked })} />
                         </FormField>
                       </div>
-
                       <div className="pt-2">
                         <FormField label="Usar aparência em todos os dispositivos">
-                          <ToggleSwitch
-                            label="Usar aparência em todos os dispositivos"
-                            checked={formData.useGlobalAppearance}
-                            onChange={e => {
-                              const checked = e.target.checked;
-                              setFormData(prev => syncGlobalConfig(checked, prev));
-                              if (checked) {
-                                setFloatingDevice('desktop');
-                                setCarouselDevice('desktop');
-                                setGridDevice('desktop');
-                              }
-                            }}
-                            description="Quando ativado, as configurações de Desktop serão aplicadas também no Mobile."
-                          />
+                          <ToggleSwitch label="Usar aparência em todos os dispositivos" checked={formData.useGlobalAppearance} onChange={e => { const checked = e.target.checked; setFormData(prev => syncGlobalConfig(checked, prev)); if (checked) { setFloatingDevice('desktop'); setCarouselDevice('desktop'); setGridDevice('desktop'); } }} description="Quando ativado, as configurações de Desktop serão aplicadas também no Mobile." />
                         </FormField>
                       </div>
                     </SectionCard>
                   )}
 
-                  {/* ── Flutuante ── */}
+                  {/* FLUTUANTE */}
                   {activeTab === 'floating' && (
                     <SectionCard title="Configurações do Flutuante">
-                      
-                      {/* Seletor Inteligente de Dispositivo */}
+                      {/* Seletor Dispositivo */}
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
-                        
                         {formData.useGlobalAppearance ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold" title="Configuração vinculada entre Desktop e Mobile">
-                            <Monitor size={14} />
-                            <Link size={12} className="text-[#0094EB]" />
-                            <Smartphone size={14} />
-                          </div>
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0094EB]" /><Smartphone size={14} /></div>
                         ) : (
                           <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-                            <button
-                              type="button"
-                              onClick={() => setFloatingDevice('desktop')}
-                              className={cn(
-                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
-                                floatingDevice === 'desktop'
-                                  ? 'bg-[#0094EB] text-white'
-                                  : 'text-slate-500 hover:text-slate-800'
-                              )}
-                            >
-                              <Monitor size={13} />
-                              Desktop
-                            </button>
+                            <button type="button" onClick={() => setFloatingDevice('desktop')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', floatingDevice === 'desktop' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Monitor size={13} />Desktop</button>
                             <Link2Off size={12} className="text-slate-300 mx-0.5" />
-                            <button
-                              type="button"
-                              onClick={() => setFloatingDevice('mobile')}
-                              className={cn(
-                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
-                                floatingDevice === 'mobile'
-                                  ? 'bg-[#0094EB] text-white'
-                                  : 'text-slate-500 hover:text-slate-800'
-                              )}
-                            >
-                              <Smartphone size={13} />
-                              Mobile
-                            </button>
+                            <button type="button" onClick={() => setFloatingDevice('mobile')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', floatingDevice === 'mobile' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Smartphone size={13} />Mobile</button>
                           </div>
                         )}
                       </div>
 
                       <div className="space-y-3">
-                        {/* 1. Formato & Dimensões */}
-                        <AccordionSection
-                          title="1. Formato & Dimensões"
-                          isOpen={activeSection === 'floating-dimensions'}
-                          onToggle={() => setActiveSection(activeSection === 'floating-dimensions' ? null : 'floating-dimensions')}
-                        >
+                        {/* 1. FORMATO & DIMENSÕES */}
+                        <AccordionSection title="1. Formato & Dimensões" isOpen={activeSection === 'float-1'} onToggle={() => setActiveSection(activeSection === 'float-1' ? null : 'float-1')}>
                           <div className="grid grid-cols-2 gap-2.5">
-                            <FormField label="Formato Widget">
-                              <select
-                                value={activeFloatingConfig.shape}
-                                onChange={e => {
-                                  const shape = e.target.value as WidgetShape;
-                                  if (shape === 'portrait') {
-                                    const size = formatNumberLikeCurrent(activeFloatingConfig.width, '80');
-                                    updateFloatingConfig({ shape, width: size, height: getPortraitHeightFromWidth(size) });
-                                    return;
-                                  }
-                                  if (shape === 'landscape') {
-                                    const size = formatNumberLikeCurrent(activeFloatingConfig.width, '80');
-                                    updateFloatingConfig({ shape, width: size, height: getLandscapeHeightFromWidth(size) });
-                                    return;
-                                  }
-                                  if (shape === 'square') {
-                                    const size = formatNumberLikeCurrent(activeFloatingConfig.width, '80');
-                                    updateFloatingConfig({ shape, width: size, height: size });
-                                    return;
-                                  }
-                                  const size = toNumberInputValue(activeFloatingConfig.border_radius) || toNumberInputValue(activeFloatingConfig.width) || '80';
-                                  updateFloatingConfig({ shape, border_radius: size });
-                                }}
-                                className={selectClass}
-                              >
+                            <FormField label="Formato">
+                              <select value={activeFloatingConfig.shape} onChange={e => updateFloatingConfig({ shape: e.target.value as WidgetShape })} className={selectClass}>
                                 <option value="circle">Circular</option>
                                 <option value="square">Quadrado</option>
                                 <option value="portrait">Retrato 9:16</option>
                                 <option value="landscape">Paisagem 16:9</option>
                               </select>
                             </FormField>
-
-                            <FormField label="Tamanho Base (px)">
-                              <input
-                                type="number" min="20" step="1"
-                                value={toNumberInputValue(activeFloatingConfig.width)}
-                                onChange={e => {
-                                  const value = e.target.value;
-                                  if (activeFloatingConfig.shape === 'portrait') {
-                                    updateFloatingConfig({ width: value, height: getPortraitHeightFromWidth(value) });
-                                    return;
-                                  }
-                                  if (activeFloatingConfig.shape === 'landscape') {
-                                    updateFloatingConfig({ width: value, height: getLandscapeHeightFromWidth(value) });
-                                    return;
-                                  }
-                                  if (activeFloatingConfig.shape === 'square') {
-                                    updateFloatingConfig({ width: value, height: value });
-                                    return;
-                                  }
-                                  updateFloatingConfig({ border_radius: value, width: value, height: value });
-                                }}
-                                placeholder="Ex: 80"
-                                className={inputClass}
-                              />
+                            <FormField label="Ajuste Imagem">
+                              <select value={activeFloatingConfig.object_fit || 'cover'} onChange={e => updateFloatingConfig({ object_fit: e.target.value })} className={selectClass}>
+                                <option value="cover">Cover (Preencher)</option>
+                                <option value="contain">Contain (Ajustar)</option>
+                                <option value="fill">Fill (Esticar)</option>
+                              </select>
+                            </FormField>
+                            <FormField label="Largura (px)">
+                              <input type="number" min="20" step="1" value={toNumberInputValue(activeFloatingConfig.width)} onChange={e => updateFloatingConfig({ width: e.target.value })} placeholder="Ex: 80" className={inputClass} />
                             </FormField>
                           </div>
                         </AccordionSection>
 
-                        {/* 2. Posição & Margens */}
-                        <AccordionSection
-                          title="2. Posição & Margens"
-                          isOpen={activeSection === 'floating-position'}
-                          onToggle={() => setActiveSection(activeSection === 'floating-position' ? null : 'floating-position')}
-                        >
+                        {/* 2. POSIÇÃO & MARGENS */}
+                        <AccordionSection title="2. Posição & Margens" isOpen={activeSection === 'float-2'} onToggle={() => setActiveSection(activeSection === 'float-2' ? null : 'float-2')}>
                           <div className="grid grid-cols-2 gap-2.5">
                             <FormField label="Posição na Tela" className="col-span-2">
                               <select value={activeFloatingConfig.position} onChange={e => updateFloatingConfig({ position: e.target.value as PositionValue })} className={selectClass}>
@@ -3477,271 +3094,99 @@ const AppearancePage = () => {
                                 <option value="fixed_top_left">Superior Esquerda</option>
                               </select>
                             </FormField>
-
                             <FormField label="Margem Inferior (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.bottom_spacing)} onChange={e => updateFloatingConfig({ bottom_spacing: e.target.value })} placeholder="Ex: 20" className={inputClass} />
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.bottom_spacing)} onChange={e => updateFloatingConfig({ bottom_spacing: e.target.value })} className={inputClass} />
                             </FormField>
-
                             <FormField label="Margem Superior (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.top_spacing)} onChange={e => updateFloatingConfig({ top_spacing: e.target.value })} placeholder="Ex: 20" className={inputClass} />
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.top_spacing)} onChange={e => updateFloatingConfig({ top_spacing: e.target.value })} className={inputClass} />
                             </FormField>
-
                             <FormField label="Margem Lateral (px)" className="col-span-2">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.left_spacing)} onChange={e => updateFloatingConfig({ left_spacing: e.target.value, right_spacing: e.target.value })} placeholder="Ex: 20" className={inputClass} />
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.left_spacing)} onChange={e => updateFloatingConfig({ left_spacing: e.target.value, right_spacing: e.target.value })} className={inputClass} />
                             </FormField>
                           </div>
                         </AccordionSection>
 
-                        {/* 3. Bordas & Estilo */}
-                        <AccordionSection
-                          title="3. Bordas & Estilo"
-                          isOpen={activeSection === 'floating-borders'}
-                          onToggle={() => setActiveSection(activeSection === 'floating-borders' ? null : 'floating-borders')}
-                        >
+                        {/* 3. BORDAS */}
+                        <AccordionSection title="3. Bordas" isOpen={activeSection === 'float-3'} onToggle={() => setActiveSection(activeSection === 'float-3' ? null : 'float-3')}>
                           <div className="grid grid-cols-2 gap-2.5">
                             <FormField label="Cor da Borda">
                               <ColorInput label="Cor da borda" value={activeFloatingConfig.border_color} onChange={e => updateFloatingConfig({ border_color: e.target.value })} />
                             </FormField>
-
                             <FormField label="Largura Borda (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.border_style)} onChange={e => updateFloatingConfig({ border_style: e.target.value })} placeholder="Ex: 2" className={inputClass} />
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.border_style)} onChange={e => updateFloatingConfig({ border_style: e.target.value })} className={inputClass} />
                             </FormField>
-
                             <FormField label="Raio da Borda (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.border_radius)} onChange={e => updateFloatingConfig({ border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                            </FormField>
-
-                            <FormField label="Ajuste Imagem">
-                              <select value={activeFloatingConfig.object_fit} onChange={e => updateFloatingConfig({ object_fit: e.target.value })} className={selectClass}>
-                                <option value="cover">Cover (Preencher)</option>
-                                <option value="contain">Contain (Ajustar)</option>
-                                <option value="fill">Fill (Esticar)</option>
-                              </select>
-                            </FormField>
-
-                            <FormField label="Z-Index" className="col-span-2">
-                              <input type="number" min="1" step="1" value={toNumberInputValue(activeFloatingConfig.z_index)} onChange={e => updateFloatingConfig({ z_index: e.target.value })} placeholder="Ex: 2147483647" className={inputClass} />
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeFloatingConfig.border_radius)} onChange={e => updateFloatingConfig({ border_radius: e.target.value })} className={inputClass} />
                             </FormField>
                           </div>
                         </AccordionSection>
 
-                        {/* 4. Comportamento & Visibilidade */}
-                        <AccordionSection
-                          title="4. Comportamento & Visibilidade"
-                          isOpen={activeSection === 'floating-behavior'}
-                          onToggle={() => setActiveSection(activeSection === 'floating-behavior' ? null : 'floating-behavior')}
-                        >
+                        {/* 4. ELEMENTOS VISÍVEIS */}
+                        <AccordionSection title="4. Elementos Visíveis" isOpen={activeSection === 'float-4'} onToggle={() => setActiveSection(activeSection === 'float-4' ? null : 'float-4')}>
                           <div className="space-y-4">
-                            <div className="space-y-1.5">
-                              <ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeFloatingConfig.autoplay_videos ?? true} onChange={e => updateFloatingConfig({ autoplay_videos: e.target.checked })} />
-                              <ToggleSwitch label="Exibir botão Play no centro" checked={activeFloatingConfig.show_play_icon} onChange={e => updateFloatingConfig({ show_play_icon: e.target.checked })} />
-                              <ToggleSwitch label="Permitir arrastar widget na tela" checked={activeFloatingConfig.draggable} onChange={e => updateFloatingConfig({ draggable: e.target.checked })} />
-                              <ToggleSwitch label="Exibir botão de fechar (X)" checked={activeFloatingConfig.allow_close} onChange={e => updateFloatingConfig({ allow_close: e.target.checked })} />
-                            </div>
-
-                            {/* Bloco de CTA Lateral */}
                             <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-4">
-                              <ToggleSwitch 
-                                label="Exibir CTA lateral (Pílula)" 
-                                description="Adiciona um botão de texto elegante atrelado ao widget."
-                                checked={activeFloatingConfig.show_cta ?? false} 
-                                onChange={e => updateFloatingConfig({ show_cta: e.target.checked })} 
-                              />
-                              
+                              <ToggleSwitch label="Exibir CTA (Pílula)" checked={activeFloatingConfig.show_cta ?? false} onChange={e => updateFloatingConfig({ show_cta: e.target.checked })} />
                               {activeFloatingConfig.show_cta && (
                                 <div className="space-y-3 pt-2 border-t border-blue-100/50">
                                   <FormField label="Texto do CTA (máx 12 caract.)">
-                                    <input
-                                      type="text"
-                                      maxLength={12}
-                                      value={activeFloatingConfig.cta_text ?? ''}
-                                      onChange={e => updateFloatingConfig({ cta_text: e.target.value })}
-                                      placeholder="Ex: VER VÍDEO"
-                                      className={inputClass}
-                                    />
+                                    <input type="text" maxLength={12} value={activeFloatingConfig.cta_text ?? ''} onChange={e => updateFloatingConfig({ cta_text: e.target.value })} className={inputClass} />
                                   </FormField>
-
                                   <div className="grid grid-cols-2 gap-2.5">
+                                    <FormField label="Tamanho da fonte (px)">
+                                      <input type="number" min="10" max="24" step="1" value={activeFloatingConfig.cta_font_size ?? 14} onChange={e => updateFloatingConfig({ cta_font_size: safeNumber(e.target.value, 14, 10) })} className={inputClass} />
+                                    </FormField>
+                                    <div className="flex items-end pb-1.5">
+                                      <ToggleSwitch label="Título em negrito" checked={activeFloatingConfig.cta_is_bold ?? true} onChange={e => updateFloatingConfig({ cta_is_bold: e.target.checked })} />
+                                    </div>
                                     <FormField label="Cor de Fundo">
                                       <ColorInput label="Cor de Fundo" value={activeFloatingConfig.cta_bg_color || formData.primary_color} onChange={e => updateFloatingConfig({ cta_bg_color: e.target.value })} />
                                     </FormField>
-
                                     <FormField label="Cor do Texto">
                                       <ColorInput label="Cor do Texto" value={activeFloatingConfig.cta_text_color || '#FFFFFF'} onChange={e => updateFloatingConfig({ cta_text_color: e.target.value })} />
                                     </FormField>
-                                    
-                                    <FormField label="Tamanho Fonte (px)">
-                                      <input
-                                        type="number" min="10" max="24" step="1"
-                                        value={activeFloatingConfig.cta_font_size ?? 14}
-                                        onChange={e => updateFloatingConfig({ cta_font_size: safeNumber(e.target.value, 14, 10) })}
-                                        className={inputClass}
-                                      />
-                                    </FormField>
-
-                                    <div className="flex items-end pb-1.5">
-                                      <ToggleSwitch 
-                                        label="Negrito" 
-                                        checked={activeFloatingConfig.cta_is_bold ?? true} 
-                                        onChange={e => updateFloatingConfig({ cta_is_bold: e.target.checked })} 
-                                      />
-                                    </div>
                                   </div>
                                 </div>
                               )}
                             </div>
+                            <div className="space-y-1.5">
+                              <ToggleSwitch label="Reproduzir vídeos" checked={activeFloatingConfig.autoplay_videos ?? true} onChange={e => updateFloatingConfig({ autoplay_videos: e.target.checked })} />
+                              <ToggleSwitch label="Exibir ícone de Play" checked={activeFloatingConfig.show_play_icon} onChange={e => updateFloatingConfig({ show_play_icon: e.target.checked })} />
+                              <ToggleSwitch label="Exibir botão de fechar (X)" checked={activeFloatingConfig.allow_close} onChange={e => updateFloatingConfig({ allow_close: e.target.checked })} />
+                            </div>
                           </div>
                         </AccordionSection>
                       </div>
-
                     </SectionCard>
                   )}
 
-                  {/* ── Carrossel ── */}
+                  {/* CARROSSEL */}
                   {activeTab === 'carousel' && (
                     <SectionCard title="Configurações do Carrossel">
-                      
-                      {/* Seletor Inteligente de Dispositivo */}
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
-                        
                         {formData.useGlobalAppearance ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold" title="Configuração vinculada entre Desktop e Mobile">
-                            <Monitor size={14} />
-                            <Link size={12} className="text-[#0094EB]" />
-                            <Smartphone size={14} />
-                          </div>
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0094EB]" /><Smartphone size={14} /></div>
                         ) : (
                           <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-                            <button
-                              type="button"
-                              onClick={() => setCarouselDevice('desktop')}
-                              className={cn(
-                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
-                                carouselDevice === 'desktop'
-                                  ? 'bg-[#0094EB] text-white'
-                                  : 'text-slate-500 hover:text-slate-800'
-                              )}
-                            >
-                              <Monitor size={13} />
-                              Desktop
-                            </button>
+                            <button type="button" onClick={() => setCarouselDevice('desktop')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', carouselDevice === 'desktop' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Monitor size={13} />Desktop</button>
                             <Link2Off size={12} className="text-slate-300 mx-0.5" />
-                            <button
-                              type="button"
-                              onClick={() => setCarouselDevice('mobile')}
-                              className={cn(
-                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
-                                carouselDevice === 'mobile'
-                                  ? 'bg-[#0094EB] text-white'
-                                  : 'text-slate-500 hover:text-slate-800'
-                              )}
-                            >
-                              <Smartphone size={13} />
-                              Mobile
-                            </button>
+                            <button type="button" onClick={() => setCarouselDevice('mobile')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', carouselDevice === 'mobile' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Smartphone size={13} />Mobile</button>
                           </div>
                         )}
                       </div>
 
                       <div className="space-y-3">
-                        {/* 1. Layout & Dimensões */}
-                        <AccordionSection
-                          title="1. Layout & Dimensões"
-                          isOpen={activeSection === 'carousel-dimensions'}
-                          onToggle={() => setActiveSection(activeSection === 'carousel-dimensions' ? null : 'carousel-dimensions')}
-                        >
+                        {/* 1. LAYOUT & DIMENSÕES */}
+                        <AccordionSection title="1. Layout & Dimensões" isOpen={activeSection === 'car-1'} onToggle={() => setActiveSection(activeSection === 'car-1' ? null : 'car-1')}>
                           <div className="grid grid-cols-2 gap-2.5">
-                            <FormField label="Formato dos Cards">
-                              <select
-                                value={activeCarouselConfig.shape}
-                                onChange={e => updateCarouselConfig({ shape: e.target.value as WidgetShape })}
-                                className={selectClass}
-                              >
+                            <FormField label="Formato">
+                              <select value={activeCarouselConfig.shape} onChange={e => updateCarouselConfig({ shape: e.target.value as WidgetShape })} className={selectClass}>
                                 <option value="circle">Circular</option>
                                 <option value="square">Quadrado</option>
                                 <option value="portrait">Retrato 9:16</option>
                                 <option value="landscape">Paisagem 16:9</option>
                               </select>
                             </FormField>
-
-                            <FormField label="Largura Card (px)">
-                              <input
-                                type="number" min="20" step="1"
-                                value={toNumberInputValue(activeCarouselConfig.width)}
-                                onChange={e => updateCarouselConfig({ width: e.target.value })}
-                                placeholder="Ex: 120"
-                                className={inputClass}
-                              />
-                            </FormField>
-
-                            <FormField label="Itens Visíveis">
-                              <input
-                                type="number" min="1" step="1"
-                                value={activeCarouselConfig.visible_items}
-                                onChange={e => updateCarouselConfig({ visible_items: safeNumber(e.target.value, 1, 1) })}
-                                className={inputClass}
-                              />
-                            </FormField>
-
-                            <FormField label="Espaçamento (px)">
-                              <input
-                                type="number" min="0" step="1"
-                                value={activeCarouselConfig.spacing}
-                                onChange={e => updateCarouselConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
-                                className={inputClass}
-                              />
-                            </FormField>
-
-                            <FormField label="Margem Superior (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_top)} onChange={e => updateCarouselConfig({ margin_top: e.target.value })} placeholder="Ex: 0" className={inputClass} />
-                            </FormField>
-
-                            <FormField label="Margem Inferior (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_bottom)} onChange={e => updateCarouselConfig({ margin_bottom: e.target.value })} placeholder="Ex: 0" className={inputClass} />
-                            </FormField>
-
-                            <FormField label="Margem Esquerda (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_left)} onChange={e => updateCarouselConfig({ margin_left: e.target.value })} placeholder="Ex: 0" className={inputClass} />
-                            </FormField>
-
-                            <FormField label="Margem Direita (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_right)} onChange={e => updateCarouselConfig({ margin_right: e.target.value })} placeholder="Ex: 0" className={inputClass} />
-                            </FormField>
-                          </div>
-                        </AccordionSection>
-
-                        {/* 2. Bordas & Ajustes */}
-                        <AccordionSection
-                          title="2. Bordas & Ajustes"
-                          isOpen={activeSection === 'carousel-borders'}
-                          onToggle={() => setActiveSection(activeSection === 'carousel-borders' ? null : 'carousel-borders')}
-                        >
-                          <div className="grid grid-cols-2 gap-2.5">
-                            <FormField label="Cor da Borda">
-                              <ColorInput label="Cor da borda" value={activeCarouselConfig.border_color || formData.primary_color} onChange={e => updateCarouselConfig({ border_color: e.target.value })} />
-                            </FormField>
-
-                            <FormField label="Largura Borda (px)">
-                              <input
-                                type="number" min="0" step="1"
-                                value={toNumberInputValue(activeCarouselConfig.border_style)}
-                                onChange={e => updateCarouselConfig({ border_style: e.target.value })}
-                                placeholder="Ex: 2"
-                                className={inputClass}
-                              />
-                            </FormField>
-
-                            <FormField label="Raio da Borda (px)">
-                              <input
-                                type="number" min="0" step="1"
-                                value={toNumberInputValue(activeCarouselConfig.border_radius)}
-                                onChange={e => updateCarouselConfig({ border_radius: e.target.value })}
-                                placeholder="Ex: 12"
-                                className={inputClass}
-                              />
-                            </FormField>
-
                             <FormField label="Ajuste Imagem">
                               <select value={activeCarouselConfig.object_fit || 'cover'} onChange={e => updateCarouselConfig({ object_fit: e.target.value })} className={selectClass}>
                                 <option value="cover">Cover (Preencher)</option>
@@ -3749,376 +3194,83 @@ const AppearancePage = () => {
                                 <option value="fill">Fill (Esticar)</option>
                               </select>
                             </FormField>
-                          </div>
-                        </AccordionSection>
-
-                        {/* 3. Elementos Visíveis */}
-                        <AccordionSection
-                          title="3. Elementos Visíveis"
-                          isOpen={activeSection === 'carousel-elements'}
-                          onToggle={() => setActiveSection(activeSection === 'carousel-elements' ? null : 'carousel-elements')}
-                        >
-                          <div className="space-y-1.5">
-                            <ToggleSwitch label="Exibir título da vitrine" checked={activeCarouselConfig.show_title ?? false} onChange={e => updateCarouselConfig({ show_title: e.target.checked })} />
-
-                            {/* NOVOS CAMPOS: Configurações do Título (Só aparecem se show_title for true) */}
-                            {activeCarouselConfig.show_title && (
-                              <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-2.5 mb-3 mt-2">
-                                <FormField label="Texto do título">
-                                  <input
-                                    type="text"
-                                    value={activeCarouselConfig.title_text ?? ''}
-                                    onChange={e => updateCarouselConfig({ title_text: e.target.value })}
-                                    placeholder="Ex: Nossos destaques"
-                                    className={inputClass}
-                                  />
-                                </FormField>
-
-                                <div className="grid grid-cols-2 gap-2.5">
-                                  <FormField label="Tamanho da fonte (px)">
-                                    <input
-                                      type="number" min="8" max="48" step="1"
-                                      value={activeCarouselConfig.title_font_size ?? 14}
-                                      onChange={e => updateCarouselConfig({ title_font_size: safeNumber(e.target.value, 14, 8) })}
-                                      className={inputClass}
-                                    />
-                                  </FormField>
-
-                                  <FormField label="Alinhamento">
-                                    <select
-                                      value={activeCarouselConfig.title_align ?? 'center'}
-                                      onChange={e => updateCarouselConfig({ title_align: e.target.value as 'left' | 'center' | 'right' })}
-                                      className={selectClass}
-                                    >
-                                      <option value="left">Esquerda</option>
-                                      <option value="center">Centro</option>
-                                      <option value="right">Direita</option>
-                                    </select>
-                                  </FormField>
-                                </div>
-
-                                <ToggleSwitch
-                                  label="Título em negrito"
-                                  checked={activeCarouselConfig.title_bold ?? true}
-                                  onChange={e => updateCarouselConfig({ title_bold: e.target.checked })}
-                                />
-                              </div>
-                            )}
-
-                            <ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeCarouselConfig.autoplay_videos ?? true} onChange={e => updateCarouselConfig({ autoplay_videos: e.target.checked })} />
-                            <ToggleSwitch label="Exibir ícone de Play no centro do vídeo" checked={activeCarouselConfig.show_play_icon} onChange={e => updateCarouselConfig({ show_play_icon: e.target.checked })} />
-                            <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeCarouselConfig.show_product} onChange={e => updateCarouselConfig({ show_product: e.target.checked })} />
-                          </div>
-                        </AccordionSection>
-                      </div>
-
-                    </SectionCard>
-                  )}
-
-                  {/* ── Carrossel Dinâmico ── */}
-                  {activeTab === 'dynamic_carousel' && (
-                    <SectionCard title="Configurações do Carrossel Dinâmico">
-                      
-                      {/* Seletor Inteligente de Dispositivo */}
-                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
-                        <span className="text-xs font-bold text-slate-700">Dispositivo</span>
-                        
-                        {formData.useGlobalAppearance ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold" title="Configuração vinculada entre Desktop e Mobile">
-                            <Monitor size={14} />
-                            <Link size={12} className="text-[#0094EB]" />
-                            <Smartphone size={14} />
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-                            <button
-                              type="button"
-                              onClick={() => setDynamicCarouselDevice('desktop')}
-                              className={cn(
-                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
-                                dynamicCarouselDevice === 'desktop'
-                                  ? 'bg-[#0094EB] text-white'
-                                  : 'text-slate-500 hover:text-slate-800'
-                              )}
-                            >
-                              <Monitor size={13} />
-                              Desktop
-                            </button>
-                            <Link2Off size={12} className="text-slate-300 mx-0.5" />
-                            <button
-                              type="button"
-                              onClick={() => setDynamicCarouselDevice('mobile')}
-                              className={cn(
-                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
-                                dynamicCarouselDevice === 'mobile'
-                                  ? 'bg-[#0094EB] text-white'
-                                  : 'text-slate-500 hover:text-slate-800'
-                              )}
-                            >
-                              <Smartphone size={13} />
-                              Mobile
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Aviso obrigatório de vídeos mínimos dinâmico */}
-                      {activeStoriesCount < 3 ? (
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-300 bg-amber-50/70">
-                            <span className="shrink-0 text-sm">⚠️</span>
-                            <p className="text-xs font-bold text-amber-800 leading-none">
-                              Mínimo de <span className="underline">1 vídeo no Story</span> para funcionar.
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-green-200 bg-green-50/70">
-                            <span className="shrink-0 text-sm">💡</span>
-                            <p className="text-xs font-bold text-green-800 leading-none">
-                              Recomendamos pelo menos <span className="underline">6 vídeos</span> para um melhor resultado.
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-green-200 bg-green-50/70 mb-4">
-                          <span className="shrink-0 text-sm">💡</span>
-                          <p className="text-xs font-bold text-green-800 leading-none">
-                            Recomendamos pelo menos <span className="underline">6 vídeos</span> para um melhor resultado.
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="space-y-3">
-                        {/* 1. Layout & Dimensões */}
-                        <AccordionSection
-                          title="1. Layout & Dimensões"
-                          isOpen={activeSection === 'dyn-dimensions'}
-                          onToggle={() => setActiveSection(activeSection === 'dyn-dimensions' ? null : 'dyn-dimensions')}
-                        >
-                          <div className="grid grid-cols-2 gap-2.5">
-                            <FormField label="Formato dos Cards">
-                              <select
-                                value={activeDynamicCarouselConfig.shape}
-                                onChange={e => updateDynamicCarouselConfig({ shape: e.target.value as WidgetShape })}
-                                className={selectClass}
-                              >
-                                <option value="circle">Circular</option>
-                                <option value="square">Quadrado</option>
-                                <option value="portrait">Retrato 9:16</option>
-                                <option value="landscape">Paisagem 16:9</option>
-                              </select>
+                            <FormField label="Largura (px)">
+                              <input type="number" min="20" step="1" value={toNumberInputValue(activeCarouselConfig.width)} onChange={e => updateCarouselConfig({ width: e.target.value })} className={inputClass} />
                             </FormField>
-
-                            <FormField label="Ajuste Imagem">
-                              <select value={activeDynamicCarouselConfig.object_fit || 'cover'} onChange={e => updateDynamicCarouselConfig({ object_fit: e.target.value })} className={selectClass}>
-                                <option value="cover">Cover (Preencher)</option>
-                                <option value="contain">Contain (Ajustar)</option>
-                                <option value="fill">Fill (Esticar)</option>
-                              </select>
+                            <FormField label="Itens Visíveis">
+                              <input type="number" min="1" step="1" value={activeCarouselConfig.visible_items} onChange={e => updateCarouselConfig({ visible_items: safeNumber(e.target.value, 1, 1) })} className={inputClass} />
                             </FormField>
-
-                            <FormField label="Largura Card (px)">
-                              <input
-                                type="number" min="20" step="1"
-                                value={toNumberInputValue(activeDynamicCarouselConfig.width)}
-                                onChange={e => updateDynamicCarouselConfig({ width: e.target.value })}
-                                placeholder="Ex: 120"
-                                className={inputClass}
-                              />
+                            <FormField label="Espaçamento (px)" className="col-span-2">
+                              <input type="number" min="0" step="1" value={activeCarouselConfig.spacing} onChange={e => updateCarouselConfig({ spacing: safeNumber(e.target.value, 0, 0) })} className={inputClass} />
                             </FormField>
-
-                            <FormField label="Espaçamento (px)">
-                              <input
-                                type="number" min="0" step="1"
-                                value={activeDynamicCarouselConfig.spacing}
-                                onChange={e => updateDynamicCarouselConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
-                                className={inputClass}
-                              />
-                            </FormField>
-
-                            <FormField label="Margem Esquerda (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.margin_left)} onChange={e => updateDynamicCarouselConfig({ margin_left: e.target.value })} placeholder="Ex: 0" className={inputClass} />
-                            </FormField>
-
-                            <FormField label="Margem Direita (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.margin_right)} onChange={e => updateDynamicCarouselConfig({ margin_right: e.target.value })} placeholder="Ex: 0" className={inputClass} />
-                            </FormField>
-
                             <FormField label="Margem Superior (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.margin_top)} onChange={e => updateDynamicCarouselConfig({ margin_top: e.target.value })} placeholder="Ex: 0" className={inputClass} />
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_top)} onChange={e => updateCarouselConfig({ margin_top: e.target.value })} className={inputClass} />
                             </FormField>
-
                             <FormField label="Margem Inferior (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.margin_bottom)} onChange={e => updateDynamicCarouselConfig({ margin_bottom: e.target.value })} placeholder="Ex: 0" className={inputClass} />
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_bottom)} onChange={e => updateCarouselConfig({ margin_bottom: e.target.value })} className={inputClass} />
                             </FormField>
                           </div>
                         </AccordionSection>
 
-                        {/* 2. Bordas & Ajustes */}
-                        <AccordionSection
-                          title="2. Bordas & Ajustes"
-                          isOpen={activeSection === 'dyn-borders'}
-                          onToggle={() => setActiveSection(activeSection === 'dyn-borders' ? null : 'dyn-borders')}
-                        >
+                        {/* 2. BORDAS */}
+                        <AccordionSection title="2. Bordas" isOpen={activeSection === 'car-2'} onToggle={() => setActiveSection(activeSection === 'car-2' ? null : 'car-2')}>
                           <div className="grid grid-cols-2 gap-2.5">
                             <FormField label="Cor da Borda">
-                              <ColorInput label="Cor da borda" value={activeDynamicCarouselConfig.border_color || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ border_color: e.target.value })} />
+                              <ColorInput label="Cor da borda" value={activeCarouselConfig.border_color || formData.primary_color} onChange={e => updateCarouselConfig({ border_color: e.target.value })} />
                             </FormField>
-
                             <FormField label="Largura Borda (px)">
-                              <input
-                                type="number" min="0" step="1"
-                                value={toNumberInputValue(activeDynamicCarouselConfig.border_style)}
-                                onChange={e => updateDynamicCarouselConfig({ border_style: e.target.value })}
-                                placeholder="Ex: 2"
-                                className={inputClass}
-                              />
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.border_style)} onChange={e => updateCarouselConfig({ border_style: e.target.value })} className={inputClass} />
                             </FormField>
-
                             <FormField label="Raio da Borda (px)">
-                              <input
-                                type="number" min="0" step="1"
-                                value={toNumberInputValue(activeDynamicCarouselConfig.border_radius)}
-                                onChange={e => updateDynamicCarouselConfig({ border_radius: e.target.value })}
-                                placeholder="Ex: 12"
-                                className={inputClass}
-                              />
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.border_radius)} onChange={e => updateCarouselConfig({ border_radius: e.target.value })} className={inputClass} />
                             </FormField>
                           </div>
                         </AccordionSection>
 
-                        {/* 3. Elementos Visíveis */}
-                        <AccordionSection
-                          title="3. Elementos Visíveis"
-                          isOpen={activeSection === 'dyn-elements'}
-                          onToggle={() => setActiveSection(activeSection === 'dyn-elements' ? null : 'dyn-elements')}
-                        >
-                          <div className="space-y-1.5">
-                            <ToggleSwitch label="Exibir título da vitrine" checked={activeDynamicCarouselConfig.show_title ?? false} onChange={e => updateDynamicCarouselConfig({ show_title: e.target.checked })} />
-
-                            {activeDynamicCarouselConfig.show_title && (
-                              <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-2.5">
-                                <FormField label="Texto do título">
-                                  <input
-                                    type="text"
-                                    value={activeDynamicCarouselConfig.title_text ?? ''}
-                                    onChange={e => updateDynamicCarouselConfig({ title_text: e.target.value })}
-                                    placeholder="Ex: Nossos destaques"
-                                    className={inputClass}
-                                  />
-                                </FormField>
-
-                                <div className="grid grid-cols-2 gap-2.5">
-                                  <FormField label="Tamanho da fonte (px)">
-                                    <input
-                                      type="number" min="8" max="48" step="1"
-                                      value={activeDynamicCarouselConfig.title_font_size ?? 14}
-                                      onChange={e => updateDynamicCarouselConfig({ title_font_size: safeNumber(e.target.value, 14, 8) })}
-                                      className={inputClass}
-                                    />
+                        {/* 3. ELEMENTOS VISÍVEIS */}
+                        <AccordionSection title="3. Elementos Visíveis" isOpen={activeSection === 'car-3'} onToggle={() => setActiveSection(activeSection === 'car-3' ? null : 'car-3')}>
+                          <div className="space-y-4">
+                            <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-2.5">
+                              <ToggleSwitch label="Exibir título da vitrine" checked={activeCarouselConfig.show_title ?? false} onChange={e => updateCarouselConfig({ show_title: e.target.checked })} />
+                              {activeCarouselConfig.show_title && (
+                                <>
+                                  <FormField label="Texto do título">
+                                    <input type="text" value={activeCarouselConfig.title_text ?? ''} onChange={e => updateCarouselConfig({ title_text: e.target.value })} className={inputClass} />
                                   </FormField>
-
-                                  <FormField label="Alinhamento">
-                                    <select
-                                      value={activeDynamicCarouselConfig.title_align ?? 'center'}
-                                      onChange={e => updateDynamicCarouselConfig({ title_align: e.target.value as 'left' | 'center' | 'right' })}
-                                      className={selectClass}
-                                    >
-                                      <option value="left">Esquerda</option>
-                                      <option value="center">Centro</option>
-                                      <option value="right">Direita</option>
-                                    </select>
-                                  </FormField>
-                                </div>
-
-                                <ToggleSwitch
-                                  label="Título em negrito"
-                                  checked={activeDynamicCarouselConfig.title_bold ?? true}
-                                  onChange={e => updateDynamicCarouselConfig({ title_bold: e.target.checked })}
-                                />
-                              </div>
-                            )}
-
-                            <ToggleSwitch label="Exibir ícone de Play no centro do vídeo" checked={activeDynamicCarouselConfig.show_play_icon} onChange={e => updateDynamicCarouselConfig({ show_play_icon: e.target.checked })} />
-                            <ToggleSwitch label="Reproduzir vídeos inativos" checked={activeDynamicCarouselConfig.autoplay_videos ?? true} onChange={e => updateDynamicCarouselConfig({ autoplay_videos: e.target.checked })} />
-                          </div>
-                        </AccordionSection>
-
-                        {/* 4. Destaque de Vídeo */}
-                        <AccordionSection
-                          title="4. Destaque de Vídeo"
-                          isOpen={activeSection === 'dyn-highlight'}
-                          onToggle={() => setActiveSection(activeSection === 'dyn-highlight' ? null : 'dyn-highlight')}
-                        >
-                          <div className="space-y-1.5">
-                            <div>
-                              <label className="block text-xs font-semibold text-slate-600 mb-1">Intervalo de avanço automático (seg)</label>
-                              <input type="number" min="1" max="20" step="0.5"
-                                value={activeDynamicCarouselConfig.autoplay_delay ? activeDynamicCarouselConfig.autoplay_delay / 1000 : 5}
-                                onChange={e => updateDynamicCarouselConfig({ autoplay_delay: Number(e.target.value) * 1000 })}
-                                placeholder="Ex: 5" className={inputClass} />
+                                  <div className="grid grid-cols-2 gap-2.5">
+                                    <FormField label="Tamanho da fonte">
+                                      <input type="number" min="8" max="48" step="1" value={activeCarouselConfig.title_font_size ?? 14} onChange={e => updateCarouselConfig({ title_font_size: safeNumber(e.target.value, 14, 8) })} className={inputClass} />
+                                    </FormField>
+                                    <FormField label="Alinhamento">
+                                      <select value={activeCarouselConfig.title_align ?? 'center'} onChange={e => updateCarouselConfig({ title_align: e.target.value as 'left' | 'center' | 'right' })} className={selectClass}>
+                                        <option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option>
+                                      </select>
+                                    </FormField>
+                                  </div>
+                                  <ToggleSwitch label="Título em negrito" checked={activeCarouselConfig.title_bold ?? true} onChange={e => updateCarouselConfig({ title_bold: e.target.checked })} />
+                                </>
+                              )}
                             </div>
-                            <ToggleSwitch
-                              label="Aplicar sombra no vídeo em destaque"
-                              checked={activeDynamicCarouselConfig.highlight_shadow ?? false}
-                              onChange={e => updateDynamicCarouselConfig({ highlight_shadow: e.target.checked })}
-                            />
-                            <ToggleSwitch
-                              label="Ampliar vídeo em destaque"
-                              checked={activeDynamicCarouselConfig.highlight_enlarge_active ?? false}
-                              onChange={e => updateDynamicCarouselConfig({ highlight_enlarge_active: e.target.checked })}
-                            />
-                            <ToggleSwitch
-                              label="Dessaturar vídeos inativos (50%)"
-                              description="Reduz pela metade a saturação das cores dos vídeos que não estão em destaque."
-                              checked={activeDynamicCarouselConfig.highlight_desaturate_inactive ?? false}
-                              onChange={e => updateDynamicCarouselConfig({ highlight_desaturate_inactive: e.target.checked })}
-                            />
+                            <div className="space-y-1.5">
+                              <ToggleSwitch label="Reproduzir vídeos" checked={activeCarouselConfig.autoplay_videos ?? true} onChange={e => updateCarouselConfig({ autoplay_videos: e.target.checked })} />
+                              <ToggleSwitch label="Exibir ícone de Play" checked={activeCarouselConfig.show_play_icon} onChange={e => updateCarouselConfig({ show_play_icon: e.target.checked })} />
+                            </div>
                           </div>
                         </AccordionSection>
 
-                        {/* 5. Estilo do Card de Produto */}
-                        <AccordionSection
-                          title="5. Estilo do Card de Produto"
-                          isOpen={activeSection === 'dyn-product'}
-                          onToggle={() => setActiveSection(activeSection === 'dyn-product' ? null : 'dyn-product')}
-                        >
-                          <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeDynamicCarouselConfig.show_product} onChange={e => updateDynamicCarouselConfig({ show_product: e.target.checked })} />
-                          
-                          {activeDynamicCarouselConfig.show_product && (
-                            <div className="mt-3.5 space-y-3 border-t border-slate-100 pt-3.5">
-                              <div className="grid grid-cols-2 gap-2.5">
-                                <FormField label="Cor do fundo">
-                                  <ColorInput label="Cor do fundo do card" value={activeDynamicCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateDynamicCarouselConfig({ product_card_bg: e.target.value })} />
-                                </FormField>
-
-                                <FormField label="Cor da Borda">
-                                  <ColorInput label="Cor da borda" value={activeDynamicCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateDynamicCarouselConfig({ product_card_border_color: e.target.value })} />
-                                </FormField>
-
-                                <FormField label="Largura Borda (px)">
-                                  <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_border_width)} onChange={e => updateDynamicCarouselConfig({ product_card_border_width: e.target.value })} placeholder="Ex: 1" className={inputClass} />
-                                </FormField>
-
-                                <FormField label="Raio Borda (px)">
-                                  <input type="number" min="0" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_border_radius)} onChange={e => updateDynamicCarouselConfig({ product_card_border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                                </FormField>
-
-                                <FormField label="Tamanho Título">
-                                  <input type="number" min="8" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_name_size)} onChange={e => updateDynamicCarouselConfig({ product_card_name_size: e.target.value })} placeholder="Ex: 11" className={inputClass} />
-                                </FormField>
-
-                                <FormField label="Cor Título">
-                                  <ColorInput label="Cor do título" value={activeDynamicCarouselConfig.product_card_name_color || '#0F172A'} onChange={e => updateDynamicCarouselConfig({ product_card_name_color: e.target.value })} />
-                                </FormField>
-
-                                <FormField label="Tamanho Preço">
-                                  <input type="number" min="8" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_price_size)} onChange={e => updateDynamicCarouselConfig({ product_card_price_size: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                                </FormField>
-
-                                <FormField label="Cor Preço">
-                                  <ColorInput label="Cor do preço" value={activeDynamicCarouselConfig.product_card_price_color || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ product_card_price_color: e.target.value })} />
-                                </FormField>
-                              </div>
+                        {/* 4. CARD DE PRODUTO */}
+                        <AccordionSection title="4. Card de Produto" isOpen={activeSection === 'car-4'} onToggle={() => setActiveSection(activeSection === 'car-4' ? null : 'car-4')}>
+                          <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeCarouselConfig.show_product} onChange={e => updateCarouselConfig({ show_product: e.target.checked })} />
+                          {activeCarouselConfig.show_product && (
+                            <div className="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-slate-100 pt-3.5">
+                              <FormField label="Cor do fundo"><ColorInput label="Cor" value={(activeCarouselConfig as any).product_card_bg || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_bg: e.target.value } as any)} /></FormField>
+                              <FormField label="Cor da Borda"><ColorInput label="Borda" value={(activeCarouselConfig as any).product_card_border_color || '#E2E8F0'} onChange={e => updateCarouselConfig({ product_card_border_color: e.target.value } as any)} /></FormField>
+                              <FormField label="Largura Borda (px)"><input type="number" min="0" value={toNumberInputValue((activeCarouselConfig as any).product_card_border_width)} onChange={e => updateCarouselConfig({ product_card_border_width: e.target.value } as any)} className={inputClass} /></FormField>
+                              <FormField label="Raio Borda (px)"><input type="number" min="0" value={toNumberInputValue((activeCarouselConfig as any).product_card_border_radius)} onChange={e => updateCarouselConfig({ product_card_border_radius: e.target.value } as any)} className={inputClass} /></FormField>
+                              <FormField label="Tamanho Título"><input type="number" min="8" value={toNumberInputValue((activeCarouselConfig as any).product_card_name_size)} onChange={e => updateCarouselConfig({ product_card_name_size: e.target.value } as any)} className={inputClass} /></FormField>
+                              <FormField label="Cor Título"><ColorInput label="Cor" value={(activeCarouselConfig as any).product_card_name_color || '#0F172A'} onChange={e => updateCarouselConfig({ product_card_name_color: e.target.value } as any)} /></FormField>
+                              <FormField label="Tamanho Preço"><input type="number" min="8" value={toNumberInputValue((activeCarouselConfig as any).product_card_price_size)} onChange={e => updateCarouselConfig({ product_card_price_size: e.target.value } as any)} className={inputClass} /></FormField>
+                              <FormField label="Cor Preço"><ColorInput label="Cor" value={(activeCarouselConfig as any).product_card_price_color || formData.primary_color} onChange={e => updateCarouselConfig({ product_card_price_color: e.target.value } as any)} /></FormField>
                             </div>
                           )}
                         </AccordionSection>
@@ -4126,287 +3278,247 @@ const AppearancePage = () => {
                     </SectionCard>
                   )}
 
-                  {/* ── Grade ── */}
-                  {activeTab === 'grid' && (
-                    <SectionCard title="Configurações da Grade">
-                      
-                      {/* Seletor Inteligente de Dispositivo */}
+                  {/* CARROSSEL DINÂMICO */}
+                  {activeTab === 'dynamic_carousel' && (
+                    <SectionCard title="Configurações do Carrossel Dinâmico">
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
-                        
                         {formData.useGlobalAppearance ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold" title="Configuração vinculada entre Desktop e Mobile">
-                            <Monitor size={14} />
-                            <Link size={12} className="text-[#0094EB]" />
-                            <Smartphone size={14} />
-                          </div>
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0094EB]" /><Smartphone size={14} /></div>
                         ) : (
                           <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-                            <button
-                              type="button"
-                              onClick={() => setGridDevice('desktop')}
-                              className={cn(
-                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
-                                gridDevice === 'desktop'
-                                  ? 'bg-[#0094EB] text-white'
-                                  : 'text-slate-500 hover:text-slate-800'
-                              )}
-                            >
-                              <Monitor size={13} />
-                              Desktop
-                            </button>
+                            <button type="button" onClick={() => setDynamicCarouselDevice('desktop')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', dynamicCarouselDevice === 'desktop' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Monitor size={13} />Desktop</button>
                             <Link2Off size={12} className="text-slate-300 mx-0.5" />
-                            <button
-                              type="button"
-                              onClick={() => setGridDevice('mobile')}
-                              className={cn(
-                                'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all',
-                                gridDevice === 'mobile'
-                                  ? 'bg-[#0094EB] text-white'
-                                  : 'text-slate-500 hover:text-slate-800'
-                              )}
-                            >
-                              <Smartphone size={13} />
-                              Mobile
-                            </button>
+                            <button type="button" onClick={() => setDynamicCarouselDevice('mobile')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', dynamicCarouselDevice === 'mobile' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Smartphone size={13} />Mobile</button>
                           </div>
                         )}
                       </div>
 
                       <div className="space-y-3">
-                        {/* 1. Layout & Dimensões */}
-                        <AccordionSection
-                          title="1. Layout & Dimensões"
-                          isOpen={activeSection === 'grid-dimensions'}
-                          onToggle={() => setActiveSection(activeSection === 'grid-dimensions' ? null : 'grid-dimensions')}
-                        >
+                        {/* 1. LAYOUT & DIMENSÕES */}
+                        <AccordionSection title="1. Layout & Dimensões" isOpen={activeSection === 'dyn-1'} onToggle={() => setActiveSection(activeSection === 'dyn-1' ? null : 'dyn-1')}>
                           <div className="grid grid-cols-2 gap-2.5">
-                            <FormField label="Formato dos Cards">
-                              <select
-                                value={activeGridConfig.shape}
-                                onChange={e => updateGridConfig({ shape: e.target.value as WidgetShape })}
-                                className={selectClass}
-                              >
-                                <option value="circle">Circular</option>
-                                <option value="square">Quadrado</option>
-                                <option value="portrait">Retrato 9:16</option>
-                                <option value="landscape">Paisagem 16:9</option>
-                              </select>
+                            <FormField label="Formato">
+                              <select value={activeDynamicCarouselConfig.shape} onChange={e => updateDynamicCarouselConfig({ shape: e.target.value as WidgetShape })} className={selectClass}><option value="circle">Circular</option><option value="square">Quadrado</option><option value="portrait">Retrato 9:16</option><option value="landscape">Paisagem 16:9</option></select>
                             </FormField>
-
-                            <FormField label="Largura Card (px)">
-                              <input
-                                type="number" min="20" step="1"
-                                value={toNumberInputValue(activeGridConfig.width)}
-                                onChange={e => updateGridConfig({ width: e.target.value })}
-                                placeholder="Ex: 80"
-                                className={inputClass}
-                              />
-                            </FormField>
-
-                            <FormField label="Colunas por Linha">
-                              <input
-                                type="number" min="1" max="10" step="1"
-                                value={activeGridConfig.visible_items}
-                                onChange={e => updateGridConfig({ visible_items: limitNumber(e.target.value, 1, 1, 10) })}
-                                className={inputClass}
-                              />
-                            </FormField>
-
-                            <FormField label="Espaçamento (px)">
-                              <input
-                                type="number" min="0" step="1"
-                                value={activeGridConfig.spacing}
-                                onChange={e => updateGridConfig({ spacing: safeNumber(e.target.value, 0, 0) })}
-                                className={inputClass}
-                              />
-                            </FormField>
-                          </div>
-                        </AccordionSection>
-
-                        {/* 2. Bordas & Ajustes */}
-                        <AccordionSection
-                          title="2. Bordas & Ajustes"
-                          isOpen={activeSection === 'grid-borders'}
-                          onToggle={() => setActiveSection(activeSection === 'grid-borders' ? null : 'grid-borders')}
-                        >
-                          <div className="grid grid-cols-2 gap-2.5">
-                            <FormField label="Cor da Borda">
-                              <ColorInput label="Cor da borda" value={activeGridConfig.border_color || formData.primary_color} onChange={e => updateGridConfig({ border_color: e.target.value })} />
-                            </FormField>
-
-                            <FormField label="Largura Borda (px)">
-                              <input
-                                type="number" min="0" step="1"
-                                value={toNumberInputValue(activeGridConfig.border_style)}
-                                onChange={e => updateGridConfig({ border_style: e.target.value })}
-                                placeholder="Ex: 2"
-                                className={inputClass}
-                              />
-                            </FormField>
-
-                            <FormField label="Raio da Borda (px)">
-                              <input
-                                type="number" min="0" step="1"
-                                value={toNumberInputValue(activeGridConfig.border_radius)}
-                                onChange={e => updateGridConfig({ border_radius: e.target.value })}
-                                placeholder="Ex: 12"
-                                className={inputClass}
-                              />
-                            </FormField>
-
                             <FormField label="Ajuste Imagem">
-                              <select value={activeGridConfig.object_fit || 'cover'} onChange={e => updateGridConfig({ object_fit: e.target.value })} className={selectClass}>
-                                <option value="cover">Cover (Preencher)</option>
-                                <option value="contain">Contain (Ajustar)</option>
-                                <option value="fill">Fill (Esticar)</option>
-                              </select>
+                              <select value={activeDynamicCarouselConfig.object_fit || 'cover'} onChange={e => updateDynamicCarouselConfig({ object_fit: e.target.value })} className={selectClass}><option value="cover">Cover</option><option value="contain">Contain</option><option value="fill">Fill</option></select>
                             </FormField>
+                            <FormField label="Largura (px)">
+                              <input type="number" min="20" step="1" value={toNumberInputValue(activeDynamicCarouselConfig.width)} onChange={e => updateDynamicCarouselConfig({ width: e.target.value })} className={inputClass} />
+                            </FormField>
+                            <FormField label="Espaçamento (px)">
+                              <input type="number" min="0" step="1" value={activeDynamicCarouselConfig.spacing} onChange={e => updateDynamicCarouselConfig({ spacing: safeNumber(e.target.value, 0, 0) })} className={inputClass} />
+                            </FormField>
+                            <FormField label="Margem Esquerda (px)"><input type="number" min="0" value={toNumberInputValue(activeDynamicCarouselConfig.margin_left)} onChange={e => updateDynamicCarouselConfig({ margin_left: e.target.value })} className={inputClass} /></FormField>
+                            <FormField label="Margem Direita (px)"><input type="number" min="0" value={toNumberInputValue(activeDynamicCarouselConfig.margin_right)} onChange={e => updateDynamicCarouselConfig({ margin_right: e.target.value })} className={inputClass} /></FormField>
+                            <FormField label="Margem Superior (px)"><input type="number" min="0" value={toNumberInputValue(activeDynamicCarouselConfig.margin_top)} onChange={e => updateDynamicCarouselConfig({ margin_top: e.target.value })} className={inputClass} /></FormField>
+                            <FormField label="Margem Inferior (px)"><input type="number" min="0" value={toNumberInputValue(activeDynamicCarouselConfig.margin_bottom)} onChange={e => updateDynamicCarouselConfig({ margin_bottom: e.target.value })} className={inputClass} /></FormField>
                           </div>
                         </AccordionSection>
 
-                        {/* 3. Elementos Visíveis */}
-                        <AccordionSection
-                          title="3. Elementos Visíveis"
-                          isOpen={activeSection === 'grid-elements'}
-                          onToggle={() => setActiveSection(activeSection === 'grid-elements' ? null : 'grid-elements')}
-                        >
-                          <div className="space-y-1.5">
-                            <ToggleSwitch label="Exibir título da grade" checked={activeGridConfig.show_title ?? false} onChange={e => updateGridConfig({ show_title: e.target.checked })} />
-                            <ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeGridConfig.autoplay_videos ?? true} onChange={e => updateGridConfig({ autoplay_videos: e.target.checked })} />
-                            <ToggleSwitch label="Reprodução sequencial (1 vídeo por vez, 5s cada)" checked={activeGridConfig.sequential_playback ?? false} onChange={e => updateGridConfig({ sequential_playback: e.target.checked })} />
+                        {/* 2. BORDAS */}
+                        <AccordionSection title="2. Bordas" isOpen={activeSection === 'dyn-2'} onToggle={() => setActiveSection(activeSection === 'dyn-2' ? null : 'dyn-2')}>
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <FormField label="Cor da Borda"><ColorInput label="Cor" value={activeDynamicCarouselConfig.border_color || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ border_color: e.target.value })} /></FormField>
+                            <FormField label="Largura Borda (px)"><input type="number" min="0" value={toNumberInputValue(activeDynamicCarouselConfig.border_style)} onChange={e => updateDynamicCarouselConfig({ border_style: e.target.value })} className={inputClass} /></FormField>
+                            <FormField label="Raio da Borda (px)"><input type="number" min="0" value={toNumberInputValue(activeDynamicCarouselConfig.border_radius)} onChange={e => updateDynamicCarouselConfig({ border_radius: e.target.value })} className={inputClass} /></FormField>
                           </div>
+                        </AccordionSection>
+
+                        {/* 3. ELEMENTOS VISÍVEIS */}
+                        <AccordionSection title="3. Elementos Visíveis" isOpen={activeSection === 'dyn-3'} onToggle={() => setActiveSection(activeSection === 'dyn-3' ? null : 'dyn-3')}>
+                          <div className="space-y-4">
+                            <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-2.5">
+                              <ToggleSwitch label="Exibir título da vitrine" checked={activeDynamicCarouselConfig.show_title ?? false} onChange={e => updateDynamicCarouselConfig({ show_title: e.target.checked })} />
+                              {activeDynamicCarouselConfig.show_title && (
+                                <>
+                                  <FormField label="Texto do título"><input type="text" value={activeDynamicCarouselConfig.title_text ?? ''} onChange={e => updateDynamicCarouselConfig({ title_text: e.target.value })} className={inputClass} /></FormField>
+                                  <div className="grid grid-cols-2 gap-2.5">
+                                    <FormField label="Tamanho da fonte"><input type="number" min="8" value={activeDynamicCarouselConfig.title_font_size ?? 14} onChange={e => updateDynamicCarouselConfig({ title_font_size: safeNumber(e.target.value, 14, 8) })} className={inputClass} /></FormField>
+                                    <FormField label="Alinhamento"><select value={activeDynamicCarouselConfig.title_align ?? 'center'} onChange={e => updateDynamicCarouselConfig({ title_align: e.target.value as 'left' | 'center' | 'right' })} className={selectClass}><option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option></select></FormField>
+                                  </div>
+                                  <ToggleSwitch label="Título em negrito" checked={activeDynamicCarouselConfig.title_bold ?? true} onChange={e => updateDynamicCarouselConfig({ title_bold: e.target.checked })} />
+                                </>
+                              )}
+                            </div>
+                            <div className="space-y-1.5">
+                              <ToggleSwitch label="Reproduzir vídeos inativos" checked={activeDynamicCarouselConfig.autoplay_videos ?? true} onChange={e => updateDynamicCarouselConfig({ autoplay_videos: e.target.checked })} />
+                              <ToggleSwitch label="Exibir ícone de Play" checked={activeDynamicCarouselConfig.show_play_icon} onChange={e => updateDynamicCarouselConfig({ show_play_icon: e.target.checked })} />
+                            </div>
+                          </div>
+                        </AccordionSection>
+
+                        {/* 4. DESTAQUE DE VÍDEO */}
+                        <AccordionSection title="4. Destaque de Vídeo" isOpen={activeSection === 'dyn-4'} onToggle={() => setActiveSection(activeSection === 'dyn-4' ? null : 'dyn-4')}>
+                          <div className="space-y-3">
+                            <FormField label="Intervalo automático (seg)">
+                              <input type="number" min="1" step="0.5" value={activeDynamicCarouselConfig.autoplay_delay ? activeDynamicCarouselConfig.autoplay_delay / 1000 : 5} onChange={e => updateDynamicCarouselConfig({ autoplay_delay: Number(e.target.value) * 1000 })} className={inputClass} />
+                            </FormField>
+                            <ToggleSwitch label="Aplicar sombra no vídeo" checked={activeDynamicCarouselConfig.highlight_shadow ?? false} onChange={e => updateDynamicCarouselConfig({ highlight_shadow: e.target.checked })} />
+                            <ToggleSwitch label="Ampliar vídeo em destaque" checked={activeDynamicCarouselConfig.highlight_enlarge_active ?? false} onChange={e => updateDynamicCarouselConfig({ highlight_enlarge_active: e.target.checked })} />
+                            <ToggleSwitch label="Dessaturar vídeos inativos (50%)" checked={activeDynamicCarouselConfig.highlight_desaturate_inactive ?? false} onChange={e => updateDynamicCarouselConfig({ highlight_desaturate_inactive: e.target.checked })} />
+                          </div>
+                        </AccordionSection>
+
+                        {/* 5. CARD DE PRODUTO */}
+                        <AccordionSection title="5. Card de Produto" isOpen={activeSection === 'dyn-5'} onToggle={() => setActiveSection(activeSection === 'dyn-5' ? null : 'dyn-5')}>
+                          <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeDynamicCarouselConfig.show_product} onChange={e => updateDynamicCarouselConfig({ show_product: e.target.checked })} />
+                          {activeDynamicCarouselConfig.show_product && (
+                            <div className="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-slate-100 pt-3.5">
+                              <FormField label="Cor do fundo"><ColorInput label="Cor" value={activeDynamicCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateDynamicCarouselConfig({ product_card_bg: e.target.value })} /></FormField>
+                              <FormField label="Cor da Borda"><ColorInput label="Borda" value={activeDynamicCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateDynamicCarouselConfig({ product_card_border_color: e.target.value })} /></FormField>
+                              <FormField label="Largura Borda (px)"><input type="number" min="0" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_border_width)} onChange={e => updateDynamicCarouselConfig({ product_card_border_width: e.target.value })} className={inputClass} /></FormField>
+                              <FormField label="Raio Borda (px)"><input type="number" min="0" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_border_radius)} onChange={e => updateDynamicCarouselConfig({ product_card_border_radius: e.target.value })} className={inputClass} /></FormField>
+                              <FormField label="Tamanho Título"><input type="number" min="8" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_name_size)} onChange={e => updateDynamicCarouselConfig({ product_card_name_size: e.target.value })} className={inputClass} /></FormField>
+                              <FormField label="Cor Título"><ColorInput label="Cor" value={activeDynamicCarouselConfig.product_card_name_color || '#0F172A'} onChange={e => updateDynamicCarouselConfig({ product_card_name_color: e.target.value })} /></FormField>
+                              <FormField label="Tamanho Preço"><input type="number" min="8" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_price_size)} onChange={e => updateDynamicCarouselConfig({ product_card_price_size: e.target.value })} className={inputClass} /></FormField>
+                              <FormField label="Cor Preço"><ColorInput label="Cor" value={activeDynamicCarouselConfig.product_card_price_color || formData.primary_color} onChange={e => updateDynamicCarouselConfig({ product_card_price_color: e.target.value })} /></FormField>
+                            </div>
+                          )}
                         </AccordionSection>
                       </div>
-
                     </SectionCard>
                   )}
 
-                  {/* ── Modal (Player) ── */}
-                  {activeTab === 'modal' && (
-                    <SectionCard title="Configurações do Player">
-                      
-                      {/* Seletor Inteligente de Dispositivo */}
+                  {/* GRADE */}
+                  {activeTab === 'grid' && (
+                    <SectionCard title="Configurações da Grade">
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
-                        
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold" title="Configuração vinculada entre Desktop e Mobile">
-                          <Monitor size={14} />
-                          <Link size={12} className="text-[#0094EB]" />
-                          <Smartphone size={14} />
-                        </div>
+                        {formData.useGlobalAppearance ? (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0094EB]" /><Smartphone size={14} /></div>
+                        ) : (
+                          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+                            <button type="button" onClick={() => setGridDevice('desktop')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', gridDevice === 'desktop' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Monitor size={13} />Desktop</button>
+                            <Link2Off size={12} className="text-slate-300 mx-0.5" />
+                            <button type="button" onClick={() => setGridDevice('mobile')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', gridDevice === 'mobile' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Smartphone size={13} />Mobile</button>
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-3">
-                        {/* 1. Moldura & Borda */}
-                        <AccordionSection
-                          title="1. Moldura & Borda"
-                          isOpen={activeSection === 'modal-borders'}
-                          onToggle={() => setActiveSection(activeSection === 'modal-borders' ? null : 'modal-borders')}
-                        >
+                        {/* 1. LAYOUT & DIMENSÕES */}
+                        <AccordionSection title="1. Layout & Dimensões" isOpen={activeSection === 'grid-1'} onToggle={() => setActiveSection(activeSection === 'grid-1' ? null : 'grid-1')}>
                           <div className="grid grid-cols-2 gap-2.5">
-                            <FormField label="Cor da Borda" className="col-span-2">
-                              <ColorInput label="Cor da borda" value={formData.modal_config.border_color || formData.primary_color} onChange={e => updateModalConfig({ border_color: e.target.value })} />
+                            <FormField label="Formato">
+                              <select value={activeGridConfig.shape} onChange={e => updateGridConfig({ shape: e.target.value as WidgetShape })} className={selectClass}><option value="circle">Circular</option><option value="square">Quadrado</option><option value="portrait">Retrato 9:16</option><option value="landscape">Paisagem 16:9</option></select>
                             </FormField>
-
-                            <FormField label="Largura Borda (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_width)} onChange={e => updateModalConfig({ border_width: e.target.value })} placeholder="Ex: 2" className={inputClass} />
+                            <FormField label="Ajuste Imagem">
+                              <select value={activeGridConfig.object_fit || 'cover'} onChange={e => updateGridConfig({ object_fit: e.target.value })} className={selectClass}><option value="cover">Cover</option><option value="contain">Contain</option><option value="fill">Fill</option></select>
                             </FormField>
-
-                            <FormField label="Raio Borda (px)">
-                              <input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_radius)} onChange={e => updateModalConfig({ border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                            </FormField>
+                            <FormField label="Largura (px)"><input type="number" min="20" value={toNumberInputValue(activeGridConfig.width)} onChange={e => updateGridConfig({ width: e.target.value })} className={inputClass} /></FormField>
+                            <FormField label="Colunas"><input type="number" min="1" max="10" value={activeGridConfig.visible_items} onChange={e => updateGridConfig({ visible_items: limitNumber(e.target.value, 1, 1, 10) })} className={inputClass} /></FormField>
+                            <FormField label="Espaçamento (px)" className="col-span-2"><input type="number" min="0" value={activeGridConfig.spacing} onChange={e => updateGridConfig({ spacing: safeNumber(e.target.value, 0, 0) })} className={inputClass} /></FormField>
                           </div>
                         </AccordionSection>
 
-                        {/* 2. Elementos no Player */}
-                        <AccordionSection
-                          title="2. Elementos no Player"
-                          isOpen={activeSection === 'modal-elements'}
-                          onToggle={() => setActiveSection(activeSection === 'modal-elements' ? null : 'modal-elements')}
-                        >
+                        {/* 2. BORDAS */}
+                        <AccordionSection title="2. Bordas" isOpen={activeSection === 'grid-2'} onToggle={() => setActiveSection(activeSection === 'grid-2' ? null : 'grid-2')}>
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <FormField label="Cor da Borda"><ColorInput label="Cor" value={activeGridConfig.border_color || formData.primary_color} onChange={e => updateGridConfig({ border_color: e.target.value })} /></FormField>
+                            <FormField label="Largura Borda (px)"><input type="number" min="0" value={toNumberInputValue(activeGridConfig.border_style)} onChange={e => updateGridConfig({ border_style: e.target.value })} className={inputClass} /></FormField>
+                            <FormField label="Raio da Borda (px)"><input type="number" min="0" value={toNumberInputValue(activeGridConfig.border_radius)} onChange={e => updateGridConfig({ border_radius: e.target.value })} className={inputClass} /></FormField>
+                          </div>
+                        </AccordionSection>
+
+                        {/* 3. ELEMENTOS VISÍVEIS */}
+                        <AccordionSection title="3. Elementos Visíveis" isOpen={activeSection === 'grid-3'} onToggle={() => setActiveSection(activeSection === 'grid-3' ? null : 'grid-3')}>
+                          <div className="space-y-4">
+                            <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-2.5">
+                              <ToggleSwitch label="Exibir título da vitrine" checked={activeGridConfig.show_title ?? false} onChange={e => updateGridConfig({ show_title: e.target.checked })} />
+                              {activeGridConfig.show_title && (
+                                <>
+                                  <FormField label="Texto do título"><input type="text" value={(activeGridConfig as any).title_text ?? ''} onChange={e => updateGridConfig({ title_text: e.target.value } as any)} className={inputClass} /></FormField>
+                                  <div className="grid grid-cols-2 gap-2.5">
+                                    <FormField label="Tamanho da fonte"><input type="number" min="8" value={(activeGridConfig as any).title_font_size ?? 14} onChange={e => updateGridConfig({ title_font_size: safeNumber(e.target.value, 14, 8) } as any)} className={inputClass} /></FormField>
+                                    <FormField label="Alinhamento"><select value={(activeGridConfig as any).title_align ?? 'center'} onChange={e => updateGridConfig({ title_align: e.target.value } as any)} className={selectClass}><option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option></select></FormField>
+                                  </div>
+                                  <ToggleSwitch label="Título em negrito" checked={(activeGridConfig as any).title_bold ?? true} onChange={e => updateGridConfig({ title_bold: e.target.checked } as any)} />
+                                </>
+                              )}
+                            </div>
+                            <div className="space-y-1.5">
+                              <ToggleSwitch label="Reproduzir vídeos automaticamente" checked={activeGridConfig.autoplay_videos ?? true} onChange={e => updateGridConfig({ autoplay_videos: e.target.checked })} />
+                              <ToggleSwitch label="Reprodução sequencial (1 vídeo por vez, 5s cada)" checked={activeGridConfig.sequential_playback ?? false} onChange={e => updateGridConfig({ sequential_playback: e.target.checked })} />
+                              <ToggleSwitch label="Exibir ícone de Play" checked={(activeGridConfig as any).show_play_icon ?? true} onChange={e => updateGridConfig({ show_play_icon: e.target.checked } as any)} />
+                            </div>
+                          </div>
+                        </AccordionSection>
+
+                        {/* 4. CARD DE PRODUTO */}
+                        <AccordionSection title="4. Card de Produto" isOpen={activeSection === 'grid-4'} onToggle={() => setActiveSection(activeSection === 'grid-4' ? null : 'grid-4')}>
+                          <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={(activeGridConfig as any).show_product} onChange={e => updateGridConfig({ show_product: e.target.checked } as any)} />
+                          {(activeGridConfig as any).show_product && (
+                            <div className="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-slate-100 pt-3.5">
+                              <FormField label="Cor do fundo"><ColorInput label="Cor" value={(activeGridConfig as any).product_card_bg || '#FFFFFF'} onChange={e => updateGridConfig({ product_card_bg: e.target.value } as any)} /></FormField>
+                              <FormField label="Cor da Borda"><ColorInput label="Borda" value={(activeGridConfig as any).product_card_border_color || '#E2E8F0'} onChange={e => updateGridConfig({ product_card_border_color: e.target.value } as any)} /></FormField>
+                              <FormField label="Largura Borda (px)"><input type="number" min="0" value={toNumberInputValue((activeGridConfig as any).product_card_border_width)} onChange={e => updateGridConfig({ product_card_border_width: e.target.value } as any)} className={inputClass} /></FormField>
+                              <FormField label="Raio Borda (px)"><input type="number" min="0" value={toNumberInputValue((activeGridConfig as any).product_card_border_radius)} onChange={e => updateGridConfig({ product_card_border_radius: e.target.value } as any)} className={inputClass} /></FormField>
+                              <FormField label="Tamanho Título"><input type="number" min="8" value={toNumberInputValue((activeGridConfig as any).product_card_name_size)} onChange={e => updateGridConfig({ product_card_name_size: e.target.value } as any)} className={inputClass} /></FormField>
+                              <FormField label="Cor Título"><ColorInput label="Cor" value={(activeGridConfig as any).product_card_name_color || '#0F172A'} onChange={e => updateGridConfig({ product_card_name_color: e.target.value } as any)} /></FormField>
+                              <FormField label="Tamanho Preço"><input type="number" min="8" value={toNumberInputValue((activeGridConfig as any).product_card_price_size)} onChange={e => updateGridConfig({ product_card_price_size: e.target.value } as any)} className={inputClass} /></FormField>
+                              <FormField label="Cor Preço"><ColorInput label="Cor" value={(activeGridConfig as any).product_card_price_color || formData.primary_color} onChange={e => updateGridConfig({ product_card_price_color: e.target.value } as any)} /></FormField>
+                            </div>
+                          )}
+                        </AccordionSection>
+                      </div>
+                    </SectionCard>
+                  )}
+
+                  {/* PLAYER */}
+                  {activeTab === 'modal' && (
+                    <SectionCard title="Configurações do Player">
+                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
+                        <span className="text-xs font-bold text-slate-700">Dispositivo</span>
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0094EB]" /><Smartphone size={14} /></div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {/* 1. BORDA */}
+                        <AccordionSection title="1. Borda" isOpen={activeSection === 'mod-1'} onToggle={() => setActiveSection(activeSection === 'mod-1' ? null : 'mod-1')}>
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <FormField label="Cor da Borda" className="col-span-2"><ColorInput label="Cor da borda" value={formData.modal_config.border_color || formData.primary_color} onChange={e => updateModalConfig({ border_color: e.target.value })} /></FormField>
+                            <FormField label="Largura Borda (px)"><input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_width)} onChange={e => updateModalConfig({ border_width: e.target.value })} className={inputClass} /></FormField>
+                            <FormField label="Raio da Borda (px)"><input type="number" min="0" step="1" value={toNumberInputValue(formData.modal_config.border_radius)} onChange={e => updateModalConfig({ border_radius: e.target.value })} className={inputClass} /></FormField>
+                          </div>
+                        </AccordionSection>
+
+                        {/* 3. ELEMENTOS VISÍVEIS (Numeração da UI segue o seu guia "3. ELEMENTOS VISÍVEIS") */}
+                        <AccordionSection title="3. Elementos Visíveis" isOpen={activeSection === 'mod-3'} onToggle={() => setActiveSection(activeSection === 'mod-3' ? null : 'mod-3')}>
                           <div className="space-y-1.5">
                             <ToggleSwitch label="Exibir título do vídeo" checked={formData.modal_config.show_title} onChange={e => updateModalConfig({ show_title: e.target.checked })} />
                             <ToggleSwitch label="Exibir botão Play/Pause central" checked={formData.modal_config.show_play_button} onChange={e => updateModalConfig({ show_play_button: e.target.checked })} />
                             <ToggleSwitch label="Exibir botão Like (Curtir)" checked={formData.modal_config.show_like_button} onChange={e => updateModalConfig({ show_like_button: e.target.checked })} />
                             <ToggleSwitch label="Exibir botão de Comentários" checked={formData.modal_config.show_comment_button} onChange={e => updateModalConfig({ show_comment_button: e.target.checked })} />
                             <ToggleSwitch label="Exibir botão de Compartilhar" checked={formData.modal_config.show_share_button} onChange={e => updateModalConfig({ show_share_button: e.target.checked })} />
-                            <ToggleSwitch label="Exibir card de produto" checked={formData.modal_config.show_product} onChange={e => updateModalConfig({ show_product: e.target.checked })} />
-                            
-                            {formData.modal_config.show_product && (
-                              <div className="ml-4 pl-3 border-l-2 border-slate-200 dark:border-slate-700 transition-all">
-                                <ToggleSwitch 
-                                  label="Exibir botão Ver Produto" 
-                                  checked={formData.modal_config.show_product_button ?? true} 
-                                  onChange={e => updateModalConfig({ show_product_button: e.target.checked })} 
-                                />
-                              </div>
-                            )}
                           </div>
                         </AccordionSection>
 
-                        {/* 3. Estilo do Card de Produto */}
-                        {formData.modal_config.show_product && (
-                          <AccordionSection
-                            title="3. Estilo do Card de Produto"
-                            isOpen={activeSection === 'modal-product'}
-                            onToggle={() => setActiveSection(activeSection === 'modal-product' ? null : 'modal-product')}
-                          >
-                            <div className="grid grid-cols-2 gap-2.5">
-                              <FormField label="Fundo do Card">
-                                <ColorInput label="Fundo do card" value={(formData.modal_config as any).product_card_bg || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_bg: e.target.value } as any)} />
-                              </FormField>
-
-                              <FormField label="Cor da Borda">
-                                <ColorInput label="Cor da borda" value={(formData.modal_config as any).product_card_border_color || '#E2E8F0'} onChange={e => updateModalConfig({ product_card_border_color: e.target.value } as any)} />
-                              </FormField>
-
-                              <FormField label="Largura Borda (px)">
-                                <input type="number" min="0" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_border_width)} onChange={e => updateModalConfig({ product_card_border_width: e.target.value } as any)} placeholder="Ex: 1" className={inputClass} />
-                              </FormField>
-
-                              <FormField label="Raio Borda (px)">
-                                <input type="number" min="0" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_border_radius)} onChange={e => updateModalConfig({ product_card_border_radius: e.target.value } as any)} placeholder="Ex: 12" className={inputClass} />
-                              </FormField>
-
-                              <FormField label="Tamanho Título">
-                                <input type="number" min="8" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_name_size)} onChange={e => updateModalConfig({ product_card_name_size: e.target.value } as any)} placeholder="Ex: 11" className={inputClass} />
-                              </FormField>
-
-                              <FormField label="Cor Título">
-                                <ColorInput label="Cor do título" value={(formData.modal_config as any).product_card_name_color || '#0F172A'} onChange={e => updateModalConfig({ product_card_name_color: e.target.value } as any)} />
-                              </FormField>
-
-                              <FormField label="Tamanho Preço">
-                                <input type="number" min="8" step="1" value={toNumberInputValue((formData.modal_config as any).product_card_price_size)} onChange={e => updateModalConfig({ product_card_price_size: e.target.value } as any)} placeholder="Ex: 12" className={inputClass} />
-                              </FormField>
-
-                              <FormField label="Cor Preço">
-                                <ColorInput label="Cor do preço" value={(formData.modal_config as any).product_card_price_color || formData.primary_color} onChange={e => updateModalConfig({ product_card_price_color: e.target.value } as any)} />
-                              </FormField>
-
-                              {formData.modal_config.show_product_button && (
-                                <>
-                                  <FormField label="Cor Botão Produto">
-                                    <ColorInput label="Cor do botão do produto" value={(formData.modal_config as any).product_card_button_bg || formData.primary_color} onChange={e => updateModalConfig({ product_card_button_bg: e.target.value } as any)} />
-                                  </FormField>
-
-                                  <FormField label="Cor Texto Botão">
-                                    <ColorInput label="Cor do texto do botão" value={(formData.modal_config as any).product_card_button_color || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_button_color: e.target.value } as any)} />
-                                  </FormField>
-                                </>
-                              )}
+                        {/* 4. CARD DE PRODUTO */}
+                        <AccordionSection title="4. Card de Produto" isOpen={activeSection === 'mod-4'} onToggle={() => setActiveSection(activeSection === 'mod-4' ? null : 'mod-4')}>
+                          <ToggleSwitch label="Exibir card de produto" checked={formData.modal_config.show_product} onChange={e => updateModalConfig({ show_product: e.target.checked })} />
+                          {formData.modal_config.show_product && (
+                            <div className="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-slate-100 pt-3.5">
+                              <FormField label="Cor do fundo"><ColorInput label="Cor" value={(formData.modal_config as any).product_card_bg || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_bg: e.target.value } as any)} /></FormField>
+                              <FormField label="Cor da Borda"><ColorInput label="Borda" value={(formData.modal_config as any).product_card_border_color || '#E2E8F0'} onChange={e => updateModalConfig({ product_card_border_color: e.target.value } as any)} /></FormField>
+                              <FormField label="Largura Borda (px)"><input type="number" min="0" value={toNumberInputValue((formData.modal_config as any).product_card_border_width)} onChange={e => updateModalConfig({ product_card_border_width: e.target.value } as any)} className={inputClass} /></FormField>
+                              <FormField label="Raio Borda (px)"><input type="number" min="0" value={toNumberInputValue((formData.modal_config as any).product_card_border_radius)} onChange={e => updateModalConfig({ product_card_border_radius: e.target.value } as any)} className={inputClass} /></FormField>
+                              <FormField label="Tamanho Título"><input type="number" min="8" value={toNumberInputValue((formData.modal_config as any).product_card_name_size)} onChange={e => updateModalConfig({ product_card_name_size: e.target.value } as any)} className={inputClass} /></FormField>
+                              <FormField label="Cor Título"><ColorInput label="Cor" value={(formData.modal_config as any).product_card_name_color || '#0F172A'} onChange={e => updateModalConfig({ product_card_name_color: e.target.value } as any)} /></FormField>
+                              <FormField label="Tamanho Preço"><input type="number" min="8" value={toNumberInputValue((formData.modal_config as any).product_card_price_size)} onChange={e => updateModalConfig({ product_card_price_size: e.target.value } as any)} className={inputClass} /></FormField>
+                              <FormField label="Cor Preço"><ColorInput label="Cor" value={(formData.modal_config as any).product_card_price_color || formData.primary_color} onChange={e => updateModalConfig({ product_card_price_color: e.target.value } as any)} /></FormField>
+                              <FormField label="Cor Botão Produto"><ColorInput label="Cor" value={(formData.modal_config as any).product_card_button_bg || formData.primary_color} onChange={e => updateModalConfig({ product_card_button_bg: e.target.value } as any)} /></FormField>
+                              <FormField label="Cor Texto Botão"><ColorInput label="Cor" value={(formData.modal_config as any).product_card_button_color || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_button_color: e.target.value } as any)} /></FormField>
                             </div>
-                          </AccordionSection>
-                        )}
+                          )}
+                        </AccordionSection>
                       </div>
-
                     </SectionCard>
                   )}
 
                 </div>
 
-                {/* Coluna Direita: Preview Lateral */}
                 <PreviewCard
                   formData={formData}
                   floatingDevice={floatingDevice}
@@ -4418,59 +3530,30 @@ const AppearancePage = () => {
               </div>
             </div>
 
-            {/* Footer do modal */}
             <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white px-6 py-2.5 shrink-0">
-              <button
-                type="button"
-                onClick={handleCancel}
-                disabled={saving}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <X size={14} />
-                Cancelar
+              <button type="button" onClick={handleCancel} disabled={saving} className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">
+                <X size={14} /> Cancelar
               </button>
               {storeUrl && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    let targetUrl = storeUrl.trim();
-                    if (!/^https?:\/\//i.test(targetUrl)) {
-                      targetUrl = `https://${targetUrl}`;
-                    }
-                    const connector = targetUrl.includes('?') ? '&' : '?';
-                    window.open(`${targetUrl}${connector}vidlytics_preview=true`, '_blank', 'noopener,noreferrer');
-                  }}
-                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                    <polyline points="15 3 21 3 21 9"></polyline>
-                    <line x1="10" y1="14" x2="21" y2="3"></line>
-                  </svg>
+                <button type="button" onClick={() => {
+                  let targetUrl = storeUrl.trim();
+                  if (!/^https?:\/\//i.test(targetUrl)) targetUrl = `https://${targetUrl}`;
+                  const connector = targetUrl.includes('?') ? '&' : '?';
+                  window.open(`${targetUrl}${connector}vidlytics_preview=true`, '_blank', 'noopener,noreferrer');
+                }} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                   Ver na Loja
                 </button>
               )}
-              <button
-                type="button"
-                onClick={handleSaveStyle}
-                disabled={saving}
-                className="flex items-center gap-1.5 rounded-xl bg-[#0094EB] px-5 py-2 text-xs font-bold text-white shadow-md hover:bg-[#0E4787] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                {saving ? 'Salvando...' : 'Salvar'}
+              <button type="button" onClick={handleSaveStyle} disabled={saving} className="flex items-center gap-1.5 rounded-xl bg-[#0094EB] px-5 py-2 text-xs font-bold text-white shadow-md hover:bg-[#0E4787] disabled:cursor-not-allowed disabled:opacity-60">
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} {saving ? 'Salvando...' : 'Salvar'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <ConfirmDeleteDialog
-        isOpen={deleteModal.isOpen}
-        onClose={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
-        onConfirm={handleConfirmDelete}
-        title="Excluir estilo?"
-        description={`Tem certeza que deseja excluir "${deleteModal.name}"? Esta ação não pode ser desfeita.`}
-      />
+      <ConfirmDeleteDialog isOpen={deleteModal.isOpen} onClose={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))} onConfirm={handleConfirmDelete} title="Excluir estilo?" description={`Tem certeza que deseja excluir "${deleteModal.name}"? Esta ação não pode ser desfeita.`} />
     </div>
   );
 };
