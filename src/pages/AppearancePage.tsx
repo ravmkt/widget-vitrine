@@ -2965,12 +2965,12 @@ const AppearancePage = () => {
         same_for_all: formData.useGlobalAppearance,
       };
 
-const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
-  ...formData.dynamic_carousel_config,
-  desktop: { ...normalizeCarouselConfigShape(formData.dynamic_carousel_config.desktop), enabled: true } as DynamicCarouselConfig,
-  mobile: { ...normalizeCarouselConfigShape(formData.dynamic_carousel_config.mobile), enabled: true } as DynamicCarouselConfig,
-  same_for_all: formData.useGlobalAppearance,
-};
+      const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
+        ...formData.dynamic_carousel_config,
+        desktop: { ...normalizeCarouselConfigShape(formData.dynamic_carousel_config.desktop), enabled: true } as DynamicCarouselConfig,
+        mobile: { ...normalizeCarouselConfigShape(formData.dynamic_carousel_config.mobile), enabled: true } as DynamicCarouselConfig,
+        same_for_all: formData.useGlobalAppearance,
+      };
 
       const gridConfig: ResponsiveConfig<GridConfig> = {
         ...formData.grid_config,
@@ -3027,6 +3027,7 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
         created_at: formData.created_at || editingStyle?.created_at || now,
         updated_at: now,
       };
+
       if (stylePayload.is_default) {
         await Promise.all(
           appearances
@@ -3117,7 +3118,7 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
 
   return (
     <div className="animate-fade-in space-y-8 pb-20">
-{/* Header com Estética Dashboard Vidlytics */}
+      {/* Header com Estética Dashboard Vidlytics */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -3127,7 +3128,7 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
             Customize a identidade visual, widgets, carrosséis, grades e player da sua loja.
           </p>
         </div>
-<button
+        <button
           type="button"
           onClick={handleNewStyle}
           className="flex items-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer"
@@ -3135,12 +3136,12 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
           <Plus size={16} className="!text-white stroke-[2.5]" />
           Novo Estilo
         </button>
-              </div>
+      </div>
 
       {/* Módulo de Estilos Cadastrados no Padrão Modular do Dashboard */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         
-{/* Cabeçalho do Módulo */}
+        {/* Cabeçalho do Módulo */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white bg-[#0094EB] dark:bg-[#ff7a29] shadow-[0_0_15px_rgba(0,148,235,0.35)] dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
@@ -3212,7 +3213,7 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                       </span>
                     </td>
 
-<td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4 text-center">
                       {app.is_default ? (
                         <span className="mx-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-blue-50 dark:bg-[#ff7a29]/15 border border-blue-200 dark:border-[#ff7a29]/30 px-3.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] shadow-xs">
                           <Star size={11} className="fill-[#0094EB] text-[#0094EB] dark:fill-[#ff7a29] dark:text-[#ff7a29]" />
@@ -3260,7 +3261,6 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
       </div>
 
       {/* Modal de edição */}
-{/* Modal de edição */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 sm:p-6 md:p-8 backdrop-blur-sm">
           <div className="flex h-[90vh] w-full max-w-7xl flex-col overflow-hidden rounded-[1.5rem] bg-white shadow-2xl transition-all duration-300">
@@ -3286,7 +3286,7 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
               </button>
             </div>
 
-{/* Tabs */}
+            {/* Tabs */}
             <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-4 shrink-0">
               <div className="flex flex-wrap gap-2">
                 <ModalTabButton active={activeTab === 'basic'} icon={<Settings2 size={16} />} label="Básico" onClick={() => setActiveTab('basic')} />
@@ -3597,9 +3597,9 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                     </SectionCard>
                   )}
 
-{/* ── Carrossel ── */}
+                  {/* ── Carrossel ── */}
                   {activeTab === 'carousel' && (
-<SectionCard title="Configurações do Carrossel">
+                    <SectionCard title="Configurações do Carrossel">
                       
                       {/* Seletor Inteligente de Dispositivo */}
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
@@ -3810,7 +3810,6 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                             <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeCarouselConfig.show_product} onChange={e => updateCarouselConfig({ show_product: e.target.checked })} />
                           </div>
                         </AccordionSection>
-                        )}
                       </div>
 
                     </SectionCard>
@@ -4127,7 +4126,6 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                     </SectionCard>
                   )}
 
-
                   {/* ── Grade ── */}
                   {activeTab === 'grid' && (
                     <SectionCard title="Configurações da Grade">
@@ -4420,7 +4418,7 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
               </div>
             </div>
 
-{/* Footer do modal */}
+            {/* Footer do modal */}
             <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white px-6 py-2.5 shrink-0">
               <button
                 type="button"
@@ -4440,7 +4438,6 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                       targetUrl = `https://${targetUrl}`;
                     }
                     const connector = targetUrl.includes('?') ? '&' : '?';
-                    // Passa um parâmetro que sinaliza modo preview ativo para a loja
                     window.open(`${targetUrl}${connector}vidlytics_preview=true`, '_blank', 'noopener,noreferrer');
                   }}
                   className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50"
@@ -4479,5 +4476,3 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
 };
 
 export default AppearancePage;
-
-
