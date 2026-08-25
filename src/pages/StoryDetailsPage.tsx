@@ -190,7 +190,7 @@ const mapDbRuleToUiRule = (rule: any): PageRuleUi => {
 
 
 const StoryDetailsPage = () => {
-  const { storeId, loading: tenantLoading } = useTenant();
+  const { storeId, currentStore, loading: tenantLoading } = useTenant();
   const { id } = useParams();
   const navigate = useNavigate();
 
