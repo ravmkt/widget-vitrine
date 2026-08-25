@@ -5377,10 +5377,14 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
 
   cardOuter.appendChild(cardInner);
 
-  cardOuter.addEventListener('click', function () {
-    if (floatingWasDragged) { floatingWasDragged = false; return; }
-    openStoryModal(0);
-  });
+cardOuter.addEventListener('click', function () {
+  if (floatingDragActive || floatingWasDragged) {
+    floatingDragActive = false;
+    floatingWasDragged = false;
+    return;
+  }
+  openStoryModal(0);
+});
 
   // ── MONTAR WIDGET ──
   var wrapper = createEl('div', 'vl-floating-wrapper');
