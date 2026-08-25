@@ -5119,6 +5119,9 @@ function initInlineWidget(options) {
     var behaviorConfig = getFloatingBehaviorConfig(appearance);
     if (!behaviorConfig.allowDrag) return;
 
+    // IMPRESCINDÍVEL: Avisa o navegador para não interferir com gestos de rolagem padrão
+    el.style.touchAction = 'none';
+
     var isDragging = false;
     var startX, startY, initialRight, initialBottom;
 
@@ -5126,24 +5129,30 @@ function initInlineWidget(options) {
       // Ignora cliques que não sejam o botão esquerdo (no mouse)
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       
-      // Ignora o arrasto se clicar no botão de fechar (x)
+      // Ignora o arrasto se clicar no botão de fechar (x) ou dismiss
       if (e.target.closest && (e.target.closest('.vl-dismiss') || e.target.closest('.vl-floating-close-btn'))) return;
 
       isDragging = true;
-      floatingWasDragged = false;
+      
+      // Define a flag global de arrasto com segurança
+      if (typeof floatingWasDragged !== 'undefined') {
+        floatingWasDragged = false;
+      }
+
       startX = e.clientX;
       startY = e.clientY;
 
       var rect = el.getBoundingClientRect();
       initialRight = window.innerWidth - rect.right;
       initialBottom = window.innerHeight - rect.bottom;
+      
       el.style.transition = 'none';
 
-      // Captura o ponteiro para manter o arrasto ativo fora do elemento/Shadow DOM
+      // Captura o ponteiro para rastrear o movimento mesmo fora do elemento
       try {
         el.setPointerCapture(e.pointerId);
       } catch (err) {
-        console.warn('Pointer capture falhou:', err);
+        console.warn('[Vidlytics] Falha ao capturar ponteiro:', err);
       }
     });
 
@@ -5153,9 +5162,13 @@ function initInlineWidget(options) {
       var dx = startX - e.clientX;
       var dy = startY - e.clientY;
 
-      // Limiar (threshold) de 3 pixels para evitar disparos acidentais em cliques simples
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-        floatingWasDragged = true;
+      // Limiar de 4px para diferenciar clique de arrasto
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+        if (typeof floatingWasDragged !== 'undefined') {
+          floatingWasDragged = true;
+        }
+        
+        // Atualiza a posição mantendo o elemento fixo em relação ao canto inferior direito
         el.style.right = (initialRight + dx) + 'px';
         el.style.bottom = (initialBottom + dy) + 'px';
         el.style.left = 'auto';
