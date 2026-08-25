@@ -5233,9 +5233,10 @@ function renderFloatingWidget(floatingStories) {
     closeBtn.innerHTML = '&times;';
     closeBtn.style.cssText =
       'position:absolute !important;' +
-      'top:-10px !important;' +
-      'right:-10px !important;' +
+      'top:8px !important;' +
+      'right:8px !important;' +
       'width:24px !important;' +
+      'z-index:99 !important;' +
       'height:24px !important;' +
       'border-radius:50% !important;' +
       'background:rgba(0,0,0,0.7) !important;' +
