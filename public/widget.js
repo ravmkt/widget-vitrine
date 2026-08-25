@@ -5848,16 +5848,13 @@ return readStoreSettings().then(function (settings) {
             } catch (err) {
               console.error('[Vidlytics] ❌ Erro no fallback:', err);
             }
-          }});
+          }
+        });
       });
-}).then(function () {
-  }).catch(function (err) {
-    console.warn('[Vidlytics] Erro ao carregar aparência:', err);
+    });
   });
 }
 
 initWidget();
 
 })();
-
-
