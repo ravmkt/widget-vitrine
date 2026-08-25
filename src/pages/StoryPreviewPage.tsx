@@ -84,7 +84,6 @@ export default function StoryPreviewPage() {
   const [commentName, setCommentName] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-
   // Panels
   const [shareCopied, setShareCopied] = useState(false);
   const [sizingModel, setSizingModel] = useState<any>(null);
@@ -95,6 +94,12 @@ export default function StoryPreviewPage() {
   // ─── Drag state (carrossel com transform) ───
   const sliderRef = useRef<HTMLDivElement>(null);
   const dragCarousel = useRef({ isDown: false, startX: 0, startOffset: 0, moved: false });
+
+  // ─── Drag state (Widget Flutuante Arrastável) ───
+  const [floatingOffset, setFloatingOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isDraggingFloating, setIsDraggingFloating] = useState(false);
+  const dragStartFloating = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const wasDraggedFloatingRef = useRef(false);
 
   // ─── getAllSafe ───
   const getAllSafe = async <T,>(collection: any, sid?: string): Promise<T[]> => {
@@ -293,6 +298,47 @@ export default function StoryPreviewPage() {
     }
   };
 
+  // ═══════════════════════════════════════════════════════
+  // ARRASTAR DO WIDGET FLUTUANTE (Pointer Events)
+  // ═══════════════════════════════════════════════════════
+
+  const handleFloatingPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Apenas responde ao clique esquerdo do mouse ou touch direto
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+    setIsDraggingFloating(true);
+    wasDraggedFloatingRef.current = false;
+    dragStartFloating.current = { x: e.clientX, y: e.clientY };
+
+    // Captura o cursor para continuar rastreando mesmo se sair do componente durante movimentos rápidos
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handleFloatingPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingFloating) return;
+
+    const dx = e.clientX - dragStartFloating.current.x;
+    const dy = e.clientY - dragStartFloating.current.y;
+
+    // Se moveu mais que 4 pixels, define que foi arrastado e não apenas clicado
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+      wasDraggedFloatingRef.current = true;
+    }
+
+    setFloatingOffset(prev => ({
+      x: prev.x + dx,
+      y: prev.y + dy
+    }));
+
+    dragStartFloating.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleFloatingPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingFloating) return;
+    setIsDraggingFloating(false);
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  };
+
   // ─── Loading ───
   if (loading) return <div className="fixed inset-0 flex items-center justify-center bg-slate-950"><div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white" /></div>;
   if (!story) return <div className="fixed inset-0 flex items-center justify-center bg-slate-950 text-white">Story não encontrado</div>;
@@ -306,16 +352,51 @@ export default function StoryPreviewPage() {
     const thumb = getVideoThumb(firstVideo);
     const videoUrl = getVideoUrl(firstVideo);
 
+    const transform = `translate(${floatingOffset.x}px, ${floatingOffset.y}px)`;
+
     return (
-      <div style={{ position: 'fixed', top: f.top, right: f.right, bottom: f.bottom, left: f.left, zIndex: f.zIndex }}>
-        <div onClick={() => openPlayer(0)} style={{ width: f.width, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+      <div
+        style={{
+          position: 'fixed',
+          top: f.top,
+          right: f.right,
+          bottom: f.bottom,
+          left: f.left,
+          zIndex: f.zIndex,
+          transform,
+          touchAction: 'none', // Impede o scroll de tela padrão no celular enquanto arrasta
+          cursor: isDraggingFloating ? 'grabbing' : 'grab',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          transition: isDraggingFloating ? 'none' : 'transform 0.1s ease-out'
+        }}
+        onPointerDown={handleFloatingPointerDown}
+        onPointerMove={handleFloatingPointerMove}
+        onPointerUp={handleFloatingPointerUp}
+      >
+        <div
+          onClick={(e) => {
+            // Se o widget foi arrastado, abortamos o evento de clique (não abre o player)
+            if (wasDraggedFloatingRef.current) {
+              e.preventDefault();
+              e.stopPropagation();
+              return;
+            }
+            openPlayer(0);
+          }}
+          className={cn(
+            "flex flex-col items-center gap-1 transition-all",
+            isDraggingFloating && "scale-[1.04] opacity-90 shadow-2xl"
+          )}
+          style={{ width: f.width, cursor: isDraggingFloating ? 'grabbing' : 'pointer' }}
+        >
           <div style={{ position: 'relative', width: f.width, height: f.height }}>
             <div style={{ width: f.width, height: f.height, borderRadius: f.radius, padding: f.borderWidth, background: f.borderColor || `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`, boxShadow: '0 12px 30px rgba(15,23,42,.18)', overflow: 'hidden' }}>
               <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: f.innerRadius, overflow: 'hidden', background: '#000' }}>
                 {isVideoFile(videoUrl) ? (
-                  <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full" style={{ objectFit: f.objectFit as any }} muted loop autoPlay playsInline />
+                  <video src={videoUrl} poster={thumb || undefined} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: f.objectFit as any }} muted loop autoPlay playsInline />
                 ) : thumb ? (
-                  <img src={thumb} alt={story.title || ''} className="absolute inset-0 h-full w-full" style={{ objectFit: f.objectFit as any }} />
+                  <img src={thumb} alt={story.title || ''} className="absolute inset-0 h-full w-full pointer-events-none" style={{ objectFit: f.objectFit as any }} />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-slate-800"><Play size={20} className="text-white/60" /></div>
                 )}
@@ -327,7 +408,16 @@ export default function StoryPreviewPage() {
               </div>
             </div>
             {f.allowClose && (
-              <button onClick={(e) => { e.stopPropagation(); navigate(-1); }} className="absolute -top-3.5 -right-3.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white shadow" style={{ pointerEvents: 'auto' }}>
+              <button
+                // Evita propagar o evento de arrastar ao tentar clicar no botão de fechar
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(-1);
+                }}
+                className="absolute -top-3.5 -right-3.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white shadow-md active:scale-90 transition-transform"
+                style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+              >
                 <X size={14} className="text-slate-800" />
               </button>
             )}
