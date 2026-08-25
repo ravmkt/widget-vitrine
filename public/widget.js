@@ -5120,37 +5120,29 @@ function initInlineWidget(options) {
     var behaviorConfig = getFloatingBehaviorConfig(appearance);
     if (!behaviorConfig.allowDrag) return;
 
-    // Avisa o navegador que não deve interferir no arrasto (sem rolagem)
     positionEl.style.touchAction = 'none';
 
     var isDragging = false;
-    var startX, startY, initialRight, initialBottom;
+    var currentX = 0;
+    var currentY = 0;
+    var initialX = 0;
+    var initialY = 0;
 
-    // O ponto de clique será o balão (dragHandleEl), mas quem se move é o wrapper (positionEl)
     var trigger = dragHandleEl || positionEl;
 
     trigger.addEventListener('pointerdown', function (e) {
-      // Ignora cliques que não sejam o botão esquerdo (no mouse)
       if (e.pointerType === 'mouse' && e.button !== 0) return;
-
-      // Ignora o arrasto se clicar no botão de fechar (X)
       if (e.target.closest && (e.target.closest('.vl-dismiss') || e.target.closest('.vl-floating-close-btn'))) return;
 
       isDragging = true;
-      floatingDragActive = true;   // <-- NOVO
       floatingWasDragged = false;
 
-      startX = e.clientX;
-      startY = e.clientY;
+      // Captura de onde o mouse iniciou, descontando o que o balão já foi movido antes
+      initialX = e.clientX - currentX;
+      initialY = e.clientY - currentY;
 
-      var rect = positionEl.getBoundingClientRect();
-      initialRight = window.innerWidth - rect.right;
-      initialBottom = window.innerHeight - rect.bottom;
-
-      // Remove transição durante o arrasto
       positionEl.style.transition = 'none';
 
-      // Captura o ponteiro para não perder o movimento
       try {
         trigger.setPointerCapture(e.pointerId);
       } catch (err) {}
@@ -5159,28 +5151,24 @@ function initInlineWidget(options) {
     trigger.addEventListener('pointermove', function (e) {
       if (!isDragging) return;
 
-      var dx = startX - e.clientX;
-      var dy = startY - e.clientY;
+      var dx = e.clientX - initialX;
+      var dy = e.clientY - initialY;
 
-      // Limiar de 8px para diferenciar clique (tremores) de arrasto real
-      if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
-        if (typeof floatingWasDragged !== 'undefined') {
-          floatingWasDragged = true;
-        }
-
-        // Move o wrapper inteiro (balão + X) junto
-        positionEl.style.right = (initialRight + dx) + 'px';
-        positionEl.style.bottom = (initialBottom + dy) + 'px';
-        positionEl.style.left = 'auto';
-        positionEl.style.top = 'auto';
+      // Limiar para diferenciar clique de arrasto
+      if (Math.abs(dx - currentX) > 5 || Math.abs(dy - currentY) > 5 || floatingWasDragged) {
+        floatingWasDragged = true;
+        
+        currentX = dx;
+        currentY = dy;
+        
+        positionEl.style.transform = 'translate(' + currentX + 'px, ' + currentY + 'px)';
       }
     });
 
     trigger.addEventListener('pointerup', function (e) {
       if (isDragging) {
         isDragging = false;
-        floatingDragActive = false;   // <-- NOVO
-        positionEl.style.transition = 'all 0.3s ease';
+        positionEl.style.transition = 'transform 0.3s ease';
         try {
           trigger.releasePointerCapture(e.pointerId);
         } catch (err) {}
@@ -5190,11 +5178,8 @@ function initInlineWidget(options) {
     trigger.addEventListener('pointercancel', function (e) {
       if (isDragging) {
         isDragging = false;
-        floatingDragActive = false;
-        positionEl.style.transition = 'all 0.3s ease';
-        try {
-          trigger.releasePointerCapture(e.pointerId);
-        } catch (err) {}
+        positionEl.style.transition = 'transform 0.3s ease';
+        try { trigger.releasePointerCapture(e.pointerId); } catch (err) {}
       }
     });
   }
