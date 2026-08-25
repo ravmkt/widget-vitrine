@@ -5139,13 +5139,11 @@ function initInlineWidget(options) {
       isDragging = true;
       floatingDragActive = true;   // <-- NOVO
       floatingWasDragged = false;
-        floatingWasDragged = false;
-      }
 
       startX = e.clientX;
       startY = e.clientY;
 
-var rect = positionEl.getBoundingClientRect();
+      var rect = positionEl.getBoundingClientRect();
       initialRight = window.innerWidth - rect.right;
       initialBottom = window.innerHeight - rect.bottom;
 
