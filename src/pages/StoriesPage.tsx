@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTenant } from '@/context/TenantContext'; // 🆕 Importando o contexto do Tenant
 import { db, resolveStoreId, Story } from '@/lib/db';
 import {
   Plus,
@@ -22,6 +23,7 @@ import { cn } from '@/lib/utils';
 
 const StoriesPage = () => {
   const navigate = useNavigate();
+  const { currentStore } = useTenant(); // 🆕 Resgata os dados da loja atual (contendo a URL)
 
   const [stories, setStories] = useState<Story[]>([]);
   const [videoCounts, setVideoCounts] = useState<Record<string, number>>({});
@@ -583,13 +585,24 @@ const loadData = async () => {
                     <td className="px-6 py-4 text-center">
                       <div className="flex justify-center gap-2">
                         <button
-                          onClick={() =>
-                            window.open(
-                              `/stories/preview/${story.id}`,
-                              '_blank',
-                              'noopener,noreferrer',
-                            )
-                          }
+                          onClick={() => {
+                            let targetUrl = currentStore?.url?.trim() || "";
+                            if (targetUrl) {
+                              if (!/^https?:\/\//i.test(targetUrl)) {
+                                targetUrl = "https://" + targetUrl;
+                              }
+                              const connector = targetUrl.includes("?") ? "&" : "?";
+                              const finalPreviewUrl = targetUrl + connector + "vidlytics_preview_story_id=" + story.id;
+                              window.open(finalPreviewUrl, "_blank", "noopener,noreferrer");
+                            } else {
+                              // Fallback seguro caso a loja ainda não tenha URL configurada
+                              window.open(
+                                `/stories/preview/${story.id}`,
+                                '_blank',
+                                'noopener,noreferrer',
+                              );
+                            }
+                          }}
                           className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors"
                           title="Preview Story"
                         >
