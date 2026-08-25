@@ -5420,70 +5420,76 @@ function renderFloatingWidget(floatingStories) {
   }
 
   // ── INJEÇÃO DO BOTÃO CTA FLUTUANTE ──
-  
-  // 1. Tenta usar a função helper, se não existir, tenta ler direto do objeto currentAppearance
-  var ctaText = typeof readAppearanceValue === 'function' 
-    ? readAppearanceValue(currentAppearance, ['floating_cta_text', 'ctaText']) 
-    : (currentAppearance.floating_cta_text || currentAppearance.ctaText || currentAppearance.floating_cta || null);
-    
-  var ctaLink = typeof readAppearanceValue === 'function' 
-    ? readAppearanceValue(currentAppearance, ['floating_cta_link', 'ctaLink']) 
-    : (currentAppearance.floating_cta_link || currentAppearance.ctaLink || null);
 
-  if (ctaText) {
+  // Função auxiliar para ler dados seguros dentro de floating_config
+  var rcvCTA = function(field, fallback) {
+    var val = typeof readConfigValue === 'function' ? readConfigValue(currentAppearance, 'floating_config', field, null, null) : null;
+    if (val !== null && val !== undefined && val !== '') return val;
+    return fallback;
+  };
+
+  var rawShow = rcvCTA('show_cta', false);
+  var showCta = (rawShow === true || rawShow === 'true' || rawShow === 1 || rawShow === '1');
+  var ctaText = rcvCTA('cta_text', '');
+
+  if (showCta && ctaText) {
     var ctaElement = createEl('div', 'vl-floating-cta');
-    var btnColor = typeof getPrimaryColor === 'function' ? getPrimaryColor(currentAppearance) : '#000000';
+    var btnColor = rcvCTA('cta_bg_color', primaryColor);
+    var txtColor = rcvCTA('cta_text_color', '#FFFFFF');
+    var fontSize = rcvCTA('cta_font_size', '14');
     
-    var txtColor = typeof readAppearanceValue === 'function' 
-      ? readAppearanceValue(currentAppearance, ['button_text_color', 'buttonTextColor']) 
-      : (currentAppearance.button_text_color || currentAppearance.buttonTextColor || '#ffffff');
-    if (!txtColor) txtColor = '#ffffff';
-
+    var rawBold = rcvCTA('cta_is_bold', true);
+    var isBold = (rawBold === true || rawBold === 'true' || rawBold === 1 || rawBold === '1');
+    
+    // Identifica o alinhamento do flutuante para a pílula sair pro lado correto
+    var isRight = (cfg.position && cfg.position.indexOf('right') !== -1);
+    
     ctaElement.innerText = ctaText;
-    ctaElement.style.cssText = 
-      'display: flex !important;' +
-      'justify-content: center !important;' +
-      'align-items: center !important;' +
+    ctaElement.style.cssText =
+      'position: absolute !important;' +
+      'top: 50% !important;' +
+      'transform: translateY(-50%) !important;' +
       'background: ' + btnColor + ' !important;' +
       'color: ' + txtColor + ' !important;' +
-      'padding: 8px 16px !important;' +
-      'border-radius: 999px !important;' + 
-      'font-size: 13px !important;' +
-      'font-weight: 700 !important;' +
-      'text-align: center !important;' +
+      'font-size: ' + fontSize + 'px !important;' +
+      'font-weight: ' + (isBold ? 'bold' : 'normal') + ' !important;' +
+      'padding: 6px 14px !important;' +
       'cursor: pointer !important;' +
       'box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;' +
-      'width: 100% !important;' +
-      'max-width: ' + cfg.width + ' !important;' +
-      'box-sizing: border-box !important;' +
       'pointer-events: auto !important;' +
       'white-space: nowrap !important;' +
-      'overflow: hidden !important;' +
-      'text-overflow: ellipsis !important;' +
-      'transition: transform 0.2s ease, opacity 0.2s ease !important;' +
+      'transition: opacity 0.2s ease, filter 0.2s ease !important;' +
       'font-family: inherit !important;' +
-      'margin-top: 4px !important;'; // Espaçamento entre a bolha e o botão
+      'z-index: -1 !important;'; 
+      
+    // Estética da pílula saindo por trás do widget baseada no alinhamento da tela
+    if (isRight) {
+      ctaElement.style.right = '100%';
+      ctaElement.style.marginRight = '-15px'; // Entra pra debaixo do círculo
+      ctaElement.style.paddingRight = '25px';
+      ctaElement.style.borderRadius = '30px 0 0 30px';
+    } else {
+      ctaElement.style.left = '100%';
+      ctaElement.style.marginLeft = '-15px';
+      ctaElement.style.paddingLeft = '25px';
+      ctaElement.style.borderRadius = '0 30px 30px 0';
+    }
 
-    // Hover effect via JS
+    // Efeitos visuais
     ctaElement.addEventListener('mouseenter', function() {
-      ctaElement.style.transform = 'scale(1.05)';
-      ctaElement.style.opacity = '0.9';
+      ctaElement.style.filter = 'brightness(1.1)';
     });
     ctaElement.addEventListener('mouseleave', function() {
-      ctaElement.style.transform = 'scale(1)';
-      ctaElement.style.opacity = '1';
+      ctaElement.style.filter = 'brightness(1)';
     });
-
+    
+    // Clique do CTA abre o Story
     ctaElement.addEventListener('click', function(e) {
-      e.stopPropagation(); // Evita conflito com o arrastar
-      if (ctaLink) {
-        window.open(ctaLink, '_blank');
-      } else {
-        openStoryModal(0); // Se não tiver link, abre os stories
-      }
+      e.preventDefault();
+      e.stopPropagation();
+      openModal(0);
     });
 
-    // Insere o CTA dentro do widget (abaixo do wrapper da bolha)
     widget.appendChild(ctaElement);
   }
 
