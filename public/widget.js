@@ -690,43 +690,57 @@ function getCarouselConfig(appearance) {
     return readConfigValue(appearance, 'carousel_config', jsonbField, flatField, fallback);
   }
   
-// 1. Definições estruturais do carrossel
-  var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
-  var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
-  var borderWidth = toNumber(rcv('border_width', 'carousel_border_width', '0'), 0);
-
-  var itemWidth = toNumber(rcv('width', 'card_size', '120'), 120);
-  var itemSpacing = toNumber(rcv('spacing', 'carousel_item_spacing', '8'), 8);
-  
-  // 2. Leitura segura de border_radius (preserva 0 para canto reto)
-  var rawRadiusInput = rcv('border_radius', 'carousel_item_radius', 12);
-  var parsedRadiusVal = parseFloat(rawRadiusInput);
-  var safeRadiusNum = !isNaN(parsedRadiusVal) ? Math.max(0, parsedRadiusVal) : 12;
-  var itemRadius = (String(rawRadiusInput).trim() === '0' || rawRadiusInput === 0) ? '0px' : px(safeRadiusNum, 12);
-    
-    var marginTop = toNumber(rcv('margin_top', 'carousel_margin_top', '0'), 0);
-  var marginBottom = toNumber(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
-  var marginLeft = toNumber(rcv('margin_left', 'carousel_margin_left', '0'), 0);
-  var marginRight = toNumber(rcv('margin_right', 'carousel_margin_right', '0'), 0);
-  
-var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false);
-  var showPlayIcon = toBoolean(rcv('show_play_icon', 'carousel_show_play_icon', true), true);
-  var showItemTitle = toBoolean(rcv('show_item_title', 'carousel_show_item_title', false), false);
-  var showArrows = toBoolean(rcv('show_arrows', 'carousel_show_arrows', true), true);
-  var showProduct = toBoolean(rcv('show_product', 'carousel_show_product', true), true);
-
-  // Leitura da chave real view_mode ('preview' / 'playing' / 'video' = reproduz mutado)
-  var autoplayVideos = rcv('autoplay_videos', 'carousel_autoplay_videos', true);
-  autoplayVideos = (autoplayVideos === false || autoplayVideos === 'false') ? false : true;
-  var carouselPlayMode = autoplayVideos ? 'playing' : 'static';
-
-var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
+  // ==========================================
+  // 1. LAYOUT & DIMENSÕES
+  // ==========================================
+  var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
   var aspect = '9/16';
   if (shape === 'square' || shape === '1:1') aspect = '1/1';
   else if (shape === 'circle') aspect = '1/1';
   else if (shape === 'landscape' || shape === 'paisagem' || shape === '16:9' || shape === '16_9') aspect = '16/9';
 
-  // Leitura consolidada e única das propriedades do card de produto
+  var objectFit = String(rcv('object_fit', 'carousel_object_fit', 'cover')).trim().toLowerCase();
+  var itemWidth = toNumber(rcv('width', 'card_size', '120'), 120);
+  var visibleItems = safeInt(rcv('visible_items', 'carousel_visible_items', '4'), 4);
+  var itemSpacing = toNumber(rcv('spacing', 'carousel_item_spacing', '8'), 8);
+  
+  var marginTop = toNumber(rcv('margin_top', 'carousel_margin_top', '0'), 0);
+  var marginBottom = toNumber(rcv('margin_bottom', 'carousel_margin_bottom', '0'), 0);
+  var marginLeft = toNumber(rcv('margin_left', 'carousel_margin_left', '0'), 0);
+  var marginRight = toNumber(rcv('margin_right', 'carousel_margin_right', '0'), 0);
+  
+  // ==========================================
+  // 2. BORDAS
+  // ==========================================
+  var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
+  var borderWidth = toNumber(rcv('border_width', 'carousel_border_width', '0'), 0);
+  
+  var rawRadiusInput = rcv('border_radius', 'carousel_item_radius', 12);
+  var parsedRadiusVal = parseFloat(rawRadiusInput);
+  var safeRadiusNum = !isNaN(parsedRadiusVal) ? Math.max(0, parsedRadiusVal) : 12;
+  var itemRadius = (String(rawRadiusInput).trim() === '0' || rawRadiusInput === 0) ? '0px' : px(safeRadiusNum, 12);
+    
+  // ==========================================
+  // 3. ELEMENTOS VISÍVEIS
+  // ==========================================
+  var showTitle = toBoolean(rcv('show_title', 'carousel_show_title', false), false);
+  var titleText = String(rcv('title_text', 'carousel_title_text', '') || '').trim();
+  var titleFontSize = toNumber(rcv('title_font_size', 'carousel_title_font_size', '18'), 18);
+  var titleAlign = String(rcv('title_align', 'carousel_title_align', 'left')).trim().toLowerCase();
+  var titleBold = toBoolean(rcv('title_bold', 'carousel_title_bold', true), true);
+
+  var autoplayVideos = rcv('autoplay_videos', 'carousel_autoplay_videos', true);
+  autoplayVideos = (autoplayVideos === false || autoplayVideos === 'false') ? false : true;
+  var carouselPlayMode = autoplayVideos ? 'playing' : 'static';
+  
+  var showPlayIcon = toBoolean(rcv('show_play_icon', 'carousel_show_play_icon', true), true);
+  var showItemTitle = toBoolean(rcv('show_item_title', 'carousel_show_item_title', false), false);
+  var showArrows = toBoolean(rcv('show_arrows', 'carousel_show_arrows', true), true);
+
+  // ==========================================
+  // 4. CARD DE PRODUTO
+  // ==========================================
+  var showProduct = toBoolean(rcv('show_product', 'carousel_show_product', true), true);
   var pBg = sanitizeCssValue(rcv('product_card_bg', 'carousel_product_card_bg', '#FFFFFF'), '#FFFFFF', 'color');
   var pBorderColor = sanitizeCssValue(rcv('product_card_border_color', 'carousel_product_card_border_color', '#E2E8F0'), '#E2E8F0', 'color');
   var pBorderWidth = toNumber(rcv('product_card_border_width', 'carousel_product_card_border_width', '1'), 1);
@@ -740,20 +754,35 @@ var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
   var pPriceBold = toBoolean(rcv('product_card_price_bold', 'carousel_product_card_price_bold', true), true);
 
   return {
+    // 1
+    shape: shape,
+    itemAspect: aspect,
+    objectFit: objectFit,
     itemWidth: px(itemWidth),
+    visibleItems: visibleItems,
     itemSpacing: px(itemSpacing),
-    itemRadius: shape === 'circle' ? '999px' : px(itemRadius),
     marginTop: px(marginTop),
     marginBottom: px(marginBottom),
     marginLeft: marginLeft,
     marginRight: marginRight,
-    visibleItems: visibleItems,
+    
+    // 2
     borderColor: borderColor,
     borderWidth: borderWidth,
+    itemRadius: shape === 'circle' ? '999px' : itemRadius,
+    
+    // 3
     showTitle: showTitle,
+    titleText: titleText,
+    titleFontSize: titleFontSize,
+    titleAlign: titleAlign,
+    titleBold: titleBold,
+    carouselPlayMode: carouselPlayMode,
     showPlayIcon: showPlayIcon,
     showItemTitle: showItemTitle,
     showArrows: showArrows,
+    
+    // 4
     showProduct: showProduct,
     productCardBg: pBg,
     productCardBorderColor: pBorderColor,
@@ -763,10 +792,7 @@ var shape = String(rcv('shape', 'card_shape', 'portrait')).trim().toLowerCase();
     productCardNameColor: pNameColor,
     productCardPriceSize: pPriceSize,
     productCardPriceColor: pPriceColor,
-    productCardPriceBold: pPriceBold,
-    carouselPlayMode: carouselPlayMode,
-    shape: shape,
-    itemAspect: aspect
+    productCardPriceBold: pPriceBold
   };
 }
 
