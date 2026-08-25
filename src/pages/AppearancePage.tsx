@@ -412,11 +412,20 @@ const normalizeFloatingConfigForSave = (
     normalizedPosition,
     config.floating_position,
   );
+  
   return normalizeFloatingShapeValues({
     ...config,
     border_style: normalizeBorderWidth(config.border_style, '2'),
     position: normalizedPosition,
     floating_position: normalizedFloatingPosition,
+    
+    // 👇 NOVAS PROPRIEDADES DO CTA 👇
+    show_cta: config.show_cta ?? false,
+    cta_text: config.cta_text ?? 'VER VÍDEO',
+    cta_bg_color: config.cta_bg_color ?? '#0094EB',
+    cta_text_color: config.cta_text_color ?? '#FFFFFF',
+    cta_font_size: safeNumber(config.cta_font_size, 14), // Usando seu helper nativo!
+    cta_is_bold: config.cta_is_bold ?? true,
   });
 };
 
