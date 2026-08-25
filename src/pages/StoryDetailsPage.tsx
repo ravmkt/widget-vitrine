@@ -393,7 +393,7 @@ console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
 
   const handleSuccessClose = () => navigate('/stories');
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ DRAG-AND-DROP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────── DRAG-AND-DROP ──────────────
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDragIndex(index);
     e.dataTransfer.setData('text/plain', String(index));
@@ -479,7 +479,7 @@ const response = await fetch(
   }, 2000);
 };
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ GALLERY MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────── GALLERY MODAL ────────────────
   const GalleryModal = () => (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-5xl rounded-[28px] bg-white p-6 shadow-2xl">
@@ -675,7 +675,7 @@ const SelectorModal = () => {
       <form onSubmit={handleSave}>
         <div className="grid grid-cols-1 gap-8">
           <div className="space-y-8">
-            {/* â”€â”€ DESIGN E FORMATO â”€â”€ */}
+            {/* ── DESIGN E FORMATO ── */}
             <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
               <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-6"><Layout className="text-[#0094EB]" size={20} /><h3 className="text-lg font-black uppercase tracking-tight text-slate-800">Design e Formato</h3></div>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -737,7 +737,7 @@ const SelectorModal = () => {
                 <div className="space-y-2 pt-4"><label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Estilo Visual / Aparência</label><select value={formData.appearance_id} onChange={(event) => setFormData((prev) => ({ ...prev, appearance_id: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none"><option value="">Seguir Padrão do App</option>{appearances.filter((app) => app.id && isValidUuid(app.id)).map((app) => (<option key={app.id} value={app.id}>{app.name} {app.is_default ? '(Padrão)' : ''}</option>))}</select></div>
               </div>
 
-            {/* â”€â”€ CONTEÃšDO SELECIONADO (COM DRAG-AND-DROP) â”€â”€ */}
+            {/* ── CONTEÚDO SELECIONADO (COM DRAG-AND-DROP) ── */}
             <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
               <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-6">
                 <div className="flex items-center gap-3">
@@ -856,7 +856,7 @@ const SelectorModal = () => {
               )}
             </div>
 
-            {/* â”€â”€ LOCAL DE EXIBIÃ‡ÃƒO â”€â”€ */}
+            {/* ── LOCAL DE EXIBIÃ‡ÃƒO ── */}
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2"><MapPin className="text-[#0094EB]" size={18} /><h4 className="text-sm font-black uppercase text-slate-800">Local de exibição</h4></div></div>
               <div className="grid gap-4 md:grid-cols-[1fr_220px] md:items-end">
@@ -900,7 +900,36 @@ className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-
     </button>
       </div>
 </div>
-                <div className="space-y-2"><label className="text-[9px] font-black uppercase tracking-widest text-slate-400">POSIÃ‡ÃƒO</label><select value={locations[0]?.position || 'beforeend'} onChange={(event) => setLocations((prev) => [{ ...(prev[0] || { id: generateUuid(), store_id: resolvedStoreId || '', story_id: story?.id || '', selector: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }), position: event.target.value as DisplayPosition }])} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none">{POSITION_OPTIONS.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}</select></div>
+                            <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    POSIÇÃO
+                  </label>
+                  <select
+                    value={locations[0]?.position || 'beforeend'}
+                    onChange={(event) =>
+                      setLocations((prev) => [
+                        {
+                          ...(prev[0] || {
+                            id: generateUuid(),
+                            store_id: resolvedStoreId || '',
+                            story_id: story?.id || '',
+                            selector: '',
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                          }),
+                          position: event.target.value as DisplayPosition,
+                        },
+                      ])
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                  >
+                    {POSITION_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
