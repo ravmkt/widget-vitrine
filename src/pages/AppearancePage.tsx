@@ -2468,6 +2468,8 @@ const AppearancePage = () => {
     tenantContext?.isLoading ||
     tenantContext?.tenantLoading ||
     false;
+      const storeUrl = tenantContext?.currentStore?.url || '';
+
 
   const [resolvedStoreId, setResolvedStoreId] = useState<string>('');
   const [appearances, setAppearances] = useState<Appearance[]>([]);
