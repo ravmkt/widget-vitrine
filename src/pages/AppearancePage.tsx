@@ -2523,8 +2523,7 @@ const AppearancePage = () => {
     tenantContext?.isLoading ||
     tenantContext?.tenantLoading ||
     false;
-      const storeUrl = tenantContext?.currentStore?.url || '';
-
+  const storeUrl = tenantContext?.currentStore?.url || '';
 
   const [resolvedStoreId, setResolvedStoreId] = useState<string>('');
   const [appearances, setAppearances] = useState<Appearance[]>([]);
@@ -2540,7 +2539,7 @@ const AppearancePage = () => {
 
   const [floatingDevice, setFloatingDevice] = useState<DeviceType>('desktop');
   const [carouselDevice, setCarouselDevice] = useState<DeviceType>('desktop');
-    const [dynamicCarouselDevice, setDynamicCarouselDevice] = useState<DeviceType>('desktop');
+  const [dynamicCarouselDevice, setDynamicCarouselDevice] = useState<DeviceType>('desktop');
 
   const [gridDevice, setGridDevice] = useState<DeviceType>('desktop');
   const [activeTab, setActiveTab] = useState<ModalTab>('basic');
@@ -2573,7 +2572,6 @@ const AppearancePage = () => {
     // Dispara o evento 'storage' local para atualizar outras abas abertas
     window.dispatchEvent(new Event('storage'));
   }, [formData, activeTab, floatingDevice, carouselDevice, dynamicCarouselDevice, gridDevice]);
-  // ── ATÉ AQUI ──
 
   useEffect(() => {
     setActiveSection(null);
@@ -2594,10 +2592,10 @@ const AppearancePage = () => {
         return;
       }
       setResolvedStoreId(finalStoreId);
-            const styles = await getAppearancesSafe(finalStoreId);
+      const styles = await getAppearancesSafe(finalStoreId);
       setAppearances(styles);
 
-      // 🔍 Sincroniza em tempo real a contagem de stories ativos da loja para exibição inteligente de avisos
+      // Sincroniza em tempo real a contagem de stories ativos da loja para exibição inteligente de avisos
       try {
         if (supabase) {
           const { data: storiesData, error: storiesError } = await supabase
@@ -2747,55 +2745,54 @@ const AppearancePage = () => {
     });
   };
 
-const updateDynamicCarouselConfig = (patch: Partial<DynamicCarouselConfig>) => {
-  setFormData(prev => {
-    const device = prev.useGlobalAppearance ? 'desktop' : dynamicCarouselDevice;
-    const current = prev.dynamic_carousel_config[device];
+  const updateDynamicCarouselConfig = (patch: Partial<DynamicCarouselConfig>) => {
+    setFormData(prev => {
+      const device = prev.useGlobalAppearance ? 'desktop' : dynamicCarouselDevice;
+      const current = prev.dynamic_carousel_config[device];
 
-    let updatedDeviceConfig: DynamicCarouselConfig = {
-      ...current,
-      ...patch,
-      enabled: true, // sempre ativo
-      spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
-      visible_items: safeNumber(
-        patch.visible_items ?? current.visible_items,
-        current.visible_items || 1,
-        1,
-      ),
-    };
+      let updatedDeviceConfig: DynamicCarouselConfig = {
+        ...current,
+        ...patch,
+        enabled: true, // sempre ativo
+        spacing: safeNumber(patch.spacing ?? current.spacing, current.spacing || 0, 0),
+        visible_items: safeNumber(
+          patch.visible_items ?? current.visible_items,
+          current.visible_items || 1,
+          1,
+        ),
+      };
 
-    if (patch.shape !== undefined) {
-      const newShape = normalizeWidgetShape(patch.shape, 'portrait');
-      const width = formatNumberLikeCurrent(patch.width ?? current.width ?? '80', '80');
-      updatedDeviceConfig = { ...updatedDeviceConfig, shape: newShape, width };
-    }
+      if (patch.shape !== undefined) {
+        const newShape = normalizeWidgetShape(patch.shape, 'portrait');
+        const width = formatNumberLikeCurrent(patch.width ?? current.width ?? '80', '80');
+        updatedDeviceConfig = { ...updatedDeviceConfig, shape: newShape, width };
+      }
 
-        const autoHighlight = updatedDeviceConfig.auto_highlight ?? false;
-    const autoplayOn = updatedDeviceConfig.autoplay_videos ?? true;
+      const autoHighlight = updatedDeviceConfig.auto_highlight ?? false;
+      const autoplayOn = updatedDeviceConfig.autoplay_videos ?? true;
 
-    updatedDeviceConfig = {
-      ...updatedDeviceConfig,
-      highlight_border_color: updatedDeviceConfig.highlight_border_color ?? updatedDeviceConfig.border_color,
-      highlight_mode: updatedDeviceConfig.highlight_mode ?? (autoHighlight ? 'ring' : 'none'),
-      highlight_shadow: updatedDeviceConfig.highlight_shadow ?? false,
-      highlight_enlarge_active: updatedDeviceConfig.highlight_enlarge_active ?? updatedDeviceConfig.highlight_scale_up ?? false,
-      highlight_dim_inactive: updatedDeviceConfig.highlight_dim_inactive ?? updatedDeviceConfig.highlight_scale_down_others ?? false,
-      autoplay_delay: updatedDeviceConfig.autoplay_delay ?? (autoplayOn ? 5000 : 0),
-      show_title: updatedDeviceConfig.show_title ?? false,
-      show_play_icon: updatedDeviceConfig.show_play_icon ?? true,
-      show_product: updatedDeviceConfig.show_product ?? false,
-    };
+      updatedDeviceConfig = {
+        ...updatedDeviceConfig,
+        highlight_border_color: updatedDeviceConfig.highlight_border_color ?? updatedDeviceConfig.border_color,
+        highlight_mode: updatedDeviceConfig.highlight_mode ?? (autoHighlight ? 'ring' : 'none'),
+        highlight_shadow: updatedDeviceConfig.highlight_shadow ?? false,
+        highlight_enlarge_active: updatedDeviceConfig.highlight_enlarge_active ?? updatedDeviceConfig.highlight_scale_up ?? false,
+        highlight_dim_inactive: updatedDeviceConfig.highlight_dim_inactive ?? updatedDeviceConfig.highlight_scale_down_others ?? false,
+        autoplay_delay: updatedDeviceConfig.autoplay_delay ?? (autoplayOn ? 5000 : 0),
+        show_title: updatedDeviceConfig.show_title ?? false,
+        show_play_icon: updatedDeviceConfig.show_play_icon ?? true,
+        show_product: updatedDeviceConfig.show_product ?? false,
+      };
 
-    updatedDeviceConfig = normalizeCarouselConfigShape(updatedDeviceConfig) as DynamicCarouselConfig;
+      updatedDeviceConfig = normalizeCarouselConfigShape(updatedDeviceConfig) as DynamicCarouselConfig;
 
-    const nextConfig: ResponsiveConfig<DynamicCarouselConfig> = prev.useGlobalAppearance
-      ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
-      : { ...prev.dynamic_carousel_config, same_for_all: false, [device]: updatedDeviceConfig };
+      const nextConfig: ResponsiveConfig<DynamicCarouselConfig> = prev.useGlobalAppearance
+        ? { same_for_all: true, desktop: updatedDeviceConfig, mobile: updatedDeviceConfig }
+        : { ...prev.dynamic_carousel_config, same_for_all: false, [device]: updatedDeviceConfig };
 
-    return { ...prev, dynamic_carousel_config: nextConfig };
-  });
-};
-
+      return { ...prev, dynamic_carousel_config: nextConfig };
+    });
+  };
 
   const updateGridConfig = (patch: Partial<GridConfig>) => {
     setFormData(prev => {
@@ -2919,7 +2916,7 @@ const updateDynamicCarouselConfig = (patch: Partial<DynamicCarouselConfig>) => {
     setFormData(createDefaultFormData(finalStoreId));
     setFloatingDevice('desktop');
     setCarouselDevice('desktop');
-        setDynamicCarouselDevice('desktop');
+    setDynamicCarouselDevice('desktop');
     setGridDevice('desktop');
     setActiveTab('basic');
     setShowModal(true);
@@ -2930,7 +2927,7 @@ const updateDynamicCarouselConfig = (patch: Partial<DynamicCarouselConfig>) => {
     setFormData(normalizeAppearance(style, resolvedStoreId || storeId));
     setFloatingDevice('desktop');
     setCarouselDevice('desktop');
-        setDynamicCarouselDevice('desktop');
+    setDynamicCarouselDevice('desktop');
     setGridDevice('desktop');
     setActiveTab('basic');
     setShowModal(true);
