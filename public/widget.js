@@ -5407,7 +5407,7 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
   }
 
   globalShadowRoot.appendChild(widget);
-  applyDraggable(cardOuter, currentAppearance);
+applyDraggable(wrapper, cardOuter, currentAppearance);
 }
 
   /* ================================================================
