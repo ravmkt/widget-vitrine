@@ -2379,46 +2379,37 @@ const VisualPreview = ({
 
 const PreviewCard = ({
   formData,
-  floatingDevice,
-  carouselDevice,
-  dynamicCarouselDevice,
-  gridDevice,
+  floatingDevice, setFloatingDevice,
+  carouselDevice, setCarouselDevice,
+  dynamicCarouselDevice, setDynamicCarouselDevice,
+  gridDevice, setGridDevice,
   activeTab,
-}: {
-  formData: ExtendedAppearance;
-  floatingDevice: DeviceType;
-  carouselDevice: DeviceType;
-  dynamicCarouselDevice: DeviceType;
-  gridDevice: DeviceType;
-  activeTab: ModalTab;
-}) => {
-  // Identifica dinamicamente qual é o dispositivo (Mobile/Desktop) ativo para a tab atual
+}: any) => {
+  // Estado local apenas para o Player, já que os outros sincronizam com a barra lateral
+  const [playerDevice, setPlayerDevice] = useState<'desktop' | 'mobile'>('mobile');
+
+  // Descobre qual dispositivo está ativo agora baseado na aba
   const activeDevice = 
     activeTab === 'floating' ? floatingDevice :
     activeTab === 'carousel' ? carouselDevice :
     activeTab === 'dynamic_carousel' ? dynamicCarouselDevice :
-    activeTab === 'grid' ? gridDevice : 'desktop';
+    activeTab === 'grid' ? gridDevice : 
+    playerDevice;
 
-  const floating = getActiveResponsiveConfig(
-    formData.floating_config,
-    floatingDevice,
-    formData.useGlobalAppearance,
-  );
-  const carousel = getActiveResponsiveConfig(
-    formData.carousel_config,
-    carouselDevice,
-    formData.useGlobalAppearance,
-  );
-  const dynamicCarousel = getActiveResponsiveConfig(
-    formData.dynamic_carousel_config,
-    dynamicCarouselDevice,
-    formData.useGlobalAppearance,
-  );
-  const grid = getActiveResponsiveConfig(
-    formData.grid_config,
-    gridDevice,
-    formData.useGlobalAppearance,
-  );
+  // Função para mudar o dispositivo clicando nos botões acima do preview
+  const handleDeviceChange = (device: 'desktop' | 'mobile') => {
+    if (formData.useGlobalAppearance) return; // Se estiver travado no global, não faz nada
+    if (activeTab === 'floating') setFloatingDevice(device);
+    if (activeTab === 'carousel') setCarouselDevice(device);
+    if (activeTab === 'dynamic_carousel') setDynamicCarouselDevice(device);
+    if (activeTab === 'grid') setGridDevice(device);
+    if (activeTab === 'modal') setPlayerDevice(device);
+  };
+
+  const floating = getActiveResponsiveConfig(formData.floating_config, activeDevice, formData.useGlobalAppearance);
+  const carousel = getActiveResponsiveConfig(formData.carousel_config, activeDevice, formData.useGlobalAppearance);
+  const dynamicCarousel = getActiveResponsiveConfig(formData.dynamic_carousel_config, activeDevice, formData.useGlobalAppearance);
+  const grid = getActiveResponsiveConfig(formData.grid_config, activeDevice, formData.useGlobalAppearance);
 
   const colors = {
     primary: formData.primary_color,
@@ -2432,80 +2423,70 @@ const PreviewCard = ({
   const isMobileFrame = !formData.useGlobalAppearance && activeDevice === 'mobile';
 
   return (
-    <aside className="flex h-full flex-col overflow-y-auto rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm space-y-4">
-      
-      {/* Container de Visualização Inteligente sem o cabeçalho simulado */}
-      <div className="relative flex-1 flex items-center justify-center p-2 bg-slate-100/10 rounded-2xl border border-slate-100 transition-all duration-300">
-        <div
-          className={cn(
-            "w-full transition-all duration-500 ease-in-out",
-            isMobileFrame
-              ? "max-w-[340px] rounded-[2.5rem] border-[10px] border-slate-900 shadow-2xl overflow-hidden bg-white"
-              : "max-w-full"
-          )}
-        >
-          {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} device={activeDevice} />}
-          {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
-          {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} />}
-          {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
-          {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
-          {activeTab === 'basic' && <VisualPreview formData={formData} colors={colors} />}
+    <aside className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+      {/* HEADER DO PREVIEW: Toggles de Dispositivo */}
+      <div className="flex items-center justify-center border-b border-slate-100 bg-slate-50/80 p-2 shrink-0">
+        <div className="flex items-center bg-slate-200/60 p-1 rounded-lg gap-1">
+          <button
+            type="button"
+            onClick={() => handleDeviceChange('desktop')}
+            className={cn(
+              "flex items-center justify-center p-1.5 rounded-md transition-all duration-200",
+              activeDevice === 'desktop' ? "bg-white shadow-sm text-[#0094EB]" : "text-slate-500 hover:text-slate-700"
+            )}
+            title="Visualizar em Desktop"
+          >
+            <Monitor size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDeviceChange('mobile')}
+            className={cn(
+              "flex items-center justify-center p-1.5 rounded-md transition-all duration-200",
+              activeDevice === 'mobile' ? "bg-white shadow-sm text-[#0094EB]" : "text-slate-500 hover:text-slate-700"
+            )}
+            title="Visualizar em Mobile"
+          >
+            <Smartphone size={16} />
+          </button>
         </div>
       </div>
 
-      {/* AVISO: Reduzido e com shrink-0 para nunca cortar */}
-      <div className="p-3 bg-slate-50 border border-slate-200/60 rounded-xl flex items-start gap-2.5 text-xs text-slate-500 leading-relaxed shadow-sm shrink-0">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 shrink-0 mt-0.5">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 16v-4"/>
-          <path d="M12 8h.01"/>
-        </svg>
-        <span>
-          Este painel é um <strong>preview meramente visual</strong>. Para interagir de verdade e testar os cliques do player, use a visualização direta do Story.
-        </span>
+      {/* ÁREA DO PREVIEW EM SI */}
+      <div className="relative flex-1 flex flex-col items-center p-4 bg-slate-50/50 overflow-y-auto">
+        <div className="my-auto w-full flex justify-center">
+          {isMobileFrame ? (
+            /* FRAME MOCKUP DE CELULAR FÍSICO */
+            <div className="relative mx-auto w-[320px] h-[650px] bg-slate-800 rounded-[3rem] p-2.5 shadow-2xl flex shrink-0 ring-1 ring-slate-900/10">
+              {/* Entalhe (Notch) e Câmera */}
+              <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-3xl z-50 flex justify-center items-center">
+                <div className="w-10 h-1.5 rounded-full bg-slate-700/50"></div>
+              </div>
+              
+              {/* Tela do Celular */}
+              <div className="flex-1 w-full h-full bg-white rounded-[2.25rem] overflow-hidden relative overflow-y-auto hide-scrollbar">
+                {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} device={activeDevice} />}
+                {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
+                {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} />}
+                {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
+                {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
+                {activeTab === 'basic' && <VisualPreview formData={formData} colors={colors} />}
+              </div>
+            </div>
+          ) : (
+            /* FRAME DESKTOP LIVRE */
+            <div className="w-full transition-all duration-500 ease-in-out">
+              {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} device={activeDevice} />}
+              {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
+              {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} />}
+              {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
+              {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
+              {activeTab === 'basic' && <VisualPreview formData={formData} colors={colors} />}
+            </div>
+          )}
+        </div>
       </div>
     </aside>
-  );
-};
-
-interface AccordionSectionProps {
-  title: string;
-  isOpen: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}
-
-const AccordionSection = ({ title, isOpen, onToggle, children }: AccordionSectionProps) => {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden transition-all duration-300">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full items-center justify-between bg-slate-50/60 px-4 py-3.5 text-left text-xs font-black uppercase tracking-wider text-[#0094EB] hover:bg-slate-50 transition-colors"
-      >
-        <span>{title}</span>
-        <ChevronDown
-          size={16}
-          className={cn(
-            "text-slate-400 transition-transform duration-300",
-            isOpen && "rotate-180 text-[#0094EB]"
-          )}
-        />
-      </button>
-      
-      <div
-        className={cn(
-          "grid transition-all duration-300 ease-in-out",
-          isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-        )}
-      >
-        <div className="overflow-hidden">
-          <div className="p-4 bg-white border-t border-slate-100 space-y-4">
-            {children}
-          </div>
-        </div>
-      </div>
-    </div>
   );
 };
 
