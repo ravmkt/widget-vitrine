@@ -5189,6 +5189,7 @@ function initInlineWidget(options) {
    ================================================================ */
 
 function renderFloatingWidget(floatingStories) {
+  
   if (!currentAppearance) return;
 
   var stories = floatingStories || currentStories;
