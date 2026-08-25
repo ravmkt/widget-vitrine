@@ -5857,9 +5857,6 @@ return readStoreSettings().then(function (settings) {
   }).catch(function (err) {
     console.warn('[Vidlytics] Erro ao carregar aparência:', err);
   });
-  }).catch(function (err) {
-    console.warn('[Vidlytics] Erro ao verificar status da loja:', err);
-  });
 }
 
 initWidget();
