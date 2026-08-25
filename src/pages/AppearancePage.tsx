@@ -109,8 +109,13 @@ type FloatingConfig = {
   draggable: boolean;
   allow_close: boolean;
   z_index: string;
-show_title: boolean;
-autoplay_videos: boolean;
+  autoplay_videos: boolean;
+  show_cta: boolean;
+  cta_text: string;
+  cta_bg_color: string;
+  cta_text_color: string;
+  cta_font_size: number;
+  cta_is_bold: boolean;
 };
 
 type CarouselConfig = {
