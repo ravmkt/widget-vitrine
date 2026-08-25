@@ -5192,13 +5192,14 @@ var rect = positionEl.getBoundingClientRect();
     trigger.addEventListener('pointercancel', function (e) {
       if (isDragging) {
         isDragging = false;
-        floatingDragActive = false;   // <-- NOVO
+        floatingDragActive = false;
         positionEl.style.transition = 'all 0.3s ease';
         try {
           trigger.releasePointerCapture(e.pointerId);
         } catch (err) {}
       }
     });
+  }
 
   /* ================================================================
      RENDERIZAÇÃO DO WIDGET FLUTUANTE
