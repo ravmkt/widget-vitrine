@@ -5378,12 +5378,20 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
 
   cardOuter.appendChild(cardInner);
 
-cardOuter.addEventListener('click', function () {
+cardOuter.addEventListener('click', function (event) {
   if (floatingDragActive || floatingWasDragged) {
+    event.preventDefault();
+    event.stopPropagation();
+
     floatingDragActive = false;
-    floatingWasDragged = false;
+
+    window.setTimeout(function () {
+      floatingWasDragged = false;
+    }, 0);
+
     return;
   }
+
   openStoryModal(0);
 });
 
