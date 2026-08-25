@@ -3709,6 +3709,14 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                             <FormField label="Margem Inferior (px)">
                               <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_bottom)} onChange={e => updateCarouselConfig({ margin_bottom: e.target.value })} placeholder="Ex: 0" className={inputClass} />
                             </FormField>
+
+                            <FormField label="Margem Esquerda (px)">
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_left)} onChange={e => updateCarouselConfig({ margin_left: e.target.value })} placeholder="Ex: 0" className={inputClass} />
+                            </FormField>
+
+                            <FormField label="Margem Direita (px)">
+                              <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_right)} onChange={e => updateCarouselConfig({ margin_right: e.target.value })} placeholder="Ex: 0" className={inputClass} />
+                            </FormField>
                           </div>
                         </AccordionSection>
 
