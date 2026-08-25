@@ -5115,26 +5115,27 @@ function initInlineWidget(options) {
      ARRASTAR (DRAG) DO WIDGET FLUTUANTE
      ================================================================ */
 
-  function applyDraggable(el, appearance) {
+  function applyDraggable(positionEl, dragHandleEl, appearance) {
     var behaviorConfig = getFloatingBehaviorConfig(appearance);
     if (!behaviorConfig.allowDrag) return;
 
-    // IMPRESCINDÍVEL: Avisa o navegador para não interferir com gestos de rolagem padrão
-    el.style.touchAction = 'none';
+    // Avisa o navegador que não deve interferir no arrasto (sem rolagem)
+    positionEl.style.touchAction = 'none';
 
     var isDragging = false;
     var startX, startY, initialRight, initialBottom;
 
-    el.addEventListener('pointerdown', function (e) {
+    // O ponto de clique será o balão (dragHandleEl), mas quem se move é o wrapper (positionEl)
+    var trigger = dragHandleEl || positionEl;
+
+    trigger.addEventListener('pointerdown', function (e) {
       // Ignora cliques que não sejam o botão esquerdo (no mouse)
       if (e.pointerType === 'mouse' && e.button !== 0) return;
-      
-      // Ignora o arrasto se clicar no botão de fechar (x) ou dismiss
+
+      // Ignora o arrasto se clicar no botão de fechar (X)
       if (e.target.closest && (e.target.closest('.vl-dismiss') || e.target.closest('.vl-floating-close-btn'))) return;
 
       isDragging = true;
-      
-      // Define a flag global de arrasto com segurança
       if (typeof floatingWasDragged !== 'undefined') {
         floatingWasDragged = false;
       }
@@ -5142,21 +5143,20 @@ function initInlineWidget(options) {
       startX = e.clientX;
       startY = e.clientY;
 
-      var rect = el.getBoundingClientRect();
+      var rect = wrapper.getBoundingClientRect();
       initialRight = window.innerWidth - rect.right;
       initialBottom = window.innerHeight - rect.bottom;
-      
-      el.style.transition = 'none';
 
-      // Captura o ponteiro para rastrear o movimento mesmo fora do elemento
+      // Remove transição durante o arrasto
+      positionEl.style.transition = 'none';
+
+      // Captura o ponteiro para não perder o movimento
       try {
-        el.setPointerCapture(e.pointerId);
-      } catch (err) {
-        console.warn('[Vidlytics] Falha ao capturar ponteiro:', err);
-      }
+        trigger.setPointerCapture(e.pointerId);
+      } catch (err) {}
     });
 
-    el.addEventListener('pointermove', function (e) {
+    trigger.addEventListener('pointermove', function (e) {
       if (!isDragging) return;
 
       var dx = startX - e.clientX;
@@ -5167,31 +5167,31 @@ function initInlineWidget(options) {
         if (typeof floatingWasDragged !== 'undefined') {
           floatingWasDragged = true;
         }
-        
-        // Atualiza a posição mantendo o elemento fixo em relação ao canto inferior direito
-        el.style.right = (initialRight + dx) + 'px';
-        el.style.bottom = (initialBottom + dy) + 'px';
-        el.style.left = 'auto';
-        el.style.top = 'auto';
+
+        // Move o wrapper inteiro (balão + X) junto
+        positionEl.style.right = (initialRight + dx) + 'px';
+        positionEl.style.bottom = (initialBottom + dy) + 'px';
+        positionEl.style.left = 'auto';
+        positionEl.style.top = 'auto';
       }
     });
 
-    el.addEventListener('pointerup', function (e) {
+    trigger.addEventListener('pointerup', function (e) {
       if (isDragging) {
         isDragging = false;
-        el.style.transition = 'all 0.3s ease';
+        positionEl.style.transition = 'all 0.3s ease';
         try {
-          el.releasePointerCapture(e.pointerId);
+          trigger.releasePointerCapture(e.pointerId);
         } catch (err) {}
       }
     });
 
-    el.addEventListener('pointercancel', function (e) {
+    trigger.addEventListener('pointercancel', function (e) {
       if (isDragging) {
         isDragging = false;
-        el.style.transition = 'all 0.3s ease';
+        positionEl.style.transition = 'all 0.3s ease';
         try {
-          el.releasePointerCapture(e.pointerId);
+          trigger.releasePointerCapture(e.pointerId);
         } catch (err) {}
       }
     });
