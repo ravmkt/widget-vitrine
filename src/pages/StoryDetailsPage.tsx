@@ -683,52 +683,55 @@ const SelectorModal = () => {
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome do Story</label>
                   <input type="text" value={formData.title} onChange={(event) => setFormData((prev) => ({ ...prev, title: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none focus:border-[#0094EB]" placeholder="Ex: Lançamentos" />
                 </div>
-<div className="space-y-3 md:col-span-2">
-  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
-    {[
-      { id: 'floating_widget', label: 'Flutuante' },
-      { id: 'carousel', label: 'Carrossel' },
-      { id: 'grid', label: 'Grade' },
-      { id: 'dynamic_carousel', label: 'Carrossel Dinâmico' },
-    ].map((format) => {
-      const Icon = FORMAT_ICONS[format.id as keyof typeof FORMAT_ICONS] ?? Layout;
-      const isDynamic = format.id === 'dynamic_carousel';
-      const isDisabled = isDynamic && selectedVideoIds.length < 3;
 
-      return (
-        <button
-          key={format.id}
-          type="button"
-          disabled={isDisabled}
-          onClick={() => !isDisabled && setFormData((prev) => ({ ...prev, format: format.id as StoryFormat }))}
-          className={cn(
-            'flex flex-col items-center justify-center gap-3 rounded-3xl border-2 p-6 transition-all min-h-[140px]',
-            isDisabled
-              ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 opacity-60'
-              : formData.format === format.id
-                ? 'border-[#0094EB] bg-blue-50 text-[#0094EB]'
-                : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'
-          )}
-        >
-          <Icon size={24} strokeWidth={1.7} />
-          <span className="text-[10px] font-black uppercase tracking-wider">{format.label}</span>
-          {isDynamic && (
-            <span className="text-center text-[9px] font-bold leading-tight text-slate-400 mt-1">
-              {isDisabled ? 'Adicione 3 vídeos para habilitar' : `${selectedVideoIds.length} selecionados`}
-            </span>
-          )}
-        </button>
-      );
-    })}
-  </div>
-  
-  {/* Aviso sobre os requisitos do Carrossel Dinâmico */}
-  {formData.format === 'dynamic_carousel' && (
-    <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 text-xs font-medium text-slate-600">
-      💡 <strong className="text-[#0094EB]">Carrossel Dinâmico:</strong> Este formato requer no mínimo <strong>3 vídeos</strong> ativos para funcionar corretamente na sua loja. Recomendamos o uso de <strong>6 ou mais vídeos</strong> para garantir uma experiência fluida e engajadora para os clientes.
-    </div>
-  )}
-</div>
+                {/* Bloco de Formatos Corrigido e Responsivo */}
+                <div className="space-y-3 md:col-span-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Layout de Exibição</label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+                    {[
+                      { id: 'floating_widget', label: 'Flutuante' },
+                      { id: 'carousel', label: 'Carrossel' },
+                      { id: 'grid', label: 'Grade' },
+                      { id: 'dynamic_carousel', label: 'Carrossel Dinâmico' },
+                    ].map((format) => {
+                      const Icon = FORMAT_ICONS[format.id as keyof typeof FORMAT_ICONS] ?? Layout;
+                      const isDynamic = format.id === 'dynamic_carousel';
+                      const isDisabled = isDynamic && selectedVideoIds.length < 3;
+
+                      return (
+                        <button
+                          key={format.id}
+                          type="button"
+                          disabled={isDisabled}
+                          onClick={() => !isDisabled && setFormData((prev) => ({ ...prev, format: format.id as StoryFormat }))}
+                          className={cn(
+                            'flex flex-col items-center justify-center gap-3 rounded-3xl border-2 p-6 transition-all min-h-[140px]',
+                            isDisabled
+                              ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 opacity-60'
+                              : formData.format === format.id
+                                ? 'border-[#0094EB] bg-blue-50 text-[#0094EB]'
+                                : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'
+                          )}
+                        >
+                          <Icon size={24} strokeWidth={1.7} />
+                          <span className="text-[10px] font-black uppercase tracking-wider">{format.label}</span>
+                          {isDynamic && (
+                            <span className="text-center text-[9px] font-bold leading-tight text-slate-400 mt-1">
+                              {isDisabled ? 'Adicione 3 vídeos' : `${selectedVideoIds.length} selecionados`}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Alerta informativo do Carrossel Dinâmico */}
+                  {formData.format === 'dynamic_carousel' && (
+                    <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 text-xs font-semibold text-slate-600 transition-all">
+                      💡 <strong className="text-[#0094EB]">Carrossel Dinâmico:</strong> Este formato requer no mínimo <strong>3 vídeos ativos</strong> selecionados abaixo para funcionar corretamente na sua loja. Recomendamos o uso de <strong>6 ou mais vídeos</strong> para a melhor experiência de rolagem infinita.
+                    </div>
+                  )}
+                </div>
                 </div>
                 <div className="space-y-2 pt-4"><label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Direção de Rolagem</label><select value={formData.scroll_direction} onChange={(event) => setFormData((prev) => ({ ...prev, scroll_direction: event.target.value as ScrollDirection }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none"><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
                 <div className="space-y-2 pt-4"><label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Estilo Visual / Aparência</label><select value={formData.appearance_id} onChange={(event) => setFormData((prev) => ({ ...prev, appearance_id: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none"><option value="">Seguir Padrão do App</option>{appearances.filter((app) => app.id && isValidUuid(app.id)).map((app) => (<option key={app.id} value={app.id}>{app.name} {app.is_default ? '(Padrão)' : ''}</option>))}</select></div>
