@@ -5852,6 +5852,7 @@ return readStoreSettings().then(function (settings) {
         });
       });
     });
+    });
   });
   });
 }
