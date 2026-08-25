@@ -5189,6 +5189,7 @@ function initInlineWidget(options) {
    ================================================================ */
 
 function renderFloatingWidget(floatingStories) {
+  console.log("VIDLYTICS DEBUG - Configuração Atual:", currentAppearance);
   
   if (!currentAppearance) return;
 
