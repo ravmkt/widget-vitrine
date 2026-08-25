@@ -5263,14 +5263,30 @@ function renderFloatingWidget(floatingStories) {
       'justify-content:center !important;' +
       'border:none !important;' +
       'transition:background 0.2s !important;';
+
     closeBtn.addEventListener('mouseenter', function () {
       closeBtn.style.background = 'rgba(255,0,0,0.8)';
     });
+    
     closeBtn.addEventListener('mouseleave', function () {
       closeBtn.style.background = 'rgba(0,0,0,0.7)';
     });
-    closeBtn.addEventListener('click', function (e) {
+
+    // 🚨 BLOQUEIA O ARRASTO SE CLICAR NO X
+    closeBtn.addEventListener('pointerdown', function (e) {
       e.stopPropagation();
+    });
+
+    closeBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (floatingDragActive || floatingWasDragged) {
+        floatingDragActive = false;
+        floatingWasDragged = false;
+        return;
+      }
+
       var host = document.getElementById('vidlytics-floating-host');
       if (host) host.remove();
       globalShadowRoot = null;
