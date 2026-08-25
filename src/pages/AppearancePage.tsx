@@ -3531,12 +3531,65 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                           isOpen={activeSection === 'floating-behavior'}
                           onToggle={() => setActiveSection(activeSection === 'floating-behavior' ? null : 'floating-behavior')}
                         >
-                          <div className="space-y-1.5">
-                            <ToggleSwitch label="Exibir título no flutuante" checked={activeFloatingConfig.show_title ?? true} onChange={e => updateFloatingConfig({ show_title: e.target.checked })} />
-                            <ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeFloatingConfig.autoplay_videos ?? true} onChange={e => updateFloatingConfig({ autoplay_videos: e.target.checked })} />
-                            <ToggleSwitch label="Exibir botão Play no centro" checked={activeFloatingConfig.show_play_icon} onChange={e => updateFloatingConfig({ show_play_icon: e.target.checked })} />
-                            <ToggleSwitch label="Permitir arrastar widget na tela" checked={activeFloatingConfig.draggable} onChange={e => updateFloatingConfig({ draggable: e.target.checked })} />
-                            <ToggleSwitch label="Exibir botão de fechar (X)" checked={activeFloatingConfig.allow_close} onChange={e => updateFloatingConfig({ allow_close: e.target.checked })} />
+                          <div className="space-y-4">
+                            <div className="space-y-1.5">
+                              <ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeFloatingConfig.autoplay_videos ?? true} onChange={e => updateFloatingConfig({ autoplay_videos: e.target.checked })} />
+                              <ToggleSwitch label="Exibir botão Play no centro" checked={activeFloatingConfig.show_play_icon} onChange={e => updateFloatingConfig({ show_play_icon: e.target.checked })} />
+                              <ToggleSwitch label="Permitir arrastar widget na tela" checked={activeFloatingConfig.draggable} onChange={e => updateFloatingConfig({ draggable: e.target.checked })} />
+                              <ToggleSwitch label="Exibir botão de fechar (X)" checked={activeFloatingConfig.allow_close} onChange={e => updateFloatingConfig({ allow_close: e.target.checked })} />
+                            </div>
+
+                            {/* Bloco de CTA Lateral */}
+                            <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-4">
+                              <ToggleSwitch 
+                                label="Exibir CTA lateral (Pílula)" 
+                                description="Adiciona um botão de texto elegante atrelado ao widget."
+                                checked={activeFloatingConfig.show_cta ?? false} 
+                                onChange={e => updateFloatingConfig({ show_cta: e.target.checked })} 
+                              />
+                              
+                              {activeFloatingConfig.show_cta && (
+                                <div className="space-y-3 pt-2 border-t border-blue-100/50">
+                                  <FormField label="Texto do CTA (máx 12 caract.)">
+                                    <input
+                                      type="text"
+                                      maxLength={12}
+                                      value={activeFloatingConfig.cta_text ?? ''}
+                                      onChange={e => updateFloatingConfig({ cta_text: e.target.value })}
+                                      placeholder="Ex: VER VÍDEO"
+                                      className={inputClass}
+                                    />
+                                  </FormField>
+
+                                  <div className="grid grid-cols-2 gap-2.5">
+                                    <FormField label="Cor de Fundo">
+                                      <ColorInput label="Cor de Fundo" value={activeFloatingConfig.cta_bg_color || formData.primary_color} onChange={e => updateFloatingConfig({ cta_bg_color: e.target.value })} />
+                                    </FormField>
+
+                                    <FormField label="Cor do Texto">
+                                      <ColorInput label="Cor do Texto" value={activeFloatingConfig.cta_text_color || '#FFFFFF'} onChange={e => updateFloatingConfig({ cta_text_color: e.target.value })} />
+                                    </FormField>
+                                    
+                                    <FormField label="Tamanho Fonte (px)">
+                                      <input
+                                        type="number" min="10" max="24" step="1"
+                                        value={activeFloatingConfig.cta_font_size ?? 14}
+                                        onChange={e => updateFloatingConfig({ cta_font_size: safeNumber(e.target.value, 14, 10) })}
+                                        className={inputClass}
+                                      />
+                                    </FormField>
+
+                                    <div className="flex items-end pb-1.5">
+                                      <ToggleSwitch 
+                                        label="Negrito" 
+                                        checked={activeFloatingConfig.cta_is_bold ?? true} 
+                                        onChange={e => updateFloatingConfig({ cta_is_bold: e.target.checked })} 
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </AccordionSection>
                       </div>
