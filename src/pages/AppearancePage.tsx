@@ -2988,7 +2988,8 @@ const AppearancePage = () => {
               <button type="button" onClick={handleCancel} disabled={saving} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-60"><X size={20} /></button>
             </div>
 
-            <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-4 shrink-0">
+            {/* ABAS (Menu Básico, Flutuante, etc) - Reduzido o py */}
+            <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-2.5 shrink-0">
               <div className="flex flex-wrap gap-2">
                 <ModalTabButton active={activeTab === 'basic'} icon={<Settings2 size={16} />} label="Básico" onClick={() => setActiveTab('basic')} />
                 <ModalTabButton active={activeTab === 'floating'} icon={<PlaySquare size={16} />} label="Flutuante" onClick={() => setActiveTab('floating')} />
@@ -2999,9 +3000,14 @@ const AppearancePage = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-hidden bg-slate-50/60 p-6 xl:p-8">
-              <div className="grid h-full grid-cols-1 gap-8 items-start xl:grid-cols-[380px_minmax(0,1fr)]">
-                <div className="h-full overflow-y-auto pr-4 pb-12 space-y-6 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
+            {/* CORPO DO MODAL - Reduzido paddings e gap */}
+            <div className="flex-1 overflow-hidden bg-slate-50/60 p-4 xl:p-5">
+              <div className="grid h-full grid-cols-1 gap-4 items-start xl:grid-cols-[380px_minmax(0,1fr)]">
+                
+                {/* LADO ESQUERDO: BARRA DE CONFIGURAÇÕES - Reduzido space-y-6 para space-y-4 */}
+                <div className="h-full overflow-y-auto pr-3 pb-12 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
+                  
+                  {/* ... MANTENHA AQUI TODO O CONTEÚDO DOS SEUS "if (activeTab === ...)" INTACTOS ... */}
                   
                   {/* BÁSICO */}
                   {activeTab === 'basic' && (
