@@ -5418,13 +5418,23 @@ function renderFloatingWidget(floatingStories) {
   }
 
   // ── INJEÇÃO DO BOTÃO CTA FLUTUANTE ──
-  var ctaText = typeof readAppearanceValue === 'function' ? readAppearanceValue(currentAppearance, ['floating_cta_text', 'ctaText']) : null;
-  var ctaLink = typeof readAppearanceValue === 'function' ? readAppearanceValue(currentAppearance, ['floating_cta_link', 'ctaLink']) : null;
+  
+  // 1. Tenta usar a função helper, se não existir, tenta ler direto do objeto currentAppearance
+  var ctaText = typeof readAppearanceValue === 'function' 
+    ? readAppearanceValue(currentAppearance, ['floating_cta_text', 'ctaText']) 
+    : (currentAppearance.floating_cta_text || currentAppearance.ctaText || currentAppearance.floating_cta || null);
+    
+  var ctaLink = typeof readAppearanceValue === 'function' 
+    ? readAppearanceValue(currentAppearance, ['floating_cta_link', 'ctaLink']) 
+    : (currentAppearance.floating_cta_link || currentAppearance.ctaLink || null);
 
   if (ctaText) {
     var ctaElement = createEl('div', 'vl-floating-cta');
     var btnColor = typeof getPrimaryColor === 'function' ? getPrimaryColor(currentAppearance) : '#000000';
-    var txtColor = typeof readAppearanceValue === 'function' ? readAppearanceValue(currentAppearance, ['button_text_color', 'buttonTextColor']) : '#ffffff';
+    
+    var txtColor = typeof readAppearanceValue === 'function' 
+      ? readAppearanceValue(currentAppearance, ['button_text_color', 'buttonTextColor']) 
+      : (currentAppearance.button_text_color || currentAppearance.buttonTextColor || '#ffffff');
     if (!txtColor) txtColor = '#ffffff';
 
     ctaElement.innerText = ctaText;
@@ -5449,7 +5459,8 @@ function renderFloatingWidget(floatingStories) {
       'overflow: hidden !important;' +
       'text-overflow: ellipsis !important;' +
       'transition: transform 0.2s ease, opacity 0.2s ease !important;' +
-      'font-family: inherit !important;';
+      'font-family: inherit !important;' +
+      'margin-top: 4px !important;'; // Espaçamento entre a bolha e o botão
 
     // Hover effect via JS
     ctaElement.addEventListener('mouseenter', function() {
@@ -5470,6 +5481,7 @@ function renderFloatingWidget(floatingStories) {
       }
     });
 
+    // Insere o CTA dentro do widget (abaixo do wrapper da bolha)
     widget.appendChild(ctaElement);
   }
 
