@@ -877,6 +877,12 @@ product_card_price_size: toNumber(rcv('product_card_price_size', '12'), 12),
     return fetchJson('stories?select=*&store_id=eq.' + encodeURIComponent(storeId))
       .then(function (items) {
         return items.filter(function (story) {
+          // 🚀 Bypass de segurança para simulação de preview
+          var match = window.location.search.match(/[?&]vidlytics_preview_story_id=([^&]+)/);
+          var previewId = match ? match[1] : null;
+          if (previewId && String(story.id) === String(previewId)) {
+            return true; 
+          }
           return ('status' in story ? story.status === 'active' : true) &&
                  ('active' in story ? story.active !== false : true);
         });
@@ -5815,7 +5821,27 @@ return readStoreSettings().then(function (settings) {
               console.error('[Vidlytics] ❌ Erro no fallback:', err);
             }
           }
-        });
+        
+
+          // 🚀 AUTO-OPEN IMEDIATO DO PREVIEW DE STORIES (IGNORA STATUS E REGRA DE PÁGINA)
+          var match = window.location.search.match(/[?&]vidlytics_preview_story_id=([^&]+)/);
+          var previewId = match ? match[1] : null;
+          if (previewId) {
+            setTimeout(function () {
+              if (typeof currentStories !== 'undefined' && currentStories.length > 0) {
+                var sIdx = -1;
+                for (var i = 0; i < currentStories.length; i++) {
+                  if (String(currentStories[i].id) === String(previewId)) {
+                    sIdx = i;
+                    break;
+                  }
+                }
+                if (sIdx !== -1) {
+                  openStoryModal(sIdx, 0);
+                }
+              }
+            }, 600);
+          }});
       });
 }).then(function () {
     }).catch(function (err) {
