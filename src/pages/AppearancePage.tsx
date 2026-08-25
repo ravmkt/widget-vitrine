@@ -2377,6 +2377,39 @@ const VisualPreview = ({
   );
 };
 
+// ──────────────────── COMPONENTES FALTANTES (CAUSAVAM TELA BRANCA) ────────────────────
+const AccordionSection = ({
+  title,
+  isOpen,
+  onToggle,
+  children,
+}: {
+  title: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) => {
+  return (
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between bg-slate-50/50 px-4 py-3 text-sm font-bold text-slate-800 hover:bg-slate-50 transition-colors"
+      >
+        {title}
+        <ChevronDown
+          size={16}
+          className={cn(
+            'text-slate-500 transition-transform duration-200',
+            isOpen ? 'rotate-180' : ''
+          )}
+        />
+      </button>
+      {isOpen && <div className="border-t border-slate-100 p-4">{children}</div>}
+    </div>
+  );
+};
+
 const PreviewCard = ({
   formData,
   floatingDevice, setFloatingDevice,
@@ -2385,7 +2418,7 @@ const PreviewCard = ({
   gridDevice, setGridDevice,
   activeTab,
 }: any) => {
-  // Estado local apenas para o Player, já que os outros sincronizam com a barra lateral
+  // Estado local apenas para o Player e Básico
   const [playerDevice, setPlayerDevice] = useState<'desktop' | 'mobile'>('mobile');
 
   // Descobre qual dispositivo está ativo agora baseado na aba
@@ -2398,12 +2431,12 @@ const PreviewCard = ({
 
   // Função para mudar o dispositivo clicando nos botões acima do preview
   const handleDeviceChange = (device: 'desktop' | 'mobile') => {
-    if (formData.useGlobalAppearance) return; // Se estiver travado no global, não faz nada
+    // CORREÇÃO: Removida a trava global. Queremos poder alternar a VISUALIZAÇÃO mesmo que as configurações sejam iguais!
     if (activeTab === 'floating') setFloatingDevice(device);
     if (activeTab === 'carousel') setCarouselDevice(device);
     if (activeTab === 'dynamic_carousel') setDynamicCarouselDevice(device);
     if (activeTab === 'grid') setGridDevice(device);
-    if (activeTab === 'modal') setPlayerDevice(device);
+    if (activeTab === 'modal' || activeTab === 'basic') setPlayerDevice(device);
   };
 
   const floating = getActiveResponsiveConfig(formData.floating_config, activeDevice, formData.useGlobalAppearance);
@@ -2420,44 +2453,45 @@ const PreviewCard = ({
     floatingBorder: floating.border_color || formData.primary_color,
   };
 
-  const isMobileFrame = !formData.useGlobalAppearance && activeDevice === 'mobile';
+  // Sempre força a capa do celular se o viewMode estiver no 'mobile', independente do global
+  const isMobileFrame = activeDevice === 'mobile';
 
   return (
-    <aside className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-      {/* HEADER DO PREVIEW: Toggles de Dispositivo */}
-      <div className="flex items-center justify-center border-b border-slate-100 bg-slate-50/80 p-2 shrink-0">
-        <div className="flex items-center bg-slate-200/60 p-1 rounded-lg gap-1">
-          <button
-            type="button"
-            onClick={() => handleDeviceChange('desktop')}
-            className={cn(
-              "flex items-center justify-center p-1.5 rounded-md transition-all duration-200",
-              activeDevice === 'desktop' ? "bg-white shadow-sm text-[#0094EB]" : "text-slate-500 hover:text-slate-700"
-            )}
-            title="Visualizar em Desktop"
-          >
-            <Monitor size={16} />
-          </button>
-          <button
-            type="button"
-            onClick={() => handleDeviceChange('mobile')}
-            className={cn(
-              "flex items-center justify-center p-1.5 rounded-md transition-all duration-200",
-              activeDevice === 'mobile' ? "bg-white shadow-sm text-[#0094EB]" : "text-slate-500 hover:text-slate-700"
-            )}
-            title="Visualizar em Mobile"
-          >
-            <Smartphone size={16} />
-          </button>
-        </div>
+    <aside className="relative flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+      
+      {/* CORREÇÃO: Toggles Flutuantes no Canto Superior Direito */}
+      <div className="absolute top-4 right-4 z-50 flex items-center bg-white/90 backdrop-blur-md border border-slate-200 p-1 rounded-xl shadow-sm">
+        <button
+          type="button"
+          onClick={() => handleDeviceChange('desktop')}
+          className={cn(
+            "flex items-center justify-center p-2 rounded-lg transition-all duration-200",
+            activeDevice === 'desktop' ? "bg-[#0094EB] text-white shadow-md" : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+          )}
+          title="Visualizar em Desktop"
+        >
+          <Monitor size={18} />
+        </button>
+        <button
+          type="button"
+          onClick={() => handleDeviceChange('mobile')}
+          className={cn(
+            "flex items-center justify-center p-2 rounded-lg transition-all duration-200",
+            activeDevice === 'mobile' ? "bg-[#0094EB] text-white shadow-md" : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+          )}
+          title="Visualizar em Mobile"
+        >
+          <Smartphone size={18} />
+        </button>
       </div>
 
       {/* ÁREA DO PREVIEW EM SI */}
       <div className="relative flex-1 flex flex-col items-center p-4 bg-slate-50/50 overflow-y-auto">
-        <div className="my-auto w-full flex justify-center">
+        {/* Adicionado py-10 e my-auto para respiro de rolagem */}
+        <div className="my-auto w-full flex justify-center py-10">
           {isMobileFrame ? (
-            /* FRAME MOCKUP DE CELULAR FÍSICO */
-            <div className="relative mx-auto w-[320px] h-[650px] bg-slate-800 rounded-[3rem] p-2.5 shadow-2xl flex shrink-0 ring-1 ring-slate-900/10">
+            /* CORREÇÃO: min-h-[680px] e shrink-0 para não cortar o celular */
+            <div className="relative mx-auto w-[320px] min-h-[680px] bg-slate-800 rounded-[3rem] p-2.5 shadow-2xl flex shrink-0 ring-1 ring-slate-900/10">
               {/* Entalhe (Notch) e Câmera */}
               <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-3xl z-50 flex justify-center items-center">
                 <div className="w-10 h-1.5 rounded-full bg-slate-700/50"></div>
@@ -2475,7 +2509,7 @@ const PreviewCard = ({
             </div>
           ) : (
             /* FRAME DESKTOP LIVRE */
-            <div className="w-full transition-all duration-500 ease-in-out">
+            <div className="w-full transition-all duration-500 ease-in-out mt-8">
               {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} device={activeDevice} />}
               {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
               {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} />}
@@ -2988,7 +3022,7 @@ const AppearancePage = () => {
               <button type="button" onClick={handleCancel} disabled={saving} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-60"><X size={20} /></button>
             </div>
 
-            {/* ABAS (Menu Básico, Flutuante, etc) - Reduzido o py */}
+            {/* ABAS (Menu Básico, Flutuante, etc) */}
             <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-2.5 shrink-0">
               <div className="flex flex-wrap gap-2">
                 <ModalTabButton active={activeTab === 'basic'} icon={<Settings2 size={16} />} label="Básico" onClick={() => setActiveTab('basic')} />
@@ -3000,14 +3034,12 @@ const AppearancePage = () => {
               </div>
             </div>
 
-            {/* CORPO DO MODAL - Reduzido paddings e gap */}
+            {/* CORPO DO MODAL */}
             <div className="flex-1 overflow-hidden bg-slate-50/60 p-4 xl:p-5">
               <div className="grid h-full grid-cols-1 gap-4 items-start xl:grid-cols-[380px_minmax(0,1fr)]">
                 
-                {/* LADO ESQUERDO: BARRA DE CONFIGURAÇÕES - Reduzido space-y-6 para space-y-4 */}
+                {/* LADO ESQUERDO: BARRA DE CONFIGURAÇÕES */}
                 <div className="h-full overflow-y-auto pr-3 pb-12 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
-                  
-                  {/* ... MANTENHA AQUI TODO O CONTEÚDO DOS SEUS "if (activeTab === ...)" INTACTOS ... */}
                   
                   {/* BÁSICO */}
                   {activeTab === 'basic' && (
@@ -3471,7 +3503,7 @@ const AppearancePage = () => {
                           </div>
                         </AccordionSection>
 
-                        {/* 3. ELEMENTOS VISÍVEIS (Numeração da UI segue o seu guia "3. ELEMENTOS VISÍVEIS") */}
+                        {/* 3. ELEMENTOS VISÍVEIS */}
                         <AccordionSection title="3. Elementos Visíveis" isOpen={activeSection === 'mod-3'} onToggle={() => setActiveSection(activeSection === 'mod-3' ? null : 'mod-3')}>
                           <div className="space-y-1.5">
                             <ToggleSwitch label="Exibir título do vídeo" checked={formData.modal_config.show_title} onChange={e => updateModalConfig({ show_title: e.target.checked })} />
@@ -3522,13 +3554,11 @@ const AppearancePage = () => {
             </div>
 
             <div className="flex items-center justify-between border-t border-slate-100 bg-white px-6 py-3 shrink-0">
-              {/* Aviso alinhado à esquerda */}
               <div className="hidden sm:flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50/80 px-3 py-1.5 rounded-lg border border-slate-100">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} className="text-[#0094EB]"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                 <span>Este painel é um <strong>preview meramente visual</strong>. Para testar cliques e interações, use a visualização direta da loja.</span>
               </div>
 
-              {/* Botões à direita */}
               <div className="flex items-center gap-3">
                 <button type="button" onClick={handleCancel} disabled={saving} className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 transition-colors">
                   <X size={14} /> Cancelar
