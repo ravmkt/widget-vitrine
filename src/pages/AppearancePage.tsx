@@ -1621,6 +1621,8 @@ const FloatingPreview = ({
     positionStyle.right = gapRight;
   }
 
+  const isRightAligned = floating.position.includes('right') || floating.floating_position.includes('right');
+
   return (
     <div 
       className="relative w-full h-[440px] overflow-hidden rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50"
@@ -1629,46 +1631,75 @@ const FloatingPreview = ({
         backgroundSize: '16px 16px',
       }}
     >
-      {/* Widget Flutuante Puro com Tamanho 100% Real */}
+      {/* Wrapper dinâmico que carrega o Widget + CTA de forma sincronizada na UI de teste */}
       <div
-        className="absolute flex items-center justify-center overflow-hidden bg-white shadow-xl transition-all duration-300 animate-fade-in"
+        className="absolute transition-all duration-300 animate-fade-in flex items-center"
         style={{
-          width: finalWidth,
-          height: finalHeight,
-          borderRadius: isCircle ? '999px' : cssSize(floating.border_radius, '12px'),
-          border: cssBorder(floating.border_style, colors.floatingBorder),
-          zIndex: safeNumber(floating.z_index, 5, 1),
           ...positionStyle,
+          zIndex: safeNumber(floating.z_index, 5, 1),
         }}
       >
-        <video
-          ref={videoRef}
-          src={DEMO_PREVIEW_VIDEOS[0]}
-          loop={floating.autoplay_videos ?? true}
-          muted
-          playsInline
-          preload="auto"
-          poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-          className="absolute inset-0 h-full w-full object-cover pointer-events-none"
-        />
+        {/* Pílula do CTA Lateral */}
+        {floating.show_cta && floating.cta_text && (
+          <div
+            className="absolute whitespace-nowrap shadow-md pointer-events-none transition-all duration-300"
+            style={{
+              backgroundColor: floating.cta_bg_color || '#0094EB',
+              color: floating.cta_text_color || '#FFFFFF',
+              fontSize: `${floating.cta_font_size || 14}px`,
+              fontWeight: floating.cta_is_bold ? 'bold' : 'normal',
+              padding: '6px 14px',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              zIndex: -1, // Fica atrás do flutuante
+              ...(isRightAligned ? {
+                right: '100%',
+                marginRight: '-15px', // Sobreposição para efeito visual
+                paddingRight: '25px',
+                borderRadius: '30px 0 0 30px'
+              } : {
+                left: '100%',
+                marginLeft: '-15px',
+                paddingLeft: '25px',
+                borderRadius: '0 30px 30px 0'
+              })
+            }}
+          >
+            {floating.cta_text}
+          </div>
+        )}
 
-        {floating.show_play_icon && (
-          <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-            <PlaySquare size={16} />
-          </div>
-        )}
-        {floating.allow_close && (
-          <div className="absolute right-1 top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
-            <X size={12} />
-          </div>
-        )}
-        {floating.show_title && (
-          <div className="absolute bottom-2 left-3 right-3 z-10">
-            <p className="truncate text-[11px] font-black text-white drop-shadow">
-              Story
-            </p>
-          </div>
-        )}
+        {/* Widget Flutuante em si */}
+        <div
+          className="relative flex items-center justify-center overflow-hidden bg-white shadow-xl shrink-0"
+          style={{
+            width: finalWidth,
+            height: finalHeight,
+            borderRadius: isCircle ? '999px' : cssSize(floating.border_radius, '12px'),
+            border: cssBorder(floating.border_style, colors.floatingBorder),
+          }}
+        >
+          <video
+            ref={videoRef}
+            src={DEMO_PREVIEW_VIDEOS[0]}
+            loop={floating.autoplay_videos ?? true}
+            muted
+            playsInline
+            preload="auto"
+            poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
+          />
+
+          {floating.show_play_icon && (
+            <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
+              <PlaySquare size={16} />
+            </div>
+          )}
+          {floating.allow_close && (
+            <div className="absolute right-1 top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
+              <X size={12} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
