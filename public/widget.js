@@ -5392,22 +5392,22 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
 
   cardOuter.appendChild(cardInner);
 
-cardOuter.addEventListener('click', function (event) {
-  if (floatingDragActive || floatingWasDragged) {
-    event.preventDefault();
-    event.stopPropagation();
+  cardOuter.addEventListener('click', function (event) {
+    if (floatingDragActive || floatingWasDragged) {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      // Limpa as variáveis APÓS o ciclo do evento de clique,
+      // para não abrir o modal acidentalmente
+      setTimeout(function () {
+        floatingDragActive = false;
+        floatingWasDragged = false;
+      }, 50);
+      return;
+    }
 
-    floatingDragActive = false;
-
-    window.setTimeout(function () {
-      floatingWasDragged = false;
-    }, 0);
-
-    return;
-  }
-
-  openStoryModal(0);
-});
+    openStoryModal(0);
+  });
 
   // ── MONTAR WIDGET ──
   var wrapper = createEl('div', 'vl-floating-wrapper');
