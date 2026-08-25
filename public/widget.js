@@ -146,6 +146,7 @@ function ensureModalStylesInLightDOM(appearance) {
   var modalContent = null;
   var globalShadowRoot = null;
   var floatingWasDragged = false;
+  var floatingDragActive = false
   var floatingWasClosed = false;
   var widgetSelectToken = null;
   var readStoryProductsData = [];
