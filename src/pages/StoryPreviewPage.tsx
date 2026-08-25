@@ -208,7 +208,7 @@ export default function StoryPreviewPage() {
 
   // ─── Handlers ───
   const openPlayer = (idx = 0) => { setVideoIdx(idx); setPlayerOpen(true); setPlaying(true); setMuted(true); setProgress(0); };
-const closePlayer = () => { setPlayerOpen(false); setPlaying(false); setShowComments(false); setShowCommentForm(false); setShowEmojiPicker(false); setShowSizing(false); };
+  const closePlayer = () => { setPlayerOpen(false); setPlaying(false); setShowComments(false); setShowCommentForm(false); setShowEmojiPicker(false); setShowSizing(false); };
   const goNext = () => { if (videoIdx < videos.length - 1) { setVideoIdx(v => v + 1); setPlaying(true); setProgress(0); } else closePlayer(); };
   const goPrev = () => { if (videoIdx > 0) { setVideoIdx(v => v - 1); setPlaying(true); setProgress(0); } };
   const togglePlay = () => { if (!videoRef.current) return; if (playing) videoRef.current.pause(); else videoRef.current.play().catch(() => {}); };
@@ -595,7 +595,7 @@ const closePlayer = () => { setPlayerOpen(false); setPlaying(false); setShowComm
                     {/* Botão "Ver no site" — sempre visível quando há produto */}
                     <a href={product.product_url || product.url || '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 10px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}><ExternalLink size={12} /> Ver no site</a>
                     {/* Botão WhatsApp — só aparece se configurado no appearance */}
-{whatsappNumber && (
+                    {whatsappNumber && (
                         <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse nesse produto que vi no vídeo. ${product.product_url || product.url || ''}`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 10px', background: '#25d366', color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>Comprar pelo WhatsApp</a>
                     )}
                   </div>
@@ -766,11 +766,23 @@ Preview do Story • {storyFormat === 'floating_widget' ? 'Flutuante' : storyFor
             </p>
           </div>
         </div>
+
+        {/* ── Banner de Orientação para Simulação Real ── */}
+        <div className="mb-6 rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-center text-sm text-slate-600 shadow-sm backdrop-blur-sm">
+          <span>Para uma simulação real, </span>
+          <button
+            onClick={() => navigate(`/stories/${storyId}`)}
+            className="font-bold text-blue-600 underline hover:text-blue-700 transition-colors"
+          >
+            entre no editor do history clicando aqui
+          </button>
+          <span>.</span>
+        </div>
       </div>
 
-{storyFormat === 'floating_widget' && videos.length > 0 && renderFloating()}
-{(storyFormat === 'carousel' || storyFormat === 'dynamic_carousel') && videos.length > 0 && renderInlineWidget(false)}
-{storyFormat === 'grid' && videos.length > 0 && renderInlineWidget(true)}
+      {storyFormat === 'floating_widget' && videos.length > 0 && renderFloating()}
+      {(storyFormat === 'carousel' || storyFormat === 'dynamic_carousel') && videos.length > 0 && renderInlineWidget(false)}
+      {storyFormat === 'grid' && videos.length > 0 && renderInlineWidget(true)}
 
       {videos.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-slate-400">
