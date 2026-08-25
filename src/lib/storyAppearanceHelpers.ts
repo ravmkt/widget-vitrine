@@ -341,6 +341,10 @@ export function getFloatingConfig(appearance: Record<string, any>) {
     showCta: toBoolean(rcv('show_cta', 'floating_show_cta', true), true),
     ctaText: rcv('cta_text', 'floating_cta_text', 'Comprar Agora'),
     ctaLink: rcv('cta_link', 'floating_cta_link', ''),
+    ctaBgColor: rcv('cta_bg_color', 'floating_cta_bg_color', getPrimaryColor(a)),
+    ctaTextColor: rcv('cta_text_color', 'floating_cta_text_color', '#FFFFFF'),
+    ctaFontSize: toNumber(rcv('cta_font_size', 'floating_cta_font_size', '14'), 14),
+    ctaIsBold: toBoolean(rcv('cta_is_bold', 'floating_cta_is_bold', true), true),
   };
 }
 
