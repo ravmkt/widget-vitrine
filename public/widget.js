@@ -5138,7 +5138,7 @@ function initInlineWidget(options) {
 
       isDragging = true;
       floatingDragActive = true;   // <-- NOVO
-      if (typeof floatingWasDragged !== 'undefined') {
+      floatingWasDragged = false;
         floatingWasDragged = false;
       }
 
