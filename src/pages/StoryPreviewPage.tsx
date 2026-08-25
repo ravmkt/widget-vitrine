@@ -95,7 +95,7 @@ export default function StoryPreviewPage() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const dragCarousel = useRef({ isDown: false, startX: 0, startOffset: 0, moved: false });
 
-  // ─── Drag state (Widget Flutuante Arrastável) ───
+  // ─── Drag state (Widget Flutuante Arrastável Blindado) ───
   const [floatingOffset, setFloatingOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDraggingFloating, setIsDraggingFloating] = useState(false);
   const dragStartFloating = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -299,45 +299,52 @@ export default function StoryPreviewPage() {
   };
 
   // ═══════════════════════════════════════════════════════
-  // ARRASTAR DO WIDGET FLUTUANTE (Pointer Events)
+  // ARRASTAR DO WIDGET FLUTUANTE ( listeners globais de window )
   // ═══════════════════════════════════════════════════════
 
   const handleFloatingPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Apenas responde ao clique esquerdo do mouse ou touch direto
+    // Permite apenas o clique primário (botão esquerdo) ou toque
     if (e.button !== 0 && e.pointerType === 'mouse') return;
 
     setIsDraggingFloating(true);
     wasDraggedFloatingRef.current = false;
     dragStartFloating.current = { x: e.clientX, y: e.clientY };
-
-    // Captura o cursor para continuar rastreando mesmo se sair do componente durante movimentos rápidos
-    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
-  const handleFloatingPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+  useEffect(() => {
     if (!isDraggingFloating) return;
 
-    const dx = e.clientX - dragStartFloating.current.x;
-    const dy = e.clientY - dragStartFloating.current.y;
+    const handleGlobalPointerMove = (e: PointerEvent) => {
+      const dx = e.clientX - dragStartFloating.current.x;
+      const dy = e.clientY - dragStartFloating.current.y;
 
-    // Se moveu mais que 4 pixels, define que foi arrastado e não apenas clicado
-    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
-      wasDraggedFloatingRef.current = true;
-    }
+      // Se moveu mais que 5 pixels acumulados, consideramos como arrasto ativo
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        wasDraggedFloatingRef.current = true;
+      }
 
-    setFloatingOffset(prev => ({
-      x: prev.x + dx,
-      y: prev.y + dy
-    }));
+      setFloatingOffset(prev => ({
+        x: prev.x + dx,
+        y: prev.y + dy
+      }));
 
-    dragStartFloating.current = { x: e.clientX, y: e.clientY };
-  };
+      dragStartFloating.current = { x: e.clientX, y: e.clientY };
+    };
 
-  const handleFloatingPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDraggingFloating) return;
-    setIsDraggingFloating(false);
-    e.currentTarget.releasePointerCapture(e.pointerId);
-  };
+    const handleGlobalPointerUp = () => {
+      setIsDraggingFloating(false);
+    };
+
+    // Anexa os ouvintes ao window para garantir o rastreio absoluto de tela
+    window.addEventListener('pointermove', handleGlobalPointerMove);
+    window.addEventListener('pointerup', handleGlobalPointerUp);
+
+    return () => {
+      window.removeEventListener('pointermove', handleGlobalPointerMove);
+      window.removeEventListener('pointerup', handleGlobalPointerUp);
+    };
+  }, [isDraggingFloating]);
+
 
   // ─── Loading ───
   if (loading) return <div className="fixed inset-0 flex items-center justify-center bg-slate-950"><div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white" /></div>;
@@ -364,19 +371,17 @@ export default function StoryPreviewPage() {
           left: f.left,
           zIndex: f.zIndex,
           transform,
-          touchAction: 'none', // Impede o scroll de tela padrão no celular enquanto arrasta
+          touchAction: 'none', // Desativa o scroll da tela no celular
           cursor: isDraggingFloating ? 'grabbing' : 'grab',
           userSelect: 'none',
           WebkitUserSelect: 'none',
-          transition: isDraggingFloating ? 'none' : 'transform 0.1s ease-out'
+          transition: isDraggingFloating ? 'none' : 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
         }}
         onPointerDown={handleFloatingPointerDown}
-        onPointerMove={handleFloatingPointerMove}
-        onPointerUp={handleFloatingPointerUp}
       >
         <div
           onClick={(e) => {
-            // Se o widget foi arrastado, abortamos o evento de clique (não abre o player)
+            // Se foi arrastado, impede a abertura do player
             if (wasDraggedFloatingRef.current) {
               e.preventDefault();
               e.stopPropagation();
@@ -386,9 +391,9 @@ export default function StoryPreviewPage() {
           }}
           className={cn(
             "flex flex-col items-center gap-1 transition-all",
-            isDraggingFloating && "scale-[1.04] opacity-90 shadow-2xl"
+            isDraggingFloating && "scale-[1.05] opacity-90 shadow-2xl"
           )}
-          style={{ width: f.width, cursor: isDraggingFloating ? 'grabbing' : 'pointer' }}
+          style={{ width: f.width }}
         >
           <div style={{ position: 'relative', width: f.width, height: f.height }}>
             <div style={{ width: f.width, height: f.height, borderRadius: f.radius, padding: f.borderWidth, background: f.borderColor || `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`, boxShadow: '0 12px 30px rgba(15,23,42,.18)', overflow: 'hidden' }}>
@@ -409,14 +414,14 @@ export default function StoryPreviewPage() {
             </div>
             {f.allowClose && (
               <button
-                // Evita propagar o evento de arrastar ao tentar clicar no botão de fechar
+                // Evita que o clique no fechar inicie o arrastar
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(-1);
                 }}
                 className="absolute -top-3.5 -right-3.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white shadow-md active:scale-90 transition-transform"
-                style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+                style={{ cursor: 'pointer', zIndex: 10 }}
               >
                 <X size={14} className="text-slate-800" />
               </button>
@@ -644,12 +649,12 @@ export default function StoryPreviewPage() {
               <video key={currentVideo.id} ref={videoRef} src={currentUrl} poster={currentThumb || undefined} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} autoPlay muted={muted} playsInline loop onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onTimeUpdate={(e) => { const el = e.currentTarget; if (el.duration) setProgress((el.currentTime / el.duration) * 100); }} onEnded={goNext} />
             ) : currentThumb ? (
               <img src={currentThumb} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,.5)' }}>Nenhum vídeo</div>}
+            ) : <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifycontent: 'center', color: 'rgba(255,255,255,.5)' }}>Nenhum vídeo</div>}
 
             {/* Nav arrows */}
             {videos.length > 1 && (<>
-              <button onClick={(e) => { e.stopPropagation(); goPrev(); }} style={{ position: 'absolute', left: '10px', top: '42%', transform: 'translateY(-50%)', width: '36px', height: '36px', borderRadius: '999px', background: 'rgba(255,255,255,.18)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 35, border: '1px solid rgba(255,255,255,.35)' }}><ChevronLeft size={18} className="text-white" /></button>
-              <button onClick={(e) => { e.stopPropagation(); goNext(); }} style={{ position: 'absolute', right: '10px', top: '42%', transform: 'translateY(-50%)', width: '36px', height: '36px', borderRadius: '999px', background: 'rgba(255,255,255,.18)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 35, border: '1px solid rgba(255,255,255,.35)' }}><ChevronRight size={18} className="text-white" /></button>
+              <button onClick={(e) => { e.stopPropagation(); goPrev(); }} style={{ position: 'absolute', left: '10px', top: '42%', transform: 'translateY(-50%)', width: '36px', height: '36px', borderRadius: '999px', background: 'rgba(255,255,255,.18)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifycontent: 'center', cursor: 'pointer', zIndex: 35, border: '1px solid rgba(255,255,255,.35)' }}><ChevronLeft size={18} className="text-white" /></button>
+              <button onClick={(e) => { e.stopPropagation(); goNext(); }} style={{ position: 'absolute', right: '10px', top: '42%', transform: 'translateY(-50%)', width: '36px', height: '36px', borderRadius: '999px', background: 'rgba(255,255,255,.18)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifycontent: 'center', cursor: 'pointer', zIndex: 35, border: '1px solid rgba(255,255,255,.35)' }}><ChevronRight size={18} className="text-white" /></button>
             </>)}
           </div>
 
@@ -682,9 +687,7 @@ export default function StoryPreviewPage() {
                   <p style={{ fontWeight: 800, fontSize: '13px', color: textColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name || 'Produto'}</p>
                   {product.price != null && Number(product.price) > 0 && <p style={{ marginTop: '4px', fontWeight: 800, fontSize: '16px', color: secondaryColor }}>R$ {Number(product.price).toFixed(2).replace('.', ',')}</p>}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap', marginTop: '6px' }}>
-                    {/* Botão "Ver no site" — sempre visível quando há produto */}
                     <a href={product.product_url || product.url || '#'} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 10px', background: buttonColor, color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}><ExternalLink size={12} /> Ver no site</a>
-                    {/* Botão WhatsApp — só aparece se configurado no appearance */}
                     {whatsappNumber && (
                         <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho interesse nesse produto que vi no vídeo. ${product.product_url || product.url || ''}`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '999px', padding: '6px 10px', background: '#25d366', color: '#fff', fontSize: '11px', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>Comprar pelo WhatsApp</a>
                     )}
@@ -697,25 +700,23 @@ export default function StoryPreviewPage() {
           {/* Comments panel */}
           {showComments && (
             <div style={{ position: 'absolute', inset: '8px', zIndex: 200, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff', border: `2px solid ${primaryColor}`, borderRadius: '20px', boxShadow: '0 12px 30px rgba(0,0,0,.35)' }}>
-              {/* Cabeçalho */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px', height: '48px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111', margin: 0 }}>Comentários{comments.length > 0 ? ` (${comments.length})` : ''}</h3>
-                <button onClick={() => { setShowComments(false); setShowCommentForm(false); }} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none' }}><X size={20} className="text-slate-600" /></button>
+                <button onClick={() => { setShowComments(false); setShowCommentForm(false); }} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifycontent: 'center', cursor: 'pointer', border: 'none' }}><X size={20} className="text-slate-600" /></button>
               </div>
 
-              {/* Corpo: lista de comentários ou estado vazio */}
               {!showCommentForm ? (
                 <>
                   <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
                     {comments.length === 0 ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '180px', padding: '20px', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifycontent: 'center', flex: 1, minHeight: '180px', padding: '20px', textAlign: 'center' }}>
                         <MessageCircle size={40} style={{ opacity: 0.15, marginBottom: '12px', color: '#334155' }} />
                         <p style={{ fontSize: '15px', fontWeight: 700, color: '#334155', margin: '0 0 16px 0' }}>Seja o primeiro a comentar</p>
                       </div>
                     ) : (
                       comments.map((c, i) => (
                         <div key={c.id || i} style={{ display: 'flex', gap: '10px', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
-                          <div style={{ width: '34px', height: '34px', minWidth: '34px', borderRadius: '50%', background: primaryColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700 }}>{(c.user_name || c.name || 'A').charAt(0).toUpperCase()}</div>
+                          <div style={{ width: '34px', height: '34px', minWidth: '34px', borderRadius: '50%', background: primaryColor, color: '#fff', display: 'flex', alignItems: 'center', justifycontent: 'center', fontSize: '14px', fontWeight: 700 }}>{(c.user_name || c.name || 'A').charAt(0).toUpperCase()}</div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <span style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>{c.user_name || c.name || 'Anônimo'}</span>
                             <p style={{ fontSize: '14px', color: '#334155', lineHeight: 1.5, margin: 0, wordBreak: 'break-word' }}>{c.text}</p>
@@ -724,8 +725,7 @@ export default function StoryPreviewPage() {
                       ))
                     )}
                   </div>
-                  {/* Rodapé: botão "Deixe seu comentário" */}
-                  <div style={{ flexShrink: 0, borderTop: '1px solid #e2e8f0', padding: '12px 14px 10px', background: '#fff', display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ flexShrink: 0, borderTop: '1px solid #e2e8f0', padding: '12px 14px 10px', background: '#fff', display: 'flex', justifycontent: 'center' }}>
                     <button
                       onClick={() => setShowCommentForm(true)}
                       style={{ width: '100%', height: '40px', border: 'none', borderRadius: '12px', background: buttonColor, color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}
@@ -735,7 +735,6 @@ export default function StoryPreviewPage() {
                   </div>
                 </>
               ) : (
-                /* Formulário de comentário */
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px 18px', gap: '8px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Seu nome</label>
                   <input
@@ -756,7 +755,7 @@ export default function StoryPreviewPage() {
                     />
                     <button
                       onClick={(e) => { e.preventDefault(); setShowEmojiPicker(!showEmojiPicker); }}
-                      style={{ position: 'absolute', right: '10px', bottom: '10px', width: '32px', height: '32px', border: '2px solid #0f172a', borderRadius: '50%', background: '#fff', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, lineHeight: 1 }}
+                      style={{ position: 'absolute', right: '10px', bottom: '10px', width: '32px', height: '32px', border: '2px solid #0f172a', borderRadius: '50%', background: '#fff', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifycontent: 'center', padding: 0, lineHeight: 1 }}
                     >
                       😊
                     </button>
@@ -769,7 +768,7 @@ export default function StoryPreviewPage() {
                           <button
                             key={emoji}
                             onClick={() => { setCommentText(prev => (prev || '') + emoji); setShowEmojiPicker(false); }}
-                            style={{ width: '34px', height: '34px', border: 'none', background: 'transparent', borderRadius: '8px', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                            style={{ width: '34px', height: '34px', border: 'none', background: 'transparent', borderRadius: '8px', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifycontent: 'center', padding: 0 }}
                           >
                             {emoji}
                           </button>
@@ -799,14 +798,14 @@ export default function StoryPreviewPage() {
           {/* Sizing panel */}
           {showSizing && sizingModel && (
             <div style={{ position: 'absolute', zIndex: 70, display: 'flex', flexDirection: 'column', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'calc(100% - 40px)', maxWidth: '340px', maxHeight: '62%', overflow: 'hidden', background: '#fff', borderRadius: '24px', boxShadow: '0 18px 50px rgba(0,0,0,.32)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 18px 8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between', padding: '18px 18px 8px' }}>
                 <span style={{ fontSize: '11px', fontWeight: 900, letterSpacing: '.08em', textTransform: 'uppercase', color: primaryColor }}>Medidas da modelo</span>
-                <button onClick={() => setShowSizing(false)} style={{ width: '36px', height: '36px', borderRadius: '999px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none' }}><X size={20} className="text-slate-600" /></button>
+                <button onClick={() => setShowSizing(false)} style={{ width: '36px', height: '36px', borderRadius: '999px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifycontent: 'center', cursor: 'pointer', border: 'none' }}><X size={20} className="text-slate-600" /></button>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: '0 18px 18px' }}>
                 {Array.isArray(sizingModel.measures) && sizingModel.measures.length > 0 ? (
                   sizingModel.measures.map((item: any, i: number) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 12px', background: '#f6f8fb', borderRadius: '14px', marginBottom: '9px' }}>
+                    <div key={i} style={{ display: 'flex', justifycontent: 'space-between', padding: '14px 12px', background: '#f6f8fb', borderRadius: '14px', marginBottom: '9px' }}>
                       <span style={{ fontWeight: 800, color: '#475569' }}>{item.name || item.label || `Medida ${i + 1}`}</span>
                       <span style={{ fontWeight: 800, color: '#0f172a', textAlign: 'right' }}>{item.value || item.size || '-'}{item.unit || ''}</span>
                     </div>
