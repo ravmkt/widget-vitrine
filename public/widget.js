@@ -5184,9 +5184,9 @@ function initInlineWidget(options) {
     });
   }
 
-  /* ================================================================
-     RENDERIZAÇÃO DO WIDGET FLUTUANTE
-     ================================================================ */
+/* ================================================================
+   RENDERIZAÇÃO DO WIDGET FLUTUANTE
+   ================================================================ */
 
 function renderFloatingWidget(floatingStories) {
   if (!currentAppearance) return;
@@ -5284,7 +5284,6 @@ function renderFloatingWidget(floatingStories) {
     thumbUrl = getVideoThumbnail(story.videos[0]);
   }
 
-// trecho novo
   var cardOuter = createEl('div', 'vl-floating-card-outer');
   var isCircle = cfg.shape === 'circle';
 
@@ -5356,7 +5355,7 @@ function renderFloatingWidget(floatingStories) {
   }
 
   // Ícone de play centralizado
-if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isImageItem)) {
+  if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isImageItem)) {
     var playOverlay = createEl('div', 'vl-floating-play-icon');
     playOverlay.style.cssText =
       'position:absolute !important;' +
@@ -5382,7 +5381,6 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
       event.preventDefault();
       event.stopPropagation();
       
-      // Reseta a flag logo após impedir o clique indesejado
       setTimeout(function () {
         floatingWasDragged = false;
       }, 10);
@@ -5407,7 +5405,7 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
     var titleEl = createEl('div', 'vl-floating-title');
     titleEl.textContent = story.title;
     titleEl.style.cssText =
-      'color:' + (getTextColor ? getTextColor(currentAppearance) : '#333') + ' !important;' +
+      'color:' + (typeof getTextColor === 'function' ? getTextColor(currentAppearance) : '#333') + ' !important;' +
       'font-size:12px !important;' +
       'font-weight:600 !important;' +
       'text-align:' + (cfg.alignItems === 'flex-start' ? 'left' : cfg.alignItems === 'flex-end' ? 'right' : 'center') + ' !important;' +
@@ -5419,8 +5417,64 @@ if (cfg.showPlayIcon && thumbUrl && !(cfg.autoplayVideos && rawVideoUrl && !isIm
     widget.appendChild(titleEl);
   }
 
+  // ── INJEÇÃO DO BOTÃO CTA FLUTUANTE ──
+  var ctaText = typeof readAppearanceValue === 'function' ? readAppearanceValue(currentAppearance, ['floating_cta_text', 'ctaText']) : null;
+  var ctaLink = typeof readAppearanceValue === 'function' ? readAppearanceValue(currentAppearance, ['floating_cta_link', 'ctaLink']) : null;
+
+  if (ctaText) {
+    var ctaElement = createEl('div', 'vl-floating-cta');
+    var btnColor = typeof getPrimaryColor === 'function' ? getPrimaryColor(currentAppearance) : '#000000';
+    var txtColor = typeof readAppearanceValue === 'function' ? readAppearanceValue(currentAppearance, ['button_text_color', 'buttonTextColor']) : '#ffffff';
+    if (!txtColor) txtColor = '#ffffff';
+
+    ctaElement.innerText = ctaText;
+    ctaElement.style.cssText = 
+      'display: flex !important;' +
+      'justify-content: center !important;' +
+      'align-items: center !important;' +
+      'background: ' + btnColor + ' !important;' +
+      'color: ' + txtColor + ' !important;' +
+      'padding: 8px 16px !important;' +
+      'border-radius: 999px !important;' + 
+      'font-size: 13px !important;' +
+      'font-weight: 700 !important;' +
+      'text-align: center !important;' +
+      'cursor: pointer !important;' +
+      'box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;' +
+      'width: 100% !important;' +
+      'max-width: ' + cfg.width + ' !important;' +
+      'box-sizing: border-box !important;' +
+      'pointer-events: auto !important;' +
+      'white-space: nowrap !important;' +
+      'overflow: hidden !important;' +
+      'text-overflow: ellipsis !important;' +
+      'transition: transform 0.2s ease, opacity 0.2s ease !important;' +
+      'font-family: inherit !important;';
+
+    // Hover effect via JS
+    ctaElement.addEventListener('mouseenter', function() {
+      ctaElement.style.transform = 'scale(1.05)';
+      ctaElement.style.opacity = '0.9';
+    });
+    ctaElement.addEventListener('mouseleave', function() {
+      ctaElement.style.transform = 'scale(1)';
+      ctaElement.style.opacity = '1';
+    });
+
+    ctaElement.addEventListener('click', function(e) {
+      e.stopPropagation(); // Evita conflito com o arrastar
+      if (ctaLink) {
+        window.open(ctaLink, '_blank');
+      } else {
+        openStoryModal(0); // Se não tiver link, abre os stories
+      }
+    });
+
+    widget.appendChild(ctaElement);
+  }
+
   globalShadowRoot.appendChild(widget);
-applyDraggable(wrapper, cardOuter, currentAppearance);
+  applyDraggable(wrapper, cardOuter, currentAppearance);
 }
 
   /* ================================================================
