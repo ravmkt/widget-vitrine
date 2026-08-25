@@ -334,6 +334,9 @@ export function getFloatingConfig(appearance: Record<string, any>) {
     allowDrag: toBoolean(rcv('draggable', 'floating_allow_drag', false), false),
     allowClose: toBoolean(rcv('allow_close', 'floating_allow_close', true), true),
     showTitle: toBoolean(rcv('show_title', 'floating_show_title', true), true),
+    showCta: toBoolean(rcv('show_cta', 'floating_show_cta', true), true),
+    ctaText: rcv('cta_text', 'floating_cta_text', 'Comprar Agora'),
+    ctaLink: rcv('cta_link', 'floating_cta_link', ''),
   };
 }
 
