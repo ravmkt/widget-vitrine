@@ -4315,6 +4315,28 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                 <X size={14} />
                 Cancelar
               </button>
+              {storeUrl && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    let targetUrl = storeUrl.trim();
+                    if (!/^https?:\/\//i.test(targetUrl)) {
+                      targetUrl = `https://${targetUrl}`;
+                    }
+                    const connector = targetUrl.includes('?') ? '&' : '?';
+                    // Passa um parâmetro que sinaliza modo preview ativo para a loja
+                    window.open(`${targetUrl}${connector}vidlytics_preview=true`, '_blank', 'noopener,noreferrer');
+                  }}
+                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                  </svg>
+                  Ver na Loja
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleSaveStyle}
