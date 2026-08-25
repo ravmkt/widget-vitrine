@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +26,7 @@ const StoriesPage = () => {
   const [stories, setStories] = useState<Story[]>([]);
   const [videoCounts, setVideoCounts] = useState<Record<string, number>>({});
   const [locations, setLocations] = useState<Record<string, string>>({});
+  const [pageRules, setPageRules] = useState<Record<string, string>>({}); // 🆕 Novo estado para regras amigáveis
   const [loading, setLoading] = useState(true);
   const [currentStoreId, setCurrentStoreId] = useState<string>('');
 
@@ -61,6 +62,8 @@ const loadData = async () => {
     const sv = allSv.filter(v => storyIds.includes(v.story_id));
 
     const dl = await db.displayLocations.getAll(resolvedStoreId);
+    // 🆕 Busca as regras de exibição de páginas do banco
+    const rules = await (db as any).pageRules.getAll(resolvedStoreId);
 
     const countMap: Record<string, number> = {};
 
@@ -80,6 +83,36 @@ const loadData = async () => {
     });
 
     setLocations(locationMap);
+
+    // 🆕 Traduz as regras de página em textos legíveis para o lojista
+    const rulesMap: Record<string, string> = {};
+    rules.forEach((rule: any) => {
+      if (!rulesMap[rule.story_id]) {
+        let label = "";
+        switch (rule.condition_type) {
+          case "home":
+            label = "Somente na Home";
+            break;
+          case "all_pages":
+            label = "Todas as Páginas";
+            break;
+          case "url_contains":
+            label = `Contém: ${rule.value}`;
+            break;
+          case "url_not_contains":
+            label = `Não contém: ${rule.value}`;
+            break;
+          case "url_not_equals":
+            label = `Diferente de: ${rule.value}`;
+            break;
+          default:
+            label = rule.condition_type || "Todas as Páginas";
+        }
+        rulesMap[rule.story_id] = label;
+      }
+    });
+
+    setPageRules(rulesMap);
 
     setStories(s.sort((a, b) => (a.position || 0) - (b.position || 0)));
   } catch (e) {
@@ -512,8 +545,11 @@ const loadData = async () => {
                       {videoCounts[story.id] || 0}
                     </td>
 
-                    <td className="px-6 py-4 text-sm font-bold text-slate-600 truncate max-w-[180px]">
-                      {locations[story.id] || 'Página Geral'}
+                    <td 
+                      className="px-6 py-4 text-sm font-bold text-slate-600 truncate max-w-[180px]"
+                      title={pageRules[story.id] || 'Todas as Páginas'}
+                    >
+                      {pageRules[story.id] || 'Todas as Páginas'}
                     </td>
 
                     <td className="px-6 py-4 text-center font-black text-slate-800">
