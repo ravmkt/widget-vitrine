@@ -3509,9 +3509,13 @@ const AppearancePage = () => {
                 <PreviewCard
                   formData={formData}
                   floatingDevice={floatingDevice}
+                  setFloatingDevice={setFloatingDevice}
                   carouselDevice={carouselDevice}
+                  setCarouselDevice={setCarouselDevice}
                   dynamicCarouselDevice={dynamicCarouselDevice}
+                  setDynamicCarouselDevice={setDynamicCarouselDevice}
                   gridDevice={gridDevice}
+                  setGridDevice={setGridDevice}
                   activeTab={activeTab}
                 />
               </div>
