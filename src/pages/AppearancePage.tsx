@@ -3769,53 +3769,56 @@ const dynamicCarouselConfig: ResponsiveConfig<DynamicCarouselConfig> = {
                         >
                           <div className="space-y-1.5">
                             <ToggleSwitch label="Exibir título da vitrine" checked={activeCarouselConfig.show_title ?? false} onChange={e => updateCarouselConfig({ show_title: e.target.checked })} />
+
+                            {/* NOVOS CAMPOS: Configurações do Título (Só aparecem se show_title for true) */}
+                            {activeCarouselConfig.show_title && (
+                              <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-2.5 mb-3 mt-2">
+                                <FormField label="Texto do título">
+                                  <input
+                                    type="text"
+                                    value={activeCarouselConfig.title_text ?? ''}
+                                    onChange={e => updateCarouselConfig({ title_text: e.target.value })}
+                                    placeholder="Ex: Nossos destaques"
+                                    className={inputClass}
+                                  />
+                                </FormField>
+
+                                <div className="grid grid-cols-2 gap-2.5">
+                                  <FormField label="Tamanho da fonte (px)">
+                                    <input
+                                      type="number" min="8" max="48" step="1"
+                                      value={activeCarouselConfig.title_font_size ?? 14}
+                                      onChange={e => updateCarouselConfig({ title_font_size: safeNumber(e.target.value, 14, 8) })}
+                                      className={inputClass}
+                                    />
+                                  </FormField>
+
+                                  <FormField label="Alinhamento">
+                                    <select
+                                      value={activeCarouselConfig.title_align ?? 'center'}
+                                      onChange={e => updateCarouselConfig({ title_align: e.target.value as 'left' | 'center' | 'right' })}
+                                      className={selectClass}
+                                    >
+                                      <option value="left">Esquerda</option>
+                                      <option value="center">Centro</option>
+                                      <option value="right">Direita</option>
+                                    </select>
+                                  </FormField>
+                                </div>
+
+                                <ToggleSwitch
+                                  label="Título em negrito"
+                                  checked={activeCarouselConfig.title_bold ?? true}
+                                  onChange={e => updateCarouselConfig({ title_bold: e.target.checked })}
+                                />
+                              </div>
+                            )}
+
                             <ToggleSwitch label="Reproduzir vídeos automaticamente (mudo)" checked={activeCarouselConfig.autoplay_videos ?? true} onChange={e => updateCarouselConfig({ autoplay_videos: e.target.checked })} />
                             <ToggleSwitch label="Exibir ícone de Play no centro do vídeo" checked={activeCarouselConfig.show_play_icon} onChange={e => updateCarouselConfig({ show_play_icon: e.target.checked })} />
                             <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeCarouselConfig.show_product} onChange={e => updateCarouselConfig({ show_product: e.target.checked })} />
                           </div>
                         </AccordionSection>
-
-                        {/* 4. Estilo do Card de Produto */}
-                        {activeCarouselConfig.show_product && (
-                          <AccordionSection
-                            title="4. Estilo do Card de Produto"
-                            isOpen={activeSection === 'carousel-product'}
-                            onToggle={() => setActiveSection(activeSection === 'carousel-product' ? null : 'carousel-product')}
-                          >
-                            <div className="grid grid-cols-2 gap-2.5">
-                              <FormField label="Fundo do Card">
-                                <ColorInput label="Fundo do card" value={activeCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_bg: e.target.value })} />
-                              </FormField>
-
-                              <FormField label="Cor da Borda">
-                                <ColorInput label="Cor da borda" value={activeCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateCarouselConfig({ product_card_border_color: e.target.value })} />
-                              </FormField>
-
-                              <FormField label="Largura Borda (px)">
-                                <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_width)} onChange={e => updateCarouselConfig({ product_card_border_width: e.target.value })} placeholder="Ex: 1" className={inputClass} />
-                              </FormField>
-
-                              <FormField label="Raio Borda (px)">
-                                <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_border_radius)} onChange={e => updateCarouselConfig({ product_card_border_radius: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                              </FormField>
-
-                              <FormField label="Tamanho Título">
-                                <input type="number" min="8" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_name_size)} onChange={e => updateCarouselConfig({ product_card_name_size: e.target.value })} placeholder="Ex: 11" className={inputClass} />
-                              </FormField>
-
-                              <FormField label="Cor Título">
-                                <ColorInput label="Cor do título" value={activeCarouselConfig.product_card_name_color || '#0F172A'} onChange={e => updateCarouselConfig({ product_card_name_color: e.target.value })} />
-                              </FormField>
-
-                              <FormField label="Tamanho Preço">
-                                <input type="number" min="8" step="1" value={toNumberInputValue(activeCarouselConfig.product_card_price_size)} onChange={e => updateCarouselConfig({ product_card_price_size: e.target.value })} placeholder="Ex: 12" className={inputClass} />
-                              </FormField>
-
-                              <FormField label="Cor Preço">
-                                <ColorInput label="Cor do preço" value={activeCarouselConfig.product_card_price_color || formData.primary_color} onChange={e => updateCarouselConfig({ product_card_price_color: e.target.value })} />
-                              </FormField>
-                            </div>
-                          </AccordionSection>
                         )}
                       </div>
 
