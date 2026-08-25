@@ -577,8 +577,13 @@ const createDefaultFloatingDesktopConfig = (): FloatingConfig => ({
   draggable: false,
   allow_close: false,
   z_index: '2147483647',
-  show_title: true,
   autoplay_videos: true,
+  show_cta: false,
+  cta_text: 'VER VÍDEO',
+  cta_bg_color: '#0094EB',
+  cta_text_color: '#FFFFFF',
+  cta_font_size: 14,
+  cta_is_bold: true,
 });
 
 const createDefaultFloatingMobileConfig = (): FloatingConfig => ({
@@ -599,8 +604,13 @@ const createDefaultFloatingMobileConfig = (): FloatingConfig => ({
   draggable: false,
   allow_close: false,
   z_index: '2147483647',
-  show_title: true,
   autoplay_videos: true,
+  show_cta: false,
+  cta_text: 'VER VÍDEO',
+  cta_bg_color: '#0094EB',
+  cta_text_color: '#FFFFFF',
+  cta_font_size: 12,
+  cta_is_bold: true,
 });
 
 const createDefaultCarouselDesktopConfig = (): CarouselConfig => ({
