@@ -644,7 +644,31 @@ const SelectorModal = () => {
             <span className={cn('text-[10px] font-black uppercase tracking-widest', formData.active ? 'text-emerald-500' : 'text-slate-400')}>{formData.active ? 'Status: Ativo' : 'Status: Inativo'}</span>
             <button type="button" onClick={() => setFormData((prev) => ({ ...prev, active: !prev.active }))} className={cn('h-6 w-12 rounded-full p-1 transition-all duration-300', formData.active ? 'bg-emerald-500' : 'bg-slate-300')}><div className={cn('h-4 w-4 rounded-full bg-white transition-all duration-300', formData.active ? 'translate-x-6' : 'translate-x-0')} /></button>
           </div>
-          <button type="button" onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 transition-all hover:bg-[#0E4787] disabled:opacity-60">{isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}{isSaving ? 'Salvando...' : 'Salvar Alterações'}</button>
+{currentStore?.url && !isCreate && (
+  <button
+    type="button"
+    onClick={() => {
+      let targetUrl = currentStore.url.trim();
+      if (!/^https?:\/\//i.test(targetUrl)) {
+        targetUrl = `https://${targetUrl}`;
+      }
+      const connector = targetUrl.includes('?') ? '&' : '?';
+      // Passa o ID do story para que o widget force a abertura/destaque deste story específico
+      const previewUrl = `${targetUrl}${connector}vidlytics_preview_story_id=${id}`;
+      window.open(previewUrl, '_blank', 'noopener,noreferrer');
+    }}
+    className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-black text-slate-700 shadow-xs transition-all hover:bg-slate-50"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+      <polyline points="15 3 21 3 21 9"></polyline>
+      <line x1="10" y1="14" x2="21" y2="3"></line>
+    </svg>
+    Ver na Loja
+  </button>
+)}
+
+<button type="button" onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 transition-all hover:bg-[#0E4787] disabled:opacity-60">{isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}{isSaving ? 'Salvando...' : 'Salvar Alterações'}</button>
         </div>
       </div>
 
