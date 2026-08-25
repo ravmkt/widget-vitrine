@@ -5853,6 +5853,7 @@ return readStoreSettings().then(function (settings) {
       });
     });
   });
+  });
 }
 
 initWidget();
