@@ -5122,22 +5122,38 @@ function initInlineWidget(options) {
     var isDragging = false;
     var startX, startY, initialRight, initialBottom;
 
-    el.addEventListener('mousedown', function (e) {
-      if (e.target.closest && e.target.closest('.vl-dismiss')) return;
+    el.addEventListener('pointerdown', function (e) {
+      // Ignora cliques que não sejam o botão esquerdo (no mouse)
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      
+      // Ignora o arrasto se clicar no botão de fechar (x)
+      if (e.target.closest && (e.target.closest('.vl-dismiss') || e.target.closest('.vl-floating-close-btn'))) return;
+
       isDragging = true;
       floatingWasDragged = false;
       startX = e.clientX;
       startY = e.clientY;
+
       var rect = el.getBoundingClientRect();
       initialRight = window.innerWidth - rect.right;
       initialBottom = window.innerHeight - rect.bottom;
       el.style.transition = 'none';
+
+      // Captura o ponteiro para manter o arrasto ativo fora do elemento/Shadow DOM
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch (err) {
+        console.warn('Pointer capture falhou:', err);
+      }
     });
 
-    document.addEventListener('mousemove', function (e) {
+    el.addEventListener('pointermove', function (e) {
       if (!isDragging) return;
+
       var dx = startX - e.clientX;
       var dy = startY - e.clientY;
+
+      // Limiar (threshold) de 3 pixels para evitar disparos acidentais em cliques simples
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
         floatingWasDragged = true;
         el.style.right = (initialRight + dx) + 'px';
@@ -5147,43 +5163,23 @@ function initInlineWidget(options) {
       }
     });
 
-    document.addEventListener('mouseup', function () {
+    el.addEventListener('pointerup', function (e) {
       if (isDragging) {
         isDragging = false;
         el.style.transition = 'all 0.3s ease';
+        try {
+          el.releasePointerCapture(e.pointerId);
+        } catch (err) {}
       }
     });
 
-    el.addEventListener('touchstart', function (e) {
-      if (e.target.closest && e.target.closest('.vl-dismiss')) return;
-      if (e.touches.length !== 1) return;
-      isDragging = true;
-      floatingWasDragged = false;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      var rect = el.getBoundingClientRect();
-      initialRight = window.innerWidth - rect.right;
-      initialBottom = window.innerHeight - rect.bottom;
-      el.style.transition = 'none';
-    }, { passive: true });
-
-    document.addEventListener('touchmove', function (e) {
-      if (!isDragging || e.touches.length !== 1) return;
-      var dx = startX - e.touches[0].clientX;
-      var dy = startY - e.touches[0].clientY;
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-        floatingWasDragged = true;
-        el.style.right = (initialRight + dx) + 'px';
-        el.style.bottom = (initialBottom + dy) + 'px';
-        el.style.left = 'auto';
-        el.style.top = 'auto';
-      }
-    }, { passive: true });
-
-    document.addEventListener('touchend', function () {
+    el.addEventListener('pointercancel', function (e) {
       if (isDragging) {
         isDragging = false;
         el.style.transition = 'all 0.3s ease';
+        try {
+          el.releasePointerCapture(e.pointerId);
+        } catch (err) {}
       }
     });
   }
