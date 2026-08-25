@@ -3521,24 +3521,35 @@ const AppearancePage = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white px-6 py-2.5 shrink-0">
-              <button type="button" onClick={handleCancel} disabled={saving} className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">
-                <X size={14} /> Cancelar
-              </button>
-              {storeUrl && (
-                <button type="button" onClick={() => {
-                  let targetUrl = storeUrl.trim();
-                  if (!/^https?:\/\//i.test(targetUrl)) targetUrl = `https://${targetUrl}`;
-                  const connector = targetUrl.includes('?') ? '&' : '?';
-                  window.open(`${targetUrl}${connector}vidlytics_preview=true`, '_blank', 'noopener,noreferrer');
-                }} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                  Ver na Loja
+            <div className="flex items-center justify-between border-t border-slate-100 bg-white px-6 py-3 shrink-0">
+              {/* Aviso alinhado à esquerda */}
+              <div className="hidden sm:flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50/80 px-3 py-1.5 rounded-lg border border-slate-100">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} className="text-[#0094EB]"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span>Este painel é um <strong>preview meramente visual</strong>. Para testar cliques e interações, use a visualização direta da loja.</span>
+              </div>
+
+              {/* Botões à direita */}
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={handleCancel} disabled={saving} className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 transition-colors">
+                  <X size={14} /> Cancelar
                 </button>
-              )}
-              <button type="button" onClick={handleSaveStyle} disabled={saving} className="flex items-center gap-1.5 rounded-xl bg-[#0094EB] px-5 py-2 text-xs font-bold text-white shadow-md hover:bg-[#0E4787] disabled:cursor-not-allowed disabled:opacity-60">
-                {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} {saving ? 'Salvando...' : 'Salvar'}
-              </button>
+                
+                {storeUrl && (
+                  <button type="button" onClick={() => {
+                    let targetUrl = storeUrl.trim();
+                    if (!/^https?:\/\//i.test(targetUrl)) targetUrl = `https://${targetUrl}`;
+                    const connector = targetUrl.includes('?') ? '&' : '?';
+                    window.open(`${targetUrl}${connector}vidlytics_preview=true`, '_blank', 'noopener,noreferrer');
+                  }} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    Ver na Loja
+                  </button>
+                )}
+                
+                <button type="button" onClick={handleSaveStyle} disabled={saving} className="flex items-center gap-1.5 rounded-xl bg-[#0094EB] px-5 py-2 text-xs font-bold text-white shadow-md hover:bg-[#0E4787] disabled:cursor-not-allowed disabled:opacity-60 transition-colors">
+                  {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} {saving ? 'Salvando...' : 'Salvar'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
