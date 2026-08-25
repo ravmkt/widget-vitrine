@@ -5181,6 +5181,7 @@ var rect = positionEl.getBoundingClientRect();
     trigger.addEventListener('pointerup', function (e) {
       if (isDragging) {
         isDragging = false;
+        floatingDragActive = false;   // <-- NOVO
         positionEl.style.transition = 'all 0.3s ease';
         try {
           trigger.releasePointerCapture(e.pointerId);
