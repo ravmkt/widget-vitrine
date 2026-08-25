@@ -5162,8 +5162,8 @@ function initInlineWidget(options) {
       var dx = startX - e.clientX;
       var dy = startY - e.clientY;
 
-      // Limiar de 4px para diferenciar clique de arrasto
-      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+      // Limiar de 8px para diferenciar clique (tremores) de arrasto real
+      if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
         if (typeof floatingWasDragged !== 'undefined') {
           floatingWasDragged = true;
         }
