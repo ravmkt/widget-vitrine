@@ -5137,6 +5137,7 @@ function initInlineWidget(options) {
       if (e.target.closest && (e.target.closest('.vl-dismiss') || e.target.closest('.vl-floating-close-btn'))) return;
 
       isDragging = true;
+      floatingDragActive = true;   // <-- NOVO
       if (typeof floatingWasDragged !== 'undefined') {
         floatingWasDragged = false;
       }
