@@ -5143,7 +5143,7 @@ function initInlineWidget(options) {
       startX = e.clientX;
       startY = e.clientY;
 
-      var rect = wrapper.getBoundingClientRect();
+var rect = positionEl.getBoundingClientRect();
       initialRight = window.innerWidth - rect.right;
       initialBottom = window.innerHeight - rect.bottom;
 
