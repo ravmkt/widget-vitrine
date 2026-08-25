@@ -213,6 +213,18 @@ const StoryDetailsPage = () => {
 const [selectorModalOpen, setSelectorModalOpen] = useState(false);
 const [selectorUrl, setSelectorUrl] = useState("");
 const [selectorLoading, setSelectorLoading] = useState(false);
+const [previewUrl, setPreviewUrl] = useState("");
+
+  // Sincroniza a URL padrão da loja com o campo de preview quando carregar
+  useEffect(() => {
+    if (currentStore?.url && !previewUrl) {
+      let initialUrl = currentStore.url.trim();
+      if (!/^https?:\/\//i.test(initialUrl)) {
+        initialUrl = "https://" + initialUrl;
+      }
+      setPreviewUrl(initialUrl);
+    }
+  }, [currentStore, previewUrl]);
 
   const loadStoryData = useCallback(async () => {
     if (tenantLoading) return;
@@ -644,29 +656,37 @@ const SelectorModal = () => {
             <span className={cn('text-[10px] font-black uppercase tracking-widest', formData.active ? 'text-emerald-500' : 'text-slate-400')}>{formData.active ? 'Status: Ativo' : 'Status: Inativo'}</span>
             <button type="button" onClick={() => setFormData((prev) => ({ ...prev, active: !prev.active }))} className={cn('h-6 w-12 rounded-full p-1 transition-all duration-300', formData.active ? 'bg-emerald-500' : 'bg-slate-300')}><div className={cn('h-4 w-4 rounded-full bg-white transition-all duration-300', formData.active ? 'translate-x-6' : 'translate-x-0')} /></button>
           </div>
-{currentStore?.url && !isCreate && (
-  <button
-    type="button"
-    onClick={() => {
-      let targetUrl = currentStore.url.trim();
-      if (!/^https?:\/\//i.test(targetUrl)) {
-        targetUrl = `https://${targetUrl}`;
-      }
-      const connector = targetUrl.includes('?') ? '&' : '?';
-      // Passa o ID do story para que o widget force a abertura/destaque deste story específico
-      const previewUrl = `${targetUrl}${connector}vidlytics_preview_story_id=${id}`;
-      window.open(previewUrl, '_blank', 'noopener,noreferrer');
-    }}
-    className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-black text-slate-700 shadow-xs transition-all hover:bg-slate-50"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-      <polyline points="15 3 21 3 21 9"></polyline>
-      <line x1="10" y1="14" x2="21" y2="3"></line>
-    </svg>
-    Ver na Loja
-  </button>
-)}
+{!isCreate ? (
+          <div className="hidden items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-1 md:flex">
+            <input
+              type="url"
+              placeholder="Cole a URL de teste (ex: link de um produto)..."
+              value={previewUrl}
+              onChange={(e) => setPreviewUrl(e.target.value)}
+              className="w-64 bg-transparent px-3 py-1 text-xs font-bold text-slate-700 outline-none placeholder:text-slate-400"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                let targetUrl = previewUrl.trim() || currentStore?.url?.trim() || "";
+                if (!targetUrl) return;
+                if (!/^https?:\/\//i.test(targetUrl)) {
+                  targetUrl = "https://" + targetUrl;
+                }
+                const connector = targetUrl.includes("?") ? "&" : "?";
+                const finalPreviewUrl = targetUrl + connector + "vidlytics_preview_story_id=" + id;
+                window.open(finalPreviewUrl, "_blank", "noopener,noreferrer");
+              }}
+              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:bg-slate-800"
+            >
+              🚀 Simular Preview
+            </button>
+          </div>
+        ) : (
+          <div className="hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 md:block">
+            💾 Salve para habilitar o preview
+          </div>
+        )}
 
 <button type="button" onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 transition-all hover:bg-[#0E4787] disabled:opacity-60">{isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}{isSaving ? 'Salvando...' : 'Salvar Alterações'}</button>
         </div>
@@ -727,8 +747,13 @@ const SelectorModal = () => {
 
                   {/* Alerta informativo do Carrossel Dinâmico */}
                   {formData.format === 'dynamic_carousel' && (
-                    <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 text-xs font-semibold text-slate-600 transition-all">
-                      💡 <strong className="text-[#0094EB]">Carrossel Dinâmico:</strong> Este formato requer no mínimo <strong>3 vídeos ativos</strong> selecionados abaixo para funcionar corretamente na sua loja. Recomendamos o uso de <strong>6 ou mais vídeos</strong> para a melhor experiência de rolagem infinita.
+                    <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-4 text-xs font-semibold text-slate-600 transition-all flex flex-col gap-2">
+                      <div>
+                        ⚠️ <strong className="text-amber-700">Carrossel Dinâmico:</strong> Este formato requer no mínimo <strong>3 vídeos ativos</strong> selecionados abaixo para funcionar corretamente na sua loja.
+                      </div>
+                      <div>
+                        💡 Recomendamos o uso de <strong>6 ou mais vídeos</strong> para a melhor experiência de rolagem infinita.
+                      </div>
                     </div>
                   )}
                 </div>
@@ -886,17 +911,12 @@ const SelectorModal = () => {
       className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
       placeholder=".breadcrumbs"
     />
-    <button
+        <button
       type="button"
       onClick={() => setSelectorModalOpen(true)}
-className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-[#0094EB] hover:bg-blue-50 transition-colors"
+      className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-black text-[#0094EB] hover:bg-blue-50 transition-colors"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <circle cx="12" cy="12" r="6"></circle>
-        <circle cx="12" cy="12" r="2"></circle>
-      </svg>
-      Selecionar
+      🎯 Selecionar
     </button>
       </div>
 </div>
