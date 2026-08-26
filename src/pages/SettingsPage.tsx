@@ -499,7 +499,7 @@ const SettingsPage = () => {
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              <span>🏪</span> 2. Dados da Loja
+             1. Dados da Loja
             </h2>
             <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
               Informações cadastrais e identidade da sua marca no Vidlytics.
@@ -726,7 +726,7 @@ const SettingsPage = () => {
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              <span>📊</span> 4. Módulo de Métricas
+              3. Métricas
             </h2>
             <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
               Monitore de forma inteligente o comportamento do cliente final e as interações com seus vídeos.
@@ -758,7 +758,7 @@ const SettingsPage = () => {
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              <span>🔒</span> 5. Segurança & API
+              4. Segurança & API
             </h2>
             <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
               Credenciais e chaves públicas de integração do widget na loja.
