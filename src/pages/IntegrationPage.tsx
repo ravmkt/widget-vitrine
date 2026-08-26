@@ -3,37 +3,76 @@ import {
   AlertTriangle,
   CheckCircle2,
   Copy,
-  LayoutGrid,
-  PlayCircle,
   Store,
 } from 'lucide-react';
 import { useTenant } from '@/context/TenantContext';
 import { supabase } from '@/lib/supabase';
 
-// Ícone customizado de Carrossel: 3 retângulos retrato lado a lado
-const CarrosselIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect x="2" y="4" width="5" height="16" rx="1.5" />
-    <rect x="9.5" y="4" width="5" height="16" rx="1.5" />
-    <rect x="17" y="4" width="5" height="16" rx="1.5" />
+// ── ÍCONES EXCLUSIVOS CUSTOMIZADOS (FIEIS AO SEU DESIGN) ──
+
+// Ícone: Flutuante (Retângulo vertical + Linhas de clique + Mão apontando)
+const FlutuanteIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    {/* Retângulo vertical */}
+    <rect x="3.5" y="3.5" width="7.5" height="14" rx="1.5" />
+    
+    {/* Linhas radiais de clique */}
+    <path d="M7.5 13.5l-1.5-.8" />
+    <path d="M7.5 16l-2 .5" />
+    <path d="M9 11.5l-.5-1.5" />
+
+    {/* Mão de clique importada e rotacionada perfeitamente para tocar o card */}
+    <g transform="translate(10, 16) rotate(-30) scale(0.48)">
+      <path
+        d="M12 15V11a1.5 1.5 0 0 1 3 0v4m-3-1.5V8a1.5 1.5 0 0 1 3 0v7m-3-3V6a1.5 1.5 0 0 1 3 0v9m-6 1.5a3 3 0 0 1 3-3V3.5a1.5 1.5 0 0 1 3 0V15.5c0 3-2.5 5.5-5.5 5.5S6 18.5 6 15.5"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
   </svg>
 );
 
-// Ícone customizado de Carrossel Dinâmico: Mesmos 3 retângulos com uma estrelinha dourada (premium) animada
-const CarrosselDinamicoIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <div className="relative">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <rect x="2" y="4" width="5" height="16" rx="1.5" />
-      <rect x="9.5" y="4" width="5" height="16" rx="1.5" />
-      <rect x="17" y="4" width="5" height="16" rx="1.5" />
-    </svg>
-    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center text-amber-500 dark:text-yellow-400">
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 animate-pulse">
-        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-      </svg>
-    </span>
-  </div>
+// Ícone: Carrossel (3 retângulos de mesma altura lado a lado)
+const CarrosselIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="2" y="5" width="5.5" height="14" rx="1.5" />
+    <rect x="9.25" y="5" width="5.5" height="14" rx="1.5" />
+    <rect x="16.5" y="5" width="5.5" height="14" rx="1.5" />
+  </svg>
 );
+
+// Ícone: Carrossel Dinâmico (Retângulo do meio maior + 4 Estrelas brilhantes)
+const CarrosselDinamicoIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    {/* Retângulos estilo carrossel com destaque no centro */}
+    <rect x="2" y="6.5" width="5.5" height="12" rx="1.5" />
+    <rect x="9.25" y="3.5" width="5.5" height="15" rx="1.5" />
+    <rect x="16.5" y="6.5" width="5.5" height="12" rx="1.5" />
+
+    {/* Brilho 1 (Grande, canto superior direito do card central) */}
+    <path d="M15 1 Q15 3.5 17.5 3.5 Q15 3.5 15 6 Q15 3.5 12.5 3.5 Q15 3.5 15 1 Z" fill="currentColor" stroke="none" />
+    {/* Brilho 2 (Médio, canto superior direito) */}
+    <path d="M19 3.5 Q19 5 20.5 5 Q19 5 19 6.5 Q19 5 17.5 5 Q19 5 19 3.5 Z" fill="currentColor" stroke="none" />
+    {/* Brilho 3 (Pequeno, lateral esquerda) */}
+    <path d="M11.5 7.5 Q11.5 8.5 12.5 8.5 Q11.5 8.5 11.5 9.5 Q11.5 8.5 10.5 8.5 Q11.5 8.5 11.5 7.5 Z" fill="currentColor" stroke="none" />
+    {/* Brilho 4 (Pequeno, lateral direita) */}
+    <path d="M16 8.5 Q16 9.5 17 9.5 Q16 9.5 16 10.5 Q16 9.5 15 9.5 Q16 9.5 16 8.5 Z" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+// Ícone: Grade (4 quadrados arredondados 2x2)
+const GradeIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="2.5" y="2.5" width="8.5" height="8.5" rx="2" />
+    <rect x="13" y="2.5" width="8.5" height="8.5" rx="2" />
+    <rect x="2.5" y="13" width="8.5" height="8.5" rx="2" />
+    <rect x="13" y="13" width="8.5" height="8.5" rx="2" />
+  </svg>
+);
+
 
 const IntegrationPage = () => {
   const { storeId } = useTenant();
@@ -248,7 +287,7 @@ window.VIDLYTICS_CONFIG = {
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
-              <PlayCircle size={20} className="!text-white stroke-[2.5]" />
+              <FlutuanteIcon className="!text-white" />
             </div>
 
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
@@ -299,7 +338,7 @@ window.VIDLYTICS_CONFIG = {
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
-              <LayoutGrid size={20} className="!text-white stroke-[2.5]" />
+              <GradeIcon className="!text-white" />
             </div>
 
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
@@ -341,7 +380,7 @@ window.VIDLYTICS_CONFIG = {
         </div>
       </div>
 
-      {/* ── SEÇÃO: COMO INSTALAR NA SUA LOJA (DINÂMICO BASEADO NA TAB) ── */}
+      {/* ── SEÇÃO: COMO INSTALAR NA SUA LOJA (DINÂMICO BASEADO NA TAB) ── */}
       <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
         <div className="border-b border-slate-100 dark:border-white/5 pb-4">
           <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
