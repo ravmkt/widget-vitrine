@@ -451,11 +451,55 @@ const SettingsPage = () => {
           handleSave();
         }}
       >
-        {/* ── 1. DADOS DA LOJA ── */}
+        {/* ── 1. STATUS GERAL DO VIDLYTICS (Promovido ao topo) ── */}
+        <div className={`rounded-[2.5rem] border-2 transition-all p-6 sm:p-8 shadow-xs ${settings.widget_enabled ? 'border-emerald-500/20 bg-emerald-500/[0.02] dark:bg-emerald-500/[0.01]' : 'border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a1f35]/80'}`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                Status de Exibição
+              </span>
+              <h2 className="text-xl font-black flex items-center gap-2">
+                {settings.widget_enabled ? (
+                  <span className="text-emerald-500 flex items-center gap-2 text-md font-extrabold">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    Vidlytics Ativo
+                  </span>
+                ) : (
+                  <span className="text-slate-400 dark:text-slate-500 flex items-center gap-2 text-md font-extrabold">
+                    <span className="h-2.5 w-2.5 rounded-full bg-slate-400 dark:bg-slate-500"></span>
+                    Vidlytics Inativo
+                  </span>
+                )}
+              </h2>
+              <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] max-w-2xl leading-relaxed">
+                {settings.widget_enabled
+                  ? 'A vitrine de stories está ativa e renderizando publicamente no seu e-commerce.'
+                  : 'A exibição dos vídeos na sua loja está pausada. Nenhum widget será carregado.'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0 self-end sm:self-center bg-slate-100/50 dark:bg-slate-900/40 px-4 py-2 rounded-2xl border border-slate-200/40 dark:border-white/5">
+              <span className="text-[10px] font-black uppercase text-slate-500 dark:text-[#8a90a0]">
+                {settings.widget_enabled ? 'Online' : 'Offline'}
+              </span>
+              <Switch
+                checked={settings?.widget_enabled ?? true}
+                onCheckedChange={c =>
+                  setSettings(prev => ({ ...prev, widget_enabled: c }))
+                }
+                className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ── 2. DADOS DA LOJA ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              <span>🏪</span> 1. Dados da Loja
+              <span>🏪</span> 2. Dados da Loja
             </h2>
             <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
               Informações cadastrais e identidade da sua marca no Vidlytics.
@@ -610,45 +654,23 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* ── 2. MÓDULOS (DUAL-THEME: AZUL NO LIGHT / LARANJA NO DARK) ── */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
-          <div className="border-b border-slate-100 dark:border-white/5 pb-4">
-            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              <span>⚡</span> 2. Módulos
-            </h2>
-            <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
-              Ative ou desative recursos e integrações públicas da plataforma.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-start justify-between gap-4 p-4 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/60 border border-slate-100 dark:border-white/5">
-              <div>
-                <Label className="text-xs font-black text-slate-800 dark:text-white block">
-                  Ativar Vitrine de Vídeos
-                </Label>
-                <p className="text-[11px] font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
-                  Controla a renderização pública do carrossel/grade na loja virtual.
-                </p>
-              </div>
-              <Switch
-                checked={settings?.widget_enabled ?? true}
-                onCheckedChange={c =>
-                  setSettings(prev => ({ ...prev, widget_enabled: c }))
-                }
-                className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
-              />
+        {/* ── 3. INTEGRAÇÃO WHATSAPP (Com Switch integrado no cabeçalho) ── */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
+            <div>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                <span>💬</span> 3. Integração WhatsApp
+              </h2>
+              <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
+                Defina o número receptor e a mensagem automática enviada pelos clientes nos vídeos.
+              </p>
             </div>
-
-            <div className="flex items-start justify-between gap-4 p-4 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/60 border border-slate-100 dark:border-white/5">
-              <div>
-                <Label className="text-xs font-black text-slate-800 dark:text-white block">
-                  Ativar Botão do WhatsApp
-                </Label>
-                <p className="text-[11px] font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
-                  Exibe o botão de conversa direta do WhatsApp sobre os vídeos.
-                </p>
-              </div>
+            
+            {/* Seletor no canto superior direito do card */}
+            <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-[#0f1220]/60 px-3.5 py-1.5 rounded-xl border border-slate-100 dark:border-white/5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">
+                {settings.whatsapp_enabled ? 'Ativo' : 'Inativo'}
+              </span>
               <Switch
                 checked={settings?.whatsapp_enabled ?? true}
                 onCheckedChange={c =>
@@ -657,39 +679,9 @@ const SettingsPage = () => {
                 className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
               />
             </div>
-
-            <div className="flex items-start justify-between gap-4 p-4 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/60 border border-slate-100 dark:border-white/5">
-              <div>
-                <Label className="text-xs font-black text-slate-800 dark:text-white block">
-                  Ativar Telemetria e Analytics
-                </Label>
-                <p className="text-[11px] font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
-                  Coleta métricas de visualização, retenção e engajamento em tempo real.
-                </p>
-              </div>
-              <Switch
-                checked={settings?.stories_enabled ?? true}
-                onCheckedChange={c =>
-                  setSettings(prev => ({ ...prev, stories_enabled: c }))
-                }
-                className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* ── 3. INTEGRAÇÃO WHATSAPP ── */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
-          <div className="border-b border-slate-100 dark:border-white/5 pb-4">
-            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              <span>💬</span> 3. Integração WhatsApp
-            </h2>
-            <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
-              Defina o número receptor e a mensagem automática enviada pelos clientes nos vídeos.
-            </p>
           </div>
 
-          <div className="space-y-4">
+          <div className={`space-y-4 transition-all duration-300 ${!settings.whatsapp_enabled ? 'opacity-40 pointer-events-none filter grayscale-[30%]' : ''}`}>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                 Número do WhatsApp
@@ -703,6 +695,7 @@ const SettingsPage = () => {
                   setSettings(prev => ({ ...prev, whatsapp_number: v }));
                 }}
                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                disabled={!settings.whatsapp_enabled}
               />
               <p className="text-[11px] text-slate-500 dark:text-[#8a90a0]">
                 Informe o WhatsApp com código do país e DDD (Ex: 5545998888888).
@@ -723,16 +716,49 @@ const SettingsPage = () => {
                 }
                 rows={3}
                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                disabled={!settings.whatsapp_enabled}
               />
             </div>
           </div>
         </div>
 
-        {/* ── 4. SEGURANÇA & API KEYS (PROMOVIDA A SEÇÃO 4) ── */}
+        {/* ── 4. MÓDULO DE MÉTRICAS (Estatísticas dedicadas) ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              <span>🔒</span> 4. Segurança & API
+              <span>📊</span> 4. Módulo de Métricas
+            </h2>
+            <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
+              Monitore de forma inteligente o comportamento do cliente final e as interações com seus vídeos.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-start justify-between gap-4 p-5 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/60 border border-slate-100 dark:border-white/5">
+              <div className="space-y-0.5">
+                <Label className="text-xs font-black text-slate-800 dark:text-white block">
+                  {settings?.stories_enabled ? 'Ativar métricas e analytics' : 'Desativar métricas e analytics'}
+                </Label>
+                <p className="text-[11px] font-medium text-slate-500 dark:text-[#8a90a0] leading-relaxed">
+                  Coleta métricas detalhadas de visualização, retenção de público, engajamento e cliques em tempo real na loja.
+                </p>
+              </div>
+              <Switch
+                checked={settings?.stories_enabled ?? true}
+                onCheckedChange={c =>
+                  setSettings(prev => ({ ...prev, stories_enabled: c }))
+                }
+                className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ── 5. SEGURANÇA & API KEYS ── */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
+          <div className="border-b border-slate-100 dark:border-white/5 pb-4">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+              <span>🔒</span> 5. Segurança & API
             </h2>
             <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
               Credenciais e chaves públicas de integração do widget na loja.
