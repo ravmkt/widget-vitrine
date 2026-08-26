@@ -461,6 +461,7 @@ const SettingsPage = () => {
       </div>
 
       <form
+        noValidate 
         className="space-y-8"
         onSubmit={e => {
           e.preventDefault();
