@@ -673,7 +673,7 @@ const SelectorModal = () => {
           <div className="hidden items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-1 md:flex">
             <input
               type="url"
-              // ✅ Agora exibe a URL real da sua loja como sugestão em cinza (placeholder)
+              // ✅ Agora exibe a URL real da loja ativa apenas como exemplo (placeholder) em cinza claro
               placeholder={currentStore?.url ? `Ex: ${currentStore.url}` : "Cole a URL de teste (ex: link de um produto)..."}
               value={previewUrl}
               onChange={(e) => setPreviewUrl(e.target.value)}
@@ -682,7 +682,7 @@ const SelectorModal = () => {
             <button
               type="button"
               onClick={() => {
-                // ✅ Se o usuário não digitou nada, usa a URL real da loja como destino padrão
+                // ✅ Se o usuário não digitou nada no input, assume o fallback automático da URL real da loja
                 let targetUrl = previewUrl.trim() || currentStore?.url?.trim() || "";
                 if (!targetUrl) {
                   alert("Por favor, configure a URL da sua loja nas Configurações ou digite uma URL de teste.");
@@ -692,7 +692,7 @@ const SelectorModal = () => {
                   targetUrl = "https://" + targetUrl;
                 }
                 const connector = targetUrl.includes("?") ? "&" : "?";
-                const finalPreviewUrl = targetUrl + connector + "vidlytics_preview_story_id=" + id;
+                const finalPreviewUrl = targetUrl + connector + "vidlytics_preview_story_id=" + stableStoryId;
                 window.open(finalPreviewUrl, "_blank", "noopener,noreferrer");
               }}
               className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:bg-slate-800"
