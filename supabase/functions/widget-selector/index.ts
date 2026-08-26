@@ -89,7 +89,8 @@ serve(async (req) => {
   if (req.method === "POST") {
     try {
       const body = await req.json();
-      const { selector, token, story_id, store_id } = body;
+      const { selector, token, story_id } = body;
+      let { store_id } = body; // Alterado para 'let' para podermos reatribuir
 
       if (!selector) {
         return new Response(
@@ -101,6 +102,31 @@ serve(async (req) => {
       // Se tem story_id, grava DIRETO em display_locations
       if (story_id) {
         const now = new Date().toISOString();
+
+        // 🛡️ HARDENING: Garante o store_id buscando diretamente do Story (evita falha NOT NULL)
+        if (!store_id) {
+          const { data: storyData, error: storyError } = await supabase
+            .from("stories")
+            .select("store_id")
+            .eq("id", story_id)
+            .maybeSingle();
+
+          if (storyError) {
+            return new Response(
+              JSON.stringify({ success: false, message: `Erro ao identificar a loja: ${storyError.message}` }),
+              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+
+          if (!storyData) {
+            return new Response(
+              JSON.stringify({ success: false, message: "A Story associada não foi encontrada no banco." }),
+              { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+
+          store_id = storyData.store_id; // Armazena o ID correto resolvido de forma segura pelo servidor
+        }
 
         // Busca se já existe location para este story
         const { data: existing } = await supabase
@@ -124,7 +150,7 @@ serve(async (req) => {
           const result = await supabase
             .from("display_locations")
             .insert({
-              store_id: store_id || null,
+              store_id: store_id, // Usando o store_id recuperado com segurança (NOT NULL garantido!)
               story_id,
               selector,
               position: "beforeend",
