@@ -23,7 +23,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { RefreshCw, Loader2, Copy, X, Image } from 'lucide-react';
+import { RefreshCw, Loader2, Copy, X, Image, Sun, Moon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const LOGO_BUCKET = "store-assets";
@@ -72,7 +72,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   floating_widget_enabled: true,
   default_template: 'minimalista',
   language: 'pt-BR',
-  timezone: 'America/Sao_Paulo',
+  timezone: 'America/Paulo',
   whatsapp_number: '',
   whatsapp_enabled: true,
   whatsapp_message_template:
@@ -188,7 +188,7 @@ const SettingsPage = () => {
     localStorage.setItem('app-theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
-useEffect(() => {
+  useEffect(() => {
     const fetchSettings = async () => {
       try {
         setLoading(true);
@@ -410,10 +410,10 @@ useEffect(() => {
       </div>
     );
 
-return (
+  return (
     <div className="space-y-8 animate-fade-in pb-20 font-sans">
-      {/* ── CABEÇALHO DA PÁGINA ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* ── CABEÇALHO DA PÁGINA COM SELETOR DE TEMA NO CANTO SUPERIOR DIREITO ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Configurações do Sistema
@@ -421,6 +421,26 @@ return (
           <p className="text-sm font-medium text-slate-500 dark:text-[#c0c5d4] mt-1">
             Configure dados da loja, módulos ativos, integrações e comportamento global dos vídeos.
           </p>
+        </div>
+
+        {/* Seletor de Tema Compacto (Pílula) */}
+        <div className="flex items-center gap-1 bg-white dark:bg-[#1a1f35]/90 border border-slate-200 dark:border-white/10 p-1.5 rounded-2xl shadow-xs self-start sm:self-auto shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsDark(false)}
+            className={`p-2 rounded-xl transition-all ${!isDark ? 'bg-slate-100 dark:bg-slate-800 text-amber-500 shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+            title="Tema Claro"
+          >
+            <Sun size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsDark(true)}
+            className={`p-2 rounded-xl transition-all ${isDark ? 'bg-slate-100 dark:bg-slate-800 text-[#ff7a29] shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+            title="Tema Escuro"
+          >
+            <Moon size={18} />
+          </button>
         </div>
       </div>
 
@@ -529,7 +549,7 @@ return (
               </p>
             </div>
 
-<div className="space-y-2">
+            <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                 Logo da Loja
               </Label>
@@ -590,7 +610,7 @@ return (
           </div>
         </div>
 
-{/* ── 2. MÓDULOS (DUAL-THEME: AZUL NO LIGHT / LARANJA NO DARK) ── */}
+        {/* ── 2. MÓDULOS (DUAL-THEME: AZUL NO LIGHT / LARANJA NO DARK) ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
@@ -658,7 +678,7 @@ return (
           </div>
         </div>
 
-{/* ── 3. INTEGRAÇÃO WHATSAPP ── */}
+        {/* ── 3. INTEGRAÇÃO WHATSAPP ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
@@ -708,63 +728,11 @@ return (
           </div>
         </div>
 
-        {/* ── 4. APARÊNCIA (TEMA) ── */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-4">
-          <div className="border-b border-slate-100 dark:border-white/5 pb-4">
-            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              <span>🌗</span> 4. Aparência do Painel
-            </h2>
-            <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
-              Alterne entre o tema Claro e o tema Escuro (Dark Glass).
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/60 border border-slate-100 dark:border-white/5">
-            <div className="flex items-center gap-3">
-              <span className={`text-lg transition-opacity ${isDark ? 'opacity-40' : 'opacity-100'}`}>
-                ☀️
-              </span>
-
-              <button
-                type="button"
-                role="switch"
-                aria-checked={isDark}
-                aria-label="Alternar tema claro/escuro"
-                onClick={() => setIsDark(prev => !prev)}
-                className={`
-                  relative inline-flex h-7 w-14 shrink-0 cursor-pointer
-                  items-center rounded-full border-2 border-transparent
-                  transition-colors duration-300 ease-in-out
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff7a29]
-                  ${isDark ? 'bg-[#ff7a29]' : 'bg-slate-300'}
-                `}
-              >
-                <span
-                  className={`
-                    pointer-events-none inline-block h-5 w-5
-                    transform rounded-full bg-white shadow-md
-                    ring-0 transition-transform duration-300 ease-in-out
-                    ${isDark ? 'translate-x-7' : 'translate-x-1'}
-                  `}
-                />
-              </button>
-
-              <span className={`text-lg transition-opacity ${isDark ? 'opacity-100' : 'opacity-40'}`}>
-                🌙
-              </span>
-            </div>
-
-            <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
-              {isDark ? 'Tema Escuro (Deep Glass)' : 'Tema Claro'}
-            </span>
-          </div>
-        </div>
-
-{/* ── 5. SEGURANÇA & API KEYS (DUAL-THEME) ── */}
+        {/* ── 4. SEGURANÇA & API KEYS (PROMOVIDA A SEÇÃO 4) ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              <span>🔒</span> 5. Segurança & API
+              <span>🔒</span> 4. Segurança & API
             </h2>
             <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
               Credenciais e chaves públicas de integração do widget na loja.
@@ -813,7 +781,7 @@ return (
           </div>
         </div>
         
-{/* ── BOTÃO SALVAR PRIMÁRIO DUAL-THEME ── */}
+        {/* ── BOTÃO SALVAR PRIMÁRIO DUAL-THEME ── */}
         <div className="flex justify-end pt-4">
           <Button
             type="submit"
@@ -830,10 +798,9 @@ return (
             )}
           </Button>
         </div>
-              </form>
+      </form>
     </div>
   );
 };
 
 export default SettingsPage;
-
