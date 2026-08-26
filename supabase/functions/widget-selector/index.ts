@@ -176,7 +176,7 @@ serve(async (req) => {
             });
         }
       }
-s
+
       return new Response(
         JSON.stringify({ success: true, message: "Seletor salvo e sincronizado com sucesso!" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
