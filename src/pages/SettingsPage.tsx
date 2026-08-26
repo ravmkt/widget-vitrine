@@ -250,9 +250,9 @@ const SettingsPage = () => {
       } catch (err) {
         console.error('Error fetching settings:', err);
         setSettings(DEFAULT_SETTINGS);
-      } fill/y {
-        setLoading(false);
-      }
+  } finally {
+    setLoading(false);
+  }
     };
     fetchSettings();
   }, []);
