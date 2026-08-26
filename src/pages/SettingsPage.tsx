@@ -25,6 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { RefreshCw, Loader2, Copy, X, Image, Sun, Moon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTenant } from '@/context/TenantContext'; // 👈 Importamos o contexto central de Tenant
 
 const LOGO_BUCKET = "store-assets";
 
@@ -155,6 +156,9 @@ const appSettingsToGeneralSettings = (
 const SettingsPage = () => {
   const navigate = useNavigate();
 
+  // ── Integração de contexto global do Tenant (Multi-store) ──
+  const { storeId: tenantStoreId, currentStore, loading: tenantLoading } = useTenant();
+
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -190,39 +194,14 @@ const SettingsPage = () => {
 
   useEffect(() => {
     const fetchSettings = async () => {
+      // Espera o Tenant Context terminar de carregar os dados
+      if (tenantLoading) return;
+
       try {
         setLoading(true);
-        let activeStoreId =
-          localStorage.getItem('vidlytics_current_store_id') ||
-          localStorage.getItem('current_store_id') ||
-          localStorage.getItem('store_id');
-
-        if (!activeStoreId && supabase) {
-          const { data: userData } = await supabase.auth.getUser();
-          const user = userData?.user;
-          if (user) {
-            const { data: userStore } = await supabase
-              .from('stores')
-              .select('id, name, url')
-              .eq('owner_user_id', user.id)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .maybeSingle();
-
-            if (userStore) {
-              activeStoreId = userStore.id;
-              localStorage.setItem('vidlytics_current_store_id', userStore.id);
-            }
-          }
-        }
+        const activeStoreId = tenantStoreId;
 
         if (activeStoreId && supabase) {
-          const { data: storeRow } = await supabase
-            .from('stores')
-            .select('id, name, url, logo_url, contact_email')
-            .eq('id', activeStoreId)
-            .maybeSingle();
-
           const { data: settingsRow } = await supabase
             .from('store_settings')
             .select('*')
@@ -233,18 +212,18 @@ const SettingsPage = () => {
             const loaded = generalSettingsToAppSettings(settingsRow as GeneralSettings);
             setSettings(loaded);
             setLogoPreview(loaded.store_logo_url || "");
-          } else if (storeRow) {
+          } else if (currentStore) {
+            // Se as configurações da loja ainda não existem, monta usando a própria store atual
             setSettings({
               ...DEFAULT_SETTINGS,
-              store_id: storeRow.id,
-              store_name: storeRow.name || '',
-              store_url: storeRow.url || '',
-              store_logo_url: storeRow.logo_url || null,
-              contact_email: storeRow.contact_email || null,
+              store_id: currentStore.id,
+              store_name: currentStore.name || '',
+              store_url: currentStore.url || '',
+              store_logo_url: currentStore.logo_url || null,
+              contact_email: currentStore.contact_email || null,
             });
-            setLogoPreview(storeRow.logo_url || "");
+            setLogoPreview(currentStore.logo_url || "");
           } else {
-            // Se o ID ativo existe mas não há registros criados ainda
             setSettings({
               ...DEFAULT_SETTINGS,
               store_id: activeStoreId,
@@ -261,7 +240,7 @@ const SettingsPage = () => {
       }
     };
     fetchSettings();
-  }, []);
+  }, [tenantStoreId, currentStore, tenantLoading]);
 
   // ── NOVO: Buscar setores e setor atual da loja ──
   useEffect(() => {
@@ -278,7 +257,7 @@ const SettingsPage = () => {
 
         if (sectorList) setSectors(sectorList);
 
-        const storeId = settings?.store_id;
+        const storeId = settings?.store_id || tenantStoreId;
         if (storeId) {
           const { data: store } = await supabase
             .from('stores')
@@ -294,7 +273,7 @@ const SettingsPage = () => {
       }
     };
     fetchSectors();
-  }, [settings?.store_id]);
+  }, [settings?.store_id, tenantStoreId]);
 
   // Função auxiliar para garantir o formato correto da URL com HTTP/HTTPS
   const formatStoreUrl = (url: string | null): string => {
@@ -331,37 +310,9 @@ const SettingsPage = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // 🛡️ HARDENING: Garante que temos um store_id UUID válido em mãos antes de salvar no banco local
-      let resolvedStoreId = settings.store_id;
+      // 🛡️ HARDENING: Alinha o store_id prioritariamente ao ID unificado do Tenant Context
+      const resolvedStoreId = tenantStoreId || settings.store_id;
 
-      if (!resolvedStoreId || resolvedStoreId.trim() === '') {
-        resolvedStoreId =
-          localStorage.getItem('vidlytics_current_store_id') ||
-          localStorage.getItem('current_store_id') ||
-          localStorage.getItem('store_id') || '';
-      }
-
-      // Se ainda estiver vazio, resgata via usuário logado no Supabase
-      if ((!resolvedStoreId || resolvedStoreId.trim() === '') && supabase) {
-        const { data: userData } = await supabase.auth.getUser();
-        const user = userData?.user;
-        if (user) {
-          const { data: userStore } = await supabase
-            .from('stores')
-            .select('id')
-            .eq('owner_user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          if (userStore) {
-            resolvedStoreId = userStore.id;
-            localStorage.setItem('vidlytics_current_store_id', userStore.id);
-          }
-        }
-      }
-
-      // Se de tudo falhar, barra antes de estourar a validação do banco local
       if (!resolvedStoreId || resolvedStoreId.trim() === '') {
         toast.error('Não foi possível identificar o ID da loja ativa. Por favor, recarregue a página.');
         setSaving(false);
@@ -416,7 +367,7 @@ const SettingsPage = () => {
       const now = new Date().toISOString();
       const updatedSettings: AppSettings = {
         ...settings,
-        store_id: resolvedStoreId, // 👈 Injetando o ID correto garantido
+        store_id: resolvedStoreId, // Injeta o UUID unificado
         store_url: finalStoreUrl,
         store_logo_url: finalLogoUrl,
         updated_at: now,
@@ -463,7 +414,8 @@ const SettingsPage = () => {
     }
   };
 
-  if (loading)
+  // Se o Tenant ou as configurações internas ainda estiverem carregando, exibe spinner
+  if (loading || tenantLoading)
     return (
       <div className="flex h-[200px] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-violet-600" />
@@ -774,12 +726,10 @@ const SettingsPage = () => {
               <Textarea
                 value={settings?.whatsapp_message_template ?? ''}
                 onChange={e =>
-                  setSettings(prev =>
-                    setSettings(prev => ({
-                      ...prev,
-                      whatsapp_message_template: e.target.value,
-                    }))
-                  )
+                  setSettings(prev => ({
+                    ...prev,
+                    whatsapp_message_template: e.target.value,
+                  }))
                 }
                 rows={3}
                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
