@@ -109,7 +109,7 @@ export const CarrosselDinamicoIcon = ({ className = "h-11 w-11" }: { className?:
     </g>
     <g clipPath="url(#din-420e341ea8)">
       <g clipPath="url(#din-9fe2599d0b)">
-        <path strokeLinecap="butt" transform="matrix(0.730588, 0, 0, 0.730588, 21.693563, 7.652417)" fill="none" strokeLinejoin="miter" d="M 2.19455 0.0159396 L 8.332583 0.0159396 C 9.546289 0.0159396 10.530085 0.999736 10.530085 2.208094 L 10.530085 21.007159 C 10.530085 22.220865 9.546289 23.204661 8.332583 23.204661 L 2.19455 23.204661 C 0.986191 23.204661 0.00239473 22.220865 0.00239473 21.007159 L 0.00239473 2.208094 C 0.00239473 0.999736 0.986191 0.0159396 2.19455 0.0159396 Z" stroke="#ffffff" strokeWidth="0.88" strokeOpacity="1" strokeMiterlimit="4"/>
+        <path strokeLinecap="butt" transform="matrix(0.730588, 0, 0, 0.730588, 21.693563, 7.652417)" fill="none" strokeLinejoin="miter" d="M 2.19455 0.0159396 L 8.332583 0.0159396 C 9.546289 0.0159396 10.530085 0.2208094 L 10.530085 21.007159 C 10.530085 22.220865 9.546289 23.204661 8.332583 23.204661 L 2.19455 23.204661 C 0.986191 23.204661 0.00239473 22.220865 0.00239473 21.007159 L 0.00239473 2.208094 C 0.00239473 0.999736 0.986191 0.0159396 2.19455 0.0159396 Z" stroke="#ffffff" strokeWidth="0.88" strokeOpacity="1" strokeMiterlimit="4"/>
       </g>
     </g>
     <g clipPath="url(#din-c06f921f05)">
@@ -482,7 +482,7 @@ window.VIDLYTICS_CONFIG = {
         </div>
       </div>
 
-      {/* ── SEÇÃO: COMO INSTALAR NA SUA LOJA ── */}
+      {/* ── SEÇÃO: COMO INSTALAR NA SUA LOJA (FOCADO EXCLUSIVAMENTE NO SCRIPT PRINCIPAL) ── */}
       <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
         <div className="border-b border-slate-100 dark:border-white/5 pb-4">
           <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
@@ -518,10 +518,10 @@ window.VIDLYTICS_CONFIG = {
                     2
                   </div>
                   <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Cole os scripts
+                    Cole o Script Principal
                   </h3>
                   <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                    Cole o <strong>Script Principal (Passo 1)</strong> no cabeçalho (&lt;head&gt;) e o <strong>Script de Rastreamento (Passo 2)</strong> na página de conclusão de compra (Obrigado / Confirmação de pedido) da sua plataforma.
+                    Copie o <strong>Script Principal (Passo 1)</strong> no cabeçalho <code>&lt;head&gt;</code> ou na seção global de scripts para que os widgets e players fiquem ativos em todo o site.
                   </p>
                 </div>
               </div>
@@ -550,10 +550,10 @@ window.VIDLYTICS_CONFIG = {
                     2
                   </div>
                   <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Configure as Tags HTML
+                    Crie a Tag do Script Principal
                   </h3>
                   <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                    Crie tags do tipo <strong>HTML Personalizado</strong> para o Script Principal e outra para o Script de Rastreamento. No acionamento, use <strong>All Pages</strong> para o principal e gatilhos de conversão para o rastreamento.
+                    Crie uma tag do tipo <strong>HTML Personalizado</strong>, cole o código do Script Principal dentro dela e configure o gatilho para disparar em todas as páginas (<strong>All Pages</strong>).
                   </p>
                 </div>
               </div>
@@ -578,13 +578,14 @@ window.VIDLYTICS_CONFIG = {
           </div>
         </div>
 
+        {/* Banner de Direcionamento CSS atualizado conforme solicitado */}
         <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-              Precisa customizar o posicionamento ou estilo?
+              Precisa customizar o posicionamento ou local de exibição?
             </p>
             <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-[#c0c5d4]">
-              Utilize o menu <strong>Aparência</strong> para ajustar bordas, cores, formatos de card e seletores CSS sem precisar programar.
+              A configuração de exibição e os seletores CSS (para escolher exatamente onde os widgets vão renderizar na sua loja) são definidos de forma visual e simples diretamente na tela de <strong>Edição de cada Story</strong> (no menu <strong>Stories</strong>), sem que você precise programar nada no seu tema.
             </p>
           </div>
         </div>
