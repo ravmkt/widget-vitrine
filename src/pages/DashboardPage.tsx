@@ -13,6 +13,7 @@ import {
   Clock,
   Play,
   Share2,
+  ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ptBR } from 'date-fns/locale';
@@ -99,12 +100,15 @@ const DashboardPage: React.FC = () => {
   });
 
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
+  
+  // ── Checklist Inicial Reorganizado (6 Passos) ──
   const [checklist, setChecklist] = useState<ChecklistItem[]>([
-    { id: 'videos', title: 'Fazer upload de vídeos', description: 'Suba seus vídeos verticais ou importe das redes sociais.', route: '/videos', completed: false },
-    { id: 'products', title: 'Cadastrar produtos da loja', description: 'Vincule produtos com preço para compra direta.', route: '/products', completed: false },
+    { id: 'settings', title: 'Configurações da loja', description: 'Preencha os dados cadastrais, e-mail e integre seu canal de WhatsApp.', route: '/settings', completed: false },
+    { id: 'integration', title: 'Instalação do script', description: 'Copie e instale o script de embed nas plataformas ou via GTM.', route: '/integration', completed: false },
+    { id: 'products', title: 'Vincular os produtos', description: 'Vincule produtos com preço para permitir compra direta através dos vídeos.', route: '/products', completed: false },
+    { id: 'videos', title: 'Subir vídeos', description: 'Suba seus vídeos verticais ou importe do Instagram/TikTok.', route: '/videos', completed: false },
     { id: 'stories', title: 'Criar coleção de Stories', description: 'Agrupe seus vídeos em coleções interativas.', route: '/stories', completed: false },
-    { id: 'appearance', title: 'Personalizar aparência do player', description: 'Ajuste cores, bordas e botões da marca.', route: '/appearance', completed: false },
-    { id: 'locations', title: 'Publicar widget na sua loja', description: 'Escolha onde os vídeos devem aparecer no seu tema.', route: '/settings', completed: false },
+    { id: 'appearance', title: 'Configurar a aparência', description: 'Personalize cores, fontes, bordas e botões do player de stories.', route: '/appearance', completed: false },
   ]);
 
   const activeInterval = useMemo(() => selectedPeriod, [selectedPeriod]);
@@ -121,16 +125,17 @@ const DashboardPage: React.FC = () => {
         const now = new Date();
         const currentMonth = now.toISOString().slice(0, 7);
 
-        // Execução resiliente com Promise.allSettled
+        // Execução resiliente com Promise.allSettled + Adição de consulta de store_settings
         const results = await Promise.allSettled([
-          db.videos.getAll(storeId),
-          supabase.from('stores').select('*').eq('id', storeId).single(),
-          supabase.from('usage_counters').select('*').eq('store_id', storeId).eq('month', currentMonth).maybeSingle(),
-          supabase.from('products').select('id', { count: 'exact', head: true }).eq('store_id', storeId),
-          supabase.from('stories').select('id', { count: 'exact', head: true }).eq('store_id', storeId),
-          supabase.from('appearances').select('id', { count: 'exact', head: true }).eq('store_id', storeId),
-          supabase.from('display_locations').select('id', { count: 'exact', head: true }).eq('store_id', storeId),
-          supabase.from('store_activity_events').select('*').eq('store_id', storeId).order('created_at', { ascending: false }).limit(6),
+          db.videos.getAll(storeId), // [0]
+          supabase.from('stores').select('*').eq('id', storeId).single(), // [1]
+          supabase.from('usage_counters').select('*').eq('store_id', storeId).eq('month', currentMonth).maybeSingle(), // [2]
+          supabase.from('products').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [3]
+          supabase.from('stories').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [4]
+          supabase.from('appearances').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [5]
+          supabase.from('display_locations').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [6]
+          supabase.from('store_activity_events').select('*').eq('store_id', storeId).order('created_at', { ascending: false }).limit(6), // [7]
+          supabase.from('store_settings').select('*').eq('store_id', storeId).maybeSingle(), // [8]
         ]);
 
         if (!isMounted) return;
@@ -144,6 +149,7 @@ const DashboardPage: React.FC = () => {
           appearanceRes,
           locationsRes,
           eventsRes,
+          settingsRes,
         ] = results;
 
         // 1. Vídeos
@@ -200,7 +206,7 @@ const DashboardPage: React.FC = () => {
         }
         setActivities(fetchedEvents);
 
-        // 5. Checklist Dinâmico
+        // 5. Checklist Dinâmico e Reordenado
         const productsCount = productsRes.status === 'fulfilled' ? productsRes.value.count || 0 : 0;
         if (productsRes.status === 'rejected') {
           console.error('[DashboardPage] Falha ao carregar products:', productsRes.reason);
@@ -216,12 +222,55 @@ const DashboardPage: React.FC = () => {
           console.error('[DashboardPage] Falha ao carregar appearances:', appearanceRes.reason);
         }
 
+        // Validação de Configurações salvas
+        const hasSettingsSaved = settingsRes.status === 'fulfilled' && !!settingsRes.value.data && !!settingsRes.value.data.store_name;
+
+        // Validação de Instalação do Script (widget ativo com views ou locais de exibição cadastrados)
+        const isIntegrationCompleted = pagesCount > 0 || (usageData && (usageData.views_count || 0) > 0);
+
         setChecklist([
-          { id: 'videos', title: 'Fazer upload de vídeos', description: 'Suba seus vídeos verticais ou importe das redes sociais.', route: '/videos', completed: totalVideosCount > 0 },
-          { id: 'products', title: 'Cadastrar produtos da loja', description: 'Vincule produtos com preço para compra direta.', route: '/products', completed: productsCount > 0 },
-          { id: 'stories', title: 'Criar coleção de Stories', description: 'Agrupe seus vídeos em coleções interativas.', route: '/stories', completed: storiesCount > 0 },
-          { id: 'appearance', title: 'Personalizar aparência do player', description: 'Ajuste cores, bordas e botões da marca.', route: '/appearance', completed: appearanceCount > 0 },
-          { id: 'locations', title: 'Publicar widget na sua loja', description: 'Escolha onde os vídeos devem aparecer no seu tema.', route: '/settings', completed: pagesCount > 0 },
+          {
+            id: 'settings',
+            title: 'Configurações da loja',
+            description: 'Preencha os dados cadastrais, e-mail e integre seu canal de WhatsApp.',
+            route: '/settings',
+            completed: hasSettingsSaved,
+          },
+          {
+            id: 'integration',
+            title: 'Instalação do script',
+            description: 'Copie e instale o script de embed nas plataformas ou via GTM.',
+            route: '/integration',
+            completed: isIntegrationCompleted,
+          },
+          {
+            id: 'products',
+            title: 'Vincular os produtos',
+            description: 'Vincule produtos com preço para permitir compra direta através dos vídeos.',
+            route: '/products',
+            completed: productsCount > 0,
+          },
+          {
+            id: 'videos',
+            title: 'Subir vídeos',
+            description: 'Suba seus vídeos verticais ou importe do Instagram/TikTok.',
+            route: '/videos',
+            completed: totalVideosCount > 0,
+          },
+          {
+            id: 'stories',
+            title: 'Criar coleção de Stories',
+            description: 'Agrupe seus vídeos em coleções interativas.',
+            route: '/stories',
+            completed: storiesCount > 0,
+          },
+          {
+            id: 'appearance',
+            title: 'Configurar a aparência',
+            description: 'Personalize cores, fontes, bordas e botões do player de stories.',
+            route: '/appearance',
+            completed: appearanceCount > 0,
+          },
         ]);
       } catch (err) {
         console.error('[DashboardPage] Erro crítico ao carregar estrutura da dashboard:', err);
@@ -279,8 +328,8 @@ const DashboardPage: React.FC = () => {
   const completedSteps = checklist.filter((item) => item.completed).length;
   const checklistPercent = Math.round((completedSteps / checklist.length) * 100);
 
-const getBarColor = (pct: number) => {
-    if (pct >= 90) return '!bg-[#ef4444]'; // Ultrapassou 90% (falta 10% ou menos) -> Vermelho
+  const getBarColor = (pct: number) => {
+    if (pct >= 90) return '!bg-[#ef4444]'; // Ultrapassou 90% -> Vermelho
     if (pct >= 75) return '!bg-[#ff7a29]'; // Ultrapassou 75% -> Laranja
     return '!bg-[#22c55e]'; // Padrão normal -> Verde
   };
@@ -296,7 +345,7 @@ const getBarColor = (pct: number) => {
 
   return (
     <div className="space-y-8 animate-fade-in font-sans text-slate-900 dark:text-[#e8ecf4] min-h-screen -m-6 p-6 sm:p-8 bg-transparent dark:bg-[radial-gradient(ellipse_at_top,_#1a1f3a_0%,_#0f1220_55%,_#0a0e1a_100%)]">
-      {/* ── 1. HEADER (BOAS-VINDAS & STATUS COM GLOW) ── */}
+      {/* ── 1. HEADER ── */}
       <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 rounded-[2rem] border border-slate-200 dark:border-orange-500/15 shadow-sm dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
         <div className="flex items-center gap-2 mb-2.5">
           <span className="text-xs font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
@@ -321,7 +370,7 @@ const getBarColor = (pct: number) => {
         </p>
       </div>
 
-      {/* ── 2. CONSUMO DO PLANO (CARDS GLASS COM HOVER ELEVADO) ── */}
+      {/* ── 2. CONSUMO DO PLANO ── */}
       <div>
         <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-3 px-1">
           Consumo do Plano
@@ -416,10 +465,10 @@ const getBarColor = (pct: number) => {
         </div>
       </div>
 
-      {/* ── 3. DESEMPENHO DOS VÍDEOS (SPLIT 50/50) ── */}
+      {/* ── 3. DESEMPENHO DOS VÍDEOS ── */}
       <div
         className={cn(
-          'bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-6 transition-opacity duration-200',
+          'bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-6 transition-opacity duration-200 flex flex-col',
           metricsLoading && 'opacity-60 pointer-events-none'
         )}
       >
@@ -455,7 +504,7 @@ const getBarColor = (pct: number) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start flex-1">
           <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <MetricCard title="Visualizações" value={dashboardMetrics.views.toLocaleString()} icon={Eye} />
             <MetricCard title="Cliques em CTA" value={dashboardMetrics.ctaClicks.toLocaleString()} icon={MousePointerClick} />
@@ -463,18 +512,12 @@ const getBarColor = (pct: number) => {
             <MetricCard title="CTR Médio" value={`${dashboardMetrics.ctr.toFixed(1).replace('.', ',')}%`} icon={MousePointerClick} />
           </div>
 
-          <div className="lg:col-span-6 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-white/5 lg:pl-8 flex flex-col justify-between h-full">
+          <div className="lg:col-span-6 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-white/5 lg:pl-8 flex flex-col justify-between h-full min-h-[280px]">
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                   Top Vídeos Mais Assistidos
                 </h4>
-                <button
-                  onClick={() => navigate('/videos/performance')}
-                  className="text-xs font-bold text-[#0094EB] dark:text-[#ff7a29] hover:underline"
-                >
-                  Ver relatório completo &rarr;
-                </button>
               </div>
 
               {topVideos.length === 0 ? (
@@ -526,16 +569,27 @@ const getBarColor = (pct: number) => {
             </div>
           </div>
         </div>
+
+        {/* ── Botão Cápsula de Relatório Alinhado no Canto Inferior Direito ── */}
+        <div className="flex justify-end mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
+          <button
+            onClick={() => navigate('/videos/performance')}
+            className="bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] text-white font-black py-2.5 px-6 rounded-full text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 flex items-center gap-2 cursor-pointer"
+          >
+            Ver Relatório Completo
+            <ArrowRight size={14} className="stroke-[2.5]" />
+          </button>
+        </div>
       </div>
 
-      {/* ── 4 & 5. LINHA DIVIDIDA: CHECKLIST + ATIVIDADE RECENTE ── */}
+      {/* ── 4 & 5. LINHA DIVIDIDA: CHECKLIST REORGANIZADO + ATIVIDADE RECENTE ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
         <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/5 pb-5 mb-5">
               <div>
-                <h2 className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
-                  <span>🚀</span> Checklist da Ativação da Loja
+                <h2 className="text-base font-black text-slate-800 dark:text-white">
+                  Checklist da Ativação da Loja
                 </h2>
                 <p className="text-xs font-semibold text-slate-500 dark:text-[#c0c5d4] mt-0.5">
                   Conclua os passos para publicar seus stories.
@@ -576,11 +630,12 @@ const getBarColor = (pct: number) => {
                       : 'bg-slate-50/70 dark:bg-[#0f1220]/60 border-slate-200 dark:border-white/5 hover:bg-white dark:hover:bg-[#1a1f35] hover:border-[#0094EB] dark:hover:border-[#ff7a29] hover:shadow-md'
                   )}
                 >
+                  {/* Círculo do checklist redimensionado de w-5 h-5 para w-7 h-7 com números maiores text-sm */}
                   <div
                     className={cn(
-                      'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-[11px] transition-all',
+                      'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-sm transition-all',
                       item.completed
-                        ? 'bg-emerald-500 text-white shadow-sm'
+                        ? 'bg-emerald-500 text-white shadow-sm font-black'
                         : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0094EB] dark:group-hover:border-[#ff7a29]'
                     )}
                   >
@@ -613,11 +668,12 @@ const getBarColor = (pct: number) => {
           </div>
         </div>
 
+        {/* Atividade Recente */}
         <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
             <div className="border-b border-slate-100 dark:border-white/5 pb-5 mb-5">
-              <h2 className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
-                <span>⚡</span> Atividade Recente
+              <h2 className="text-base font-black text-slate-800 dark:text-white">
+                Atividade Recente
               </h2>
               <p className="text-xs font-semibold text-slate-500 dark:text-[#c0c5d4] mt-0.5">
                 Feed de eventos e interações em tempo real.
@@ -651,7 +707,7 @@ const getBarColor = (pct: number) => {
         </div>
       </div>
 
-      {/* ── 6 & 7. SEÇÃO INFERIOR: ACADEMY & INDIQUE E GANHE COM GRADIENTE DIAGONAL ── */}
+      {/* ── 6 & 7. SEÇÃO INFERIOR ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
         {/* Academy */}
         <div className="lg:col-span-7 bg-white dark:bg-[#1a1f35]/75 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 p-6 sm:p-7 rounded-[2.5rem] shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_30px_rgba(255,122,41,0.1)] transition-all duration-300 flex flex-col md:flex-row items-center gap-5">
@@ -676,12 +732,12 @@ const getBarColor = (pct: number) => {
               Como dobrar suas conversões com vídeos em 3 passos
             </h4>
             <p className="text-xs text-slate-500 dark:text-[#c0c5d4] font-medium leading-relaxed">
-              Aprenda as melhores práticas de posicionamento e gatilhos de CTA para aumentar as vendas da sua loja.
+              Aprenda as melhores práticas de positioning e gatilhos de CTA para aumentar as vendas da sua loja.
             </p>
           </div>
         </div>
 
-{/* Card Destaque: Indique e Ganhe (Dual-Theme: Azul no Light / Laranja no Dark) */}
+        {/* Indique e Ganhe */}
         <div className="lg:col-span-5 bg-white dark:bg-[#1a1f35]/90 dark:backdrop-blur-md p-6 sm:p-7 rounded-[2.5rem] shadow-sm hover:shadow-md dark:hover:shadow-[0_8px_20px_rgba(255,122,41,0.15)] flex flex-col justify-between border border-slate-200 dark:border-orange-500/15 hover:-translate-y-1 transition-all duration-300">
           <div>
             <div className="flex items-center justify-between">
@@ -712,7 +768,7 @@ const getBarColor = (pct: number) => {
             <span className="!text-white font-black">Copiar Meu Link de Indicação</span>
           </button>
         </div>
-                      </div>
+      </div>
 
       {/* DIALOG DE DATA PERSONALIZADA */}
       <CustomDialog
