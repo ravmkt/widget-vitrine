@@ -215,17 +215,6 @@ const [selectorUrl, setSelectorUrl] = useState("");
 const [selectorLoading, setSelectorLoading] = useState(false);
 const [previewUrl, setPreviewUrl] = useState("");
 
-  // Sincroniza a URL padrão da loja com o campo de preview quando carregar
-  useEffect(() => {
-    if (currentStore?.url && !previewUrl) {
-      let initialUrl = currentStore.url.trim();
-      if (!/^https?:\/\//i.test(initialUrl)) {
-        initialUrl = "https://" + initialUrl;
-      }
-      setPreviewUrl(initialUrl);
-    }
-  }, [currentStore, previewUrl]);
-
   const loadStoryData = useCallback(async () => {
     if (tenantLoading) return;
     try {
