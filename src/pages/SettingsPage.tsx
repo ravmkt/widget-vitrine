@@ -250,7 +250,7 @@ const SettingsPage = () => {
       } catch (err) {
         console.error('Error fetching settings:', err);
         setSettings(DEFAULT_SETTINGS);
-      } finally {
+      } fill/y {
         setLoading(false);
       }
     };
@@ -289,6 +289,19 @@ const SettingsPage = () => {
     };
     fetchSectors();
   }, [settings?.store_id]);
+
+  // Função auxiliar para garantir o formato correto da URL com HTTP/HTTPS
+  const formatStoreUrl = (url: string | null): string => {
+    if (!url) return "";
+    const trimmed = url.trim();
+    if (trimmed === "") return "";
+    
+    // Se não começar com http:// ou https://, adiciona https://
+    if (!/^https?:\/\//i.test(trimmed)) {
+      return `https://${trimmed}`;
+    }
+    return trimmed;
+  };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -354,9 +367,13 @@ const SettingsPage = () => {
         finalLogoUrl = data.publicUrl;
       }
 
+      // Garante que a URL esteja formatada ao salvar
+      const finalStoreUrl = formatStoreUrl(settings.store_url);
+
       const now = new Date().toISOString();
       const updatedSettings: AppSettings = {
         ...settings,
+        store_url: finalStoreUrl,
         store_logo_url: finalLogoUrl,
         updated_at: now,
       };
@@ -373,7 +390,7 @@ const SettingsPage = () => {
           .from('stores')
           .update({
             name: updatedSettings.store_name || 'Loja',
-            url: updatedSettings.store_url || null,
+            url: finalStoreUrl || null,
             logo_url: finalLogoUrl || null,
             contact_email: updatedSettings.contact_email || null,
             sector_id: sectorValue,
@@ -382,6 +399,8 @@ const SettingsPage = () => {
           .eq('id', settings.store_id);
       }
 
+      // Atualiza o estado local para exibir a URL formatada
+      setSettings(updatedSettings);
       setSelectedLogoFile(null);
 
       window.dispatchEvent(new Event('storage'));
@@ -525,12 +544,16 @@ const SettingsPage = () => {
                 URL da Loja *
               </Label>
               <Input
-                type="url"
+                type="text"
                 placeholder="https://sualoja.com"
                 value={settings?.store_url ?? ''}
                 onChange={e =>
                   setSettings(prev => ({ ...prev, store_url: e.target.value }))
                 }
+                onBlur={e => {
+                  const formatted = formatStoreUrl(e.target.value);
+                  setSettings(prev => ({ ...prev, store_url: formatted }));
+                }}
                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
                 required
               />
