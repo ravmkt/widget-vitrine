@@ -1,612 +1,145 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Copy,
-  Store,
-} from 'lucide-react';
-import { useTenant } from '@/context/TenantContext';
-import { supabase } from '@/lib/supabase';
+import React from "react";
 
-// ── ÍCONES EXCLUSIVOS CUSTOMIZADOS (PROPORÇÕES EXATAS E AMPLA MARGEM INTERNA) ──
+interface IconProps extends React.SVGProps<SVGSVGElement> {
+  size?: number;
+  mainColor?: string; // Cor do fundo (padrão: #0094ea)
+  strokeColor?: string; // Cor das linhas/detalhes (padrão: #ffffff)
+}
 
-// Ícone: Flutuante (Card à esquerda + Mão detalhada apontando de lado + Cliques limpos)
-const FlutuanteIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    {/* Card vertical esquerdo (com bastante margem) */}
-    <rect x="4.5" y="5.5" width="5.5" height="13" rx="1.8" />
-    
-    {/* Traços de clique irradiando do ponto de toque (X=10, Y=11.5) */}
-    <path d="M10 8.5 L10.5 7" />
-    <path d="M11.5 9.5 L12.5 8.5" />
-    <path d="M12 11.5 L13.5 11.5" />
-    <path d="M11.5 13.5 L12.5 14.5" />
-
-    {/* Mão de clique diagonal ultra-fiel (Escalada e posicionada com respiro) */}
-    <g transform="translate(10, 11.5) rotate(-25) scale(0.6) translate(-10.5, -8.5)">
-      <path d="M12.5 19.5h3.8a3 3 0 0 0 3-3v-2.2a1.5 1.5 0 0 0-1.5-1.5h-.8v-1.3a1.5 1.5 0 0 0-3 0v1.3h-.5v-4.3a1.5 1.5 0 0 0-3 0v4.3l-1.8-1.8a1.5 1.5 0 0 0-2.1 2.1l3.4 3.4a3 3 0 0 0 2.1.8z" />
-    </g>
-  </svg>
-);
-
-// Ícone: Carrossel (3 cards verticais com margens simétricas e elegantes)
-const CarrosselIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect x="4.5" y="6" width="4.2" height="12" rx="1.8" />
-    <rect x="9.9" y="6" width="4.2" height="12" rx="1.8" />
-    <rect x="15.3" y="6" width="4.2" height="12" rx="1.8" />
-  </svg>
-);
-
-// Ícone: Carrossel Dinâmico (Card centralizado em destaque + Estrelas de traço fino)
-const CarrosselDinamicoIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    {/* Três colunas estilo carrossel */}
-    <rect x="4.5" y="7.5" width="4.2" height="9" rx="1.8" />
-    <rect x="9.9" y="5.5" width="4.2" height="13" rx="1.8" />
-    <rect x="15.3" y="7.5" width="4.2" height="9" rx="1.8" />
-
-    {/* Estrela principal (4 pontas - traço fino) */}
-    <path d="M14.5 1.5 L14.9 3 L16.4 3.4 L14.9 3.8 L14.5 5.3 L14.1 3.8 L12.6 3.4 L14.1 3.0 Z" />
-    
-    {/* Estrela secundária menor à direita */}
-    <path d="M19.5 2 L19.7 3 L20.7 3.2 L19.7 3.4 L19.5 4.4 L19.3 3.4 L18.3 3.2 L19.3 3 Z" />
-
-    {/* Estrela pequenininha à esquerda */}
-    <path d="M11.5 4 L11.6 4.5 L12.1 4.6 L11.6 4.7 L11.5 5.2 L11.4 4.7 L10.9 4.6 L11.4 4.5 Z" />
-  </svg>
-);
-
-// Ícone: Galeria (4 quadrados com cantos bastante arredondados e excelente espaçamento)
-const GradeIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect x="5" y="5" width="5.5" height="5.5" rx="2" />
-    <rect x="13.5" y="5" width="5.5" height="5.5" rx="2" />
-    <rect x="5" y="13.5" width="5.5" height="5.5" rx="2" />
-    <rect x="13.5" y="13.5" width="5.5" height="5.5" rx="2" />
-  </svg>
-);
-
-
-const IntegrationPage = () => {
-  const { storeId } = useTenant();
-
-  const [copied, setCopied] = useState(false);
-  const [copiedTracking, setCopiedTracking] = useState(false);
-  const [installTab, setInstallTab] = useState<'platform' | 'gtm'>('platform');
-  const [securityToken, setSecurityToken] = useState<string>('');
-  const [tokenLoading, setTokenLoading] = useState(true);
-
-  const publicUrl = useMemo(() => {
-    const envUrl = import.meta.env.VITE_WIDGET_PUBLIC_URL || '';
-
-    if (envUrl) {
-      return String(envUrl).replace(/\/$/, '').trim();
-    }
-
-    if (typeof window !== 'undefined') {
-      return window.location.origin.replace(/\/$/, '').trim();
-    }
-
-    return '';
-  }, []);
-
-  const supabaseUrl = String(import.meta.env.VITE_SUPABASE_URL || '')
-    .replace(/\/$/, '')
-    .trim();
-
-  const supabaseAnonKey = String(
-    import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-  ).trim();
-
-  const isLocal =
-    publicUrl.includes('localhost') || publicUrl.includes('127.0.0.1');
-
-  const hasStoreId = Boolean(storeId);
-  const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
-  const canInstall = hasStoreId && hasSupabaseConfig && Boolean(publicUrl);
-
-  const widgetVersion = '2026.08.23-08';
-
-  // Busca o token de segurança da loja
-  useEffect(() => {
-    let active = true;
-
-    async function fetchToken() {
-      if (!supabase || !storeId) {
-        setTokenLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('store_settings')
-        .select('security_token')
-        .eq('store_id', storeId)
-        .maybeSingle();
-
-      if (!active) return;
-
-      if (!error && data?.security_token) {
-        setSecurityToken(data.security_token);
-      }
-
-      setTokenLoading(false);
-    }
-
-    fetchToken();
-
-    return () => {
-      active = false;
-    };
-  }, [storeId]);
-
-  const scriptCode = useMemo(() => {
-    return `<script>
-window.VIDLYTICS_CONFIG = {
-  storeId: "${storeId || ''}",
-  platform: "custom",
-  supabaseUrl: "${supabaseUrl}",
-  supabaseAnonKey: "${supabaseAnonKey}",
-  widgets: {
-    floatingVideo: true,
-    carousel: true,
-    gallery: true
-  }
-};
-
-(function() {
-  var script = document.createElement('script');
-  script.src = '${publicUrl}/widget.js?v=${widgetVersion}';
-  script.type = 'text/javascript';
-  script.async = true;
-  script.charset = 'UTF-8';
-  document.head.appendChild(script);
-})();
-</script>`;
-  }, [storeId, supabaseUrl, supabaseAnonKey, publicUrl, widgetVersion]);
-
-  const trackingScriptCode = useMemo(() => {
-    return `<script>
-(function() {
-  var script = document.createElement('script');
-  script.src = '${publicUrl}/vidlytics-tracking.js'
-    + '?store=${encodeURIComponent(storeId || '')}'
-    + '&token=${encodeURIComponent(securityToken)}';
-  script.type = 'text/javascript';
-  script.async = true;
-  document.head.appendChild(script);
-})();
-</script>`;
-  }, [publicUrl, storeId, securityToken]);
-
-  const hasSecurityToken = Boolean(securityToken);
-  const trackingReady = canInstall && hasSecurityToken && !tokenLoading;
-
-  const copyToClipboard = async (text: string, onDone: () => void) => {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-      } else {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.left = '-9999px';
-        textarea.style.top = '-9999px';
-        document.body.appendChild(textarea);
-        textarea.focus();
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-      }
-      onDone();
-    } catch (error) {
-      console.error('Erro ao copiar script:', error);
-    }
-  };
-
-  const handleCopyScript = () => {
-    copyToClipboard(scriptCode, () => {
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2500);
-    });
-  };
-
-  const handleCopyTrackingScript = () => {
-    copyToClipboard(trackingScriptCode, () => {
-      setCopiedTracking(true);
-      window.setTimeout(() => setCopiedTracking(false), 2500);
-    });
-  };
-
+// 1. ÍCONE CARROSSEL (Stories lado a lado)
+export const CarouselLayoutIcon: React.FC<IconProps> = ({
+  size = 44,
+  mainColor = "#0094ea",
+  strokeColor = "#ffffff",
+  className,
+  ...props
+}) => {
   return (
-    <div className="space-y-8 animate-fade-in pb-20 font-sans">
-      {/* ── CABEÇALHO DA PÁGINA ── */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 bg-blue-50 dark:bg-[#ff7a29]/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] shadow-xs">
-            <Store className="h-3.5 w-3.5" />
-            Integração
-          </div>
-
-          <h1 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Instalação do Vidlytics
-          </h1>
-
-          <p className="mt-1 max-w-3xl text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">
-            Instale o widget na sua loja para exibir vídeos e stories interativos como vídeo flutuante, carrossel e galeria em páginas estratégicas.
-          </p>
-        </div>
-      </div>
-
-      {/* ── ALERTAS DE AMBIENTE ── */}
-      {!hasStoreId && (
-        <div className="flex items-start gap-3 rounded-[2rem] border border-rose-500/30 bg-rose-50 dark:bg-rose-950/30 p-5">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
-          <div className="text-xs text-rose-800 dark:text-rose-300">
-            <p className="font-black text-sm uppercase tracking-tight">Loja não identificada</p>
-            <p className="mt-0.5 opacity-90 font-medium">
-              O <strong>storeId</strong> não foi localizado no contexto da loja. Sem ele, o widget não saberá quais vídeos carregar.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {!hasSupabaseConfig && (
-        <div className="flex items-start gap-3 rounded-[2rem] border border-rose-500/30 bg-rose-50 dark:bg-rose-950/30 p-5">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
-          <div className="text-xs text-rose-800 dark:text-rose-300">
-            <p className="font-black text-sm uppercase tracking-tight">Configuração do Supabase ausente</p>
-            <p className="mt-0.5 opacity-90 font-medium">
-              Verifique se as variáveis <strong>VITE_SUPABASE_URL</strong> e <strong>VITE_SUPABASE_ANON_KEY</strong> estão configuradas no ambiente.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {isLocal && (
-        <div className="flex items-start gap-3 rounded-[2rem] border border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 p-5">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
-          <div className="text-xs text-amber-800 dark:text-amber-300">
-            <p className="font-black text-sm uppercase tracking-tight">URL pública ausente</p>
-            <p className="mt-0.5 opacity-90 font-medium">
-              O widget está usando uma URL local. Para funcionar na loja real, configure a variável <strong>VITE_WIDGET_PUBLIC_URL</strong> com o domínio público da aplicação.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* ── MÓDULOS SUPERIORES: FORMATOS DE VÍDEO (DUAL-THEME) ── */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Card: Flutuante */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
-          <div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
-              <FlutuanteIcon className="text-white" />
-            </div>
-
-            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              Flutuante
-            </h2>
-
-            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-              Exiba vídeos fixos no canto da tela, ideal para destaques, lançamentos, ofertas e apresentações rápidas de produto.
-            </p>
-          </div>
-        </div>
-
-        {/* Card: Carrossel */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
-          <div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
-              <CarrosselIcon className="text-white" />
-            </div>
-
-            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              Carrossel
-            </h2>
-
-            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-              Mostre múltiplos vídeos em formato horizontal na Home, páginas de categorias ou diretamente na vitrine de produtos.
-            </p>
-          </div>
-        </div>
-
-        {/* Card: Carrossel Dinâmico */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
-          <div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
-              <CarrosselDinamicoIcon className="text-white" />
-            </div>
-
-            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              Carrossel Dinâmico
-            </h2>
-
-            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-              Exibição inteligente baseada no comportamento do usuário, produtos navegados e coleções automáticas de alta conversão.
-            </p>
-          </div>
-        </div>
-
-        {/* Card: Galeria */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
-          <div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
-              <GradeIcon className="text-white" />
-            </div>
-
-            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              Galeria
-            </h2>
-
-            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-              Crie seções em grade completas com vídeos compráveis para destacar looks, depoimentos, provadores e campanhas.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* ── BOTÕES / TABS DE SELEÇÃO DE INSTALAÇÃO ── */}
-      <div className="flex justify-center pt-2">
-        <div className="inline-flex rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220] p-1.5 shadow-sm">
-          <button
-            type="button"
-            onClick={() => setInstallTab('platform')}
-            className={`rounded-xl px-6 py-3 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-              installTab === 'platform'
-                ? 'bg-white dark:bg-[#1a1f35] text-[#0094EB] dark:text-[#ff7a29] shadow-md border border-slate-100 dark:border-orange-500/10'
-                : 'text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white'
-            }`}
-          >
-            Via Plataforma
-          </button>
-          <button
-            type="button"
-            onClick={() => setInstallTab('gtm')}
-            className={`rounded-xl px-6 py-3 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-              installTab === 'gtm'
-                ? 'bg-white dark:bg-[#1a1f35] text-[#0094EB] dark:text-[#ff7a29] shadow-md border border-slate-100 dark:border-orange-500/10'
-                : 'text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white'
-            }`}
-          >
-            Via Google Tag Manager
-          </button>
-        </div>
-      </div>
-
-      {/* ── SEÇÃO: COMO INSTALAR NA SUA LOJA ── */}
-      <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
-        <div className="border-b border-slate-100 dark:border-white/5 pb-4">
-          <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            Como instalar na sua loja
-          </h2>
-          <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-[#8a90a0]">
-            Três passos simples para ativar a experiência de vídeo commerce no seu e-commerce.
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          {installTab === 'platform' ? (
-            <>
-              {/* Passo 1 - Plataforma */}
-              <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
-                <div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
-                    1
-                  </div>
-                  <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Acesse o painel da loja
-                  </h3>
-                  <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                    Abra as configurações do tema da sua plataforma (Yampi, Shopify, Nuvemshop, WBuy, Bagy, Tray, etc.) e localize a área de scripts ou HTML personalizado.
-                  </p>
-                </div>
-              </div>
-
-              {/* Passo 2 - Plataforma */}
-              <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
-                <div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
-                    2
-                  </div>
-                  <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Cole os scripts
-                  </h3>
-                  <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                    Cole o <strong>Script Principal (Passo 1)</strong> no cabeçalho (&lt;head&gt;) e o <strong>Script de Rastreamento (Passo 2)</strong> na página de conclusão de compra (Obrigado / Confirmação de pedido) da sua plataforma.
-                  </p>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Passo 1 - GTM */}
-              <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
-                <div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
-                    1
-                  </div>
-                  <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Acesse o Google Tag Manager
-                  </h3>
-                  <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                    Abra o contêiner do GTM instalado no seu site e vá para a seção de Tags para adicionar uma nova configuração.
-                  </p>
-                </div>
-              </div>
-
-              {/* Passo 2 - GTM */}
-              <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
-                <div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
-                    2
-                  </div>
-                  <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Configure as Tags HTML
-                  </h3>
-                  <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                    Crie tags do tipo <strong>HTML Personalizado</strong> para o Script Principal e outra para o Script de Rastreamento. No acionamento, use <strong>All Pages</strong> para o principal e gatilhos de conversão para o rastreamento.
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Passo 3 - Comum a ambos */}
-          <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
-                3
-              </div>
-
-              <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                Publique seus vídeos
-              </h3>
-
-              <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                Faça upload dos vídeos no Vidlytics, configure suas coleções de stories e os vídeos aparecerão automaticamente para seus clientes de acordo com as regras de exibição.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-              Precisa customizar o posicionamento ou estilo?
-            </p>
-            <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-[#c0c5d4]">
-              Utilize o menu <strong>Aparência</strong> para ajustar bordas, cores, formatos de card e seletores CSS sem precisar programar.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-6">
-        {/* ── PASSO 1: SCRIPT PRINCIPAL (DUAL-THEME) ── */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-sm shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
-                1
-              </div>
-              <div>
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                  Script Principal (Widget)
-                </h2>
-                <p className="mt-1 max-w-3xl text-xs sm:text-sm font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                  Este script carrega o player de vídeo, os stories e os widgets no seu tema. Cole este código dentro da tag <strong>&lt;head&gt;</strong> da sua loja.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleCopyScript}
-              disabled={!canInstall}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
-            >
-              {copied ? (
-                <>
-                  <CheckCircle2 size={16} className="!text-white" />
-                  Copiado!
-                </>
-              ) : (
-                <>
-                  <Copy size={16} className="!text-white" />
-                  Copiar Script
-                </>
-              )}
-            </button>
-          </div>
-
-          <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-[#0f1220] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/5 bg-[#14182b] px-5 py-3">
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-rose-500/80" />
-                <span className="h-3 w-3 rounded-full bg-amber-500/80" />
-                <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
-              </div>
-              <span className="font-mono text-xs font-bold text-slate-400 dark:text-[#8a90a0]">widget.js</span>
-            </div>
-            <pre className="overflow-x-auto whitespace-pre-wrap p-6 font-mono text-xs font-semibold leading-relaxed text-[#22c55e] md:text-sm [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:bg-white/10">
-              {scriptCode}
-            </pre>
-          </div>
-        </div>
-
-        {/* ── PASSO 2: SCRIPT DE RASTREAMENTO DE VENDAS (DUAL-THEME) ── */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-sm shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
-                2
-              </div>
-              <div>
-                <div className="flex items-center gap-2.5">
-                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                    Script de Rastreamento (Vendas)
-                  </h2>
-                  <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-700/40 px-3 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                    Recomendado
-                  </span>
-                </div>
-
-                {installTab === 'platform' ? (
-                  <p className="mt-1.5 max-w-3xl text-xs sm:text-sm font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                    Compatível com <strong>Yampi, Shopify, Nuvemshop, WBuy, Bagy e Tray</strong>. Cole o código abaixo na área de <strong>Scripts / HTML personalizado</strong> da sua plataforma, na página de <strong>Obrigado / Confirmação de Pedido</strong>.
-                  </p>
-                ) : (
-                  <div className="mt-1.5 max-w-3xl text-xs sm:text-sm font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                    <p>No Google Tag Manager:</p>
-                    <ol className="list-decimal list-inside space-y-0.5 mt-1">
-                      <li>Crie uma nova tag do tipo <strong>HTML Personalizado</strong></li>
-                      <li>Cole o código de rastreamento abaixo dentro dela</li>
-                      <li>No gatilho, selecione o evento de compra / transação de sucesso</li>
-                      <li>Publique o contêiner do GTM</li>
-                    </ol>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleCopyTrackingScript}
-              disabled={!trackingReady}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
-            >
-              {copiedTracking ? (
-                <>
-                  <CheckCircle2 size={16} className="!text-white" />
-                  Copiado!
-                </>
-              ) : (
-                <>
-                  <Copy size={16} className="!text-white" />
-                  Copiar Script
-                </>
-              )}
-            </button>
-          </div>
-
-          <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-[#0f1220] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/5 bg-[#14182b] px-5 py-3">
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-rose-500/80" />
-                <span className="h-3 w-3 rounded-full bg-amber-500/80" />
-                <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
-              </div>
-              <span className="font-mono text-xs font-bold text-slate-400 dark:text-[#8a90a0]">vidlytics-tracking.js</span>
-            </div>
-            <pre className="overflow-x-auto whitespace-pre-wrap p-6 font-mono text-xs font-semibold leading-relaxed text-[#22c55e] md:text-sm [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:bg-white/10">
-              {trackingScriptCode}
-            </pre>
-          </div>
-        </div>
-      </div>
-    </div>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 33.12 41.04"
+      fill="none"
+      className={className}
+      {...props}
+    >
+      {/* Fundo Principal */}
+      <rect width="32.14" height="32.14" rx="4" fill={mainColor} y="0.06" />
+      
+      {/* Três Cards Verticais */}
+      <rect x="3.2" y="8.2" width="6" height="15.8" rx="1.5" stroke={strokeColor} strokeWidth="0.8" />
+      <rect x="13.1" y="8.2" width="6" height="15.8" rx="1.5" stroke={strokeColor} strokeWidth="0.8" />
+      <rect x="23.0" y="8.2" width="6" height="15.8" rx="1.5" stroke={strokeColor} strokeWidth="0.8" />
+    </svg>
   );
 };
 
-export default IntegrationPage;
+// 2. ÍCONE DESTAQUE (Stories em evidência com brilho)
+export const FeaturedLayoutIcon: React.FC<IconProps> = ({
+  size = 44,
+  mainColor = "#0094ea",
+  strokeColor = "#ffffff",
+  className,
+  ...props
+}) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 33.12 41.04"
+      fill="none"
+      className={className}
+      {...props}
+    >
+      {/* Fundo Principal */}
+      <rect width="32.14" height="32.14" rx="4" fill={mainColor} y="0.06" />
+      
+      {/* Card Lateral Esquerdo */}
+      <rect x="3.2" y="8.2" width="6" height="15.8" rx="1.5" stroke={strokeColor} strokeWidth="0.8" />
+      
+      {/* Card Central em Destaque (Maior) */}
+      <rect x="11.8" y="6.2" width="8.5" height="19.8" rx="2" stroke={strokeColor} strokeWidth="0.9" />
+      
+      {/* Card Lateral Direito */}
+      <rect x="23.0" y="8.2" width="6" height="15.8" rx="1.5" stroke={strokeColor} strokeWidth="0.8" />
+      
+      {/* Brilhos / Estrelas (Vetorizados e limpos) */}
+      <g fill={strokeColor}>
+        <path d="M 25.6 8.0 C 25.6 8.7 25.7 8.8 26.4 8.8 C 25.7 8.9 25.6 9.0 25.6 9.7 C 25.5 9.0 25.5 8.9 24.7 8.8 C 25.5 8.8 25.5 8.7 25.6 8.0 Z" />
+        <path d="M 18.4 7.6 C 18.4 8.0 18.4 8.0 18.8 8.0 C 18.4 8.1 18.4 8.1 18.4 8.5 C 18.4 8.1 18.3 8.1 18.0 8.0 C 18.3 8.0 18.4 8.0 18.4 7.6 Z" />
+        <path d="M 22.1 2.1 C 22.3 5.0 22.4 5.1 25.3 5.3 C 22.4 5.5 22.3 5.7 22.1 8.6 C 21.9 5.7 21.7 5.5 18.8 5.3 C 21.7 5.1 21.9 5.0 22.1 2.1 Z" />
+      </g>
+    </svg>
+  );
+};
+
+// 3. ÍCONE GRID (Grade 2x2)
+export const GridLayoutIcon: React.FC<IconProps> = ({
+  size = 44,
+  mainColor = "#0094ea",
+  strokeColor = "#ffffff",
+  className,
+  ...props
+}) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 33.12 41.04"
+      fill="none"
+      className={className}
+      {...props}
+    >
+      {/* Fundo Principal */}
+      <rect width="32.14" height="32.14" rx="4" fill={mainColor} y="0.06" />
+      
+      {/* Grid 2x2 */}
+      <rect x="3.7" y="4.2" width="10" height="10" rx="2" stroke={strokeColor} strokeWidth="0.8" />
+      <rect x="18.0" y="4.2" width="10" height="10" rx="2" stroke={strokeColor} strokeWidth="0.8" />
+      <rect x="3.7" y="17.6" width="10" height="10" rx="2" stroke={strokeColor} strokeWidth="0.8" />
+      <rect x="18.0" y="17.6" width="10" height="10" rx="2" stroke={strokeColor} strokeWidth="0.8" />
+    </svg>
+  );
+};
+
+// 4. ÍCONE FLUTUANTE (Story flutuante com indicação de clique/tap)
+export const FloatingLayoutIcon: React.FC<IconProps> = ({
+  size = 44,
+  mainColor = "#0094ea",
+  strokeColor = "#ffffff",
+  className,
+  ...props
+}) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 33.12 41.04"
+      fill="none"
+      className={className}
+      {...props}
+    >
+      {/* Fundo Principal */}
+      <rect width="32.14" height="32.14" rx="4" fill={mainColor} y="0.06" />
+      
+      {/* Card Celular/Widget na Esquerda */}
+      <rect x="5.5" y="6.2" width="8.5" height="19.8" rx="2" stroke={strokeColor} strokeWidth="0.9" />
+      
+      {/* Mão de Clique / Tap Gesture na Direita */}
+      <g fill={strokeColor}>
+        <path d="M 24.25 19.6 C 23.69 18.63 23.13 17.65 22.57 16.68 C 22.37 16.34 22.08 16.16 21.7 16.17 C 21.32 16.18 21.04 16.37 20.89 16.72 C 20.85 16.8 20.82 16.82 20.73 16.77 C 20.23 16.5 19.65 16.7 19.43 17.22 C 19.39 17.31 19.36 17.3 19.29 17.27 C 19.13 17.21 18.97 17.16 18.82 17.15 C 18.46 17.15 18.19 17.31 18.02 17.63 C 18.01 17.66 17.98 17.68 17.96 17.7 C 17.94 17.67 17.91 17.65 17.9 17.63 C 17.87 17.58 17.85 17.53 17.82 17.48 C 17.47 16.88 17.13 16.27 16.77 15.68 C 16.52 15.24 16.07 15.1 15.61 15.29 C 15.15 15.47 14.91 16.04 15.13 16.48 C 15.31 16.84 15.52 17.18 15.73 17.53 C 16.33 18.56 16.93 19.59 17.53 20.63 C 17.57 20.68 17.59 20.74 17.63 20.84 C 17.56 20.82 17.53 20.82 17.5 20.81 C 17.21 20.71 16.91 20.62 16.62 20.51 C 16.32 20.39 16.02 20.36 15.71 20.47 C 15.32 20.63 15.04 21.05 15.05 21.46 C 15.06 21.95 15.29 22.3 15.72 22.47 C 16.38 22.73 17.05 22.98 17.72 23.24 C 18.51 23.54 19.3 23.84 20.09 24.14 C 20.69 24.36 21.29 24.38 21.88 24.16 C 22.46 23.96 23.0 23.67 23.48 23.3 C 24.01 22.88 24.4 22.36 24.56 21.7 C 24.74 20.96 24.64 20.26 24.25 19.6 Z M 24.29 21.36 C 24.22 21.84 24.01 22.26 23.69 22.64 C 23.27 23.13 22.71 23.41 22.16 23.69 C 21.67 23.93 21.16 24.06 20.62 23.93 C 20.35 23.87 20.09 23.78 19.84 23.68 C 18.61 23.22 17.38 22.75 16.15 22.29 C 16.03 22.24 15.9 22.19 15.78 22.13 C 15.48 21.98 15.33 21.65 15.4 21.3 C 15.47 21 15.76 20.75 16.07 20.73 C 16.32 20.71 16.54 20.79 16.76 20.87 C 17.25 21.05 17.73 21.23 18.22 21.41 C 18.27 21.42 18.32 21.44 18.37 21.46 C 18.38 21.45 18.38 21.44 18.39 21.43 C 18.32 21.3 18.25 21.16 18.17 21.04 C 17.47 19.83 16.77 18.63 16.06 17.43 C 15.87 17.09 15.67 16.77 15.48 16.43 C 15.37 16.23 15.36 16.02 15.49 15.82 C 15.61 15.62 15.8 15.54 16.03 15.55 C 16.22 15.57 16.36 15.67 16.46 15.83 C 16.81 16.44 17.17 17.04 17.52 17.64 C 17.88 18.23 18.22 18.83 18.57 19.43 C 18.59 19.46 18.61 19.49 18.63 19.52 C 18.69 19.61 18.76 19.66 18.87 19.6 C 18.95 19.56 18.97 19.47 18.91 19.36 C 18.83 19.2 18.74 19.05 18.65 18.9 C 18.54 18.71 18.43 18.52 18.32 18.32 C 18.2 18.07 18.25 17.81 18.45 17.63 C 18.64 17.46 18.93 17.43 19.14 17.57 C 19.24 17.64 19.32 17.75 19.38 17.86 C 19.59 18.2 19.79 18.55 20.0 18.91 C 20.06 19.02 20.16 19.06 20.26 19.0 C 20.35 18.96 20.37 18.86 20.3 18.75 C 20.13 18.45 19.95 18.16 19.78 17.86 C 19.62 17.58 19.7 17.25 19.97 17.07 C 20.24 16.91 20.58 16.98 20.76 17.25 C 20.96 17.56 21.14 17.88 21.33 18.2 C 21.35 18.22 21.36 18.25 21.38 18.27 C 21.44 18.37 21.53 18.39 21.61 18.34 C 21.7 18.29 21.72 18.21 21.66 18.1 C 21.54 17.88 21.4 17.67 21.28 17.45 C 21.23 17.34 21.18 17.22 21.16 17.11 C 21.14 16.84 21.31 16.6 21.57 16.52 C 21.81 16.45 22.08 16.54 22.21 16.77 C 22.57 17.38 22.93 17.99 23.29 18.6 C 23.51 18.99 23.74 19.38 23.96 19.77 C 24.25 20.26 24.37 20.79 24.29 21.36 Z" />
+        
+        {/* Linhas de Interação ao redor do clique */}
+        <path d="M 15.06 14.23 C 14.88 13.91 14.7 13.58 14.51 13.26 C 14.46 13.17 14.38 13.14 14.28 13.19 C 14.19 13.23 14.16 13.33 14.21 13.43 C 14.32 13.62 14.43 13.8 14.54 13.98 C 14.62 14.12 14.7 14.26 14.78 14.39 C 14.82 14.46 14.89 14.5 14.96 14.45 C 15.02 14.42 15.06 14.37 15.11 14.34 C 15.08 14.28 15.08 14.25 15.06 14.23 Z" />
+        <path d="M 16.41 14.23 C 16.52 14.27 16.6 14.22 16.64 14.09 C 16.71 13.83 16.77 13.57 16.84 13.32 C 16.87 13.22 16.89 13.11 16.92 12.98 C 16.88 12.94 16.84 12.88 16.79 12.86 C 16.71 12.82 16.63 12.84 16.59 12.93 C 16.56 13.03 16.53 13.13 16.51 13.23 C 16.44 13.49 16.38 13.75 16.31 14.02 C 16.29 14.12 16.3 14.2 16.41 14.23 Z" />
+        <path d="M 13.94 15.68 C 14.05 15.71 14.14 15.63 14.14 15.49 C 14.12 15.47 14.09 15.42 14.04 15.38 C 14.03 15.36 14.01 15.36 13.99 15.35 C 13.64 15.26 13.3 15.17 12.96 15.08 C 12.82 15.05 12.75 15.09 12.73 15.2 C 12.7 15.3 12.75 15.36 12.88 15.4 C 13.0 15.43 13.13 15.48 13.26 15.51 C 13.49 15.57 13.71 15.63 13.94 15.68 Z" />
+        <path d="M 14.1 16.93 C 13.78 17.11 13.46 17.29 13.14 17.47 C 13.04 17.53 13.02 17.62 13.07 17.71 C 13.11 17.8 13.19 17.82 13.29 17.77 C 13.62 17.59 13.94 17.41 14.26 17.22 C 14.3 17.2 14.32 17.14 14.34 17.12 C 14.35 16.95 14.22 16.87 14.1 16.93 Z" />
+        <path d="M 17.69 15.12 C 18.01 14.94 18.33 14.76 18.65 14.58 C 18.7 14.55 18.72 14.5 18.73 14.47 C 18.74 14.3 18.62 14.22 18.49 14.29 C 18.17 14.46 17.86 14.64 17.54 14.82 C 17.44 14.88 17.41 14.97 17.46 15.06 C 17.5 15.15 17.58 15.18 17.69 15.12 Z" />
+      </g>
+    </svg>
+  );
+};
