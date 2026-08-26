@@ -659,7 +659,7 @@ const SettingsPage = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
             <div>
               <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-                <span>💬</span> 3. Integração WhatsApp
+                <span>💬</span> 2. Integração WhatsApp
               </h2>
               <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
                 Defina o número receptor e a mensagem automática enviada pelos clientes nos vídeos.
