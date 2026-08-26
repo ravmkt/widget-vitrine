@@ -8,57 +8,62 @@ import {
 import { useTenant } from '@/context/TenantContext';
 import { supabase } from '@/lib/supabase';
 
-// ── ÍCONES EXCLUSIVOS CUSTOMIZADOS (TRAÇOS FINOS DE 1.2 E ALTA FIDELIDADE) ──
+// ── ÍCONES EXCLUSIVOS CUSTOMIZADOS (PROPORÇÕES EXATAS E AMPLA MARGEM INTERNA) ──
 
-// Ícone: Flutuante (Card vertical esquerdo + Linhas de clique + Mão apontando na diagonal)
+// Ícone: Flutuante (Card à esquerda + Mão detalhada apontando de lado + Cliques limpos)
 const FlutuanteIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    {/* Card vertical esquerdo */}
-    <rect x="3" y="3" width="7" height="18" rx="2" />
+    {/* Card vertical esquerdo (com bastante margem) */}
+    <rect x="4.5" y="5.5" width="5.5" height="13" rx="1.8" />
     
-    {/* Linhas de clique irradiando à esquerda da mão */}
-    <path d="M9.5 11 L8 10" />
-    <path d="M9 13.5 L7.5 13.5" />
-    <path d="M9.5 16 L8 17" />
+    {/* Traços de clique irradiando do ponto de toque (X=10, Y=11.5) */}
+    <path d="M10 8.5 L10.5 7" />
+    <path d="M11.5 9.5 L12.5 8.5" />
+    <path d="M12 11.5 L13.5 11.5" />
+    <path d="M11.5 13.5 L12.5 14.5" />
 
-    {/* Mão de clique diagonal ultra-precisa */}
-    <g transform="translate(4.2, 7.5)">
-      <path d="M12 11l-3.5-3.5a1.5 1.5 0 10-2.12 2.12L9.88 13H5.5a1.5 1.5 0 000 3h6.38l-3.44 3.44a1.5 1.5 0 102.12 2.12l5.66-5.66a3 3 0 000-4.24l-4.22-4.22z" />
+    {/* Mão de clique diagonal ultra-fiel (Escalada e posicionada com respiro) */}
+    <g transform="translate(10, 11.5) rotate(-25) scale(0.6) translate(-10.5, -8.5)">
+      <path d="M12.5 19.5h3.8a3 3 0 0 0 3-3v-2.2a1.5 1.5 0 0 0-1.5-1.5h-.8v-1.3a1.5 1.5 0 0 0-3 0v1.3h-.5v-4.3a1.5 1.5 0 0 0-3 0v4.3l-1.8-1.8a1.5 1.5 0 0 0-2.1 2.1l3.4 3.4a3 3 0 0 0 2.1.8z" />
     </g>
   </svg>
 );
 
-// Ícone: Carrossel (3 cards verticais perfeitamente alinhados)
+// Ícone: Carrossel (3 cards verticais com margens simétricas e elegantes)
 const CarrosselIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect x="3" y="5" width="4.8" height="14" rx="2" />
-    <rect x="9.6" y="5" width="4.8" height="14" rx="2" />
-    <rect x="16.2" y="5" width="4.8" height="14" rx="2" />
+    <rect x="4.5" y="6" width="4.2" height="12" rx="1.8" />
+    <rect x="9.9" y="6" width="4.2" height="12" rx="1.8" />
+    <rect x="15.3" y="6" width="4.2" height="12" rx="1.8" />
   </svg>
 );
 
-// Ícone: Carrossel Dinâmico (Card do meio em destaque + Brilhos sólidos)
+// Ícone: Carrossel Dinâmico (Card centralizado em destaque + Estrelas de traço fino)
 const CarrosselDinamicoIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    {/* Retângulos estilo carrossel */}
-    <rect x="3" y="6" width="4.8" height="12" rx="2" />
-    <rect x="9.6" y="3.5" width="4.8" height="17" rx="2" />
-    <rect x="16.2" y="6" width="4.8" height="12" rx="2" />
+    {/* Três colunas estilo carrossel */}
+    <rect x="4.5" y="7.5" width="4.2" height="9" rx="1.8" />
+    <rect x="9.9" y="5.5" width="4.2" height="13" rx="1.8" />
+    <rect x="15.3" y="7.5" width="4.2" height="9" rx="1.8" />
 
-    {/* Brilhos estilizados com preenchimento limpo */}
-    <path d="M15 1 Q15 3.5 17.5 3.5 Q15 3.5 15 6 Q15 3.5 12.5 3.5 Q15 3.5 15 1 Z" fill="currentColor" stroke="none" />
-    <path d="M21 3 Q21 4.5 22.5 4.5 Q21 4.5 21 6 Q21 4.5 19.5 4.5 Q21 4.5 21 3 Z" fill="currentColor" stroke="none" />
-    <path d="M12.5 7 Q12.5 8 13.5 8 Q12.5 8 12.5 9 Q12.5 8 11.5 8 Q12.5 8 12.5 7 Z" fill="currentColor" stroke="none" />
+    {/* Estrela principal (4 pontas - traço fino) */}
+    <path d="M14.5 1.5 L14.9 3 L16.4 3.4 L14.9 3.8 L14.5 5.3 L14.1 3.8 L12.6 3.4 L14.1 3.0 Z" />
+    
+    {/* Estrela secundária menor à direita */}
+    <path d="M19.5 2 L19.7 3 L20.7 3.2 L19.7 3.4 L19.5 4.4 L19.3 3.4 L18.3 3.2 L19.3 3 Z" />
+
+    {/* Estrela pequenininha à esquerda */}
+    <path d="M11.5 4 L11.6 4.5 L12.1 4.6 L11.6 4.7 L11.5 5.2 L11.4 4.7 L10.9 4.6 L11.4 4.5 Z" />
   </svg>
 );
 
-// Ícone: Grade (4 quadrados arredondados de alta fidelidade)
+// Ícone: Galeria (4 quadrados com cantos bastante arredondados e excelente espaçamento)
 const GradeIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect x="3" y="3" width="7.5" height="7.5" rx="2" />
-    <rect x="13.5" y="3" width="7.5" height="7.5" rx="2" />
-    <rect x="3" y="13.5" width="7.5" height="7.5" rx="2" />
-    <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2" />
+    <rect x="5" y="5" width="5.5" height="5.5" rx="2" />
+    <rect x="13.5" y="5" width="5.5" height="5.5" rx="2" />
+    <rect x="5" y="13.5" width="5.5" height="5.5" rx="2" />
+    <rect x="13.5" y="13.5" width="5.5" height="5.5" rx="2" />
   </svg>
 );
 
