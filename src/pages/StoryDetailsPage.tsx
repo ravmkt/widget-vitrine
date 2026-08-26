@@ -470,9 +470,9 @@ const handleOpenSelector = async () => {
     tentativas++;
 
     try {
-      const response = await fetch(
-        `https://wznvecurmisgoaijykbt.supabase.co/functions/v1/widget-selector?story_id=${stableStoryId}`
-      );
+const response = await fetch(
+  `https://wznvecurmisgoaijykbt.supabase.co/functions/v1/widget-selector?token=${encodeURIComponent(token)}`
+);
       const result = await response.json();
 
       if (result.success && result.data) {
