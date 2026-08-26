@@ -251,6 +251,103 @@ export default function StoragePage() {
     name: string;
   } | null>(null);
 
+  // ── RESOLUÇÃO DE STORE ID ULTRA RESILIENTE (ANTI-FALHAS E MULTI-TENANT) ──
+  const resolveActiveStoreId = useCallback(async (): Promise<string | null> => {
+    // 1. Prioriza o estado carregado em memória
+    if (storeId) return storeId;
+
+    // 2. Tenta recuperar de todas as chaves comuns de armazenamento local
+    const keys = [
+      'vidlytics_current_store_id',
+      'current_store_id',
+      'store_id',
+      'storeId',
+      'tenant_id',
+      'tenantId',
+      'active_store_id'
+    ];
+
+    for (const key of keys) {
+      const val = localStorage.getItem(key) || sessionStorage.getItem(key);
+      if (val && val !== 'undefined' && val !== 'null' && val.trim() !== '') {
+        setStoreId(val);
+        return val;
+      }
+    }
+
+    // 3. Tenta recuperar do IndexedDB local de configurações
+    try {
+      const settings = await db.getSettings();
+      if (settings) {
+        const resolvedId = settings.store_id || settings.storeId;
+        if (resolvedId) {
+          localStorage.setItem('vidlytics_current_store_id', resolvedId);
+          setStoreId(resolvedId);
+          return resolvedId;
+        }
+      }
+    } catch (_) {}
+
+    // 4. Fallback de API do Supabase (autenticação) de forma resiliente a falhas de colunas
+    if (supabase) {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const user = sessionData?.session?.user;
+        if (user) {
+          // Tenta query na tabela stores tratando erros (caso mude owner_user_id por user_id)
+          const { data: storeRow } = await supabase
+            .from('stores')
+            .select('id')
+            .or(`owner_user_id.eq.${user.id},user_id.eq.${user.id}`)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (storeRow?.id) {
+            localStorage.setItem('vidlytics_current_store_id', storeRow.id);
+            setStoreId(storeRow.id);
+            return storeRow.id;
+          }
+
+          // Segunda tentativa na tabela profiles/users comuns
+          const { data: profileRow } = await supabase
+            .from('profiles')
+            .select('store_id')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (profileRow?.store_id) {
+            localStorage.setItem('vidlytics_current_store_id', profileRow.store_id);
+            setStoreId(profileRow.store_id);
+            return profileRow.store_id;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 5. Tenta extrair diretamente do caminho de URL ativa ou query params (Fallback definitivo)
+    try {
+      const pathParts = window.location.pathname.split('/');
+      for (const part of pathParts) {
+        if (part.length === 36 && part.includes('-')) { // Detecção de formato UUID v4
+          localStorage.setItem('vidlytics_current_store_id', part);
+          setStoreId(part);
+          return part;
+        }
+      }
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlStoreId = urlParams.get('store_id') || urlParams.get('storeId');
+      if (urlStoreId) {
+        localStorage.setItem('vidlytics_current_store_id', urlStoreId);
+        setStoreId(urlStoreId);
+        return urlStoreId;
+      }
+    } catch (_) {}
+
+    return null;
+  }, [storeId]);
+
   // Carrega as plataformas sociais conectadas à loja no Supabase e trata o retorno do OAuth
   useEffect(() => {
     const checkIntegrations = async () => {
@@ -263,10 +360,9 @@ export default function StoragePage() {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        const settings = await db.getSettings();
-        if (settings?.store_id) {
-          setStoreId(settings.store_id);
-          const data = await getConnectedIntegrations(settings.store_id);
+        const resolvedId = await resolveActiveStoreId();
+        if (resolvedId) {
+          const data = await getConnectedIntegrations(resolvedId);
           setConnectedPlatforms(data.map((item: any) => item.platform));
         }
       } catch (err) {
@@ -274,7 +370,7 @@ export default function StoragePage() {
       }
     };
     checkIntegrations();
-  }, []);
+  }, [resolveActiveStoreId]);
 
   // Busca os vídeos do Instagram assim que a loja for identificada e o Instagram estiver conectado
   useEffect(() => {
@@ -398,12 +494,12 @@ export default function StoragePage() {
 
       try {
         if (supabase) {
-          const settings = await db.getSettings();
-          if (settings?.store_id) {
+          const activeId = await resolveActiveStoreId();
+          if (activeId) {
             const { data: modelsData } = await supabase
               .from('sizing_models')
               .select('*')
-              .eq('store_id', settings.store_id);
+              .eq('store_id', activeId);
             setSizingModelsList(Array.isArray(modelsData) ? modelsData : []);
           }
         } else if (typeof (db as any).sizingModels?.getAll === 'function') {
@@ -415,47 +511,7 @@ export default function StoragePage() {
       }
     };
     fetchSelectData();
-  }, []);
-
-  // Resolução resiliente de Store ID em cascata multi-tenant
-  const resolveActiveStoreId = async (): Promise<string | null> => {
-    if (storeId) return storeId;
-
-    const fromStorage =
-      localStorage.getItem('vidlytics_current_store_id') ||
-      localStorage.getItem('current_store_id') ||
-      localStorage.getItem('store_id');
-    if (fromStorage) return fromStorage;
-
-    try {
-      const settings = await db.getSettings();
-      if (settings?.store_id) return settings.store_id;
-    } catch (_) {}
-
-    if (supabase) {
-      try {
-        const { data: userData } = await supabase.auth.getUser();
-        const user = userData?.user;
-        if (user) {
-          const { data: storeRow } = await supabase
-            .from('stores')
-            .select('id')
-            .eq('owner_user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          if (storeRow?.id) {
-            localStorage.setItem('vidlytics_current_store_id', storeRow.id);
-            setStoreId(storeRow.id);
-            return storeRow.id;
-          }
-        }
-      } catch (_) {}
-    }
-
-    return null;
-  };
+  }, [resolveActiveStoreId]);
 
   // Processa a gravação da Mídia por URL Externa com suporte a Produto e Modelo de Medidas
   const handleSaveExternalUrl = async (e: React.FormEvent) => {
@@ -684,9 +740,9 @@ export default function StoragePage() {
 
       showSuccess('Mídia adicionada com sucesso!');
       await loadAccountStorageData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao realizar upload:', err);
-      showError('Falha ao salvar o arquivo enviado.');
+      showError(err.message || 'Falha ao salvar o arquivo enviado.');
     } finally {
       setUploading(false);
       if (e.target) e.target.value = '';
@@ -770,33 +826,7 @@ export default function StoragePage() {
       setLoading(true);
       const loadedItems: StorageItem[] = [];
 
-      let activeStoreId =
-        localStorage.getItem('vidlytics_current_store_id') ||
-        localStorage.getItem('current_store_id') ||
-        localStorage.getItem('store_id');
-
-      if (!activeStoreId && supabase) {
-        const { data: userData } = await supabase.auth.getUser();
-        const user = userData?.user;
-        if (user) {
-          const { data: storeRow } = await supabase
-            .from('stores')
-            .select('id')
-            .eq('owner_user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          if (storeRow) {
-            activeStoreId = storeRow.id;
-            localStorage.setItem('vidlytics_current_store_id', storeRow.id);
-          }
-        }
-      }
-
-      if (activeStoreId) {
-        setStoreId(activeStoreId);
-      }
+      const activeStoreId = await resolveActiveStoreId();
 
       // Busca vídeos reais da loja ativa com joins relacionais e fallback defensivo
       let realVideos: any[] = [];
@@ -958,44 +988,48 @@ export default function StoragePage() {
 
       // Busca cota oficial e plano da loja ativa no Supabase
       if (activeStoreId && supabase) {
-        const { data: storeRow } = await supabase
-          .from('stores')
-          .select('storage_used_bytes, storage_limit_bytes, plan_id, plans(name, storage_limit_bytes)')
-          .eq('id', activeStoreId)
-          .maybeSingle();
+        try {
+          const { data: storeRow } = await supabase
+            .from('stores')
+            .select('storage_used_bytes, storage_limit_bytes, plan_id, plans(name, storage_limit_bytes)')
+            .eq('id', activeStoreId)
+            .maybeSingle();
 
-        if (storeRow) {
-          if (storeRow.storage_used_bytes !== null && storeRow.storage_used_bytes !== undefined) {
-            setServerStorageUsedBytes(Number(storeRow.storage_used_bytes));
+          if (storeRow) {
+            if (storeRow.storage_used_bytes !== null && storeRow.storage_used_bytes !== undefined) {
+              setServerStorageUsedBytes(Number(storeRow.storage_used_bytes));
+            }
+            if (storeRow.storage_limit_bytes) {
+              setServerStorageLimitBytes(Number(storeRow.storage_limit_bytes));
+            } else if ((storeRow as any).plans?.storage_limit_bytes) {
+              setServerStorageLimitBytes(Number((storeRow as any).plans.storage_limit_bytes));
+            }
+            if ((storeRow as any).plans?.name) {
+              setPlanName((storeRow as any).plans.name);
+            }
           }
-          if (storeRow.storage_limit_bytes) {
-            setServerStorageLimitBytes(Number(storeRow.storage_limit_bytes));
-          } else if ((storeRow as any).plans?.storage_limit_bytes) {
-            setServerStorageLimitBytes(Number((storeRow as any).plans.storage_limit_bytes));
-          }
-          if ((storeRow as any).plans?.name) {
-            setPlanName((storeRow as any).plans.name);
-          }
-        }
+        } catch (_) {}
 
-        const { data: settingsData } = await supabase
-          .from('store_settings')
-          .select('logo_url')
-          .eq('store_id', activeStoreId)
-          .maybeSingle();
+        try {
+          const { data: settingsData } = await supabase
+            .from('store_settings')
+            .select('logo_url')
+            .eq('store_id', activeStoreId)
+            .maybeSingle();
 
-        if (settingsData?.logo_url) {
-          loadedItems.push({
-            id: 'logo-setting-file',
-            name: 'LOGOTIPO_OFICIAL_LOJA.png',
-            type: 'image',
-            sizeInBytes: 0,
-            createdAt: 'Ativo',
-            thumbnailUrl: settingsData.logo_url,
-            fileUrl: settingsData.logo_url,
-            canDelete: false,
-          });
-        }
+          if (settingsData?.logo_url) {
+            loadedItems.push({
+              id: 'logo-setting-file',
+              name: 'LOGOTIPO_OFICIAL_LOJA.png',
+              type: 'image',
+              sizeInBytes: 0,
+              createdAt: 'Ativo',
+              thumbnailUrl: settingsData.logo_url,
+              fileUrl: settingsData.logo_url,
+              canDelete: false,
+            });
+          }
+        } catch (_) {}
       }
 
       setFiles(loadedItems);
@@ -1005,7 +1039,7 @@ export default function StoragePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [resolveActiveStoreId]);
 
   useEffect(() => {
     loadAccountStorageData();
