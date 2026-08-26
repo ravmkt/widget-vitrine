@@ -175,7 +175,7 @@ const MedidasPage = () => {
         errors.push("Altura deve ser maior que zero.");
       }
     } else {
-      // Objeto - Valida apenas se forem preenchidos
+      // Objeto - Valida apenas se os numéricos sugestivos forem preenchidos
       const checkNumber = (val: string, label: string) => {
         if (val.trim()) {
           if (isNaN(Number(val))) {
@@ -198,18 +198,8 @@ const MedidasPage = () => {
       if (!measure.name.trim() && measure.value.trim()) {
         errors.push(`Nome do campo ${index + 1} é obrigatório.`);
       }
-
-      if (measure.value.trim() && isNaN(Number(measure.value))) {
-        errors.push(
-          `Valor do campo "${measure.name || index + 1}" deve ser numérico.`
-        );
-      }
-
-      if (measure.value.trim() && Number(measure.value) <= 0) {
-        errors.push(
-          `Valor do campo "${measure.name || index + 1}" deve ser maior que zero.`
-        );
-      }
+      
+      // Validações numéricas removidas aqui para aceitar texto livre nos campos adicionais!
     });
 
     return {
@@ -236,8 +226,8 @@ const MedidasPage = () => {
 
       const now = new Date().toISOString();
 
-      // Monta medidas de acordo com o tipo
-      const measures: Array<{ name: string; value: number; unit: "cm" }> = [];
+      // Monta medidas base (numéricas por padrão no banco)
+      const measures: Array<{ name: string; value: any; unit: "cm" }> = [];
 
       if (formData.type === "humano") {
         measures.push({
@@ -269,14 +259,18 @@ const MedidasPage = () => {
         }
       }
 
-      // Adiciona campos dinâmicos customizados
+      // Adiciona campos dinâmicos customizados (salvando como texto ou número livre)
       formData.measures
         .filter((measure) => measure.name.trim() && measure.value.trim())
         .forEach((measure) => {
+          const rawVal = measure.value.trim();
+          const parsedNum = Number(rawVal);
+          
           measures.push({
             name: measure.name.trim(),
-            value: Number(measure.value),
-            unit: "cm",
+            // Salva como número se for puramente numérico, senão mantém texto
+            value: isNaN(parsedNum) || rawVal === "" ? rawVal : parsedNum,
+            unit: "cm", // Mantido apenas para compatibilidade de schema do Supabase, ignorado no render livre
           });
         });
 
@@ -365,8 +359,6 @@ const MedidasPage = () => {
         {models.map((model) => {
           const modelType = (model as any).type || "humano";
           const isObject = modelType === "objeto";
-
-          // Filtra medidas normais para exibição limpa
           const mappedMeasures = model.measures || [];
 
           return (
@@ -375,7 +367,7 @@ const MedidasPage = () => {
               className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
             >
               <div>
-                {/* Cabeçalho do Cartão: Título e Ações */}
+                {/* Cabeçalho do Cartão */}
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-5">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
@@ -416,29 +408,33 @@ const MedidasPage = () => {
                   </div>
                 </div>
 
-                {/* Linhas de Dados de Medidas */}
+                {/* Linhas de Dados */}
                 <div className="space-y-2.5">
-                  {mappedMeasures.map((measure, index) => (
-                    <div
-                      key={`${model.id}-${measure.name}-${index}`}
-                      className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-[#0f1220]/70 rounded-2xl border border-slate-100 dark:border-white/5 transition-all"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        {measure.name.toLowerCase() === "altura" ? (
-                          <Ruler className="text-[#0094EB] dark:text-[#ff7a29]" size={16} />
-                        ) : (
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#0094EB] dark:bg-[#ff7a29]" />
-                        )}
-                        <span className="text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
-                          {measure.name}
+                  {mappedMeasures.map((measure, index) => {
+                    const isBaseMeasure = ["altura", "largura", "comprimento"].includes(measure.name.toLowerCase());
+                    
+                    return (
+                      <div
+                        key={`${model.id}-${measure.name}-${index}`}
+                        className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-[#0f1220]/70 rounded-2xl border border-slate-100 dark:border-white/5 transition-all"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          {measure.name.toLowerCase() === "altura" ? (
+                            <Ruler className="text-[#0094EB] dark:text-[#ff7a29]" size={16} />
+                          ) : (
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#0094EB] dark:bg-[#ff7a29]" />
+                          )}
+                          <span className="text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
+                            {measure.name}
+                          </span>
+                        </div>
+
+                        <span className="font-mono text-xs font-black text-slate-900 dark:text-white bg-white dark:bg-[#1a1f35] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-white/5 shadow-xs">
+                          {measure.value} {isBaseMeasure ? "cm" : ""}
                         </span>
                       </div>
-
-                      <span className="font-mono text-xs font-black text-slate-900 dark:text-white bg-white dark:bg-[#1a1f35] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-white/5 shadow-xs">
-                        {measure.value} cm
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   {mappedMeasures.length === 0 && (
                     <p className="text-center text-slate-400 dark:text-[#8a90a0] text-xs font-semibold py-4">
@@ -480,7 +476,7 @@ const MedidasPage = () => {
         confirmText={isSaving ? "Salvando..." : "Salvar"}
       >
         <div className="space-y-6">
-          {/* Seletor de Tipo (Humano / Objeto) */}
+          {/* Seletor de Tipo */}
           <div className="space-y-2">
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
               Tipo de Medida
@@ -515,7 +511,7 @@ const MedidasPage = () => {
             </div>
           </div>
 
-          {/* Nome do modelo / objeto */}
+          {/* Nome */}
           <div className="space-y-3">
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
               {formData.type === "humano" ? "Nome do Modelo" : "Nome do Objeto"} <span className="text-rose-500">*</span>
@@ -535,9 +531,8 @@ const MedidasPage = () => {
             />
           </div>
 
-          {/* Renderização condicional de inputs baseada no tipo */}
+          {/* Inputs Condicionais */}
           {formData.type === "objeto" ? (
-            /* Layout para Objeto - 3 Colunas Recomendadas */
             <div className="grid grid-cols-3 gap-3">
               {/* Altura */}
               <div className="space-y-2">
@@ -618,7 +613,6 @@ const MedidasPage = () => {
               </div>
             </div>
           ) : (
-            /* Layout para Humano (Nativo) */
             <div className="space-y-3">
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 Altura em cm <span className="text-rose-500">*</span>
@@ -682,7 +676,7 @@ const MedidasPage = () => {
                     <div className="flex-1 space-y-2">
                       <input
                         type="text"
-                        placeholder={formData.type === "humano" ? "Nome do campo, ex: Busto" : "Nome do campo, ex: Peso / Diâmetro"}
+                        placeholder={formData.type === "humano" ? "Nome, ex: Manequim ou Peso" : "Nome, ex: Peso ou Volume"}
                         value={measure.name}
                         onChange={(event) =>
                           updateMeasure(measure.id, "name", event.target.value)
@@ -692,10 +686,8 @@ const MedidasPage = () => {
 
                       <div className="flex items-center gap-2">
                         <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          placeholder="Valor do campo"
+                          type="text"
+                          placeholder={formData.type === "humano" ? "Valor, ex: 38 ou 65kg" : "Valor, ex: 2kg ou 350ml"}
                           value={measure.value}
                           onChange={(event) =>
                             updateMeasure(
@@ -706,10 +698,6 @@ const MedidasPage = () => {
                           }
                           className="flex-1 px-3 py-2 bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
                         />
-
-                        <span className="text-slate-400 font-bold text-sm">
-                          cm
-                        </span>
                       </div>
                     </div>
 
