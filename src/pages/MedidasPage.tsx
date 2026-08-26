@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { db, SizingModel } from "@/lib/db";
-import { Ruler, Plus, Trash2, Edit3, User, Package } from "lucide-react";
+import { Plus, Trash2, Edit3, User, Package, X } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import CustomDialog from "@/components/CustomDialog";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
@@ -25,6 +25,7 @@ const MedidasPage = () => {
   const { storeId, loading: tenantLoading } = useTenant();
 
   const [models, setModels] = useState<SizingModel[]>([]);
+  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingModel, setEditingModel] = useState<SizingModel | null>(null);
@@ -47,6 +48,17 @@ const MedidasPage = () => {
     length: "",
     measures: [] as Array<{ id: string; name: string; value: string }>,
   });
+
+  // Função para inferir o tipo do perfil com base nas medidas existentes
+  const inferModelType = (model: SizingModel): "humano" | "objeto" => {
+    if ((model as any).type) return (model as any).type;
+    
+    const hasWidthOrLength = model.measures?.some((m: any) =>
+      ["largura", "comprimento"].includes(m.name.toLowerCase())
+    );
+    
+    return hasWidthOrLength ? "objeto" : "humano";
+  };
 
   const loadData = useCallback(async () => {
     try {
@@ -80,16 +92,24 @@ const MedidasPage = () => {
     });
   };
 
-  const openNewModel = () => {
+  const handleOpenSelection = () => {
     setEditingModel(null);
     resetForm();
+    setIsSelectionModalOpen(true);
+  };
+
+  const handleSelectType = (type: "humano" | "objeto") => {
+    setFormData((prev) => ({ ...prev, type }));
+    setIsSelectionModalOpen(false);
     setIsModalOpen(true);
   };
 
   const openEditModel = (model: any) => {
     setEditingModel(model);
 
-    const modelType = model.type || "humano";
+    // Infere dinamicamente o tipo para evitar o bug do banco de dados
+    const modelType = inferModelType(model);
+    
     const altura = model.measures?.find((m: any) => m.name.toLowerCase() === "altura")?.value?.toString() || "";
     const largura = model.measures?.find((m: any) => m.name.toLowerCase() === "largura")?.value?.toString() || "";
     const comprimento = model.measures?.find((m: any) => m.name.toLowerCase() === "comprimento")?.value?.toString() || "";
@@ -175,7 +195,6 @@ const MedidasPage = () => {
         errors.push("Altura deve ser maior que zero.");
       }
     } else {
-      // Objeto - Valida apenas se os numéricos sugestivos forem preenchidos
       const checkNumber = (val: string, label: string) => {
         if (val.trim()) {
           if (isNaN(Number(val))) {
@@ -198,8 +217,6 @@ const MedidasPage = () => {
       if (!measure.name.trim() && measure.value.trim()) {
         errors.push(`Nome do campo ${index + 1} é obrigatório.`);
       }
-      
-      // Validações numéricas removidas aqui para aceitar texto livre nos campos adicionais!
     });
 
     return {
@@ -225,8 +242,6 @@ const MedidasPage = () => {
       }
 
       const now = new Date().toISOString();
-
-      // Monta medidas base (numéricas por padrão no banco)
       const measures: Array<{ name: string; value: any; unit: "cm" }> = [];
 
       if (formData.type === "humano") {
@@ -259,7 +274,6 @@ const MedidasPage = () => {
         }
       }
 
-      // Adiciona campos dinâmicos customizados (salvando como texto ou número livre)
       formData.measures
         .filter((measure) => measure.name.trim() && measure.value.trim())
         .forEach((measure) => {
@@ -268,9 +282,8 @@ const MedidasPage = () => {
           
           measures.push({
             name: measure.name.trim(),
-            // Salva como número se for puramente numérico, senão mantém texto
             value: isNaN(parsedNum) || rawVal === "" ? rawVal : parsedNum,
-            unit: "cm", // Mantido apenas para compatibilidade de schema do Supabase, ignorado no render livre
+            unit: "cm",
           });
         });
 
@@ -315,14 +328,8 @@ const MedidasPage = () => {
   const handleConfirmDelete = async () => {
     try {
       await db.sizingModels.delete(deleteModal.id);
-
       showSuccess("Medida removida com sucesso.");
-
-      setDeleteModal((prev) => ({
-        ...prev,
-        isOpen: false,
-      }));
-
+      setDeleteModal((prev) => ({ ...prev, isOpen: false }));
       await loadData();
     } catch (error) {
       console.error("Erro ao excluir medida:", error);
@@ -345,7 +352,7 @@ const MedidasPage = () => {
 
         <button
           type="button"
-          onClick={openNewModel}
+          onClick={handleOpenSelection}
           disabled={!storeId || tenantLoading}
           className="flex items-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
@@ -357,7 +364,7 @@ const MedidasPage = () => {
       {/* ── GRID MODULAR DE MEDIDAS ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {models.map((model) => {
-          const modelType = (model as any).type || "humano";
+          const modelType = inferModelType(model);
           const isObject = modelType === "objeto";
           const mappedMeasures = model.measures || [];
 
@@ -370,6 +377,7 @@ const MedidasPage = () => {
                 {/* Cabeçalho do Cartão */}
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-5">
                   <div className="flex items-center gap-3 min-w-0">
+                    {/* Ícones de Categoria no Card */}
                     <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
                       {isObject ? (
                         <Package size={18} className="!text-white stroke-[2.5]" />
@@ -419,11 +427,8 @@ const MedidasPage = () => {
                         className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-[#0f1220]/70 rounded-2xl border border-slate-100 dark:border-white/5 transition-all"
                       >
                         <div className="flex items-center gap-2.5">
-                          {measure.name.toLowerCase() === "altura" ? (
-                            <Ruler className="text-[#0094EB] dark:text-[#ff7a29]" size={16} />
-                          ) : (
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#0094EB] dark:bg-[#ff7a29]" />
-                          )}
+                          {/* Sem régua na frente de altura, marcador padronizado */}
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#0094EB] dark:bg-[#ff7a29]" />
                           <span className="text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
                             {measure.name}
                           </span>
@@ -449,7 +454,7 @@ const MedidasPage = () => {
 
         {models.length === 0 && (
           <div className="col-span-full p-12 text-center bg-white dark:bg-[#1a1f35]/60 rounded-[3rem] border border-dashed border-slate-200 dark:border-orange-500/20">
-            <Ruler size={40} className="mx-auto text-slate-400 dark:text-[#ff7a29]/60 mb-3" />
+            <Package size={40} className="mx-auto text-slate-400 dark:text-[#ff7a29]/60 mb-3" />
 
             <p className="text-slate-700 dark:text-white font-black text-base">
               Nenhum perfil de medidas cadastrado.
@@ -462,11 +467,62 @@ const MedidasPage = () => {
         )}
       </div>
 
+      {/* ── PASSO 1: DECIDIR HUMANO OU OBJETO ── */}
+      <CustomDialog
+        isOpen={isSelectionModalOpen}
+        type="confirm"
+        title="O que você deseja cadastrar?"
+        maxWidth="max-w-md"
+        onCancel={() => setIsSelectionModalOpen(false)}
+        hideFooter={true}
+      >
+        <div className="grid grid-cols-1 gap-4 pt-2">
+          {/* Card Humano */}
+          <button
+            type="button"
+            onClick={() => handleSelectType("humano")}
+            className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 dark:border-white/5 hover:border-[#0094EB] dark:hover:border-[#ff7a29] bg-slate-50/50 dark:bg-[#0f1220]/40 hover:bg-blue-50/20 dark:hover:bg-orange-500/5 text-left transition-all cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-100 text-[#0094EB] dark:bg-orange-500/10 dark:text-[#ff7a29] group-hover:scale-110 transition-transform">
+              <User size={24} className="stroke-[2]" />
+            </div>
+            <div>
+              <h4 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight">
+                Perfil Humano
+              </h4>
+              <p className="text-xs font-medium text-slate-400 dark:text-[#8a90a0] mt-1">
+                Ideal para roupas, calçados e provador de modelos.
+              </p>
+            </div>
+          </button>
+
+          {/* Card Objeto */}
+          <button
+            type="button"
+            onClick={() => handleSelectType("objeto")}
+            className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 dark:border-white/5 hover:border-[#0094EB] dark:hover:border-[#ff7a29] bg-slate-50/50 dark:bg-[#0f1220]/40 hover:bg-blue-50/20 dark:hover:bg-orange-500/5 text-left transition-all cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-100 text-[#0094EB] dark:bg-orange-500/10 dark:text-[#ff7a29] group-hover:scale-110 transition-transform">
+              <Package size={24} className="stroke-[2]" />
+            </div>
+            <div>
+              <h4 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight">
+                Dimensões do Objeto
+              </h4>
+              <p className="text-xs font-medium text-slate-400 dark:text-[#8a90a0] mt-1">
+                Ideal para canecas, eletrônicos, móveis ou embalagens.
+              </p>
+            </div>
+          </button>
+        </div>
+      </CustomDialog>
+
+      {/* ── PASSO 2: MODAL DE FORMULÁRIO (HUMANO OU OBJETO) ── */}
       <CustomDialog
         isOpen={isModalOpen}
         type="form"
-        title={editingModel ? "Editar Medida" : "Nova Medida"}
-        maxWidth="max-w-2xl"
+        title={editingModel ? `Editar ${formData.type === "humano" ? "Humano" : "Objeto"}` : `Novo ${formData.type === "humano" ? "Humano" : "Objeto"}`}
+        maxWidth="max-w-xl"
         onCancel={() => {
           setIsModalOpen(false);
           setEditingModel(null);
@@ -476,41 +532,6 @@ const MedidasPage = () => {
         confirmText={isSaving ? "Salvando..." : "Salvar"}
       >
         <div className="space-y-6">
-          {/* Seletor de Tipo */}
-          <div className="space-y-2">
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Tipo de Medida
-            </label>
-            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-[#0f1220] rounded-2xl border border-slate-200 dark:border-white/5">
-              <button
-                type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, type: "humano" }))}
-                className={cn(
-                  "py-3 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2",
-                  formData.type === "humano"
-                    ? "bg-white dark:bg-[#1a1f35] text-[#0094EB] dark:text-[#ff7a29] shadow-sm"
-                    : "text-slate-400 hover:text-slate-600 dark:hover:text-white"
-                )}
-              >
-                <User size={14} />
-                Humano
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, type: "objeto" }))}
-                className={cn(
-                  "py-3 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2",
-                  formData.type === "objeto"
-                    ? "bg-white dark:bg-[#1a1f35] text-[#0094EB] dark:text-[#ff7a29] shadow-sm"
-                    : "text-slate-400 hover:text-slate-600 dark:hover:text-white"
-                )}
-              >
-                <Package size={14} />
-                Objeto
-              </button>
-            </div>
-          </div>
-
           {/* Nome */}
           <div className="space-y-3">
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -531,7 +552,7 @@ const MedidasPage = () => {
             />
           </div>
 
-          {/* Inputs Condicionais */}
+          {/* Inputs Condicionais (Humano ou Objeto) */}
           {formData.type === "objeto" ? (
             <div className="grid grid-cols-3 gap-3">
               {/* Altura */}
