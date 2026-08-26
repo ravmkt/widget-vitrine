@@ -3,15 +3,37 @@ import {
   AlertTriangle,
   CheckCircle2,
   Copy,
-  Film,
-  Layers3,
-  MapPin,
+  LayoutGrid,
   PlayCircle,
-  ShoppingBag,
   Store,
 } from 'lucide-react';
 import { useTenant } from '@/context/TenantContext';
 import { supabase } from '@/lib/supabase';
+
+// Ícone customizado de Carrossel: 3 retângulos retrato lado a lado
+const CarrosselIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="2" y="4" width="5" height="16" rx="1.5" />
+    <rect x="9.5" y="4" width="5" height="16" rx="1.5" />
+    <rect x="17" y="4" width="5" height="16" rx="1.5" />
+  </svg>
+);
+
+// Ícone customizado de Carrossel Dinâmico: Mesmos 3 retângulos com uma estrelinha dourada (premium) animada
+const CarrosselDinamicoIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+  <div className="relative">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect x="2" y="4" width="5" height="16" rx="1.5" />
+      <rect x="9.5" y="4" width="5" height="16" rx="1.5" />
+      <rect x="17" y="4" width="5" height="16" rx="1.5" />
+    </svg>
+    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center text-amber-500 dark:text-yellow-400">
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 animate-pulse">
+        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+      </svg>
+    </span>
+  </div>
+);
 
 const IntegrationPage = () => {
   const { storeId } = useTenant();
@@ -174,7 +196,7 @@ window.VIDLYTICS_CONFIG = {
           </div>
 
           <h1 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Instalação do Video Commerce
+            Instalação do Vidlytics
           </h1>
 
           <p className="mt-1 max-w-3xl text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">
@@ -221,8 +243,8 @@ window.VIDLYTICS_CONFIG = {
       )}
 
       {/* ── MÓDULOS SUPERIORES: FORMATOS DE VÍDEO (DUAL-THEME) ── */}
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Card: Vídeo Flutuante */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Card: Flutuante */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
@@ -230,7 +252,7 @@ window.VIDLYTICS_CONFIG = {
             </div>
 
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              Vídeo flutuante
+              Flutuante
             </h2>
 
             <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
@@ -239,15 +261,15 @@ window.VIDLYTICS_CONFIG = {
           </div>
         </div>
 
-        {/* Card: Carrossel de Stories */}
+        {/* Card: Carrossel */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
-              <Film size={20} className="!text-white stroke-[2.5]" />
+              <CarrosselIcon className="!text-white" />
             </div>
 
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              Carrossel de stories
+              Carrossel
             </h2>
 
             <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
@@ -256,19 +278,172 @@ window.VIDLYTICS_CONFIG = {
           </div>
         </div>
 
-        {/* Card: Galeria de Vídeos */}
+        {/* Card: Carrossel Dinâmico */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
-              <Layers3 size={20} className="!text-white stroke-[2.5]" />
+              <CarrosselDinamicoIcon className="!text-white" />
             </div>
 
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              Galeria de vídeos
+              Carrossel Dinâmico
+            </h2>
+
+            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+              Exibição inteligente baseada no comportamento do usuário, produtos navegados e coleções automáticas de alta conversão.
+            </p>
+          </div>
+        </div>
+
+        {/* Card: Galeria */}
+        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+          <div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4">
+              <LayoutGrid size={20} className="!text-white stroke-[2.5]" />
+            </div>
+
+            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              Galeria
             </h2>
 
             <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
               Crie seções em grade completas com vídeos compráveis para destacar looks, depoimentos, provadores e campanhas.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── BOTÕES / TABS DE SELEÇÃO DE INSTALAÇÃO ── */}
+      <div className="flex justify-center pt-2">
+        <div className="inline-flex rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220] p-1.5 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setInstallTab('platform')}
+            className={`rounded-xl px-6 py-3 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+              installTab === 'platform'
+                ? 'bg-white dark:bg-[#1a1f35] text-[#0094EB] dark:text-[#ff7a29] shadow-md border border-slate-100 dark:border-orange-500/10'
+                : 'text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white'
+            }`}
+          >
+            Via Plataforma
+          </button>
+          <button
+            type="button"
+            onClick={() => setInstallTab('gtm')}
+            className={`rounded-xl px-6 py-3 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+              installTab === 'gtm'
+                ? 'bg-white dark:bg-[#1a1f35] text-[#0094EB] dark:text-[#ff7a29] shadow-md border border-slate-100 dark:border-orange-500/10'
+                : 'text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white'
+            }`}
+          >
+            Via Google Tag Manager
+          </button>
+        </div>
+      </div>
+
+      {/* ── SEÇÃO: COMO INSTALAR NA SUA LOJA (DINÂMICO BASEADO NA TAB) ── */}
+      <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
+        <div className="border-b border-slate-100 dark:border-white/5 pb-4">
+          <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+            Como instalar na sua loja
+          </h2>
+          <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-[#8a90a0]">
+            Três passos simples para ativar a experiência de vídeo commerce no seu e-commerce.
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {installTab === 'platform' ? (
+            <>
+              {/* Passo 1 - Plataforma */}
+              <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                    1
+                  </div>
+                  <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    Acesse o painel da loja
+                  </h3>
+                  <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                    Abra as configurações do tema da sua plataforma (Yampi, Shopify, Nuvemshop, WBuy, Bagy, Tray, etc.) e localize a área de scripts ou HTML personalizado.
+                  </p>
+                </div>
+              </div>
+
+              {/* Passo 2 - Plataforma */}
+              <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                    2
+                  </div>
+                  <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    Cole os scripts
+                  </h3>
+                  <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                    Cole o <strong>Script Principal (Passo 1)</strong> no cabeçalho (&lt;head&gt;) e o <strong>Script de Rastreamento (Passo 2)</strong> na página de conclusão de compra (Obrigado / Confirmação de pedido) da sua plataforma.
+                  </p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Passo 1 - GTM */}
+              <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                    1
+                  </div>
+                  <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    Acesse o Google Tag Manager
+                  </h3>
+                  <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                    Abra o contêiner do GTM instalado no seu site e vá para a seção de Tags para adicionar uma nova configuração.
+                  </p>
+                </div>
+              </div>
+
+              {/* Passo 2 - GTM */}
+              <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                    2
+                  </div>
+                  <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    Configure as Tags HTML
+                  </h3>
+                  <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                    Crie tags do tipo <strong>HTML Personalizado</strong> para o Script Principal e outra para o Script de Rastreamento. No acionamento, use <strong>All Pages</strong> para o principal e gatilhos de conversão para o rastreamento.
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Passo 3 - Comum a ambos */}
+          <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+            <div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                3
+              </div>
+
+              <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                Publique seus vídeos
+              </h3>
+
+              <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                Faça upload dos vídeos no Vidlytics, configure suas coleções de stories e os vídeos aparecerão automaticamente para seus clientes de acordo com as regras de exibição.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              Precisa customizar o posicionamento ou estilo?
+            </p>
+            <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-[#c0c5d4]">
+              Utilize o menu <strong>Aparência</strong> para ajustar bordas, cores, formatos de card e seletores CSS sem precisar programar.
             </p>
           </div>
         </div>
@@ -343,48 +518,19 @@ window.VIDLYTICS_CONFIG = {
                     Recomendado
                   </span>
                 </div>
-                <p className="mt-1 max-w-3xl text-xs sm:text-sm font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                  Compatível com <strong>Yampi, Shopify, Nuvemshop, WBuy, Bagy e Tray</strong>. Para medir o faturamento gerado pelos vídeos, instale este script na página de <strong>Obrigado / Confirmação de Pedido</strong>.
-                </p>
-
-                {/* Abas de instalação */}
-                <div className="mt-4 inline-flex rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220] p-1">
-                  <button
-                    type="button"
-                    onClick={() => setInstallTab('platform')}
-                    className={`rounded-lg px-4 py-2 text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                      installTab === 'platform'
-                        ? 'bg-white dark:bg-[#1a1f35] text-[#0094EB] dark:text-[#ff7a29] shadow-sm'
-                        : 'text-slate-500 dark:text-[#8a90a0]'
-                    }`}
-                  >
-                    Colar na plataforma
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setInstallTab('gtm')}
-                    className={`rounded-lg px-4 py-2 text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                      installTab === 'gtm'
-                        ? 'bg-white dark:bg-[#1a1f35] text-[#0094EB] dark:text-[#ff7a29] shadow-sm'
-                        : 'text-slate-500 dark:text-[#8a90a0]'
-                    }`}
-                  >
-                    Via Google Tag Manager
-                  </button>
-                </div>
 
                 {installTab === 'platform' ? (
-                  <p className="mt-3 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                    Cole o código abaixo na área de <strong>Scripts / HTML personalizado</strong> da sua plataforma (Yampi, Shopify, Nuvemshop, WBuy, Bagy ou Tray), na página de <strong>Obrigado / Confirmação de Pedido</strong>.
+                  <p className="mt-1.5 max-w-3xl text-xs sm:text-sm font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                    Compatível com <strong>Yampi, Shopify, Nuvemshop, WBuy, Bagy e Tray</strong>. Cole o código abaixo na área de <strong>Scripts / HTML personalizado</strong> da sua plataforma, na página de <strong>Obrigado / Confirmação de Pedido</strong>.
                   </p>
                 ) : (
-                  <div className="mt-3 space-y-1 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
+                  <div className="mt-1.5 max-w-3xl text-xs sm:text-sm font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
                     <p>No Google Tag Manager:</p>
-                    <ol className="list-decimal list-inside space-y-0.5">
+                    <ol className="list-decimal list-inside space-y-0.5 mt-1">
                       <li>Crie uma nova tag do tipo <strong>HTML Personalizado</strong></li>
-                      <li>Cole o código abaixo dentro dela</li>
-                      <li>No gatilho, selecione <strong>All Pages</strong> (o próprio script identifica a página de compra)</li>
-                      <li>Publique o contêiner</li>
+                      <li>Cole o código de rastreamento abaixo dentro dela</li>
+                      <li>No gatilho, selecione o evento de compra / transação de sucesso</li>
+                      <li>Publique o contêiner do GTM</li>
                     </ol>
                   </div>
                 )}
@@ -432,195 +578,6 @@ window.VIDLYTICS_CONFIG = {
             <pre className="overflow-x-auto whitespace-pre-wrap p-6 font-mono text-xs font-semibold leading-relaxed text-[#0094EB] dark:text-[#38bdf8] md:text-sm [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:bg-white/10">
               {trackingScriptCode}
             </pre>
-          </div>
-        </div>
-      </div>
-
-      {/* ── MÓDULOS INFERIORES: ONDE APARECEM & PRODUTOS (DUAL-THEME) ── */}
-      <div className="grid gap-6 lg:grid-cols-2 items-stretch">
-        {/* Card: Onde os vídeos aparecem? */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 shadow-sm flex flex-col justify-between space-y-6">
-          <div>
-            <div className="flex items-start gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
-                <MapPin size={20} className="!text-white stroke-[2.5]" />
-              </div>
-
-              <div>
-                <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                  Onde os vídeos aparecem?
-                </h2>
-                <p className="mt-0.5 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                  O widget pode ser exibido automaticamente ou injetado via seletores CSS em qualquer bloco do tema da loja.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-3.5">
-              <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-4">
-                <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                  Exemplos de páginas
-                </p>
-                <p className="mt-1 text-xs font-medium text-slate-500 dark:text-[#c0c5d4]">
-                  Home, página de produto, categorias, carrinho, landing pages ou em todas as páginas.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-4">
-                <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                  Exemplos de seletores CSS
-                </p>
-                <div className="mt-2.5 flex flex-wrap gap-2">
-                  <code className="rounded-lg bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-2.5 py-1 font-mono text-[11px] font-black text-[#0094EB] dark:text-[#ff7a29]">
-                    main
-                  </code>
-                  <code className="rounded-lg bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-2.5 py-1 font-mono text-[11px] font-black text-[#0094EB] dark:text-[#ff7a29]">
-                    .main-content
-                  </code>
-                  <code className="rounded-lg bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-2.5 py-1 font-mono text-[11px] font-black text-[#0094EB] dark:text-[#ff7a29]">
-                    #banner-principal
-                  </code>
-                  <code className="rounded-lg bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-2.5 py-1 font-mono text-[11px] font-black text-[#0094EB] dark:text-[#ff7a29]">
-                    .product-description
-                  </code>
-                  <code className="rounded-lg bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-2.5 py-1 font-mono text-[11px] font-black text-[#0094EB] dark:text-[#ff7a29]">
-                    .vitrine
-                  </code>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-4">
-                <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                  Posições de injeção
-                </p>
-                <ul className="mt-1.5 space-y-1 text-xs font-medium text-slate-500 dark:text-[#c0c5d4] list-disc list-inside">
-                  <li>Antes do elemento</li>
-                  <li>Dentro do elemento (no início)</li>
-                  <li>Dentro do elemento (no final)</li>
-                  <li>Depois do elemento</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card: Produtos & Aviso Importante */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 shadow-sm flex flex-col justify-between space-y-6">
-          <div>
-            <div className="flex items-start gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
-                <ShoppingBag size={20} className="!text-white stroke-[2.5]" />
-              </div>
-
-              <div>
-                <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                  Produtos
-                </h2>
-                <p className="mt-0.5 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                  Vincule os produtos do seu catálogo diretamente aos vídeos para permitir a compra em 1 clique durante a reprodução.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5">
-              <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                Importação e Catálogo
-              </p>
-              <p className="mt-1.5 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                Você pode importar produtos via XML (Google Merchant / Feed XML) ou planilha CSV na página de <strong>Produtos</strong>.
-              </p>
-            </div>
-
-            {/* Módulo de Aviso Refinado */}
-            <div className="mt-5 rounded-2xl border border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/30 p-4">
-              <div className="flex items-start gap-3">
-                <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                <div>
-                  <p className="text-xs font-black text-amber-900 dark:text-amber-300 uppercase tracking-tight">
-                    Importante
-                  </p>
-                  <p className="mt-0.5 text-xs font-medium leading-relaxed text-amber-800 dark:text-amber-400/90">
-                    As credenciais secretas da sua conta nunca são expostas no script público. Toda a comunicação pública utiliza tokens com proteção de domínio e isolamento RLS.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── SEÇÃO: COMO INSTALAR NA SUA LOJA (DUAL-THEME) ── */}
-      <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
-        <div className="border-b border-slate-100 dark:border-white/5 pb-4">
-          <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-            <span>🚀</span> Como instalar na sua loja
-          </h2>
-          <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-[#8a90a0]">
-            Três passos simples para ativar a experiência de vídeo commerce no seu e-commerce.
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          {/* Passo 1 */}
-          <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
-                1
-              </div>
-
-              <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                Acesse o painel da loja
-              </h3>
-
-              <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                Abra as configurações do tema da sua plataforma (Yampi, Shopify, Nuvemshop, WBuy, Bagy, Tray, etc.) e localize a área de scripts/HTML personalizado.
-              </p>
-            </div>
-          </div>
-
-          {/* Passo 2 */}
-          <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
-                2
-              </div>
-
-              <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                Cole os scripts
-              </h3>
-
-              <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                Cole o <strong>Script Principal (Passo 1)</strong> no cabeçalho e o <strong>Script de Rastreamento (Passo 2)</strong> na página de conclusão de compra, direto na plataforma ou via Google Tag Manager.
-              </p>
-            </div>
-          </div>
-
-          {/* Passo 3 */}
-          <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
-                3
-              </div>
-
-              <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                Publique seus vídeos
-              </h3>
-
-              <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#c0c5d4]">
-                Faça upload dos vídeos no Vidlytics, configure suas coleções de stories e os vídeos aparecerão automaticamente para seus clientes.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-              Precisa customizar o posicionamento ou estilo?
-            </p>
-            <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-[#c0c5d4]">
-              Utilize o menu <strong>Aparência</strong> para ajustar bordas, cores, formatos de card e seletores CSS sem precisar programar.
-            </p>
           </div>
         </div>
       </div>
