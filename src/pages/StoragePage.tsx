@@ -4,8 +4,6 @@ import { supabase } from '@/lib/supabase';
 import {
   connectInstagramAccount,
   connectTikTokAccount,
-  connectYouTubeAccount,
-  connectPinterestAccount,
   getConnectedIntegrations,
 } from '@/services/integrations';
 import { fetchTikTokMedia } from '@/services/tiktok';
@@ -21,12 +19,12 @@ import {
   FileImage,
   UploadCloud,
   Link,
-  ChevronDown,
   X,
   CheckCircle2,
   AlertTriangle,
   Sparkles,
   Instagram,
+  ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError } from '@/utils/toast';
@@ -72,14 +70,18 @@ const getExternalVideoThumbnail = (url: string): string => {
   return cleanUrl;
 };
 
-// Utilitário global para converter Blob para Base64 Data URL
-const blobToBase64 = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
+// Converte links do YouTube para formato de incorporação (Embed) compatível com iframe
+const getYoutubeEmbedUrl = (url: string): string | null => {
+  if (!url) return null;
+  const match = url.match(/(?:youtube\.com\/(?:shorts\/|watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+  return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1` : null;
+};
+
+// Converte links do Instagram Reels/Posts para formato de incorporação (Embed) compatível com iframe
+const getInstagramEmbedUrl = (url: string): string | null => {
+  if (!url) return null;
+  const match = url.match(/instagram\.com\/(?:reel|p)\/([a-zA-Z0-9_-]+)/i);
+  return match ? `https://www.instagram.com/p/${match[1]}/embed` : null;
 };
 
 // Utilitário global para extrair o primeiro frame de um vídeo via Canvas de forma resiliente
@@ -242,6 +244,13 @@ export default function StoragePage() {
   const [sizingModelsList, setSizingModelsList] = useState<any[]>([]);
   const [savingUrl, setSavingUrl] = useState(false);
 
+  // Estado para gerenciar a visualização da mídia atual no modal interno
+  const [previewMedia, setPreviewMedia] = useState<{
+    url: string;
+    type: 'video' | 'image' | 'youtube' | 'iframe';
+    name: string;
+  } | null>(null);
+
   // Carrega as plataformas sociais conectadas à loja no Supabase e trata o retorno do OAuth
   useEffect(() => {
     const checkIntegrations = async () => {
@@ -340,7 +349,6 @@ export default function StoragePage() {
   };
 
   // Função para salvar o Reels do Instagram no banco de dados e abrir a edição para vincular produtos/stories
-
   const handleImportAndEditInstagramVideo = async (video: InstagramMedia) => {
     try {
       if (!storeId) {
@@ -409,7 +417,7 @@ export default function StoragePage() {
     fetchSelectData();
   }, []);
 
-// Resolução resiliente de Store ID em cascata multi-tenant
+  // Resolução resiliente de Store ID em cascata multi-tenant
   const resolveActiveStoreId = async (): Promise<string | null> => {
     if (storeId) return storeId;
 
@@ -476,7 +484,7 @@ export default function StoragePage() {
 
         showSuccess('Importando vídeo do Pinterest... Isso pode levar alguns segundos.');
 
-const { data, error } = await supabase.functions.invoke('import-pinterest-video', {
+        const { data, error } = await supabase.functions.invoke('import-pinterest-video', {
           body: {
             storeId: activeId,
             videoData: {
@@ -557,7 +565,7 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
     fileInputRef.current?.click();
   };
 
-// Processa o arquivo selecionado na janela
+  // Processa o arquivo selecionado na janela
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -576,7 +584,7 @@ const { data, error } = await supabase.functions.invoke('import-pinterest-video'
       const cleanFileName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
       const safeStoragePath = `${activeId}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${cleanFileName}`;
 
-let finalVideoUrl = '';
+      let finalVideoUrl = '';
       let finalThumbUrl = '';
       let thumbnailSize = 0;
 
@@ -729,6 +737,33 @@ let finalVideoUrl = '';
     }
   };
 
+  // Redireciona a visualização da mídia para o modal interno
+  const handlePreviewMedia = (file: StorageItem) => {
+    const url = file.fileUrl || file.thumbnailUrl;
+    if (!url || url.trim() === '') {
+      showError('Endereço do arquivo indisponível para visualização.');
+      return;
+    }
+
+    let type: 'video' | 'image' | 'youtube' | 'iframe' = 'image';
+
+    if (file.type === 'image') {
+      type = 'image';
+    } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      type = 'youtube';
+    } else if (url.includes('instagram.com')) {
+      type = 'iframe';
+    } else {
+      type = 'video';
+    }
+
+    setPreviewMedia({
+      url,
+      type,
+      name: file.name,
+    });
+  };
+
   // Carrega vídeos e imagens cadastrados na conta real do usuário
   const loadAccountStorageData = useCallback(async () => {
     try {
@@ -763,12 +798,12 @@ let finalVideoUrl = '';
         setStoreId(activeStoreId);
       }
 
-// Busca vídeos reais da loja ativa com joins relacionais e fallback defensivo
+      // Busca vídeos reais da loja ativa com joins relacionais e fallback defensivo
       let realVideos: any[] = [];
       if (activeStoreId) {
         if (supabase) {
           try {
-const { data: vidsData, error: vidsError } = await supabase
+            const { data: vidsData, error: vidsError } = await supabase
               .from('videos')
               .select(`
                 *,
@@ -796,7 +831,7 @@ const { data: vidsData, error: vidsError } = await supabase
         }
       }
 
-if (Array.isArray(realVideos)) {
+      if (Array.isArray(realVideos)) {
         const sanitizeUrl = (rawUrl?: string) => {
           if (!rawUrl) return '';
           const str = String(rawUrl).trim();
@@ -1036,11 +1071,11 @@ if (Array.isArray(realVideos)) {
 
   return (
     <div className="animate-fade-in space-y-8 pb-20 font-sans">
-      {/* ── CABEÇALHO DA PÁGINA ── */}
+      {/* ── CABEÇALHO DA PÁGINA (ALTERADO DE "Meu Armazenamento" para "Armazenamento") ── */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Meu Armazenamento
+            Armazenamento
           </h1>
           <p className="mt-1 text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">
             Gerencie os vídeos e imagens hospedados no seu plano e monitore o uso de espaço.
@@ -1112,7 +1147,7 @@ if (Array.isArray(realVideos)) {
             URL Externa
           </button>
 
-{/* Botão Primário Dual-Theme: Fazer Upload */}
+          {/* Botão Primário Dual-Theme: Fazer Upload */}
           <button
             type="button"
             disabled={uploading}
@@ -1122,7 +1157,7 @@ if (Array.isArray(realVideos)) {
             <UploadCloud size={16} className={cn("!text-white stroke-[2.5]", uploading && "animate-bounce")} />
             {uploading ? 'Enviando...' : 'Fazer Upload'}
           </button>
-                  </div>
+        </div>
       </div>
 
       {/* ── CARD MODULAR DA RÉGUA DE USO (ESTILO DASHBOARD VIDLYTICS) ── */}
@@ -1140,11 +1175,11 @@ if (Array.isArray(realVideos)) {
           <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm space-y-4">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
               <div className="flex items-center gap-4">
-{/* Ícone Padronizado Dual-Theme: Azul no Light / Laranja no Dark */}
+                {/* Ícone Padronizado Dual-Theme: Azul no Light / Laranja no Dark */}
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform hover:scale-105 shrink-0">
                   <HardDrive size={22} className="!text-white stroke-[2.5]" />
                 </div>
-                                <div>
+                <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
                       {planName}
@@ -1359,10 +1394,10 @@ if (Array.isArray(realVideos)) {
         </div>
       )}
 
-{/* ── MÓDULO MODULAR DE TABELA DE ARQUIVOS (PADRÃO TOP VÍDEOS DASHBOARD) ── */}
+      {/* ── MÓDULO MODULAR DE TABELA DE ARQUIVOS (PADRÃO TOP VÍDEOS DASHBOARD) ── */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         
-{/* Barra de Busca e Filtros Integrados (Dual-Theme: Azul no Light / Laranja no Dark) */}
+        {/* Barra de Busca e Filtros Integrados (Dual-Theme: Azul no Light / Laranja no Dark) */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-white/5 pb-5">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8a90a0]" size={16} />
@@ -1560,23 +1595,17 @@ if (Array.isArray(realVideos)) {
                           <button
                             type="button"
                             onClick={() => window.location.href = `/videos/${file.id}/edit`}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all cursor-pointer"
                             title="Editar vínculos do vídeo"
                           >
                             <Pencil size={15} />
                           </button>
                         )}
+                        {/* Botão de Visualização Rápida de Mídia (Modal Interno na Mesma Página) */}
                         <button
                           type="button"
-                          onClick={() => {
-                            const targetUrl = file.fileUrl || file.thumbnailUrl;
-                            if (targetUrl && !targetUrl.startsWith('blob:') && targetUrl.trim() !== '') {
-                              window.open(targetUrl, '_blank');
-                            } else {
-                              showError('Endereço do arquivo indisponível para visualização.');
-                            }
-                          }}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-[#0094EB] hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-all"
+                          onClick={() => handlePreviewMedia(file)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-[#0094EB] hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-all cursor-pointer"
                           title="Visualizar mídia"
                         >
                           <Eye size={15} />
@@ -1584,7 +1613,7 @@ if (Array.isArray(realVideos)) {
                         <button
                           type="button"
                           onClick={() => handleDownloadFile(file.fileUrl || file.thumbnailUrl, file.name)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all cursor-pointer"
                           title="Baixar arquivo"
                         >
                           <Download size={15} />
@@ -1592,7 +1621,7 @@ if (Array.isArray(realVideos)) {
                         <button
                           type="button"
                           onClick={() => handleDeleteFile(file.id, file.name)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
                           title="Excluir arquivo"
                         >
                           <Trash2 size={15} />
@@ -1616,7 +1645,7 @@ if (Array.isArray(realVideos)) {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400">
                   <Link size={20} />
                 </div>
-<div>
+                <div>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white">
                     Adicionar Vídeo por URL
                   </h3>
@@ -1628,7 +1657,7 @@ if (Array.isArray(realVideos)) {
               <button
                 type="button"
                 onClick={() => setShowUrlModal(false)}
-                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1662,7 +1691,7 @@ if (Array.isArray(realVideos)) {
                 />
               </div>
 
-<div>
+              <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Vincular a um Produto (Opcional)
                 </label>
@@ -1699,22 +1728,130 @@ if (Array.isArray(realVideos)) {
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-              <button
+                <button
                   type="button"
                   onClick={() => setShowUrlModal(false)}
-                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-all"
+                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-all cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingUrl}
-                  className="rounded-xl bg-[#0094EB] px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#0E4787] transition-all disabled:opacity-50"
+                  className="rounded-xl bg-[#0094EB] px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#0081cc] transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {savingUrl ? 'Salvando...' : 'Cadastrar Mídia'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL DE PREVIEW DA MÍDIA (INTERNO - NA MESMA PÁGINA) ── */}
+      {previewMedia && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-3xl rounded-[2.5rem] border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1220] p-6 sm:p-8 shadow-2xl flex flex-col max-h-[92vh]">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-orange-500/10 text-[#0094EB] dark:text-[#ff7a29]">
+                  <Eye size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-md" title={previewMedia.name}>
+                    {previewMedia.name}
+                  </h3>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0] uppercase tracking-widest">
+                    Visualização de Mídia
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewMedia(null)}
+                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-600 dark:hover:text-white transition-all cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Conteúdo Dinâmico com base na Mídia Selecionada */}
+            <div className="flex-1 flex items-center justify-center overflow-hidden bg-slate-950 rounded-2xl w-full h-[55vh] max-h-[480px] relative">
+              {(() => {
+                if (previewMedia.type === 'image') {
+                  return (
+                    <img
+                      src={previewMedia.url}
+                      alt={previewMedia.name}
+                      className="max-h-full max-w-full object-contain rounded-lg"
+                    />
+                  );
+                }
+
+                if (previewMedia.type === 'youtube') {
+                  const embedUrl = getYoutubeEmbedUrl(previewMedia.url);
+                  if (embedUrl) {
+                    return (
+                      <iframe
+                        src={embedUrl}
+                        title={previewMedia.name}
+                        className="w-full h-full rounded-lg border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      />
+                    );
+                  }
+                }
+
+                if (previewMedia.type === 'iframe') {
+                  const embedUrl = getInstagramEmbedUrl(previewMedia.url);
+                  if (embedUrl) {
+                    return (
+                      <iframe
+                        src={embedUrl}
+                        title={previewMedia.name}
+                        className="w-full h-full rounded-lg bg-white border-0"
+                        allowTransparency
+                        scrolling="yes"
+                      />
+                    );
+                  }
+                }
+
+                // Fallback para arquivo de vídeo nativo (MP4)
+                return (
+                  <video
+                    src={previewMedia.url}
+                    controls
+                    autoPlay
+                    className="max-h-full max-w-full rounded-lg"
+                  />
+                );
+              })()}
+            </div>
+
+            {/* Rodapé do Modal */}
+            <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
+              <button
+                type="button"
+                onClick={() => setPreviewMedia(null)}
+                className="rounded-xl px-5 py-2.5 text-xs font-black text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+              >
+                Fechar
+              </button>
+              <a
+                href={previewMedia.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-5 py-2.5 text-xs font-black text-white shadow-md hover:scale-[1.02] transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                Abrir original
+                <ExternalLink size={14} className="!text-white" />
+              </a>
+            </div>
+
           </div>
         </div>
       )}
