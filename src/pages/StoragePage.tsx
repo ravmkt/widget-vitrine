@@ -24,7 +24,6 @@ import {
   AlertTriangle,
   Sparkles,
   Instagram,
-  ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError } from '@/utils/toast';
@@ -828,7 +827,7 @@ export default function StoragePage() {
 
       const activeStoreId = await resolveActiveStoreId();
 
-      // Busca vídeos reais da loja ativa com joins relacionais e fallback defensivo
+      // Busca vídeos reais da loja ativa com joints relacionais e fallback defensivo
       let realVideos: any[] = [];
       if (activeStoreId) {
         if (supabase) {
@@ -1018,11 +1017,31 @@ export default function StoragePage() {
             .maybeSingle();
 
           if (settingsData?.logo_url) {
+            // ── CÁLCULO DINÂMICO DE TAMANHO DA LOGO (EVITA 0 B) ──
+            let logoSize = 150 * 1024; // Fallback elegante: 150 KB padrão caso CORS bloqueie HEAD e GET
+            try {
+              // Tenta HEAD request para capturar o Content-Length sem baixar o arquivo inteiro
+              const response = await fetch(settingsData.logo_url, { method: 'HEAD' });
+              const contentLength = response.headers.get('content-length');
+              if (contentLength) {
+                logoSize = parseInt(contentLength, 10);
+              } else {
+                // Caso o header não venha de primeira, fazemos um GET simples para obter o Blob
+                const getResponse = await fetch(settingsData.logo_url);
+                const blob = await getResponse.blob();
+                if (blob && blob.size > 0) {
+                  logoSize = blob.size;
+                }
+              }
+            } catch (e) {
+              console.warn('[Vidlytics Storage] Não foi possível obter o tamanho exato do logotipo via requisição, aplicando fallback estimado.', e);
+            }
+
             loadedItems.push({
               id: 'logo-setting-file',
               name: 'LOGOTIPO_OFICIAL_LOJA.png',
               type: 'image',
-              sizeInBytes: 0,
+              sizeInBytes: logoSize, // Agora calcula o tamanho real!
               createdAt: 'Ativo',
               thumbnailUrl: settingsData.logo_url,
               fileUrl: settingsData.logo_url,
@@ -1785,7 +1804,10 @@ export default function StoragePage() {
       {/* ── MODAL DE PREVIEW DA MÍDIA (INTERNO - NA MESMA PÁGINA) ── */}
       {previewMedia && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-3xl rounded-[2.5rem] border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1220] p-6 sm:p-8 shadow-2xl flex flex-col max-h-[92vh]">
+          <div className={cn(
+            "relative w-full rounded-[2.5rem] border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1220] p-6 sm:p-8 shadow-2xl flex flex-col max-h-[92vh] transition-all duration-300",
+            previewMedia.type === 'image' ? 'max-w-3xl' : 'max-w-[400px]'
+          )}>
             
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
@@ -1794,7 +1816,7 @@ export default function StoragePage() {
                   <Eye size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-md" title={previewMedia.name}>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-xs" title={previewMedia.name}>
                     {previewMedia.name}
                   </h3>
                   <p className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0] uppercase tracking-widest">
@@ -1811,15 +1833,18 @@ export default function StoragePage() {
               </button>
             </div>
 
-            {/* Conteúdo Dinâmico com base na Mídia Selecionada */}
-            <div className="flex-1 flex items-center justify-center overflow-hidden bg-slate-950 rounded-2xl w-full h-[55vh] max-h-[480px] relative">
+            {/* Conteúdo Dinâmico com base na Mídia Selecionada (Layout Smartphone em Vídeos/iFrames) */}
+            <div className={cn(
+              "flex-1 flex items-center justify-center overflow-hidden bg-slate-950 rounded-2xl w-full relative",
+              previewMedia.type === 'image' ? 'h-[55vh] max-h-[480px]' : 'aspect-[9/16] max-h-[62vh]'
+            )}>
               {(() => {
                 if (previewMedia.type === 'image') {
                   return (
                     <img
                       src={previewMedia.url}
                       alt={previewMedia.name}
-                      className="max-h-full max-w-full object-contain rounded-lg"
+                      className="max-h-full max-w-full object-contain rounded-lg animate-fade-in"
                     />
                   );
                 }
@@ -1854,36 +1879,27 @@ export default function StoragePage() {
                   }
                 }
 
-                // Fallback para arquivo de vídeo nativo (MP4)
+                // Fallback para arquivo de vídeo nativo (MP4) - Mantém proporções corretas
                 return (
                   <video
                     src={previewMedia.url}
                     controls
                     autoPlay
-                    className="max-h-full max-w-full rounded-lg"
+                    className="max-h-full max-w-full rounded-lg object-contain"
                   />
                 );
               })()}
             </div>
 
-            {/* Rodapé do Modal */}
-            <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
+            {/* Rodapé do Modal (Sem botão de abrir original, apenas fechar estilizado em largura máxima) */}
+            <div className="flex items-center justify-stretch gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
               <button
                 type="button"
                 onClick={() => setPreviewMedia(null)}
-                className="rounded-xl px-5 py-2.5 text-xs font-black text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+                className="w-full rounded-xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] py-3 text-xs font-black text-white shadow-md hover:scale-[1.01] transition-all cursor-pointer text-center uppercase tracking-wider"
               >
                 Fechar
               </button>
-              <a
-                href={previewMedia.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-5 py-2.5 text-xs font-black text-white shadow-md hover:scale-[1.02] transition-all flex items-center gap-1.5 cursor-pointer"
-              >
-                Abrir original
-                <ExternalLink size={14} className="!text-white" />
-              </a>
             </div>
 
           </div>
