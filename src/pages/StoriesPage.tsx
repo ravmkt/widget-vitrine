@@ -588,6 +588,18 @@ const StoriesPage = () => {
                         <button
                           onClick={() => {
                             let targetUrl = currentStore?.url?.trim() || "";
+                            
+                            // ✅ CORREÇÃO 3: Se a URL no banco de dados for a de testes (lojaexemplo), abre um prompt amigável
+                            if (!targetUrl || targetUrl.includes("lojaexemplo.com.br")) {
+                              const customUrl = prompt(
+                                "A URL cadastrada nesta loja é '" + (targetUrl || "vazia") + "'.\n" +
+                                "Por favor, digite a URL local onde deseja testar o widget (ex: localhost:3000 ou useanny.com):",
+                                targetUrl || ""
+                              );
+                              if (!customUrl) return; // cancelou o prompt
+                              targetUrl = customUrl.trim();
+                            }
+
                             if (targetUrl) {
                               if (!/^https?:\/\//i.test(targetUrl)) {
                                 targetUrl = "https://" + targetUrl;
@@ -608,14 +620,6 @@ const StoriesPage = () => {
                           title="Preview Story"
                         >
                           <Eye size={16} />
-                        </button>
-
-                        <button
-                          onClick={() => navigate(`/stories/${story.id}`)}
-                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
-                          title="Editar Story"
-                        >
-                          <Edit3 size={16} />
                         </button>
 
                         <button
