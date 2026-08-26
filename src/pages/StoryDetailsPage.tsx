@@ -209,11 +209,14 @@ const StoryDetailsPage = () => {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState({ title: '', format: 'carousel' as StoryFormat, scroll_direction: 'horizontal' as ScrollDirection, active: true, appearance_id: '' });
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; type: 'location' | 'rule'; id: string; name: string }>({ isOpen: false, type: 'location', id: '', name: '' });
-// ðŸ†• Seletor visual
-const [selectorModalOpen, setSelectorModalOpen] = useState(false);
-const [selectorUrl, setSelectorUrl] = useState("");
-const [selectorLoading, setSelectorLoading] = useState(false);
-const [previewUrl, setPreviewUrl] = useState("");
+
+  // 🎯 Seletor visual
+  const [selectorModalOpen, setSelectorModalOpen] = useState(false);
+  const [selectorUrl, setSelectorUrl] = useState("");
+  const [selectorLoading, setSelectorLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  const [stableStoryId] = useState(() => id && id !== 'new' && id !== 'undefined' ? id : generateUuid());
 
   const loadStoryData = useCallback(async () => {
     if (tenantLoading) return;
