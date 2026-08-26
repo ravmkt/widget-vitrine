@@ -654,7 +654,8 @@ const SelectorModal = () => {
           <div className="hidden items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-1 md:flex">
             <input
               type="url"
-              placeholder="Cole a URL de teste (ex: link de um produto)..."
+              // ✅ Agora exibe a URL real da sua loja como sugestão em cinza (placeholder)
+              placeholder={currentStore?.url ? `Ex: ${currentStore.url}` : "Cole a URL de teste (ex: link de um produto)..."}
               value={previewUrl}
               onChange={(e) => setPreviewUrl(e.target.value)}
               className="w-64 bg-transparent px-3 py-1 text-xs font-bold text-slate-700 outline-none placeholder:text-slate-400"
@@ -662,8 +663,12 @@ const SelectorModal = () => {
             <button
               type="button"
               onClick={() => {
+                // ✅ Se o usuário não digitou nada, usa a URL real da loja como destino padrão
                 let targetUrl = previewUrl.trim() || currentStore?.url?.trim() || "";
-                if (!targetUrl) return;
+                if (!targetUrl) {
+                  alert("Por favor, configure a URL da sua loja nas Configurações ou digite uma URL de teste.");
+                  return;
+                }
                 if (!/^https?:\/\//i.test(targetUrl)) {
                   targetUrl = "https://" + targetUrl;
                 }
