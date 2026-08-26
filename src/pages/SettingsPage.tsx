@@ -518,7 +518,7 @@ const SettingsPage = () => {
                 onChange={e =>
                   setSettings(prev => ({ ...prev, store_name: e.target.value }))
                 }
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
                 required
               />
             </div>
@@ -534,7 +534,7 @@ const SettingsPage = () => {
                 onChange={e =>
                   setSettings(prev => ({ ...prev, store_url: e.target.value }))
                 }
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
                 required
               />
             </div>
@@ -549,7 +549,7 @@ const SettingsPage = () => {
                   setSettings(prev => ({ ...prev, platform: value || null }))
                 }
               >
-                <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]">
+                <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0">
                   <SelectValue placeholder="Selecione uma plataforma..." />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-xs font-bold text-slate-800 dark:text-white shadow-xl">
@@ -576,7 +576,7 @@ const SettingsPage = () => {
                 onValueChange={setSelectedSectorId}
                 disabled={loadingSectors}
               >
-                <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]">
+                <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0">
                   <SelectValue placeholder="Selecione um setor..." />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-xs font-bold text-slate-800 dark:text-white shadow-xl">
@@ -648,7 +648,7 @@ const SettingsPage = () => {
                 onChange={e =>
                   setSettings(prev => ({ ...prev, contact_email: e.target.value }))
                 }
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
               />
             </div>
           </div>
@@ -694,7 +694,7 @@ const SettingsPage = () => {
                   const v = e.target.value.replace(/[^\d+\-\(\) ]/g, '');
                   setSettings(prev => ({ ...prev, whatsapp_number: v }));
                 }}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
                 disabled={!settings.whatsapp_enabled}
               />
               <p className="text-[11px] text-slate-500 dark:text-[#8a90a0]">
@@ -715,7 +715,7 @@ const SettingsPage = () => {
                   }))
                 }
                 rows={3}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#ff7a29]"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
                 disabled={!settings.whatsapp_enabled}
               />
             </div>
