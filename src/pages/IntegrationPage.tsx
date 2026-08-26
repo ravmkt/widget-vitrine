@@ -577,4 +577,39 @@ window.VIDLYTICS_CONFIG = {
               type="button"
               onClick={handleCopyTrackingScript}
               disabled={!trackingReady}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
+            >
+              {copiedTracking ? (
+                <>
+                  <CheckCircle2 size={16} className="!text-white" />
+                  Copiado!
+                </>
+              ) : (
+                <>
+                  <Copy size={16} className="!text-white" />
+                  Copiar Script
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-[#0f1220] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/5 bg-[#14182b] px-5 py-3">
+              <div className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-rose-500/80" />
+                <span className="h-3 w-3 rounded-full bg-amber-500/80" />
+                <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
+              </div>
+              <span className="font-mono text-xs font-bold text-slate-400 dark:text-[#8a90a0]">vidlytics-tracking.js</span>
+            </div>
+            <pre className="overflow-x-auto whitespace-pre-wrap p-6 font-mono text-xs font-semibold leading-relaxed text-[#22c55e] md:text-sm [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:bg-white/10">
+              {trackingScriptCode}
+            </pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default IntegrationPage;
