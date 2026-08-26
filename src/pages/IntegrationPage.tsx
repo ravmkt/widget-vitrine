@@ -8,11 +8,11 @@ import {
 import { useTenant } from '@/context/TenantContext';
 import { supabase } from '@/lib/supabase';
 
-// ── ÍCONES INTEGRADOS DIRETAMENTE DO SEU DESIGN ORIGINAL DE 44PX (QUADRADOS) ──
+// ── ÍCONES INTEGRADOS COM FOCO EXCLUSIVO NA ÁREA ÚTIL QUADRADA (32.14 x 32.14) ──
 
 // Ícone 4: Flutuante (Card celular à esquerda + Mão detalhada com clique)
 export const FlutuanteIcon = ({ className = "h-11 w-11" }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="44" viewBox="0 0 33.12 41.04" height="44" preserveAspectRatio="xMidYMid meet" className={className}>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0.0625 32.144531 32.148437" className={className} preserveAspectRatio="xMidYMid slice">
     <defs>
       <clipPath id="flt-328da3bf98"><path d="M 0 0.0625 L 32.144531 0.0625 L 32.144531 32.210938 L 0 32.210938 Z" clipRule="nonzero"/></clipPath>
       <clipPath id="flt-2f1ee6ceac"><path d="M 15 15 L 24.394531 15 L 24.394531 24.53125 L 15 24.53125 Z" clipRule="nonzero"/></clipPath>
@@ -45,7 +45,7 @@ export const FlutuanteIcon = ({ className = "h-11 w-11" }: { className?: string 
 
 // Ícone 1: Carrossel (3 cards verticais idênticos lado a lado)
 export const CarrosselIcon = ({ className = "h-11 w-11" }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="44" viewBox="0 0 33.12 41.04" height="44" preserveAspectRatio="xMidYMid meet" className={className}>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0.0625 32.144531 32.148437" className={className} preserveAspectRatio="xMidYMid slice">
     <defs>
       <clipPath id="car-5834149a83)"><path d="M 0 0.0625 L 32.144531 0.0625 L 32.144531 32.210938 L 0 32.210938 Z" clipRule="nonzero"/></clipPath>
       <clipPath id="car-ede1d607f6)"><path d="M 2.710938 7.652344 L 10.738281 7.652344 L 10.738281 24.457031 L 2.710938 24.457031 Z" clipRule="nonzero"/></clipPath>
@@ -53,7 +53,7 @@ export const CarrosselIcon = ({ className = "h-11 w-11" }: { className?: string 
       <clipPath id="car-36ee04c3f3)"><path d="M 12.21875 7.652344 L 20 7.652344 L 20 24.457031 L 12.21875 24.457031 Z" clipRule="nonzero"/></clipPath>
       <clipPath id="car-e2a43ee0f8"><path d="M 13.824219 7.664062 L 18.308594 7.664062 C 19.195312 7.664062 19.914062 8.382812 19.914062 9.265625 L 19.914062 23 C 19.914062 23.886719 19.195312 24.605469 18.308594 24.605469 L 13.824219 24.605469 C 12.9375 24.605469 12.21875 23.886719 12.21875 23 L 12.21875 9.265625 C 12.21875 8.382812 12.9375 7.664062 13.824219 7.664062 Z" clipRule="nonzero"/></clipPath>
       <clipPath id="car-3c255e1140)"><path d="M 21.695312 7.652344 L 29.71875 7.652344 L 29.71875 24.457031 L 21.695312 24.457031 Z" clipRule="nonzero"/></clipPath>
-      <clipPath id="car-0cc25c4ab7"><path d="M 23.296875 7.664062 L 27.78125 7.664062 C 28.667969 7.664062 29.386719 8.382812 29.386719 9.265625 L 29.386719 23 C 29.386719 23.886719 28.667969 24.605469 27.78125 24.605469 L 23.296875 24.605469 C 22.414062 24.605469 21.695312 23.886719 21.695312 23 L 21.695312 9.265625 C 21.695312 8.382812 22.414062 7.664062 23.296875 7.664062 Z" clipRule="nonzero"/></clipPath>
+      <clipPath id="car-0cc25c4ab7)"><path d="M 23.296875 7.664062 L 27.78125 7.664062 C 28.667969 7.664062 29.386719 8.382812 29.386719 9.265625 L 29.386719 23 C 29.386719 23.886719 28.667969 24.605469 27.78125 24.605469 L 23.296875 24.605469 C 22.414062 24.605469 21.695312 23.886719 21.695312 23 L 21.695312 9.265625 C 21.695312 8.382812 22.414062 7.664062 23.296875 7.664062 Z" clipRule="nonzero"/></clipPath>
     </defs>
     <g clipPath="url(#car-5834149a83)">
       <path fill="currentColor" d="M 0 0.0625 L 32.144531 0.0625 L 32.144531 32.210938 L 0 32.210938 Z" fillOpacity="1" fillRule="nonzero"/>
@@ -78,7 +78,7 @@ export const CarrosselIcon = ({ className = "h-11 w-11" }: { className?: string 
 
 // Ícone 2: Carrossel Dinâmico (Card centralizado em destaque com brilhos de faísca)
 export const CarrosselDinamicoIcon = ({ className = "h-11 w-11" }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="44" viewBox="0 0 33.12 41.04" height="44" preserveAspectRatio="xMidYMid meet" className={className}>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0.0625 32.144531 32.148437" className={className} preserveAspectRatio="xMidYMid slice">
     <defs>
       <clipPath id="din-f98553cfa5)"><path d="M 0 0.0625 L 32.144531 0.0625 L 32.144531 32.210938 L 0 32.210938 Z" clipRule="nonzero"/></clipPath>
       <clipPath id="din-c62883263b)"><path d="M 2.710938 7.652344 L 10.738281 7.652344 L 10.738281 24.457031 L 2.710938 24.457031 Z" clipRule="nonzero"/></clipPath>
@@ -137,17 +137,17 @@ export const CarrosselDinamicoIcon = ({ className = "h-11 w-11" }: { className?:
 
 // Ícone 3: Galeria (Layout em grade 2x2 simétrica)
 export const GradeIcon = ({ className = "h-11 w-11" }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="44" viewBox="0 0 33.12 41.04" height="44" preserveAspectRatio="xMidYMid meet" className={className}>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0.0625 32.144531 32.148437" className={className} preserveAspectRatio="xMidYMid slice">
     <defs>
       <clipPath id="grd-8a71bd9a82)"><path d="M 0 0.0625 L 32.144531 0.0625 L 32.144531 32.210938 L 0 32.210938 Z" clipRule="nonzero"/></clipPath>
       <clipPath id="grd-90458fc666)"><path d="M 3.214844 3.695312 L 14.765625 3.695312 L 14.765625 15.242188 L 3.214844 15.242188 Z" clipRule="nonzero"/></clipPath>
-      <clipPath id="grd-01ecac1835"><path d="M 4.820312 3.695312 L 13.011719 3.695312 C 13.898438 3.695312 14.617188 4.414062 14.617188 5.300781 L 14.617188 13.59375 C 14.617188 14.480469 13.898438 15.199219 13.011719 15.199219 L 4.820312 15.199219 C 3.933594 15.199219 3.214844 14.480469 3.214844 13.59375 L 3.214844 5.300781 C 3.214844 4.414062 3.933594 3.695312 4.820312 3.695312 Z" clipRule="nonzero"/></clipPath>
-      <clipPath id="grd-619051102a"><path d="M 17.523438 3.695312 L 29 3.695312 L 29 15.242188 L 17.523438 15.242188 Z" clipRule="nonzero"/></clipPath>
-      <clipPath id="grd-e191beee68"><path d="M 19.132812 3.695312 L 27.320312 3.695312 C 28.207031 3.695312 28.929688 4.414062 28.929688 5.300781 L 28.929688 13.59375 C 28.929688 14.480469 28.207031 15.199219 27.320312 15.199219 L 19.132812 15.199219 C 18.242188 15.199219 17.523438 14.480469 17.523438 13.59375 L 17.523438 5.300781 C 17.523438 4.414062 18.242188 3.695312 19.132812 3.695312 Z" clipRule="nonzero"/></clipPath>
-      <clipPath id="grd-43fe408327"><path d="M 3.214844 17.070312 L 14.765625 17.070312 L 14.765625 28.621094 L 3.214844 28.621094 Z" clipRule="nonzero"/></clipPath>
-      <clipPath id="grd-8d8d70d659"><path d="M 4.820312 17.074219 L 13.011719 17.074219 C 13.898438 17.074219 14.617188 17.792969 14.617188 18.679688 L 14.617188 26.96875 C 14.617188 27.859375 13.898438 28.578125 13.011719 28.578125 L 4.820312 28.578125 C 3.933594 28.578125 3.214844 27.859375 3.214844 26.96875 L 3.214844 18.679688 C 3.214844 17.792969 3.933594 17.074219 4.820312 17.074219 Z" clipRule="nonzero"/></clipPath>
-      <clipPath id="grd-a92f09777f"><path d="M 17.523438 17.070312 L 29 17.070312 L 29 28.621094 L 17.523438 28.621094 Z" clipRule="nonzero"/></clipPath>
-      <clipPath id="grd-97d8e915f9"><path d="M 19.132812 17.074219 L 27.320312 17.074219 C 28.207031 17.074219 28.929688 17.792969 28.929688 18.679688 L 28.929688 26.96875 C 28.929688 27.859375 28.207031 28.578125 27.320312 28.578125 L 19.132812 28.578125 C 18.242188 28.578125 17.523438 27.859375 17.523438 26.96875 L 17.523438 18.679688 C 17.523438 17.792969 18.242188 17.074219 19.132812 17.074219 Z" clipRule="nonzero"/></clipPath>
+      <clipPath id="grd-01ecac1835)"><path d="M 4.820312 3.695312 L 13.011719 3.695312 C 13.898438 3.695312 14.617188 4.414062 14.617188 5.300781 L 14.617188 13.59375 C 14.617188 14.480469 13.898438 15.199219 13.011719 15.199219 L 4.820312 15.199219 C 3.933594 15.199219 3.214844 14.480469 3.214844 13.59375 L 3.214844 5.300781 C 3.214844 4.414062 3.933594 3.695312 4.820312 3.695312 Z" clipRule="nonzero"/></clipPath>
+      <clipPath id="grd-619051102a)"><path d="M 17.523438 3.695312 L 29 3.695312 L 29 15.242188 L 17.523438 15.242188 Z" clipRule="nonzero"/></clipPath>
+      <clipPath id="grd-e191beee68)"><path d="M 19.132812 3.695312 L 27.320312 3.695312 C 28.207031 3.695312 28.929688 4.414062 28.929688 5.300781 L 28.929688 13.59375 C 28.929688 14.480469 28.207031 15.199219 27.320312 15.199219 L 19.132812 15.199219 C 18.242188 15.199219 17.523438 14.480469 17.523438 13.59375 L 17.523438 5.300781 C 17.523438 4.414062 18.242188 3.695312 19.132812 3.695312 Z" clipRule="nonzero"/></clipPath>
+      <clipPath id="grd-43fe408327)"><path d="M 3.214844 17.070312 L 14.765625 17.070312 L 14.765625 28.621094 L 3.214844 28.621094 Z" clipRule="nonzero"/></clipPath>
+      <clipPath id="grd-8d8d70d659)"><path d="M 4.820312 17.074219 L 13.011719 17.074219 C 13.898438 17.074219 14.617188 17.792969 14.617188 18.679688 L 14.617188 26.96875 C 14.617188 27.859375 13.898438 28.578125 13.011719 28.578125 L 4.820312 28.578125 C 3.933594 28.578125 3.214844 27.859375 3.214844 26.96875 L 3.214844 18.679688 C 3.214844 17.792969 3.933594 17.074219 4.820312 17.074219 Z" clipRule="nonzero"/></clipPath>
+      <clipPath id="grd-a92f09777f)"><path d="M 17.523438 17.070312 L 29 17.070312 L 29 28.621094 L 17.523438 28.621094 Z" clipRule="nonzero"/></clipPath>
+      <clipPath id="grd-97d8e915f9)"><path d="M 19.132812 17.074219 L 27.320312 17.074219 C 28.207031 17.074219 28.929688 17.792969 28.929688 18.679688 L 28.929688 26.96875 C 28.929688 27.859375 28.207031 28.578125 27.320312 28.578125 L 19.132812 28.578125 C 18.242188 28.578125 17.523438 27.859375 17.523438 26.96875 L 17.523438 18.679688 C 17.523438 17.792969 18.242188 17.074219 19.132812 17.074219 Z" clipRule="nonzero"/></clipPath>
     </defs>
     <g clipPath="url(#grd-8a71bd9a82)">
       <path fill="currentColor" d="M 0 0.0625 L 32.144531 0.0625 L 32.144531 32.210938 L 0 32.210938 Z" fillOpacity="1" fillRule="nonzero"/>
