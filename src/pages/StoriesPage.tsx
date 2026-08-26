@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -49,81 +49,81 @@ const StoriesPage = () => {
     storyName: '',
   });
 
-const loadData = async () => {
-  try {
-    setLoading(true);
+  const loadData = async () => {
+    try {
+      setLoading(true);
 
-    const resolvedStoreId = await resolveStoreId();
-    setCurrentStoreId(resolvedStoreId);
+      const resolvedStoreId = await resolveStoreId();
+      setCurrentStoreId(resolvedStoreId);
 
-    const s = await db.stories.getAll(resolvedStoreId);
-    const storyIds = s.map(story => story.id);
+      const s = await db.stories.getAll(resolvedStoreId);
+      const storyIds = s.map(story => story.id);
 
-    // Agora filtra direto pelo store_id no banco
-    const allSv = await db.storyVideos.getAll(resolvedStoreId);
-    const sv = allSv.filter(v => storyIds.includes(v.story_id));
+      // Agora filtra direto pelo store_id no banco
+      const allSv = await db.storyVideos.getAll(resolvedStoreId);
+      const sv = allSv.filter(v => storyIds.includes(v.story_id));
 
-    const dl = await db.displayLocations.getAll(resolvedStoreId);
-    // 🆕 Busca as regras de exibição de páginas do banco
-    const rules = await (db as any).pageRules.getAll(resolvedStoreId);
+      const dl = await db.displayLocations.getAll(resolvedStoreId);
+      // 🆕 Busca as regras de exibição de páginas do banco
+      const rules = await (db as any).pageRules.getAll(resolvedStoreId);
 
-    const countMap: Record<string, number> = {};
+      const countMap: Record<string, number> = {};
 
-    sv.forEach(relation => {
-      countMap[relation.story_id] = (countMap[relation.story_id] || 0) + 1;
-    });
+      sv.forEach(relation => {
+        countMap[relation.story_id] = (countMap[relation.story_id] || 0) + 1;
+      });
 
-    setVideoCounts(countMap);
+      setVideoCounts(countMap);
 
-    const locationMap: Record<string, string> = {};
+      const locationMap: Record<string, string> = {};
 
-    dl.forEach(loc => {
-      if (!locationMap[loc.story_id]) {
-        locationMap[loc.story_id] =
-          loc.selector === 'body' ? 'Página Inicial' : loc.selector;
-      }
-    });
-
-    setLocations(locationMap);
-
-    // 🆕 Traduz as regras de página em textos legíveis para o lojista
-    const rulesMap: Record<string, string> = {};
-    rules.forEach((rule: any) => {
-      if (!rulesMap[rule.story_id]) {
-        let label = "";
-        switch (rule.condition_type) {
-          case "home":
-            label = "Somente na Home";
-            break;
-          case "all_pages":
-            label = "Todas as Páginas";
-            break;
-          case "url_contains":
-            label = `Contém: ${rule.value}`;
-            break;
-          case "url_not_contains":
-            label = `Não contém: ${rule.value}`;
-            break;
-          case "url_not_equals":
-            label = `Diferente de: ${rule.value}`;
-            break;
-          default:
-            label = rule.condition_type || "Todas as Páginas";
+      dl.forEach(loc => {
+        if (!locationMap[loc.story_id]) {
+          locationMap[loc.story_id] =
+            loc.selector === 'body' ? 'Página Inicial' : loc.selector;
         }
-        rulesMap[rule.story_id] = label;
-      }
-    });
+      });
 
-    setPageRules(rulesMap);
+      setLocations(locationMap);
 
-    setStories(s.sort((a, b) => (a.position || 0) - (b.position || 0)));
-  } catch (e) {
-    console.error('Erro ao carregar os Stories:', e);
-    showError('Erro ao carregar os Stories.');
-  } finally {
-    setLoading(false);
-  }
-};
+      // 🆕 Traduz as regras de página em textos legíveis para o lojista
+      const rulesMap: Record<string, string> = {};
+      rules.forEach((rule: any) => {
+        if (!rulesMap[rule.story_id]) {
+          let label = "";
+          switch (rule.condition_type) {
+            case "home":
+              label = "Somente na Home";
+              break;
+            case "all_pages":
+              label = "Todas as Páginas";
+              break;
+            case "url_contains":
+              label = `Contém: ${rule.value}`;
+              break;
+            case "url_not_contains":
+              label = `Não contém: ${rule.value}`;
+              break;
+            case "url_not_equals":
+              label = `Diferente de: ${rule.value}`;
+              break;
+            default:
+              label = rule.condition_type || "Todas as Páginas";
+          }
+          rulesMap[rule.story_id] = label;
+        }
+      });
+
+      setPageRules(rulesMap);
+
+      setStories(s.sort((a, b) => (a.position || 0) - (b.position || 0)));
+    } catch (e) {
+      console.error('Erro ao carregar os Stories:', e);
+      showError('Erro ao carregar os Stories.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -346,7 +346,7 @@ const loadData = async () => {
 
         <button
           onClick={() => navigate('/stories/new')}
-          className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center gap-2"
+          className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center gap-2 cursor-pointer"
         >
           <Plus size={18} /> Novo Story
         </button>
@@ -368,16 +368,17 @@ const loadData = async () => {
           />
         </div>
 
+        {/* ── DESIGN DO FILTRO ATUALIZADO (BORDA AZUL + TEXTO AZUL QUANDO ATIVO) ── */}
         <div className="flex gap-2">
           {['all', 'active', 'inactive'].map(status => (
             <button
               key={status}
               onClick={() => setFilterStatus(status as any)}
               className={cn(
-                'px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                'px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer',
                 filterStatus === status
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-slate-50 text-slate-400 hover:text-slate-600',
+                  ? 'bg-white border-[#0094EB] text-[#0094EB] shadow-sm'
+                  : 'bg-slate-50 border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-100',
               )}
             >
               {status === 'all'
@@ -567,7 +568,7 @@ const loadData = async () => {
                         type="button"
                         onClick={() => handleToggleStatus(story)}
                         className={cn(
-                          'inline-flex h-8 w-[112px] min-w-[112px] items-center justify-center rounded-lg px-4 text-[10px] font-black uppercase tracking-wider border transition-all mx-auto',
+                          'inline-flex h-8 w-[112px] min-w-[112px] items-center justify-center rounded-lg px-4 text-[10px] font-black uppercase tracking-wider border transition-all mx-auto cursor-pointer',
                           isStoryActive(story)
                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
                             : 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100',
@@ -603,7 +604,7 @@ const loadData = async () => {
                               );
                             }
                           }}
-                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors"
+                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
                           title="Preview Story"
                         >
                           <Eye size={16} />
@@ -611,7 +612,7 @@ const loadData = async () => {
 
                         <button
                           onClick={() => navigate(`/stories/${story.id}`)}
-                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors"
+                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
                           title="Editar Story"
                         >
                           <Edit3 size={16} />
@@ -619,7 +620,7 @@ const loadData = async () => {
 
                         <button
                           onClick={() => handleDeleteClick(story)}
-                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                           title="Excluir Story"
                         >
                           <Trash2 size={16} />
