@@ -1,80 +1,45 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE",
+}
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
+  const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+  const url = new URL(req.url);
 
-  // ─── GET: Leitura do seletor (por story_id) ───
+  // ─── GET: Polling do React para buscar o seletor pelo Token ───
   if (req.method === "GET") {
     try {
-      const url = new URL(req.url);
-      const storyId = url.searchParams.get("story_id");
-      // Mantém compatibilidade com token antigo
       const token = url.searchParams.get("token");
-
-      if (!storyId && !token) {
+      if (!token) {
         return new Response(
-          JSON.stringify({ success: false, message: "story_id ou token é obrigatório" }),
+          JSON.stringify({ success: false, message: "Token é obrigatório" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Se tem token, busca na tabela antiga (legado) e retorna
-      if (token && !storyId) {
-        const { data, error } = await supabase
-          .from("selector_sessions")
-          .select("id, token, selector, story_id, store_id, created_at, updated_at")
-          .eq("token", token)
-          .maybeSingle();
+      const { data, error } = await supabase
+        .from("selector_sessions")
+        .select("selector, story_id, store_id")
+        .eq("token", token)
+        .maybeSingle();
 
-        if (error || !data) {
-          return new Response(
-            JSON.stringify({ success: false, message: "Sessão não encontrada" }),
-            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        return new Response(
-          JSON.stringify({ success: true, data }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Busca direto da tabela display_locations pelo story_id
-      const query = storyId
-        ? supabase.from("display_locations").select("*").eq("story_id", storyId).order("created_at", { ascending: true }).limit(1)
-        : supabase.from("display_locations").select("*").order("created_at", { ascending: true }).limit(1);
-
-      const { data, error } = await query;
-
-      if (error) {
-        return new Response(
-          JSON.stringify({ success: false, message: error.message }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      if (!data || data.length === 0) {
-        return new Response(
-          JSON.stringify({ success: false, message: "Nenhum seletor encontrado para este story" }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      if (error) throw error;
 
       return new Response(
-        JSON.stringify({ success: true, data: data[0] }),
+        JSON.stringify({ success: true, data }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } catch (err: any) {
@@ -189,54 +154,9 @@ serve(async (req) => {
     }
   }
 
-      // Fallback: sem story_id, grava na tabela legada (backward compat)
-      if (token) {
-        const { data: existingToken } = await supabase
-          .from("selector_sessions")
-          .select("id")
-          .eq("token", token)
-          .maybeSingle();
-
-        let error = null;
-        if (existingToken) {
-          const result = await supabase
-            .from("selector_sessions")
-            .update({ selector, story_id: story_id || null, updated_at: new Date().toISOString() })
-            .eq("token", token);
-          error = result.error;
-        } else {
-          const result = await supabase
-            .from("selector_sessions")
-            .insert({ token, selector, story_id: story_id || null });
-          error = result.error;
-        }
-
-        if (error) {
-          return new Response(
-            JSON.stringify({ success: false, message: error.message }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        return new Response(
-          JSON.stringify({ success: true }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      return new Response(
-        JSON.stringify({ success: false, message: "story_id ou token é obrigatório" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    } catch (err: any) {
-      return new Response(
-        JSON.stringify({ success: false, message: err.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-  }
-
-  return new Response(JSON.stringify({ error: "Method not allowed" }), {
-    status: 405,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+  // Fallback para outros métodos
+  return new Response(
+    JSON.stringify({ success: false, message: "Método não suportado" }),
+    { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
 });
