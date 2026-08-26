@@ -509,7 +509,7 @@ const ProductsPage = () => {
           prev.map(p => p.id === editingProduct.id ? updated as Product : p)
         );
 
-        showSuccess('Produto atualizado com sucesso!');
+        showSuccess('Produto updated com sucesso!');
       } else {
         const newProduct = await withStoreId(
           {
@@ -1785,6 +1785,7 @@ return (
                           )}
                         </div>
 
+                        {/* Filtros e Ajuste de Paginação do Preview XML */}
                         <div className="flex items-center gap-3">
                           <input
                             type="text"
@@ -1794,7 +1795,7 @@ return (
                               setXmlPreviewSearch(e.target.value);
                               setXmlPreviewPage(1);
                             }}
-                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold outline-none focus:border-[#0094EB] w-40"
+                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold outline-none focus:border-[#0094EB] w-40 dark:bg-[#0f1220] dark:border-white/5 dark:text-white"
                           />
                           <select
                             value={xmlPreviewCategory}
@@ -1802,12 +1803,26 @@ return (
                               setXmlPreviewCategory(e.target.value);
                               setXmlPreviewPage(1);
                             }}
-                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold outline-none focus:border-[#0094EB]"
+                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold outline-none focus:border-[#0094EB] dark:bg-[#0f1220] dark:border-white/5 dark:text-[#e8ecf4]"
                           >
                             <option value="all">Todas categorias</option>
                             {xmlPreviewCategories.map(cat => (
                               <option key={cat} value={cat}>{cat}</option>
                             ))}
+                          </select>
+
+                          {/* Seletor dinâmico de Paginação (10, 50 ou 100) */}
+                          <select
+                            value={xmlPreviewPageSize}
+                            onChange={e => {
+                              setXmlPreviewPageSize(Number(e.target.value));
+                              setXmlPreviewPage(1); // Reseta para a primeira página
+                            }}
+                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black outline-none focus:border-[#0094EB] dark:bg-[#0f1220] dark:border-white/5 dark:text-[#e8ecf4]"
+                          >
+                            <option value={10}>10 por pág.</option>
+                            <option value={50}>50 por pág.</option>
+                            <option value={100}>100 por pág.</option>
                           </select>
                         </div>
                       </div>
@@ -1842,13 +1857,13 @@ return (
                       {/* Tabela preview */}
                       <div className="border border-slate-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
                         <table className="w-full text-left text-xs">
-                          <thead className="bg-slate-50 sticky top-0">
+                          <thead className="bg-slate-50 sticky top-0 z-10">
                             <tr>
-                              <th className="px-3 py-2 w-8"></th>
-                              <th className="px-3 py-2 font-black text-slate-500">Produto</th>
-                              <th className="px-3 py-2 font-black text-slate-500">SKU</th>
-                              <th className="px-3 py-2 font-black text-slate-500">Preço</th>
-                              <th className="px-3 py-2 font-black text-slate-500">Categoria</th>
+                              <th className="px-3 py-2 w-8 bg-slate-50"></th>
+                              <th className="px-3 py-2 font-black text-slate-500 bg-slate-50">Produto</th>
+                              <th className="px-3 py-2 font-black text-slate-500 bg-slate-50">SKU</th>
+                              <th className="px-3 py-2 font-black text-slate-500 bg-slate-50">Preço</th>
+                              <th className="px-3 py-2 font-black text-slate-500 bg-slate-50">Categoria</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
