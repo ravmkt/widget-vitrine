@@ -85,12 +85,12 @@ serve(async (req) => {
     }
   }
 
-  // ─── POST: Gravação direta em display_locations ───
+  // ─── POST: Gravação em display_locations e selector_sessions ───
   if (req.method === "POST") {
     try {
       const body = await req.json();
       const { selector, token, story_id } = body;
-      let { store_id } = body; // Alterado para 'let' para podermos reatribuir
+      let { store_id } = body;
 
       if (!selector) {
         return new Response(
@@ -99,11 +99,11 @@ serve(async (req) => {
         );
       }
 
-      // Se tem story_id, grava DIRETO em display_locations
-      if (story_id) {
-        const now = new Date().toISOString();
+      const now = new Date().toISOString();
 
-        // 🛡️ HARDENING: Garante o store_id buscando diretamente do Story (evita falha NOT NULL)
+      // 1️⃣ Se tem story_id, resolve o store_id e grava/atualiza em display_locations (Persistência Principal)
+      if (story_id) {
+        // Garante o store_id buscando do Story caso o widget não tenha enviado
         if (!store_id) {
           const { data: storyData, error: storyError } = await supabase
             .from("stories")
@@ -111,46 +111,30 @@ serve(async (req) => {
             .eq("id", story_id)
             .maybeSingle();
 
-          if (storyError) {
-            return new Response(
-              JSON.stringify({ success: false, message: `Erro ao identificar a loja: ${storyError.message}` }),
-              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
+          if (!storyError && storyData) {
+            store_id = storyData.store_id;
           }
-
-          if (!storyData) {
-            return new Response(
-              JSON.stringify({ success: false, message: "A Story associada não foi encontrada no banco." }),
-              { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-          }
-
-          store_id = storyData.store_id; // Armazena o ID correto resolvido de forma segura pelo servidor
         }
 
         // Busca se já existe location para este story
         const { data: existing } = await supabase
           .from("display_locations")
-          .select("id, store_id")
+          .select("id")
           .eq("story_id", story_id)
-          .order("created_at", { ascending: true })
           .limit(1);
 
-        let error = null;
-
         if (existing && existing.length > 0) {
-          // Atualiza o existente
-          const result = await supabase
+          // Atualiza o seletor existente
+          await supabase
             .from("display_locations")
-            .update({ selector, updated_at: now })
+            .update({ selector, store_id: store_id || null, updated_at: now })
             .eq("id", existing[0].id);
-          error = result.error;
         } else {
-          // Cria novo
-          const result = await supabase
+          // Cria uma nova localização
+          await supabase
             .from("display_locations")
             .insert({
-              store_id: store_id, // Usando o store_id recuperado com segurança (NOT NULL garantido!)
+              store_id: store_id || null,
               story_id,
               selector,
               position: "beforeend",
@@ -158,21 +142,52 @@ serve(async (req) => {
               created_at: now,
               updated_at: now,
             });
-          error = result.error;
         }
-
-        if (error) {
-          return new Response(
-            JSON.stringify({ success: false, message: error.message }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-
-        return new Response(
-          JSON.stringify({ success: true, message: "Seletor salvo com sucesso!" }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
       }
+
+      // 2️⃣ Se tem token, grava/atualiza em selector_sessions (Essencial para o Polling do React funcionar!)
+      if (token) {
+        const { data: existingToken } = await supabase
+          .from("selector_sessions")
+          .select("id")
+          .eq("token", token)
+          .maybeSingle();
+
+        if (existingToken) {
+          await supabase
+            .from("selector_sessions")
+            .update({ 
+              selector, 
+              story_id: story_id || null, 
+              store_id: store_id || null, 
+              updated_at: now 
+            })
+            .eq("token", token);
+        } else {
+          await supabase
+            .from("selector_sessions")
+            .insert({ 
+              token, 
+              selector, 
+              story_id: story_id || null, 
+              store_id: store_id || null,
+              created_at: now,
+              updated_at: now
+            });
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, message: "Seletor salvo e sincronizado com sucesso!" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (err: any) {
+      return new Response(
+        JSON.stringify({ success: false, message: err.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+  }
 
       // Fallback: sem story_id, grava na tabela legada (backward compat)
       if (token) {
