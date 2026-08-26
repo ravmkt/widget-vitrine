@@ -585,36 +585,27 @@ const StoriesPage = () => {
 
                     <td className="px-6 py-4 text-center">
                       <div className="flex justify-center gap-2">
+                        {/* 1. 👁️ BOTÃO DO PREVIEW (Corrigido sem prompt chato) */}
                         <button
                           onClick={() => {
                             let targetUrl = currentStore?.url?.trim() || "";
                             
-                            // ✅ CORREÇÃO 3: Se a URL no banco de dados for a de testes (lojaexemplo), abre um prompt amigável
+                            // ✅ Se for a URL padrão de teste ou estiver vazia, abre direto o preview interno sem perturbar com pop-ups!
                             if (!targetUrl || targetUrl.includes("lojaexemplo.com.br")) {
-                              const customUrl = prompt(
-                                "A URL cadastrada nesta loja é '" + (targetUrl || "vazia") + "'.\n" +
-                                "Por favor, digite a URL local onde deseja testar o widget (ex: localhost:3000 ou useanny.com):",
-                                targetUrl || ""
-                              );
-                              if (!customUrl) return; // cancelou o prompt
-                              targetUrl = customUrl.trim();
-                            }
-
-                            if (targetUrl) {
-                              if (!/^https?:\/\//i.test(targetUrl)) {
-                                targetUrl = "https://" + targetUrl;
-                              }
-                              const connector = targetUrl.includes("?") ? "&" : "?";
-                              const finalPreviewUrl = targetUrl + connector + "vidlytics_preview_story_id=" + story.id;
-                              window.open(finalPreviewUrl, "_blank", "noopener,noreferrer");
-                            } else {
-                              // Fallback seguro caso a loja ainda não tenha URL configurada
                               window.open(
                                 `/stories/preview/${story.id}`,
                                 '_blank',
                                 'noopener,noreferrer',
                               );
+                              return;
                             }
+
+                            if (!/^https?:\/\//i.test(targetUrl)) {
+                              targetUrl = "https://" + targetUrl;
+                            }
+                            const connector = targetUrl.includes("?") ? "&" : "?";
+                            const finalPreviewUrl = targetUrl + connector + "vidlytics_preview_story_id=" + story.id;
+                            window.open(finalPreviewUrl, "_blank", "noopener,noreferrer");
                           }}
                           className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
                           title="Preview Story"
@@ -622,6 +613,16 @@ const StoriesPage = () => {
                           <Eye size={16} />
                         </button>
 
+                        {/* 2. 📝 BOTÃO DE EDITAR (Restaurado com Sucesso!) */}
+                        <button
+                          onClick={() => navigate(`/stories/${story.id}`)}
+                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                          title="Editar Story"
+                        >
+                          <Edit3 size={16} />
+                        </button>
+
+                        {/* 3. 🗑️ BOTÃO DE EXCLUIR */}
                         <button
                           onClick={() => handleDeleteClick(story)}
                           className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
