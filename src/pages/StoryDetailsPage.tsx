@@ -432,16 +432,15 @@ console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
     setDragIndex(null);
   };
 
-// ðŸ†• Função do seletor visual
-// ðŸ†• Função do seletor visual
+// 🎯 Função do seletor visual corrigida para usar o ID estável
 const handleOpenSelector = async () => {
   const url = selectorUrl.trim();
   if (!url) return;
 
   const token = "sel_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-  
-  // Inclui o story_id na URL para a Edge Function salvar
-  const storyIdParam = story?.id ? "&widgetSelectStoryId=" + story.id : "";
+
+  // ✅ CORREÇÃO: Usamos o stableStoryId para garantir que novas stories também funcionem no seletor
+  const storyIdParam = `&widgetSelectStoryId=${stableStoryId}`;
   const sep = url.includes("?") ? "&" : "?";
   const finalUrl = url + sep + "widgetSelectToken=" + token + storyIdParam;
 
@@ -454,9 +453,9 @@ const handleOpenSelector = async () => {
     tentativas++;
 
     try {
-const response = await fetch(
-  `https://wznvecurmisgoaijykbt.supabase.co/functions/v1/widget-selector?story_id=${story?.id}`
-);
+      const response = await fetch(
+        `https://wznvecurmisgoaijykbt.supabase.co/functions/v1/widget-selector?story_id=${stableStoryId}`
+      );
       const result = await response.json();
 
       if (result.success && result.data) {
@@ -466,7 +465,7 @@ const response = await fetch(
             ...(prev[0] || {
               id: generateUuid(),
               store_id: resolvedStoreId || '',
-              story_id: story?.id || '',
+              story_id: stableStoryId,
               position: 'beforeend',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
