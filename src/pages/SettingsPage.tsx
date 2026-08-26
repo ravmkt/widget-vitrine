@@ -495,7 +495,7 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* ── 2. DADOS DA LOJA ── */}
+        {/* ── 1. DADOS DA LOJA ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
@@ -654,7 +654,7 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* ── 3. INTEGRAÇÃO WHATSAPP (Com Switch integrado no cabeçalho) ── */}
+        {/* ── 2. INTEGRAÇÃO WHATSAPP (Com Switch integrado no cabeçalho) ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
             <div>
@@ -722,7 +722,7 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* ── 4. MÓDULO DE MÉTRICAS (Estatísticas dedicadas) ── */}
+        {/* ── 3. MÉTRICAS (Estatísticas dedicadas) ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
@@ -754,7 +754,7 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* ── 5. SEGURANÇA & API KEYS ── */}
+        {/* ── 4. SEGURANÇA & API KEYS ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
