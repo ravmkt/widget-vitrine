@@ -243,6 +243,12 @@ const SettingsPage = () => {
               contact_email: storeRow.contact_email || null,
             });
             setLogoPreview(storeRow.logo_url || "");
+          } else {
+            // Se o ID ativo existe mas não há registros criados ainda
+            setSettings({
+              ...DEFAULT_SETTINGS,
+              store_id: activeStoreId,
+            });
           }
         } else {
           setSettings(DEFAULT_SETTINGS);
@@ -250,9 +256,9 @@ const SettingsPage = () => {
       } catch (err) {
         console.error('Error fetching settings:', err);
         setSettings(DEFAULT_SETTINGS);
-  } finally {
-    setLoading(false);
-  }
+      } finally {
+        setLoading(false);
+      }
     };
     fetchSettings();
   }, []);
@@ -325,6 +331,43 @@ const SettingsPage = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // 🛡️ HARDENING: Garante que temos um store_id UUID válido em mãos antes de salvar no banco local
+      let resolvedStoreId = settings.store_id;
+
+      if (!resolvedStoreId || resolvedStoreId.trim() === '') {
+        resolvedStoreId =
+          localStorage.getItem('vidlytics_current_store_id') ||
+          localStorage.getItem('current_store_id') ||
+          localStorage.getItem('store_id') || '';
+      }
+
+      // Se ainda estiver vazio, resgata via usuário logado no Supabase
+      if ((!resolvedStoreId || resolvedStoreId.trim() === '') && supabase) {
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+        if (user) {
+          const { data: userStore } = await supabase
+            .from('stores')
+            .select('id')
+            .eq('owner_user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (userStore) {
+            resolvedStoreId = userStore.id;
+            localStorage.setItem('vidlytics_current_store_id', userStore.id);
+          }
+        }
+      }
+
+      // Se de tudo falhar, barra antes de estourar a validação do banco local
+      if (!resolvedStoreId || resolvedStoreId.trim() === '') {
+        toast.error('Não foi possível identificar o ID da loja ativa. Por favor, recarregue a página.');
+        setSaving(false);
+        return;
+      }
+
       let finalLogoUrl = settings.store_logo_url || "";
 
       if (selectedLogoFile) {
@@ -373,6 +416,7 @@ const SettingsPage = () => {
       const now = new Date().toISOString();
       const updatedSettings: AppSettings = {
         ...settings,
+        store_id: resolvedStoreId, // 👈 Injetando o ID correto garantido
         store_url: finalStoreUrl,
         store_logo_url: finalLogoUrl,
         updated_at: now,
@@ -382,7 +426,7 @@ const SettingsPage = () => {
       await db.generalSettings.save(payload as GeneralSettings);
 
       // ── Sincronização atômica na tabela principal stores ──
-      if (supabase && settings.store_id) {
+      if (supabase && resolvedStoreId) {
         const sectorValue =
           selectedSectorId === 'none' ? null : selectedSectorId || null;
 
@@ -396,7 +440,7 @@ const SettingsPage = () => {
             sector_id: sectorValue,
             updated_at: now,
           })
-          .eq('id', settings.store_id);
+          .eq('id', resolvedStoreId);
       }
 
       // Atualiza o estado local para exibir a URL formatada
@@ -730,10 +774,12 @@ const SettingsPage = () => {
               <Textarea
                 value={settings?.whatsapp_message_template ?? ''}
                 onChange={e =>
-                  setSettings(prev => ({
-                    ...prev,
-                    whatsapp_message_template: e.target.value,
-                  }))
+                  setSettings(prev =>
+                    setSettings(prev => ({
+                      ...prev,
+                      whatsapp_message_template: e.target.value,
+                    }))
+                  )
                 }
                 rows={3}
                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
