@@ -8,65 +8,57 @@ import {
 import { useTenant } from '@/context/TenantContext';
 import { supabase } from '@/lib/supabase';
 
-// ── ÍCONES EXCLUSIVOS CUSTOMIZADOS (LEVES, SEM FUNDO E PIXEL-PERFECT) ──
+// ── ÍCONES EXCLUSIVOS CUSTOMIZADOS (TRAÇOS FINOS DE 1.2 E ALTA FIDELIDADE) ──
 
-// Ícone: Flutuante (Retângulo vertical + Linhas de clique + Mão apontando)
+// Ícone: Flutuante (Card vertical esquerdo + Linhas de clique + Mão apontando na diagonal)
 const FlutuanteIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    {/* Retângulo vertical do celular/card */}
-    <rect x="3.5" y="3" width="7.5" height="14" rx="1.5" />
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    {/* Card vertical esquerdo */}
+    <rect x="3" y="3" width="7" height="18" rx="2" />
     
-    {/* Linhas de clique */}
-    <path d="M7.5 13.5l-1.5-.8" />
-    <path d="M7.5 16l-2 .5" />
-    <path d="M9 11.5l-.5-1.5" />
+    {/* Linhas de clique irradiando à esquerda da mão */}
+    <path d="M9.5 11 L8 10" />
+    <path d="M9 13.5 L7.5 13.5" />
+    <path d="M9.5 16 L8 17" />
 
-    {/* Mão de clique importada e rotacionada perfeitamente para tocar o card */}
-    <g transform="translate(10, 15) rotate(-30) scale(0.48)">
-      <path
-        d="M12 15V11a1.5 1.5 0 0 1 3 0v4m-3-1.5V8a1.5 1.5 0 0 1 3 0v7m-3-3V6a1.5 1.5 0 0 1 3 0v9m-6 1.5a3 3 0 0 1 3-3V3.5a1.5 1.5 0 0 1 3 0V15.5c0 3-2.5 5.5-5.5 5.5S6 18.5 6 15.5"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    {/* Mão de clique diagonal ultra-precisa */}
+    <g transform="translate(4.2, 7.5)">
+      <path d="M12 11l-3.5-3.5a1.5 1.5 0 10-2.12 2.12L9.88 13H5.5a1.5 1.5 0 000 3h6.38l-3.44 3.44a1.5 1.5 0 102.12 2.12l5.66-5.66a3 3 0 000-4.24l-4.22-4.22z" />
     </g>
   </svg>
 );
 
-// Ícone: Carrossel (3 retângulos verticais lado a lado)
+// Ícone: Carrossel (3 cards verticais perfeitamente alinhados)
 const CarrosselIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect x="2" y="5" width="5.5" height="14" rx="1.5" />
-    <rect x="9.25" y="5" width="5.5" height="14" rx="1.5" />
-    <rect x="16.5" y="5" width="5.5" height="14" rx="1.5" />
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="3" y="5" width="4.8" height="14" rx="2" />
+    <rect x="9.6" y="5" width="4.8" height="14" rx="2" />
+    <rect x="16.2" y="5" width="4.8" height="14" rx="2" />
   </svg>
 );
 
-// Ícone: Carrossel Dinâmico (Card do meio maior em destaque + Brilhos)
+// Ícone: Carrossel Dinâmico (Card do meio em destaque + Brilhos sólidos)
 const CarrosselDinamicoIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     {/* Retângulos estilo carrossel */}
-    <rect x="2" y="6.5" width="5.5" height="11" rx="1.5" />
-    <rect x="9.25" y="3.5" width="5.5" height="14" rx="1.5" />
-    <rect x="16.5" y="6.5" width="5.5" height="11" rx="1.5" />
+    <rect x="3" y="6" width="4.8" height="12" rx="2" />
+    <rect x="9.6" y="3.5" width="4.8" height="17" rx="2" />
+    <rect x="16.2" y="6" width="4.8" height="12" rx="2" />
 
     {/* Brilhos estilizados com preenchimento limpo */}
     <path d="M15 1 Q15 3.5 17.5 3.5 Q15 3.5 15 6 Q15 3.5 12.5 3.5 Q15 3.5 15 1 Z" fill="currentColor" stroke="none" />
-    <path d="M19 3.5 Q19 5 20.5 5 Q19 5 19 6.5 Q19 5 17.5 5 Q19 5 19 3.5 Z" fill="currentColor" stroke="none" />
-    <path d="M11.5 7.5 Q11.5 8.5 12.5 8.5 Q11.5 8.5 11.5 9.5 Q11.5 8.5 10.5 8.5 Q11.5 8.5 11.5 7.5 Z" fill="currentColor" stroke="none" />
-    <path d="M16 8.5 Q16 9.5 17 9.5 Q16 9.5 16 10.5 Q16 9.5 15 9.5 Q16 9.5 16 8.5 Z" fill="currentColor" stroke="none" />
+    <path d="M21 3 Q21 4.5 22.5 4.5 Q21 4.5 21 6 Q21 4.5 19.5 4.5 Q21 4.5 21 3 Z" fill="currentColor" stroke="none" />
+    <path d="M12.5 7 Q12.5 8 13.5 8 Q12.5 8 12.5 9 Q12.5 8 11.5 8 Q12.5 8 12.5 7 Z" fill="currentColor" stroke="none" />
   </svg>
 );
 
-// Ícone: Grade (4 quadrados arredondados 2x2 perfeitos)
+// Ícone: Grade (4 quadrados arredondados de alta fidelidade)
 const GradeIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect x="2.5" y="2.5" width="8" height="8" rx="2" />
-    <rect x="13.5" y="2.5" width="8" height="8" rx="2" />
-    <rect x="2.5" y="13.5" width="8" height="8" rx="2" />
-    <rect x="13.5" y="13.5" width="8" height="8" rx="2" />
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="3" y="3" width="7.5" height="7.5" rx="2" />
+    <rect x="13.5" y="3" width="7.5" height="7.5" rx="2" />
+    <rect x="3" y="13.5" width="7.5" height="7.5" rx="2" />
+    <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2" />
   </svg>
 );
 
