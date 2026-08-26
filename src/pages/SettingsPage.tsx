@@ -278,13 +278,21 @@ const SettingsPage = () => {
   // Função auxiliar para garantir o formato correto da URL com HTTP/HTTPS
   const formatStoreUrl = (url: string | null): string => {
     if (!url) return "";
-    const trimmed = url.trim();
-    if (trimmed === "") return "";
     
-    // Se não começar com http:// ou https://, adiciona https://
-    if (!/^https?:\/\//i.test(trimmed)) {
-      return `https://${trimmed}`;
+    // 1. Remove espaços e força tudo em letras minúsculas (essencial para o Preview/Selector)
+    let trimmed = url.trim().toLowerCase();
+    if (trimmed === "") return "";
+
+    // 2. Se não começar com http:// ou https://, força a adição do https://
+    if (!/^https?:\/\//.test(trimmed)) {
+      trimmed = `https://${trimmed}`;
     }
+
+    // 3. Remove barras extras no final (ex: "https://useanny.com/" vira "https://useanny.com")
+    if (trimmed.endsWith("/")) {
+      trimmed = trimmed.slice(0, -1);
+    }
+
     return trimmed;
   };
 
