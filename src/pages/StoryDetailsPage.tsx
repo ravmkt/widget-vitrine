@@ -718,42 +718,11 @@ const SelectorModal = () => {
             <span className={cn('text-[10px] font-black uppercase tracking-widest', formData.active ? 'text-emerald-500' : 'text-slate-400')}>{formData.active ? 'Status: Ativo' : 'Status: Inativo'}</span>
             <button type="button" onClick={() => setFormData((prev) => ({ ...prev, active: !prev.active }))} className={cn('h-6 w-12 rounded-full p-1 transition-all duration-300', formData.active ? 'bg-emerald-500' : 'bg-slate-300')}><div className={cn('h-4 w-4 rounded-full bg-white transition-all duration-300', formData.active ? 'translate-x-6' : 'translate-x-0')} /></button>
           </div>
-{!isCreate ? (
-          <div className="hidden items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-1 md:flex">
-            <input
-              type="url"
-              // ✅ Agora exibe a URL real da loja ativa apenas como exemplo (placeholder) em cinza claro
-              placeholder={storeRealUrl || currentStore?.url ? `Ex: ${storeRealUrl || currentStore?.url}` : "Cole a URL de teste (ex: link de um produto)..."}
-              value={previewUrl}
-              onChange={(e) => setPreviewUrl(e.target.value)}
-              className="w-64 bg-transparent px-3 py-1 text-xs font-bold text-slate-700 outline-none placeholder:text-slate-400"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                // ✅ Se o usuário não digitou nada no input, assume o fallback automático da URL real da loja
-                let targetUrl = previewUrl.trim() || storeRealUrl.trim() || currentStore?.url?.trim() || "";
-                if (!targetUrl) {
-                  alert("Por favor, configure a URL da sua loja nas Configurações ou digite uma URL de teste.");
-                  return;
-                }
-                if (!/^https?:\/\//i.test(targetUrl)) {
-                  targetUrl = "https://" + targetUrl;
-                }
-                const connector = targetUrl.includes("?") ? "&" : "?";
-                const finalPreviewUrl = targetUrl + connector + "vidlytics_preview_story_id=" + stableStoryId;
-                window.open(finalPreviewUrl, "_blank", "noopener,noreferrer");
-              }}
-              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:bg-slate-800"
-            >
-              🚀 Simular Preview
-            </button>
-          </div>
-        ) : (
-          <div className="hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 md:block">
-            💾 Salve para habilitar o preview
-          </div>
-        )}
+{isCreate && (
+  <div className="hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 md:block">
+    💾 Salve para habilitar o preview
+  </div>
+)}
 
 <button type="button" onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 transition-all hover:bg-[#0E4787] disabled:opacity-60">{isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}{isSaving ? 'Salvando...' : 'Salvar Alterações'}</button>
         </div>
