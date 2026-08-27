@@ -731,6 +731,52 @@ const SelectorModal = () => {
       <form onSubmit={handleSave}>
         <div className="grid grid-cols-1 gap-8">
           <div className="space-y-8">
+{/* ── SIMULAR PREVIEW ── */}
+{!isCreate && (
+  <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="mb-4 flex items-center gap-3">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-[#0094EB]">
+        <Rocket size={20} />
+      </div>
+      <div>
+        <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">
+          Simular Preview
+        </h3>
+        <p className="text-xs font-bold text-slate-400">
+          Veja como ficará na sua loja sem publicar
+        </p>
+      </div>
+    </div>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <input
+        type="url"
+        placeholder={storeRealUrl || currentStore?.url ? `Ex: ${storeRealUrl || currentStore?.url}` : "Cole a URL de teste (ex: link de um produto)..."}
+        value={previewUrl}
+        onChange={(e) => setPreviewUrl(e.target.value)}
+        className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB] placeholder:text-slate-400"
+      />
+      <button
+        type="button"
+        onClick={() => {
+          let targetUrl = previewUrl.trim() || storeRealUrl.trim() || currentStore?.url?.trim() || "";
+          if (!targetUrl) {
+            alert("Por favor, configure a URL da sua loja nas Configurações ou digite uma URL de teste.");
+            return;
+          }
+          if (!/^https?:\/\//i.test(targetUrl)) {
+            targetUrl = "https://" + targetUrl;
+          }
+          const connector = targetUrl.includes("?") ? "&" : "?";
+          const finalPreviewUrl = targetUrl + connector + "vidlytics_preview_story_id=" + stableStoryId;
+          window.open(finalPreviewUrl, "_blank", "noopener,noreferrer");
+        }}
+        className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3.5 text-sm font-black text-white shadow-xl transition-all hover:bg-slate-800 shrink-0"
+      >
+        🚀 Simular Preview
+      </button>
+    </div>
+  </div>
+)}
             {/* ── DESIGN E FORMATO ── */}
             <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
               <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-6"><Layout className="text-[#0094EB]" size={20} /><h3 className="text-lg font-black uppercase tracking-tight text-slate-800">Design e Formato</h3></div>
