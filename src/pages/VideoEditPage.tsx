@@ -151,14 +151,6 @@ const isTemporaryUrl = (url: string) => {
   return url.startsWith('blob:') || url.startsWith('data:');
 };
 
-// ──────────────────────────────────────────────
-// 🆕 NOVAS FUNÇÕES — Cache de thumbnail externa
-// ──────────────────────────────────────────────
-
-/**
- * Verifica se a URL de thumbnail é de CDN externo com token que expira
- * (Instagram, TikTok, Facebook). Essas URLs precisam ser cacheadas no Storage.
- */
 const isExternalCdnUrl = (url: string) => {
   if (!url) return false;
   return !url.includes('supabase.co/storage') &&
@@ -167,10 +159,6 @@ const isExternalCdnUrl = (url: string) => {
       url.includes('fbcdn.net'));
 };
 
-/**
- * Baixa uma thumbnail de CDN externo e faz upload para o Supabase Storage,
- * retornando a URL permanente que nunca expira.
- */
 const cacheThumbnailFromExternalUrl = async (imageUrl: string, storeId: string) => {
   try {
     const response = await fetch(imageUrl);
@@ -187,8 +175,6 @@ const cacheThumbnailFromExternalUrl = async (imageUrl: string, storeId: string) 
     return null;
   }
 };
-
-// ──────────────────────────────────────────────
 
 const VideoEditPage = () => {
   const { storeId: tenantStoreId, loading: tenantLoading } = useTenant();
@@ -536,9 +522,13 @@ const VideoEditPage = () => {
 
       let finalVideoUrl = '';
       let finalThumbnailUrl = formData.thumbnail_url || '';
+      let videoFileSize = 0;
+      let thumbnailFileSize = 0;
 
+      // 1. Processamento e Upload do Arquivo de Vídeo
       if (formData.origin === 'upload') {
         if (formData.video_file) {
+          videoFileSize = formData.video_file.size;
           finalVideoUrl = await uploadFileToSupabase(
             formData.video_file,
             safeStoreId,
@@ -546,15 +536,21 @@ const VideoEditPage = () => {
           );
         } else if (!isCreate && video?.video_url) {
           finalVideoUrl = video.video_url;
+          videoFileSize = (video as any).file_size || 0;
         }
 
         if (formData.thumbnail_file) {
+          thumbnailFileSize = formData.thumbnail_file.size;
           finalThumbnailUrl = await uploadFileToSupabase(
             formData.thumbnail_file,
             safeStoreId,
             'thumbnails',
           );
         } else if (finalThumbnailUrl.startsWith('data:image/')) {
+          const response = await fetch(finalThumbnailUrl);
+          const blob = await response.blob();
+          thumbnailFileSize = blob.size;
+
           finalThumbnailUrl = await uploadDataUrlToSupabase(
             finalThumbnailUrl,
             safeStoreId,
@@ -562,17 +558,24 @@ const VideoEditPage = () => {
           );
         } else if (finalThumbnailUrl.startsWith('blob:')) {
           finalThumbnailUrl = '';
+        } else if (!isCreate && video?.thumbnail_url) {
+          thumbnailFileSize = (video as any).thumbnail_file_size || 0;
         }
       } else if (formData.origin === 'external_url') {
         finalVideoUrl = normalizeVideoUrl(formData.video_url);
 
         if (formData.thumbnail_file) {
+          thumbnailFileSize = formData.thumbnail_file.size;
           finalThumbnailUrl = await uploadFileToSupabase(
             formData.thumbnail_file,
             safeStoreId,
             'thumbnails',
           );
         } else if (finalThumbnailUrl.startsWith('data:image/')) {
+          const response = await fetch(finalThumbnailUrl);
+          const blob = await response.blob();
+          thumbnailFileSize = blob.size;
+
           finalThumbnailUrl = await uploadDataUrlToSupabase(
             finalThumbnailUrl,
             safeStoreId,
@@ -580,34 +583,62 @@ const VideoEditPage = () => {
           );
         } else if (finalThumbnailUrl.startsWith('blob:')) {
           finalThumbnailUrl = '';
+        } else if (!isCreate && video?.thumbnail_url) {
+          thumbnailFileSize = (video as any).thumbnail_file_size || 0;
         }
       }
 
-      // ──────────────────────────────────────────────────────────
-      // 🆕 PASSO 1: Cacheia thumbnail de CDN externo no Storage
-      // ──────────────────────────────────────────────────────────
+      // 2. Cacheamento de Thumbnail Externa (Instagram, TikTok, etc.)
       if (finalThumbnailUrl && isExternalCdnUrl(finalThumbnailUrl)) {
         const cached = await cacheThumbnailFromExternalUrl(finalThumbnailUrl, safeStoreId);
         if (cached) {
           finalThumbnailUrl = cached;
+          try {
+            const res = await fetch(cached, { method: 'HEAD' });
+            const cl = res.headers.get('content-length');
+            if (cl) thumbnailFileSize = parseInt(cl, 10);
+          } catch {
+            thumbnailFileSize = 120 * 1024; // fallback de 120 KB aproximados
+          }
         }
       }
 
-      // ──────────────────────────────────────────────────────────
-      // PASSO 2: Thumbnail — gera do vídeo ou usa Edge Function
-      // ──────────────────────────────────────────────────────────
+      // 3. Captura e Upload Automático de Frame de Vídeo para Thumbnail
       if (!finalThumbnailUrl && finalVideoUrl) {
-        finalThumbnailUrl = await generateAndUploadThumbnailFromUrl(finalVideoUrl, safeStoreId);
+        try {
+          const thumbnail = await generateVideoThumbnail(finalVideoUrl);
+          if (thumbnail) {
+            const response = await fetch(thumbnail);
+            const blob = await response.blob();
+            thumbnailFileSize = blob.size;
+            finalThumbnailUrl = await uploadDataUrlToSupabase(thumbnail, safeStoreId, 'thumbnails');
+          }
+        } catch (err) {
+          console.warn('Erro ao gerar thumbnail local de frame:', err);
+        }
 
         if (!finalThumbnailUrl) {
           const fallbackUrl = await fetchThumbnailViaEdgeFunction(finalVideoUrl, safeStoreId);
           if (fallbackUrl) {
             finalThumbnailUrl = fallbackUrl;
+            if (fallbackUrl.includes('supabase')) {
+              try {
+                const res = await fetch(fallbackUrl, { method: 'HEAD' });
+                const cl = res.headers.get('content-length');
+                if (cl) thumbnailFileSize = parseInt(cl, 10);
+              } catch {
+                thumbnailFileSize = 120 * 1024;
+              }
+            }
           }
         }
       }
 
-      if (finalThumbnailUrl.startsWith('data:image/')) {
+      // 4. Verificação extra para data:image em thumbnails de fallback
+      if (finalThumbnailUrl && finalThumbnailUrl.startsWith('data:image/')) {
+        const response = await fetch(finalThumbnailUrl);
+        const blob = await response.blob();
+        thumbnailFileSize = blob.size;
         finalThumbnailUrl = await uploadDataUrlToSupabase(
           finalThumbnailUrl,
           safeStoreId,
@@ -620,7 +651,8 @@ const VideoEditPage = () => {
 
       const now = new Date().toISOString();
 
-      const videoData: Partial<Video> = {
+      // Monta o payload incluindo a computação do tamanho dos arquivos de vídeo e da thumbnail
+      const videoData: any = {
         title: formData.title.trim(),
         source_type: sourceType,
         video_url: finalVideoUrl,
@@ -629,6 +661,8 @@ const VideoEditPage = () => {
         product_id: formData.product_id || null,
         store_id: safeStoreId,
         active: formData.active,
+        file_size: videoFileSize || null,
+        thumbnail_file_size: thumbnailFileSize || null,
       };
 
       if (isCreate) {
@@ -669,12 +703,14 @@ const VideoEditPage = () => {
     : '';
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20">
+    <div className="space-y-8 animate-fade-in pb-20 font-sans">
+      
+      {/* ── SEÇÃO SUPERIOR: TÍTULO DA PÁGINA + BOTÃO SALVAR (TOPO) ── */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/gallery')}
-            className="p-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-all"
+            className="p-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
           >
             <ArrowLeft size={18} />
           </button>
@@ -687,15 +723,17 @@ const VideoEditPage = () => {
         <button
           onClick={handleSave}
           disabled={isSaving || tenantLoading}
-          className="bg-[#0094EB] hover:bg-[#0E4787] disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-blue-100 transition-all flex items-center gap-2"
+          className="bg-[#0094EB] hover:bg-[#0081cc] disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer"
         >
-          {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+          {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
           {isSaving ? 'Salvando...' : 'Salvar Alterações'}
         </button>
       </div>
 
+      {/* ── CARD PRINCIPAL COM CAMPOS DE CONFIGURAÇÃO ── */}
       <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
         <form onSubmit={handleSave} className="space-y-6">
+          
           {/* Título do Vídeo */}
           <div className="space-y-4">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -765,7 +803,7 @@ const VideoEditPage = () => {
               {formData.video_url && (
                 <video
                   src={formData.video_url}
-                  className="w-32 rounded-xl border border-slate-200"
+                  className="w-32 rounded-xl border border-slate-200 animate-fade-in"
                   muted
                   controls
                 />
@@ -960,6 +998,19 @@ const VideoEditPage = () => {
             </div>
           )}
         </form>
+      </div>
+
+      {/* ── BOTÃO DE SALVAR ALTERAÇÕES (RODAPÉ - TOTALMENTE PADRONIZADO E GÊMEO AO TOPO) ── */}
+      <div className="flex justify-end pt-4">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isSaving || tenantLoading}
+          className="bg-[#0094EB] hover:bg-[#0081cc] disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer"
+        >
+          {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+          {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+        </button>
       </div>
 
       <SuccessDialog
