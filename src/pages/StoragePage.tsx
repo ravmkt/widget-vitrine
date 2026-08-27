@@ -162,6 +162,99 @@ const generateVideoThumbnail = (file: File): Promise<Blob> => {
       reject(err);
     };
 
+// Utilitário para extrair o primeiro frame de um vídeo hospedado via URL pública (com suporte a CORS)
+const generateVideoThumbnailFromUrl = (url: string): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous'; // Essencial para evitar bloqueio de Canvas CORS taints
+    video.preload = 'auto';
+    video.muted = true;
+    video.playsInline = true;
+    video.src = url;
+
+    let captured = false;
+    let timeoutId: any = null;
+
+    const captureFrame = () => {
+      if (captured) return;
+      captured = true;
+      if (timeoutId) clearTimeout(timeoutId);
+
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 360;
+        const ctx = canvas.getContext('2d');
+
+        if (ctx && canvas.width > 0 && canvas.height > 0) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(
+            (blob) => {
+              if (blob && blob.size > 0) {
+                resolve(blob);
+              } else {
+                reject(new Error('Blob gerado pela URL está vazio.'));
+              }
+            },
+            'image/jpeg',
+            0.85
+          );
+        } else {
+          reject(new Error('Dimensões do vídeo inválidas para captura via URL.'));
+        }
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    video.onloadeddata = () => {
+      try {
+        video.currentTime = 0.001;
+      } catch (_) {
+        captureFrame();
+      }
+    };
+
+    video.onseeked = () => {
+      captureFrame();
+    };
+
+    video.onerror = (err) => {
+      if (captured) return;
+      captured = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      reject(err);
+    };
+
+    timeoutId = setTimeout(() => {
+      if (!captured) {
+        if (video.readyState >= 2) {
+          captureFrame();
+        } else {
+          captured = true;
+          reject(new Error('Timeout ao decodificar frame do vídeo por URL.'));
+        }
+      }
+    }, 4000);
+  });
+};
+
+// Chamada à Edge Function do Supabase para processar o vídeo no servidor se o navegador falhar
+const fetchThumbnailFromEdge = async (videoUrl: string, storeId: string): Promise<string | null> => {
+  try {
+    if (!supabase) return null;
+    const { data, error } = await supabase.functions.invoke('fetch-thumbnail', {
+      body: { videoUrl, storeId },
+    });
+    if (!error && data?.thumbnailUrl) {
+      return data.thumbnailUrl;
+    }
+  } catch (e) {
+    console.warn('[Vidlytics Storage] Falha ao chamar a Edge Function de thumbnail:', e);
+  }
+  return null;
+};
+
     // Timeout defensivo de 4 segundos com guarda de decodificação
     timeoutId = setTimeout(() => {
       if (!captured) {
