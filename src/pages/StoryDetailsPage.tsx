@@ -488,10 +488,13 @@ const polling = setInterval(async () => {
     if (result.success && selectorCss) {
       clearInterval(polling);
 
-      // ✅ Atualiza o local com o seletor capturado
+      // ① Atualiza o estado imediatamente (campo preenche na hora)
+      const baseLocation = locations[0];
+      const locId = isValidUuid(baseLocation?.id) ? baseLocation.id : generateUuid();
+
       setLocations((prev) => {
         const base = prev[0] || {
-          id: generateUuid(),
+          id: locId,
           store_id: resolvedStoreId || '',
           story_id: stableStoryId,
           position: 'beforeend',
@@ -501,12 +504,34 @@ const polling = setInterval(async () => {
         return [{ ...base, selector: selectorCss }];
       });
 
+      // ② Persiste no banco real (display_locations) para sobreviver ao loadStoryData
+      try {
+        const resolvedStore = resolvedStoreId || result.data?.store_id;
+        const resolvedStory = stableStoryId || result.data?.story_id;
+
+        if (resolvedStore && resolvedStory) {
+          await (db as any).displayLocations.save({
+            id: locId,
+            store_id: resolvedStore,
+            story_id: resolvedStory,
+            location: baseLocation?.location || baseLocation?.position || 'afterend',
+            selector: selectorCss,
+            position: baseLocation?.position || 'beforeend',
+            active: true,
+            created_at: baseLocation?.created_at || new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+          console.log('[Vidlytics] Seletor persistido no banco ✔', selectorCss);
+        }
+      } catch (saveErr) {
+        console.error('[Vidlytics] Erro ao persistir seletor:', saveErr);
+      }
+
       setSelectorLoading(false);
       setSelectorUrl("");
-      
-      // ✅ FORÇA o sincronismo visual (quebra o closure antigo)
-      // Se o campo usa localStorage, limpa e repopula:
-      // localStorage.setItem('sel_selector_' + stableStoryId, selectorCss);
+
+      // ③ Recarrega os dados para refletir o banco atualizado
+      loadStoryData();
     }
   } catch (err) {
     // ignora falhas de rede no polling
