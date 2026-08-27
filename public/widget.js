@@ -5805,37 +5805,42 @@ function initWidget() {
     return;
   }
 
-  readStoreStatus().then(function (storeData) {
-    if (hasSupabase && !storeData) {
-      console.warn('[Vidlytics] Widget inativo: não foi possível validar a autenticidade da loja.');
-      return;
-    }
-
-    if (storeData && isStoreBlocked(storeData)) {
-      console.warn('[Vidlytics] Widget inativo: assinatura cancelada, pendente ou trial encerrado.');
-      return;
-    }
-
-return readAppearance().then(function (appearance) {
-      currentAppearance = appearance;
-
-      if (storeData) {
-        if (storeData.logo_url) storeLogoUrl = normalizeMediaUrl(storeData.logo_url);
-        if (storeData.name) storeName = storeData.name;
+    readStoreStatus().then(function (storeData) {
+      if (hasSupabase && !storeData) {
+        console.warn('[Vidlytics] Widget inativo: não foi possível validar a autenticidade da loja.');
+        return;
       }
 
-return readStoreSettings().then(function (settings) {
-        autoApproveComments = Boolean(settings.auto_approve_comments);
-        storeWhatsappNumber = settings.whatsapp_number || '';
-        storeWhatsappMessage = settings.whatsapp_message || '';
-                if (settings.store_logo_url || settings.logo_url) {
-          storeLogoUrl = normalizeMediaUrl(settings.store_logo_url || settings.logo_url);
+      if (storeData && isStoreBlocked(storeData)) {
+        console.warn('[Vidlytics] Widget inativo: assinatura cancelada, pendente ou trial encerrado.');
+        return;
+      }
+
+      return readStoreSettings().then(function (settings) {
+        if (settings.widget_enabled === false) {
+          console.log('[Vidlytics] Widget desativado pela loja.');
+          return;
         }
-        if (settings.store_name) {
-          storeName = settings.store_name;
-        }
-      }).catch(function () {}).then(function () {
-                    return readStories();
+
+        return readAppearance().then(function (appearance) {
+          currentAppearance = appearance;
+
+          if (storeData) {
+            if (storeData.logo_url) storeLogoUrl = normalizeMediaUrl(storeData.logo_url);
+            if (storeData.name) storeName = storeData.name;
+          }
+
+          autoApproveComments = Boolean(settings.auto_approve_comments);
+          storeWhatsappNumber = settings.whatsapp_number || '';
+          storeWhatsappMessage = settings.whatsapp_message || '';
+          if (settings.store_logo_url || settings.logo_url) {
+            storeLogoUrl = normalizeMediaUrl(settings.store_logo_url || settings.logo_url);
+          }
+          if (settings.store_name) {
+            storeName = settings.store_name;
+          }
+
+          return readStories();
     }).then(function (stories) {
       currentStories = stories || [];
 
