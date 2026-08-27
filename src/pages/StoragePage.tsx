@@ -1319,13 +1319,14 @@ export default function StoragePage() {
 
   return (
     <div className="animate-fade-in space-y-8 pb-20 font-sans">
-      {/* ── CABEÇALHO DA PÁGINA ── */}
+      {/* ── CABEÇALHO DA PÁGINA (Sincronizado perfeitamente com o layout dos Stories) ── */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Armazenamento
           </h1>
-          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">
+          {/* Subtítulo perfeitamente padronizado com o tamanho de Stories */}
+          <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-[#c0c5d4] leading-relaxed">
             Gerencie os vídeos e imagens hospedados no seu plano e monitore o uso de espaço.
           </p>
         </div>
@@ -1643,10 +1644,10 @@ export default function StoragePage() {
       {/* ── CARD PRINCIPAL UNIFICADO (Tabela e Busca) ── */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         
-        {/* BARRA INTERNA DE FILTROS E BUSCA (O Input se estende totalmente usando flex-1) */}
+        {/* BARRA INTERNA DE FILTROS E BUSCA (Padrão exato do print com filtros independentes) */}
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center border-b border-slate-100 dark:border-white/5 pb-5">
           
-          {/* Input de Busca Flexível (Estica até o limite dos botões) */}
+          {/* Input de Busca Flexível (Usa flex-1 para se estender totalmente) */}
           <div className="relative flex-1 w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8a90a0]" size={18} />
             <input
@@ -1654,20 +1655,20 @@ export default function StoragePage() {
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Pesquisar pelo nome do arquivo..."
-              className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] pl-12 pr-4 py-3 text-sm font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus:bg-white dark:focus:bg-[#0f1220] transition-all"
+              className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#0f1220] pl-12 pr-4 py-3.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus:bg-white dark:focus:bg-[#0f1220] transition-all"
             />
           </div>
 
-          {/* CONTAINER ÚNICO CINZA QUE AGRUPA OS FILTROS (Sem separação) */}
-          <div className="flex items-center bg-[#F1F5F9] dark:bg-[#0f1220] p-1 rounded-xl border border-slate-200/60 dark:border-white/5 shrink-0 w-full md:w-auto">
+          {/* BOTÕES DE FILTRO INDEPENDENTES E SEPARADOS (Padrão exato do print de Stories) */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full md:w-auto">
             <button
               type="button"
               onClick={() => setSelectedType('all')}
               className={cn(
-                "rounded-lg px-6 py-2 text-[13px] font-black uppercase tracking-wider transition-all text-center flex-1 md:flex-initial cursor-pointer",
+                "rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer",
                 selectedType === 'all'
-                  ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30"
-                  : "text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white bg-transparent"
+                  ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/10 dark:shadow-orange-500/20"
+                  : "bg-[#F8FAFC] dark:bg-[#0f1220] text-slate-400 dark:text-[#8a90a0] hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent"
               )}
             >
               Todos
@@ -1676,10 +1677,10 @@ export default function StoragePage() {
               type="button"
               onClick={() => setSelectedType('video')}
               className={cn(
-                "flex items-center justify-center gap-1.5 rounded-lg px-6 py-2 text-[13px] font-black uppercase tracking-wider transition-all text-center flex-1 md:flex-initial cursor-pointer",
+                "flex items-center justify-center gap-1.5 rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer",
                 selectedType === 'video'
-                  ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30"
-                  : "text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white bg-transparent"
+                  ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/10 dark:shadow-orange-500/20"
+                  : "bg-[#F8FAFC] dark:bg-[#0f1220] text-slate-400 dark:text-[#8a90a0] hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent"
               )}
             >
               <FileVideo size={14} />
@@ -1689,10 +1690,10 @@ export default function StoragePage() {
               type="button"
               onClick={() => setSelectedType('image')}
               className={cn(
-                "flex items-center justify-center gap-1.5 rounded-lg px-6 py-2 text-[13px] font-black uppercase tracking-wider transition-all text-center flex-1 md:flex-initial cursor-pointer",
+                "flex items-center justify-center gap-1.5 rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer",
                 selectedType === 'image'
-                  ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30"
-                  : "text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white bg-transparent"
+                  ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/10 dark:shadow-orange-500/20"
+                  : "bg-[#F8FAFC] dark:bg-[#0f1220] text-slate-400 dark:text-[#8a90a0] hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent"
               )}
             >
               <FileImage size={14} />
