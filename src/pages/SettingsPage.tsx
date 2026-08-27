@@ -23,13 +23,12 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { RefreshCw, Loader2, Copy, X, Image, Sun, Moon } from 'lucide-react';
+import { RefreshCw, Loader2, Copy, X, Image, Sun, Moon, Save, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useTenant } from '@/context/TenantContext'; // 👈 Importamos o contexto central de Tenant
+import { useTenant } from '@/context/TenantContext';
 
 const LOGO_BUCKET = "store-assets";
 
-// ── Interface local (mantida para compatibilidade com o JSX) ──
 interface AppSettings {
   id: string;
   store_id: string;
@@ -88,8 +87,6 @@ const DEFAULT_SETTINGS: AppSettings = {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
-
-// ── Mapeamento: GeneralSettings (banco) ↔ AppSettings (página) ──
 
 const generalSettingsToAppSettings = (gs: GeneralSettings): AppSettings => ({
   id: gs.id || '',
@@ -151,12 +148,8 @@ const appSettingsToGeneralSettings = (
   public_live_key: app.public_live_key || '',
 });
 
-// ── Componente ──
-
 const SettingsPage = () => {
   const navigate = useNavigate();
-
-  // ── Integração de contexto global do Tenant (Multi-store) ──
   const { storeId: tenantStoreId, currentStore, loading: tenantLoading } = useTenant();
 
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
@@ -165,14 +158,10 @@ const SettingsPage = () => {
   const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
 
-  // ── NOVO: Setor da loja ──
   const [sectors, setSectors] = useState<any[]>([]);
   const [selectedSectorId, setSelectedSectorId] = useState<string>('');
   const [loadingSectors, setLoadingSectors] = useState(true);
 
-  // ═══════════════════════════════════════════════
-  // 🌗 TEMA CLARO / ESCURO
-  // ═══════════════════════════════════════════════
   const [isDark, setIsDark] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('app-theme');
@@ -194,7 +183,6 @@ const SettingsPage = () => {
 
   useEffect(() => {
     const fetchSettings = async () => {
-      // Espera o Tenant Context terminar de carregar os dados
       if (tenantLoading) return;
 
       try {
@@ -213,7 +201,6 @@ const SettingsPage = () => {
             setSettings(loaded);
             setLogoPreview(loaded.store_logo_url || "");
           } else if (currentStore) {
-            // Se as configurações da loja ainda não existem, monta usando a própria store atual
             setSettings({
               ...DEFAULT_SETTINGS,
               store_id: currentStore.id,
@@ -242,7 +229,6 @@ const SettingsPage = () => {
     fetchSettings();
   }, [tenantStoreId, currentStore, tenantLoading]);
 
-  // ── NOVO: Buscar setores e setor atual da loja ──
   useEffect(() => {
     const fetchSectors = async () => {
       if (!supabase) {
@@ -275,24 +261,16 @@ const SettingsPage = () => {
     fetchSectors();
   }, [settings?.store_id, tenantStoreId]);
 
-  // Função auxiliar para garantir o formato correto da URL com HTTP/HTTPS
   const formatStoreUrl = (url: string | null): string => {
     if (!url) return "";
-    
-    // 1. Remove espaços e força tudo em letras minúsculas (essencial para o Preview/Selector)
     let trimmed = url.trim().toLowerCase();
     if (trimmed === "") return "";
-
-    // 2. Se não começar com http:// ou https://, força a adição do https://
     if (!/^https?:\/\//.test(trimmed)) {
       trimmed = `https://${trimmed}`;
     }
-
-    // 3. Remove barras extras no final (ex: "https://useanny.com/" vira "https://useanny.com")
     if (trimmed.endsWith("/")) {
       trimmed = trimmed.slice(0, -1);
     }
-
     return trimmed;
   };
 
@@ -318,7 +296,6 @@ const SettingsPage = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // 🛡️ HARDENING: Alinha o store_id prioritariamente ao ID unificado do Tenant Context
       const resolvedStoreId = tenantStoreId || settings.store_id;
 
       if (!resolvedStoreId || resolvedStoreId.trim() === '') {
@@ -369,13 +346,11 @@ const SettingsPage = () => {
         finalLogoUrl = data.publicUrl;
       }
 
-      // Garante que a URL esteja formatada ao salvar
       const finalStoreUrl = formatStoreUrl(settings.store_url);
-
       const now = new Date().toISOString();
       const updatedSettings: AppSettings = {
         ...settings,
-        store_id: resolvedStoreId, // Injeta o UUID unificado
+        store_id: resolvedStoreId,
         store_url: finalStoreUrl,
         store_logo_url: finalLogoUrl,
         updated_at: now,
@@ -384,7 +359,6 @@ const SettingsPage = () => {
       const payload = appSettingsToGeneralSettings(updatedSettings);
       await db.generalSettings.save(payload as GeneralSettings);
 
-      // ── Sincronização atômica na tabela principal stores ──
       if (supabase && resolvedStoreId) {
         const sectorValue =
           selectedSectorId === 'none' ? null : selectedSectorId || null;
@@ -402,7 +376,6 @@ const SettingsPage = () => {
           .eq('id', resolvedStoreId);
       }
 
-      // Atualiza o estado local para exibir a URL formatada
       setSettings(updatedSettings);
       setSelectedLogoFile(null);
 
@@ -422,7 +395,6 @@ const SettingsPage = () => {
     }
   };
 
-  // Se o Tenant ou as configurações internas ainda estiverem carregando, exibe spinner
   if (loading || tenantLoading)
     return (
       <div className="flex h-[200px] items-center justify-center">
@@ -432,38 +404,6 @@ const SettingsPage = () => {
 
   return (
     <div className="space-y-8 animate-fade-in pb-20 font-sans">
-      {/* ── CABEÇALHO DA PÁGINA COM SELETOR DE TEMA NO CANTO SUPERIOR DIREITO ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Configurações do Sistema
-          </h1>
-          <p className="text-sm font-medium text-slate-500 dark:text-[#c0c5d4] mt-1">
-            Configure dados da loja, módulos ativos, integrações e comportamento global dos vídeos.
-          </p>
-        </div>
-
-        {/* Seletor de Tema Compacto (Pílula) */}
-        <div className="flex items-center gap-1 bg-white dark:bg-[#1a1f35]/90 border border-slate-200 dark:border-white/10 p-1.5 rounded-2xl shadow-xs self-start sm:self-auto shrink-0">
-          <button
-            type="button"
-            onClick={() => setIsDark(false)}
-            className={`p-2 rounded-xl transition-all ${!isDark ? 'bg-slate-100 dark:bg-slate-800 text-amber-500 shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
-            title="Tema Claro"
-          >
-            <Sun size={18} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsDark(true)}
-            className={`p-2 rounded-xl transition-all ${isDark ? 'bg-slate-100 dark:bg-slate-800 text-[#ff7a29] shadow-xs' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
-            title="Tema Escuro"
-          >
-            <Moon size={18} />
-          </button>
-        </div>
-      </div>
-
       <form
         noValidate 
         className="space-y-8"
@@ -472,48 +412,134 @@ const SettingsPage = () => {
           handleSave();
         }}
       >
-        {/* ── 1. STATUS GERAL DO VIDLYTICS (Promovido ao topo) ── */}
-        <div className={`rounded-[2.5rem] border-2 transition-all p-6 sm:p-8 shadow-xs ${settings.widget_enabled ? 'border-emerald-500/20 bg-emerald-500/[0.02] dark:bg-emerald-500/[0.01]' : 'border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a1f35]/80'}`}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
-                Status de Exibição
-              </span>
-              <h2 className="text-xl font-black flex items-center gap-2">
-                {settings.widget_enabled ? (
-                  <span className="text-emerald-500 flex items-center gap-2 text-md font-extrabold">
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+        {/* ── CABEÇALHO DA PÁGINA COM BOTÃO SALVAR INTEGRADO NO TOPO ── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              Configurações do Sistema
+            </h1>
+            <p className="text-sm font-medium text-slate-500 dark:text-[#c0c5d4] mt-1">
+              Configure dados da loja, módulos ativos, integrações e comportamento global dos vídeos.
+            </p>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={saving}
+            className="bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 self-start sm:self-auto shrink-0"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin !text-white" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <Save size={18} />
+                Salvar Configurações
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* ── SEÇÃO SUPERIOR: STATUS E TEMA LADO A LADO ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* CARD DE STATUS GERAL DO VIDLYTICS */}
+          <div className={`rounded-[2.5rem] border-2 transition-all p-6 sm:p-8 shadow-xs flex flex-col justify-between ${settings.widget_enabled ? 'border-emerald-500/20 bg-emerald-500/[0.02] dark:bg-emerald-500/[0.01]' : 'border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a1f35]/80'}`}>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                  Status de Exibição
+                </span>
+                <div className="flex items-center gap-3 bg-slate-100/50 dark:bg-slate-900/40 px-3 py-1.5 rounded-xl border border-slate-200/40 dark:border-white/5">
+                  <span className="text-[10px] font-black uppercase text-slate-500 dark:text-[#8a90a0]">
+                    {settings.widget_enabled ? 'Online' : 'Offline'}
+                  </span>
+                  <Switch
+                    checked={settings?.widget_enabled ?? true}
+                    onCheckedChange={c =>
+                      setSettings(prev => ({ ...prev, widget_enabled: c }))
+                    }
+                    className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <h2 className="text-xl font-black flex items-center gap-2">
+                  {settings.widget_enabled ? (
+                    <span className="text-emerald-500 flex items-center gap-2 text-md font-extrabold">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                      Vidlytics Ativo
                     </span>
-                    Vidlytics Ativo
-                  </span>
-                ) : (
-                  <span className="text-slate-400 dark:text-slate-500 flex items-center gap-2 text-md font-extrabold">
-                    <span className="h-2.5 w-2.5 rounded-full bg-slate-400 dark:bg-slate-500"></span>
-                    Vidlytics Inativo
-                  </span>
-                )}
-              </h2>
-              <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] max-w-2xl leading-relaxed">
-                {settings.widget_enabled
-                  ? 'A vitrine de stories está ativa e renderizando publicamente no seu e-commerce.'
-                  : 'A exibição dos vídeos na sua loja está pausada. Nenhum widget será carregado.'}
-              </p>
-            </div>
-            <div className="flex items-center gap-3 shrink-0 self-end sm:self-center bg-slate-100/50 dark:bg-slate-900/40 px-4 py-2 rounded-2xl border border-slate-200/40 dark:border-white/5">
-              <span className="text-[10px] font-black uppercase text-slate-500 dark:text-[#8a90a0]">
-                {settings.widget_enabled ? 'Online' : 'Offline'}
-              </span>
-              <Switch
-                checked={settings?.widget_enabled ?? true}
-                onCheckedChange={c =>
-                  setSettings(prev => ({ ...prev, widget_enabled: c }))
-                }
-                className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
-              />
+                  ) : (
+                    <span className="text-slate-400 dark:text-slate-500 flex items-center gap-2 text-md font-extrabold">
+                      <span className="h-2.5 w-2.5 rounded-full bg-slate-400 dark:bg-slate-500"></span>
+                      Vidlytics Inativo
+                    </span>
+                  )}
+                </h2>
+                <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] leading-relaxed">
+                  {settings.widget_enabled
+                    ? 'A vitrine de stories está ativa e renderizando publicamente no seu e-commerce.'
+                    : 'A exibição dos vídeos na sua loja está pausada. Nenhum widget será carregado.'}
+                </p>
+              </div>
             </div>
           </div>
+
+          {/* CARD DO TEMA DA INTERFACE */}
+          <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="border-b border-slate-100 dark:border-white/5 pb-2">
+                <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                  <Sun size={18} className="text-[#0094EB] dark:text-[#ff7a29]" /> Tema da Interface
+                </h2>
+                <p className="text-[11px] font-medium text-slate-500 dark:text-[#8a90a0]">
+                  Escolha entre o modo claro ou escuro para o painel administrativo.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setIsDark(false)}
+                  className={`flex items-center gap-3 rounded-2xl border-2 p-3 transition-all text-left ${!isDark ? 'border-[#0094EB] bg-blue-50/50 dark:bg-[#0f1220]' : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220]/40 hover:border-slate-300 dark:hover:border-white/20'}`}
+                >
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${!isDark ? 'bg-[#0094EB] text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400'}`}>
+                    <Sun size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className={`block text-xs font-black truncate ${!isDark ? 'text-[#0094EB] dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
+                      Tema Claro
+                    </span>
+                  </div>
+                  {!isDark && <CheckCircle2 size={16} className="ml-auto text-[#0094EB] shrink-0" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsDark(true)}
+                  className={`flex items-center gap-3 rounded-2xl border-2 p-3 transition-all text-left ${isDark ? 'border-[#ff7a29] bg-orange-50/10' : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220]/40 hover:border-slate-300 dark:hover:border-white/20'}`}
+                >
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${isDark ? 'bg-[#ff7a29] text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400'}`}>
+                    <Moon size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className={`block text-xs font-black truncate ${isDark ? 'text-[#ff7a29]' : 'text-slate-700 dark:text-slate-300'}`}>
+                      Tema Escuro
+                    </span>
+                  </div>
+                  {isDark && <CheckCircle2 size={16} className="ml-auto text-[#ff7a29] shrink-0" />}
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* ── 1. DADOS DA LOJA ── */}
@@ -591,7 +617,6 @@ const SettingsPage = () => {
               </p>
             </div>
 
-            {/* Seletor de Setor */}
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                 Setor da Loja
@@ -679,7 +704,7 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* ── 2. INTEGRAÇÃO WHATSAPP (Com Switch integrado no cabeçalho) ── */}
+        {/* ── 2. INTEGRAÇÃO WHATSAPP ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
             <div>
@@ -691,7 +716,6 @@ const SettingsPage = () => {
               </p>
             </div>
             
-            {/* Seletor no canto superior direito do card */}
             <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-[#0f1220]/60 px-3.5 py-1.5 rounded-xl border border-slate-100 dark:border-white/5">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">
                 {settings.whatsapp_enabled ? 'Ativo' : 'Inativo'}
@@ -747,7 +771,7 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* ── 3. MÉTRICAS (Estatísticas dedicadas) ── */}
+        {/* ── 3. MÉTRICAS ── */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
@@ -832,7 +856,7 @@ const SettingsPage = () => {
           </div>
         </div>
         
-        {/* ── BOTÃO SALVAR PRIMÁRIO DUAL-THEME ── */}
+        {/* ── BOTÃO SALVAR PRIMÁRIO NO RODAPÉ ── */}
         <div className="flex justify-end pt-4">
           <Button
             type="submit"
