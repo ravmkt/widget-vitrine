@@ -1259,8 +1259,53 @@ export default function StoragePage() {
     if (window.confirm(`Tem certeza que deseja excluir o arquivo "${name}"?`)) {
       try {
         if (supabase) {
-          const { error } = await supabase.from('videos').delete().eq('id', id);
-          if (error) throw error;
+          // 1. Busca as URLs da mídia no banco de dados antes de remover o registro
+          const { data: videoData, error: fetchError } = await supabase
+            .from('videos')
+            .select('video_url, thumbnail_url')
+            .eq('id', id)
+            .maybeSingle();
+
+          if (fetchError) throw fetchError;
+
+          // 2. Exclui o registro definitivo na tabela 'videos'
+          const { error: dbError } = await supabase.from('videos').delete().eq('id', id);
+          if (dbError) throw dbError;
+
+          // 3. Se a mídia existia e temos as URLs, deletamos fisicamente do Supabase Storage
+          if (videoData) {
+            // Helper resiliente para extrair bucket e path interno das URLs do Storage
+            const extractStorageParams = (url: string) => {
+              if (!url) return null;
+              const match = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+              if (match) {
+                return { bucket: match[1], path: match[2] };
+              }
+              return null;
+            };
+
+            // Remove o arquivo principal (vídeo ou imagem) do Storage
+            const mainFile = extractStorageParams(videoData.video_url || '');
+            if (mainFile) {
+              const { error: mainDeleteErr } = await supabase.storage
+                .from(mainFile.bucket)
+                .remove([mainFile.path]);
+              if (mainDeleteErr) {
+                console.warn(`[Storage Hard Delete] Erro ao remover arquivo principal (${mainFile.path}):`, mainDeleteErr);
+              }
+            }
+
+            // Remove a thumbnail (miniatura) do Storage, caso exista e seja um arquivo diferente
+            const thumbFile = extractStorageParams(videoData.thumbnail_url || '');
+            if (thumbFile && thumbFile.path !== mainFile?.path) {
+              const { error: thumbDeleteErr } = await supabase.storage
+                .from(thumbFile.bucket)
+                .remove([thumbFile.path]);
+              if (thumbDeleteErr) {
+                console.warn(`[Storage Hard Delete] Erro ao remover miniatura (${thumbFile.path}):`, thumbDeleteErr);
+              }
+            }
+          }
         } else if (typeof db.videos?.delete === 'function') {
           await db.videos.delete(id);
         }
@@ -1269,7 +1314,7 @@ export default function StoragePage() {
         await loadAccountStorageData();
       } catch (err) {
         console.error('Erro ao excluir arquivo:', err);
-        showError('Não foi possível excluir o arquivo no banco de dados.');
+        showError('Não foi possível excluir o arquivo.');
       }
     }
   };
