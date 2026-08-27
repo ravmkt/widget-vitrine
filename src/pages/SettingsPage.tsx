@@ -856,7 +856,7 @@ const SettingsPage = () => {
           </div>
         </div>
         
-        {/* ── BOTÃO SALVAR PRIMÁRIO NO RODAPÉ ── */}
+        {/* ── BOTÃO SALVAR PRIMÁRIO NO RODAPÉ (AGORA TOTALMENTE PADRONIZADO COM O TOPO) ── */}
         <div className="flex justify-end pt-4">
           <Button
             type="submit"
@@ -869,7 +869,10 @@ const SettingsPage = () => {
                 Salvando...
               </>
             ) : (
-              'Salvar Configurações'
+              <>
+                <Save size={18} />
+                Salvar Configurações
+              </>
             )}
           </Button>
         </div>
