@@ -465,49 +465,58 @@ const handleOpenSelector = async () => {
   setSelectorLoading(true);
   setSelectorModalOpen(false);
 
-  let tentativas = 0;
-  const polling = setInterval(async () => {
-    tentativas++;
+let tentativas = 0;
+const polling = setInterval(async () => {
+  tentativas++;
 
-    try {
-const response = await fetch(
-  `https://wznvecurmisgoaijykbt.supabase.co/functions/v1/widget-selector?token=${encodeURIComponent(token)}`
-);
-      const result = await response.json();
-      console.log('[Vidlytics Debug Polling]', result);
+  try {
+    const response = await fetch(
+      `https://wznvecurmisgoaijykbt.supabase.co/functions/v1/widget-selector?token=${encodeURIComponent(token)}`
+    );
+    const result = await response.json();
+    
+    // ✅ DEBUG (remova depois)
+    console.log('[Vidlytics Debug Polling]', result);
 
+    // Busca o seletor em diferentes formatos de resposta
+    const data = result.data;
+    const selectorCss = 
+      (data && typeof data === 'object' && !Array.isArray(data)) ? data.selector 
+      : (Array.isArray(data) && data[0]) ? data[0].selector 
+      : null;
 
-if (result.success) {
-  const selectorCss = result.data?.selector || result.data?.data?.selector;
-  
-  if (selectorCss) {
-    clearInterval(polling);
-    setLocations((prev) => [
-      {
-        ...(prev[0] || {
+    if (result.success && selectorCss) {
+      clearInterval(polling);
+
+      // ✅ Atualiza o local com o seletor capturado
+      setLocations((prev) => {
+        const base = prev[0] || {
           id: generateUuid(),
           store_id: resolvedStoreId || '',
           story_id: stableStoryId,
           position: 'beforeend',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        }),
-        selector: selectorCss,
-      },
-    ]);
-    setSelectorLoading(false);
-    setSelectorUrl("");
-  }
-}
-    } catch (err) {
-      // ignora falhas de rede no polling
-    }
+        };
+        return [{ ...base, selector: selectorCss }];
+      });
 
-    if (tentativas > 150) {
-      clearInterval(polling);
       setSelectorLoading(false);
+      setSelectorUrl("");
+      
+      // ✅ FORÇA o sincronismo visual (quebra o closure antigo)
+      // Se o campo usa localStorage, limpa e repopula:
+      // localStorage.setItem('sel_selector_' + stableStoryId, selectorCss);
     }
-  }, 2000);
+  } catch (err) {
+    // ignora falhas de rede no polling
+  }
+
+  if (tentativas > 150) {
+    clearInterval(polling);
+    setSelectorLoading(false);
+  }
+}, 2000);
 };
 
   // ──────────────── GALLERY MODAL ────────────────
