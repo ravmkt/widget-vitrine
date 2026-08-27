@@ -713,7 +713,7 @@ export default function StoragePage() {
     fileInputRef.current?.click();
   };
 
-  // Processa o arquivo selecionado na janela e gera a miniatura de forma resiliente em 3 níveis
+   // Processa o arquivo selecionado na janela e gera a miniatura de forma resiliente em 3 níveis
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -726,6 +726,26 @@ export default function StoragePage() {
       if (!activeId) {
         throw new Error('ID da loja não encontrado. Recarregue a página.');
       }
+
+      // 🛑 [NOVO] - Validação cirúrgica contra duplicados (mesmo nome e tamanho)
+      if (supabase) {
+        const { data: duplicate } = await supabase
+          .from('videos')
+          .select('id')
+          .eq('store_id', activeId)
+          .eq('title', file.name)
+          .eq('file_size', file.size)
+          .maybeSingle();
+
+        if (duplicate) {
+          showError(`O arquivo "${file.name}" já existe na sua biblioteca de mídias.`);
+          setUploading(false);
+          if (e.target) e.target.value = '';
+          return;
+        }
+      }
+
+      // ... [O resto do seu código original de upload continua exatamente igual a partir daqui]
 
       const isVideo = file.type.startsWith('video');
       const isImage = file.type.startsWith('image') || /\.(jpg|jpeg|png|webp|gif)$/i.test(file.name);
