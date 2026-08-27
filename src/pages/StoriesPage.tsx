@@ -170,18 +170,20 @@ const StoriesPage = () => {
     });
   }, [stories, searchTerm, filterStatus]);
 
-  const getFormatLabel = (format: string) => {
-    switch (format) {
-      case 'floating_widget':
-        return 'Flutuante';
-      case 'carousel':
-        return 'Carrossel';
-      case 'grid':
-        return 'Grade';
-      default:
-        return format;
-    }
-  };
+const getFormatLabel = (format: string) => {
+  switch (format) {
+    case 'floating_widget':
+      return 'Flutuante';
+    case 'carousel':
+      return 'Carrossel';
+    case 'dynamic_carousel':
+      return 'Carrossel Dinâmico';
+    case 'grid':
+      return 'Grade';
+    default:
+      return format;
+  }
+};
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
