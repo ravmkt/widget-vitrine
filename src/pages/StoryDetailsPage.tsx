@@ -475,24 +475,28 @@ const response = await fetch(
 );
       const result = await response.json();
 
-      if (result.success && result.data) {
-        clearInterval(polling);
-        setLocations((prev) => [
-          {
-            ...(prev[0] || {
-              id: generateUuid(),
-              store_id: resolvedStoreId || '',
-              story_id: stableStoryId,
-              position: 'beforeend',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            }),
-            selector: result.data.selector,
-          },
-        ]);
-        setSelectorLoading(false);
-        setSelectorUrl("");
-      }
+if (result.success) {
+  const selectorCss = result.data?.selector || result.data?.data?.selector;
+  
+  if (selectorCss) {
+    clearInterval(polling);
+    setLocations((prev) => [
+      {
+        ...(prev[0] || {
+          id: generateUuid(),
+          store_id: resolvedStoreId || '',
+          story_id: stableStoryId,
+          position: 'beforeend',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }),
+        selector: selectorCss,
+      },
+    ]);
+    setSelectorLoading(false);
+    setSelectorUrl("");
+  }
+}
     } catch (err) {
       // ignora falhas de rede no polling
     }
