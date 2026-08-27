@@ -162,6 +162,7 @@ var storeWhatsappNumber = '';
   var storeWhatsappMessage = '';
   var storeLogoUrl = '';
   var storeName = '';
+  var appDisabledBySettings = false;
 
   var currentStories = [];
     var currentStoryIndex = 0;
@@ -1061,7 +1062,7 @@ var query = 'comments_public?select=id,store_id,video_id,user_name,content,statu
 function readStoreSettings() {
     if (!storeId || !hasSupabase) return Promise.resolve({});
     return supabaseFetch(
-'store_settings_public?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template,store_name,logo_url,widget_enabled&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
+'store_settings_public?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template,store_name,logo_url,app_enabled,widget_enabled&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
       { method: 'GET' }
     )
       .then(function (response) { if (!response.ok) return {}; return response.json(); })
@@ -1081,7 +1082,9 @@ function readStoreSettings() {
           whatsapp_message: store.whatsapp_message || '',
           whatsapp_message_template: store.whatsapp_message_template || '',
           store_logo_url: store.logo_url || '',
-          store_name: store.store_name || ''
+          store_name: store.store_name || '',
+          app_enabled: store.app_enabled !== false,
+          widget_enabled: store.widget_enabled !== false
         };
       });
   }
@@ -5817,8 +5820,9 @@ function initWidget() {
       }
 
       return readStoreSettings().then(function (settings) {
-        if (settings.widget_enabled === false) {
-          console.log('[Vidlytics] Widget desativado pela loja.');
+        if (settings.widget_enabled === false || settings.app_enabled === false) {
+          console.warn('[Vidlytics] Widget inativo: o aplicativo está desativado nas configurações da loja (Offline).');
+          appDisabledBySettings = true;
           return;
         }
 
@@ -5869,6 +5873,11 @@ function initWidget() {
     }).then(function (likes) {
       likedVideos = likes.likedVideos || {};
       videoLikeCounts = likes.likeCounts || {};
+
+      // 🔒 Aplicativo desativado nas Configurações (Online/Offline) → não renderiza NADA na loja
+      if (appDisabledBySettings) {
+        return Promise.resolve();
+      }
 
       // 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
       if (!storeId || !hasSupabase) {
