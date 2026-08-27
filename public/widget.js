@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.27-01';
+  var WIDGET_VERSION = '2026.08.27-02';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -1109,7 +1109,23 @@ function readStoreSettings() {
       conditionType = 'contains';
     }
 
+    // 🔧 Regras negativas (não contém / diferente de) devem ser tratadas ANTES do "contém"
     if (
+      conditionType === 'url_not_contains' ||
+      conditionType === 'not_contains' ||
+      conditionType === 'nao_contem' ||
+      conditionType.indexOf('not-contains') !== -1 ||
+      conditionType.indexOf('nao-contem') !== -1
+    ) {
+      conditionType = 'not_contains';
+    } else if (
+      conditionType === 'url_not_equals' ||
+      conditionType === 'not_equals' ||
+      conditionType === 'url_different' ||
+      conditionType.indexOf('diferente') !== -1
+    ) {
+      conditionType = 'not_equals';
+    } else if (
       conditionType.indexOf('contem') !== -1 ||
       conditionType === 'url_contains' ||
       conditionType === 'contains'
@@ -1190,6 +1206,12 @@ function readStoreSettings() {
         return (
           href === value ||
           path === value
+        );
+
+      case 'not_contains':
+        return (
+          href.indexOf(value) === -1 &&
+          path.indexOf(value) === -1
         );
 
       case 'not_equals':
@@ -5871,10 +5893,25 @@ return readStoreSettings().then(function (settings) {
 
 
           // ────────────────────────────────────────────
-          // 🎈 FLUTUANTE — SEMPRE renderiza, ignora seletor
+          // 📋 Regras de página: story sem regra aparece em qualquer página;
+          // story com regras só aparece quando alguma regra combina com a URL atual
+          // ────────────────────────────────────────────
+          function storyMatchesPageRules(storyItem) {
+            var storyRules = rules.filter(function (r) { return idsEqual(r.story_id, storyItem.id); });
+            if (storyRules.length === 0) return true;
+            return storyRules.some(function (rule) { return matchesRule(rule); });
+          }
+
+          // ────────────────────────────────────────────
+          // 🎈 FLUTUANTE — ignora seletor, mas respeita as regras de página
           // ────────────────────────────────────────────
           if (floatingStories.length > 0) {
-            renderFloatingWidget(floatingStories);
+            var visibleFloatingStories = _previewStoryId
+              ? floatingStories
+              : floatingStories.filter(storyMatchesPageRules);
+            if (visibleFloatingStories.length > 0) {
+              renderFloatingWidget(visibleFloatingStories);
+            }
           }
 
           // ────────────────────────────────────────────
