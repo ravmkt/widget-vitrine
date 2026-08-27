@@ -594,33 +594,20 @@ const StoriesPage = () => {
 
                     <td className="px-6 py-4 text-center">
                       <div className="flex justify-center gap-2">
-                        {/* 1. 👁️ BOTÃO DO PREVIEW (Corrigido sem prompt chato) */}
-                        <button
-                          onClick={() => {
-                            let targetUrl = storeRealUrl.trim() || currentStore?.url?.trim() || "";
-                            
-                            // ✅ Se for a URL padrão de teste ou estiver vazia, abre direto o preview interno sem perturbar com pop-ups!
-                            if (!targetUrl || targetUrl.includes("lojaexemplo.com.br")) {
-                              window.open(
-                                `/stories/preview/${story.id}`,
-                                '_blank',
-                                'noopener,noreferrer',
-                              );
-                              return;
-                            }
-
-                            if (!/^https?:\/\//i.test(targetUrl)) {
-                              targetUrl = "https://" + targetUrl;
-                            }
-                            const connector = targetUrl.includes("?") ? "&" : "?";
-                            const finalPreviewUrl = targetUrl + connector + "vidlytics_preview_story_id=" + story.id;
-                            window.open(finalPreviewUrl, "_blank", "noopener,noreferrer");
-                          }}
-                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
-                          title="Preview Story"
-                        >
-                          <Eye size={16} />
-                        </button>
+{/* 1. 👁️ BOTÃO DO PREVIEW */}
+<button
+  onClick={() => {
+    window.open(
+      `/stories/preview/${story.id}`,
+      '_blank',
+      'noopener,noreferrer',
+    );
+  }}
+  className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+  title="Preview Story"
+>
+  <Eye size={16} />
+</button>
 
                         {/* 2. 📝 BOTÃO DE EDITAR (Restaurado com Sucesso!) */}
                         <button
