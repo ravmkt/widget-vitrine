@@ -713,7 +713,7 @@ export default function StoragePage() {
     fileInputRef.current?.click();
   };
 
-  // Processa o arquivo selecionado na janela
+  // Processa o arquivo selecionado na janela e gera a miniatura de forma resiliente em 3 níveis
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -770,11 +770,31 @@ export default function StoragePage() {
         finalThumbUrl = finalVideoUrl;
         thumbnailSize = file.size;
       } else if (isVideo) {
-        try {
-          const thumbBlob = await generateVideoThumbnail(file);
-          thumbnailSize = thumbBlob.size;
+        // ── ESTEIRA DE GERAÇÃO ULTRA-RESILIENTE DE THUMBNAIL (3 NÍVEIS) ──
+        let thumbBlob: Blob | null = null;
 
-          if (supabase && thumbBlob && thumbBlob.size > 0) {
+        // Nível 1: Geração Local no Browser usando o arquivo File original (Super rápido)
+        try {
+          thumbBlob = await generateVideoThumbnail(file);
+          console.log('[Vidlytics Storage] Nível 1: Thumbnail obtida localmente do File com sucesso.');
+        } catch (localFileErr) {
+          console.warn('[Vidlytics Storage] Nível 1 falhou (File local incompatível):', localFileErr);
+
+          // Nível 2: Geração Local no Browser usando a URL pública recém-enviada
+          try {
+            if (finalVideoUrl) {
+              thumbBlob = await generateVideoThumbnailFromUrl(finalVideoUrl);
+              console.log('[Vidlytics Storage] Nível 2: Thumbnail obtida da URL do Storage com sucesso.');
+            }
+          } catch (localUrlErr) {
+            console.warn('[Vidlytics Storage] Nível 2 falhou (URL do Storage incompatível):', localUrlErr);
+          }
+        }
+
+        // Se conseguimos obter o Blob localmente (seja do Nível 1 ou Nível 2), fazemos o upload
+        if (thumbBlob && thumbBlob.size > 0) {
+          thumbnailSize = thumbBlob.size;
+          if (supabase) {
             const thumbStoragePath = `${activeId}/thumb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
 
             const { data: thumbUploadData, error: thumbUploadErr } = await supabase.storage
@@ -792,11 +812,24 @@ export default function StoragePage() {
 
               finalThumbUrl = thumbPublicUrlData.publicUrl;
             } else if (thumbUploadErr) {
-              console.warn('[Vidlytics Storage] Erro ao enviar thumbnail:', thumbUploadErr);
+              console.warn('[Vidlytics Storage] Erro ao enviar thumbnail gerada localmente:', thumbUploadErr);
             }
           }
-        } catch (thumbErr) {
-          console.warn('[Vidlytics Storage] Falha na geração automática de thumbnail:', thumbErr);
+        }
+
+        // Nível 3: Fallback Definitivo via Edge Function se todos os métodos do navegador falharem
+        if (!finalThumbUrl) {
+          console.log('[Vidlytics Storage] Nível 3: Chamando Edge Function "fetch-thumbnail" para decodificação remota...');
+          try {
+            const edgeThumbUrl = await fetchThumbnailFromEdge(finalVideoUrl, activeId);
+            if (edgeThumbUrl) {
+              finalThumbUrl = edgeThumbUrl;
+              thumbnailSize = 120 * 1024; // Tamanho estimado de 120KB para estatísticas do plano
+              console.log('[Vidlytics Storage] Nível 3: Thumbnail obtida do servidor com sucesso!');
+            }
+          } catch (edgeErr) {
+            console.error('[Vidlytics Storage] Todos os níveis de geração de miniatura falharam:', edgeErr);
+          }
         }
       }
 
