@@ -628,7 +628,7 @@ const TABLE_ALLOWED_FIELDS: Record<string, string[]> = {
   videos: [
     'id', 'store_id', 'title', 'description', 'source_type',
     'video_url', 'thumbnail_url', 'poster_url', 'image_url',
-    'duration', 'file_size', 'status', 'active', 'product_id',
+    'duration', 'file_size', 'thumbnail_file_size', 'status', 'active', 'product_id',
     'model_id', 'created_at', 'updated_at',
   ],
   stories: [
