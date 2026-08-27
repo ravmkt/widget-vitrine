@@ -162,6 +162,21 @@ const generateVideoThumbnail = (file: File): Promise<Blob> => {
       reject(err);
     };
 
+    // Timeout defensivo de 4 segundos com guarda de decodificação
+    timeoutId = setTimeout(() => {
+      if (!captured) {
+        if (video.readyState >= 2) {
+          captureFrame();
+        } else {
+          captured = true;
+          cleanup();
+          reject(new Error('Timeout ao decodificar frame do vídeo.'));
+        }
+      }
+    }, 4000);
+  });
+};
+
 // Utilitário para extrair o primeiro frame de um vídeo hospedado via URL pública (com suporte a CORS)
 const generateVideoThumbnailFromUrl = (url: string): Promise<Blob> => {
   return new Promise((resolve, reject) => {
@@ -253,21 +268,6 @@ const fetchThumbnailFromEdge = async (videoUrl: string, storeId: string): Promis
     console.warn('[Vidlytics Storage] Falha ao chamar a Edge Function de thumbnail:', e);
   }
   return null;
-};
-
-    // Timeout defensivo de 4 segundos com guarda de decodificação
-    timeoutId = setTimeout(() => {
-      if (!captured) {
-        if (video.readyState >= 2) {
-          captureFrame();
-        } else {
-          captured = true;
-          cleanup();
-          reject(new Error('Timeout ao decodificar frame do vídeo.'));
-        }
-      }
-    }, 4000);
-  });
 };
 
 interface StorageItem {
@@ -713,7 +713,7 @@ export default function StoragePage() {
     fileInputRef.current?.click();
   };
 
-   // Processa o arquivo selecionado na janela e gera a miniatura de forma resiliente em 3 níveis
+  // Processa o arquivo selecionado na janela e gera a miniatura de forma resiliente em 3 níveis
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -727,7 +727,7 @@ export default function StoragePage() {
         throw new Error('ID da loja não encontrado. Recarregue a página.');
       }
 
-      // 🛑 [NOVO] - Validação cirúrgica contra duplicados (mesmo nome e tamanho)
+      // 🛑 Validação cirúrgica contra duplicados (mesmo nome e tamanho)
       if (supabase) {
         const { data: duplicate } = await supabase
           .from('videos')
@@ -744,8 +744,6 @@ export default function StoragePage() {
           return;
         }
       }
-
-      // ... [O resto do seu código original de upload continua exatamente igual a partir daqui]
 
       const isVideo = file.type.startsWith('video');
       const isImage = file.type.startsWith('image') || /\.(jpg|jpeg|png|webp|gif)$/i.test(file.name);
@@ -1321,7 +1319,7 @@ export default function StoragePage() {
 
   return (
     <div className="animate-fade-in space-y-8 pb-20 font-sans">
-      {/* ── CABEÇALHO DA PÁGINA (ALTERADO DE "Meu Armazenamento" para "Armazenamento") ── */}
+      {/* ── CABEÇALHO DA PÁGINA ── */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -1397,7 +1395,7 @@ export default function StoragePage() {
             URL Externa
           </button>
 
-          {/* Botão Primário Dual-Theme: Fazer Upload */}
+          {/* Botão Primário: Fazer Upload */}
           <button
             type="button"
             disabled={uploading}
@@ -1410,22 +1408,21 @@ export default function StoragePage() {
         </div>
       </div>
 
-      {/* ── CARD MODULAR DA RÉGUA DE USO (ESTILO DASHBOARD VIDLYTICS) ── */}
+      {/* ── CARD DA RÉGUA DE USO ── */}
       {(() => {
         const isCritical = usedPercentage >= 90;
         const isWarning = usedPercentage >= 70 && usedPercentage < 90;
 
         const currentColorHex = isCritical
-          ? '#ef4444' // >= 90% -> Vermelho
+          ? '#ef4444'
           : isWarning
-            ? '#ff7a29' // 70% a 89% -> Laranja
-            : '#22c55e'; // < 70% -> Verde
+            ? '#ff7a29'
+            : '#22c55e';
 
         return (
           <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm space-y-4">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
               <div className="flex items-center gap-4">
-                {/* Ícone Padronizado Dual-Theme: Azul no Light / Laranja no Dark */}
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform hover:scale-105 shrink-0">
                   <HardDrive size={22} className="!text-white stroke-[2.5]" />
                 </div>
@@ -1489,10 +1486,10 @@ export default function StoragePage() {
               </div>
             )}
 
-            {/* Barra de Progresso com Shimmer */}
+            {/* Barra de Progresso */}
             <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#0f1220] p-0.5 border border-transparent dark:border-white/5">
               <div
-                className="h-full rounded-full transition-all duration-500 animate-shimmer"
+                className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${usedPercentage}%`,
                   backgroundColor: currentColorHex,
@@ -1503,7 +1500,7 @@ export default function StoragePage() {
         );
       })()}
 
-      {/* Seção de Vídeos Importados do Instagram (Exibido somente ao clicar na aba do Instagram) */}
+      {/* Seção de Vídeos Importados do Instagram */}
       {connectedPlatforms.includes('instagram') && activePlatformTab === 'instagram' && (
         <div className="rounded-[1.5rem] border border-pink-500/20 bg-white p-6 shadow-sm dark:border-pink-900/30 dark:bg-slate-950 space-y-4 animate-in fade-in duration-300">
           <div className="flex items-center justify-between">
@@ -1546,7 +1543,6 @@ export default function StoragePage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
                   
-                  {/* Botão de Ação Rápida no Hover */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
                     <button
                       type="button"
@@ -1644,31 +1640,34 @@ export default function StoragePage() {
         </div>
       )}
 
-      {/* ── MÓDULO MODULAR DE TABELA DE ARQUIVOS (PADRÃO TOP VÍDEOS DASHBOARD) ── */}
+      {/* ── CARD PRINCIPAL UNIFICADO (Tabela e Busca) ── */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         
-        {/* Barra de Busca e Filtros Integrados (Dual-Theme: Azul no Light / Laranja no Dark) */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-white/5 pb-5">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8a90a0]" size={16} />
+        {/* BARRA INTERNA DE FILTROS E BUSCA (O Input se estende totalmente usando flex-1) */}
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-center border-b border-slate-100 dark:border-white/5 pb-5">
+          
+          {/* Input de Busca Flexível (Estica até o limite dos botões) */}
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8a90a0]" size={18} />
             <input
               type="text"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Pesquisar pelo nome do arquivo..."
-              className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] pl-10 pr-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
+              className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] pl-12 pr-4 py-3 text-sm font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus:bg-white dark:focus:bg-[#0f1220] transition-all"
             />
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#0f1220] p-1.5 rounded-2xl border border-slate-200/60 dark:border-white/5">
+          {/* CONTAINER ÚNICO CINZA QUE AGRUPA OS FILTROS (Sem separação) */}
+          <div className="flex items-center bg-[#F1F5F9] dark:bg-[#0f1220] p-1 rounded-xl border border-slate-200/60 dark:border-white/5 shrink-0 w-full md:w-auto">
             <button
               type="button"
               onClick={() => setSelectedType('all')}
               className={cn(
-                "rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer",
+                "rounded-lg px-6 py-2 text-[13px] font-black uppercase tracking-wider transition-all text-center flex-1 md:flex-initial cursor-pointer",
                 selectedType === 'all'
                   ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30"
-                  : "text-slate-600 dark:text-[#8a90a0] hover:text-slate-900 dark:hover:text-white"
+                  : "text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white bg-transparent"
               )}
             >
               Todos
@@ -1677,10 +1676,10 @@ export default function StoragePage() {
               type="button"
               onClick={() => setSelectedType('video')}
               className={cn(
-                "flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer",
+                "flex items-center justify-center gap-1.5 rounded-lg px-6 py-2 text-[13px] font-black uppercase tracking-wider transition-all text-center flex-1 md:flex-initial cursor-pointer",
                 selectedType === 'video'
                   ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30"
-                  : "text-slate-600 dark:text-[#8a90a0] hover:text-slate-900 dark:hover:text-white"
+                  : "text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white bg-transparent"
               )}
             >
               <FileVideo size={14} />
@@ -1690,10 +1689,10 @@ export default function StoragePage() {
               type="button"
               onClick={() => setSelectedType('image')}
               className={cn(
-                "flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer",
+                "flex items-center justify-center gap-1.5 rounded-lg px-6 py-2 text-[13px] font-black uppercase tracking-wider transition-all text-center flex-1 md:flex-initial cursor-pointer",
                 selectedType === 'image'
                   ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30"
-                  : "text-slate-600 dark:text-[#8a90a0] hover:text-slate-900 dark:hover:text-white"
+                  : "text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white bg-transparent"
               )}
             >
               <FileImage size={14} />
@@ -1851,7 +1850,6 @@ export default function StoragePage() {
                             <Pencil size={15} />
                           </button>
                         )}
-                        {/* Botão de Visualização Rápida de Mídia (Modal Interno na Mesma Página) */}
                         <button
                           type="button"
                           onClick={() => handlePreviewMedia(file)}
@@ -1998,7 +1996,7 @@ export default function StoragePage() {
         </div>
       )}
 
-      {/* ── MODAL DE PREVIEW DA MÍDIA (INTERNO - NA MESMA PÁGINA) ── */}
+      {/* ── MODAL DE PREVIEW DA MÍDIA ── */}
       {previewMedia && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div className={cn(
@@ -2030,7 +2028,7 @@ export default function StoragePage() {
               </button>
             </div>
 
-            {/* Conteúdo Dinâmico com base na Mídia Selecionada (Layout Smartphone em Vídeos/iFrames) */}
+            {/* Conteúdo Dinâmico */}
             <div className={cn(
               "flex-1 flex items-center justify-center overflow-hidden bg-slate-950 rounded-2xl w-full relative",
               previewMedia.type === 'image' ? 'h-[55vh] max-h-[480px]' : 'aspect-[9/16] max-h-[62vh]'
@@ -2076,7 +2074,6 @@ export default function StoragePage() {
                   }
                 }
 
-                // Fallback para arquivo de vídeo nativo (MP4) - Mantém proporções corretas
                 return (
                   <video
                     src={previewMedia.url}
@@ -2088,7 +2085,7 @@ export default function StoragePage() {
               })()}
             </div>
 
-            {/* Rodapé do Modal (Sem botão de abrir original, apenas fechar estilizado em largura máxima) */}
+            {/* Rodapé */}
             <div className="flex items-center justify-stretch gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
               <button
                 type="button"
