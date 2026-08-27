@@ -5967,14 +5967,29 @@ return readStoreSettings().then(function (settings) {
             }
           }
 
+          // 🔍 Helper: verifica se a story pode aparecer na URL atual conforme as regras de página
+          function storyMatchesCurrentPage(rulesList, storyId) {
+            var storyRules = rulesList.filter(function (r) { return idsEqual(r.story_id, storyId); });
+            if (storyRules.length === 0) return true; // sem regra = aparece em todas as páginas
+            return storyRules.some(function (rule) { return matchesRule(rule); });
+          }
+
           var pendingInlineStories = inlineStories.filter(function (s) { return !injectedStoryIds[s.id]; });
 
+          // 🎯 Só entra no fallback quem cumpre a regra de página da URL atual (story não fica "vazando" para outras páginas)
+          var eligibleForFallback = pendingInlineStories.filter(function (s) {
+            return storyMatchesCurrentPage(rules, s.id);
+          });
+
           if (_previewStoryId) {
-            // 🚀 Preview: garante que a story simulada apareça mesmo sem seletor/regra compatível
+            // 🚀 Preview: força APENAS a story simulada (ignora regras de página)
             var previewPendingStories = pendingInlineStories.filter(function (s) { return idsEqual(s.id, _previewStoryId); });
             injectFallbackStories(previewPendingStories);
           } else if (floatingStories.length === 0) {
-            injectFallbackStories(pendingInlineStories);
+            injectFallbackStories(eligibleForFallback);
+          } else {
+            // 📌 Story(s) com regras de página que não batem na URL atual fora do modo preview: não renderiza
+            injectFallbackStories([]);
           }
         });
       });
