@@ -31,6 +31,7 @@ const StoriesPage = () => {
   const [pageRules, setPageRules] = useState<Record<string, string>>({}); // 🆕 Novo estado para regras amigáveis
   const [loading, setLoading] = useState(true);
   const [currentStoreId, setCurrentStoreId] = useState<string>('');
+  const [storeRealUrl, setStoreRealUrl] = useState('');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<
@@ -55,6 +56,14 @@ const StoriesPage = () => {
 
       const resolvedStoreId = await resolveStoreId();
       setCurrentStoreId(resolvedStoreId);
+
+      // 🎯 Busca a URL REAL da loja (configurada em Configurações) para o preview
+      try {
+        const settings = await db.getSettings(resolvedStoreId);
+        setStoreRealUrl(String(settings?.store_url || ''));
+      } catch {
+        setStoreRealUrl('');
+      }
 
       const s = await db.stories.getAll(resolvedStoreId);
       const storyIds = s.map(story => story.id);
@@ -588,7 +597,7 @@ const StoriesPage = () => {
                         {/* 1. 👁️ BOTÃO DO PREVIEW (Corrigido sem prompt chato) */}
                         <button
                           onClick={() => {
-                            let targetUrl = currentStore?.url?.trim() || "";
+                            let targetUrl = storeRealUrl.trim() || currentStore?.url?.trim() || "";
                             
                             // ✅ Se for a URL padrão de teste ou estiver vazia, abre direto o preview interno sem perturbar com pop-ups!
                             if (!targetUrl || targetUrl.includes("lojaexemplo.com.br")) {

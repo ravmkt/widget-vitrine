@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.25-02';
+  var WIDGET_VERSION = '2026.08.27-01';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -4982,7 +4982,7 @@ function initInlineWidget(options) {
   var target = document.querySelector(selector);
   if (!target) {
     console.warn('[Vidlytics] Target não encontrado:', selector);
-    return;
+    return false;
   }
   
   var displayMode = options.storyFormat || getWidgetDisplayMode(appearance);
@@ -4992,7 +4992,7 @@ function initInlineWidget(options) {
     var activeStoriesCount = (stories || []).length;
     if (activeStoriesCount < 1) {
       console.warn('[Vidlytics] Carrossel Dinâmico ocultado: mínimo de 1 vídeo ativo necessário (atual: ' + activeStoriesCount + ').');
-      return;
+      return false;
     }
 
     document.querySelectorAll('[id^="vidlytics-wrapper-"]').forEach(function (w) { w.remove(); });
@@ -5013,7 +5013,7 @@ function initInlineWidget(options) {
       position: 'beforeend',
     }, stories, appearance);
 
-    return;
+    return true;
   }
 
   if (displayMode === 'carousel') {
@@ -5086,7 +5086,8 @@ function initInlineWidget(options) {
     renderBubbles(container, stories, appearance);
     target.insertAdjacentElement(position, container);
   }
-  
+
+  return true;
 }
 
   /* ================================================================
@@ -5774,6 +5775,8 @@ function initWidget() {
   var _urlParams = new URLSearchParams(window.location.search);
   var _selectorToken = _urlParams.get('widgetSelectToken') || null;
   var storyIdFromUrl = _urlParams.get('widgetSelectStoryId') || null;
+  // 🚀 Modo preview de simulação (botão "Simular Preview" do painel)
+  var _previewStoryId = _urlParams.get('vidlytics_preview_story_id') || null;
 
   if (_selectorToken) {
     initElementPicker(_selectorToken, storyIdFromUrl);
@@ -5879,6 +5882,7 @@ return readStoreSettings().then(function (settings) {
           // ────────────────────────────────────────────
 
           var injected = false;
+          var injectedStoryIds = {};
 
           activeLocations.forEach(function (location) {
             var locStoryId = location.story_id;
@@ -5900,7 +5904,8 @@ return readStoreSettings().then(function (settings) {
             }
 
             var storyRules = rules.filter(function (r) { return idsEqual(r.story_id, locStoryId); });
-            if (storyRules.length > 0) {
+            // 🚀 Modo preview: ignora as regras de página para a story simulada aparecer em qualquer URL
+            if (storyRules.length > 0 && !_previewStoryId) {
               var hasMatch = storyRules.some(function (rule) { return matchesRule(rule); });
               if (!hasMatch) {
                 return;
@@ -5915,7 +5920,7 @@ return readStoreSettings().then(function (settings) {
             }
 
             try {
-              initInlineWidget({
+              var widgetInjected = initInlineWidget({
                 target: selector,
                 placement: position,
                 stories: [story],
@@ -5925,16 +5930,21 @@ return readStoreSettings().then(function (settings) {
                 appearance: currentAppearance,
                 storyFormat: storyFormat
               });
-              injected = true;
+              // 🔧 Só marca como injetado se o widget realmente renderizou (seletor encontrado na página)
+              if (widgetInjected) {
+                injected = true;
+                injectedStoryIds[story.id] = true;
+              }
             } catch (err) {
               console.error('[Vidlytics] ❌ Erro:', err);
             }
           });
 
           // ────────────────────────────────────────────
-          // 🔧 FALLBACK — só para stories inline sem seletor
+          // 🔧 FALLBACK — stories inline que não foram injetadas em nenhum seletor
           // ────────────────────────────────────────────
-          if (!injected && inlineStories.length > 0 && floatingStories.length === 0) {
+          function injectFallbackStories(fallbackList) {
+            if (!fallbackList || fallbackList.length === 0) return;
             var fb = document.querySelector('#vidlytics-stories');
             if (!fb) {
               fb = document.createElement('div');
@@ -5945,16 +5955,26 @@ return readStoreSettings().then(function (settings) {
               initInlineWidget({
                 target: '#vidlytics-stories',
                 placement: 'beforeend',
-                stories: inlineStories,
+                stories: fallbackList,
                 products: readProductsData,
                 sizing_models: readSizingModelsData,
                 comments: readCommentsData,
                 appearance: currentAppearance,
-                storyFormat: getStoryFormat(inlineStories[0])
+                storyFormat: getStoryFormat(fallbackList[0])
               });
             } catch (err) {
               console.error('[Vidlytics] ❌ Erro no fallback:', err);
             }
+          }
+
+          var pendingInlineStories = inlineStories.filter(function (s) { return !injectedStoryIds[s.id]; });
+
+          if (_previewStoryId) {
+            // 🚀 Preview: garante que a story simulada apareça mesmo sem seletor/regra compatível
+            var previewPendingStories = pendingInlineStories.filter(function (s) { return idsEqual(s.id, _previewStoryId); });
+            injectFallbackStories(previewPendingStories);
+          } else if (floatingStories.length === 0) {
+            injectFallbackStories(pendingInlineStories);
           }
         });
       });

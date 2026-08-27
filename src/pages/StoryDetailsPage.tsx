@@ -215,6 +215,7 @@ const StoryDetailsPage = () => {
   const [selectorUrl, setSelectorUrl] = useState("");
   const [selectorLoading, setSelectorLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [storeRealUrl, setStoreRealUrl] = useState("");
 
   const [stableStoryId] = useState(() => id && id !== 'new' && id !== 'undefined' ? id : generateUuid());
 
@@ -224,6 +225,14 @@ const StoryDetailsPage = () => {
       setLoading(true);
       const finalStoreId = await resolveStoreId(storeId);
       setResolvedStoreId(finalStoreId);
+
+      // 🎯 Busca a URL REAL da loja (configurada em Configurações) para o preview de simulação
+      try {
+        const settings = await db.getSettings(finalStoreId);
+        setStoreRealUrl(String(settings?.store_url || ''));
+      } catch {
+        setStoreRealUrl('');
+      }
 
       const [videos, apps] = await Promise.all([getAllSafe<Video>((db as any).videos, finalStoreId), getAllSafe<Appearance>((db as any).appearances, finalStoreId)]);
       setAllVideos(videos);
@@ -370,7 +379,7 @@ const newRelations: StoryVideo[] = validSelectedVideoIds.map((videoId, index) =>
   story_id: savedStory.id,
   video_id: videoId,
   position: index + 1,
-  is_cover: index === 0 ? 1 : 0,
+  is_cover: index === 0,
   created_at: now,
 }));
 
@@ -714,7 +723,7 @@ const SelectorModal = () => {
             <input
               type="url"
               // ✅ Agora exibe a URL real da loja ativa apenas como exemplo (placeholder) em cinza claro
-              placeholder={currentStore?.url ? `Ex: ${currentStore.url}` : "Cole a URL de teste (ex: link de um produto)..."}
+              placeholder={storeRealUrl || currentStore?.url ? `Ex: ${storeRealUrl || currentStore?.url}` : "Cole a URL de teste (ex: link de um produto)..."}
               value={previewUrl}
               onChange={(e) => setPreviewUrl(e.target.value)}
               className="w-64 bg-transparent px-3 py-1 text-xs font-bold text-slate-700 outline-none placeholder:text-slate-400"
@@ -723,7 +732,7 @@ const SelectorModal = () => {
               type="button"
               onClick={() => {
                 // ✅ Se o usuário não digitou nada no input, assume o fallback automático da URL real da loja
-                let targetUrl = previewUrl.trim() || currentStore?.url?.trim() || "";
+                let targetUrl = previewUrl.trim() || storeRealUrl.trim() || currentStore?.url?.trim() || "";
                 if (!targetUrl) {
                   alert("Por favor, configure a URL da sua loja nas Configurações ou digite uma URL de teste.");
                   return;
