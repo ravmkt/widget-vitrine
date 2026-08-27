@@ -474,6 +474,8 @@ const response = await fetch(
   `https://wznvecurmisgoaijykbt.supabase.co/functions/v1/widget-selector?token=${encodeURIComponent(token)}`
 );
       const result = await response.json();
+      console.log('[Vidlytics Debug Polling]', result);
+
 
 if (result.success) {
   const selectorCss = result.data?.selector || result.data?.data?.selector;
