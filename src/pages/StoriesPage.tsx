@@ -170,20 +170,20 @@ const StoriesPage = () => {
     });
   }, [stories, searchTerm, filterStatus]);
 
-const getFormatLabel = (format: string) => {
-  switch (format) {
-    case 'floating_widget':
-      return 'Flutuante';
-    case 'carousel':
-      return 'Carrossel';
-    case 'dynamic_carousel':
-      return 'Carrossel Dinâmico';
-    case 'grid':
-      return 'Grade';
-    default:
-      return format;
-  }
-};
+  const getFormatLabel = (format: string) => {
+    switch (format) {
+      case 'floating_widget':
+        return 'Flutuante';
+      case 'carousel':
+        return 'Carrossel';
+      case 'dynamic_carousel':
+        return 'Carrossel Dinâmico';
+      case 'grid':
+        return 'Grade';
+      default:
+        return format;
+    }
+  };
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -325,26 +325,28 @@ const getFormatLabel = (format: string) => {
   const getFormatIcon = (format: string) => {
     switch (format) {
       case 'floating_widget':
-        return <MousePointer2 size={14} />;
-
+        return <MousePointer2 size={13} />;
       case 'carousel':
-        return <Layout size={14} />;
-
+      case 'dynamic_carousel':
+        return <Layout size={13} />;
       case 'grid':
-        return <Layers size={14} />;
-
+        return <Layers size={13} />;
       default:
-        return <PlayCircle size={14} />;
+        return <PlayCircle size={13} />;
     }
   };
 
   const getTypeBadgeClass = () =>
-    'inline-flex h-7 w-[120px] min-w-[120px] items-center justify-center gap-1.5 rounded-lg border border-slate-100 bg-slate-50 px-[10px] text-xs font-bold text-[#0094EB] whitespace-nowrap';
+    'inline-flex h-7 items-center justify-center gap-1.5 rounded-full border border-[#CDEBFF] bg-[#EBF7FF] px-3.5 text-xs font-bold text-[#0094EB] whitespace-nowrap';
+
+  const getLocalBadgeClass = () =>
+    'inline-flex h-7 items-center justify-center rounded-full border border-slate-100 bg-slate-50 px-3.5 text-xs font-bold text-slate-600 whitespace-nowrap';
 
   if (loading) return null;
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
+      {/* HEADER DA PÁGINA */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">
@@ -363,53 +365,56 @@ const getFormatLabel = (format: string) => {
         </button>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 flex flex-col md:flex-row gap-4 shadow-sm">
-        <div className="relative flex-1">
-          <Search
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-            size={18}
-          />
+      {/* ── CARD PRINCIPAL UNIFICADO (Padrão de Armazenamento) ── */}
+      <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden">
+        
+        {/* BARRA DE FILTROS E BUSCA INTERNA DO CARD */}
+        <div className="p-6 pb-4 flex flex-col md:flex-row gap-4 justify-between items-center border-b border-slate-100">
+          <div className="relative flex-1 w-full">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Pesquisar por nome, tipo ou local..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB] focus:bg-white transition-all"
+            />
+          </div>
 
-          <input
-            type="text"
-            placeholder="Pesquisar por nome, tipo ou local..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
-          />
+          {/* BOTÕES DE FILTRO ESTILO ARMAZENAMENTO (Azul ativo / Cinza inativo) */}
+          <div className="flex gap-2 w-full md:w-auto shrink-0">
+            {(['all', 'active', 'inactive'] as const).map(status => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={cn(
+                  'px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border text-center flex-1 md:flex-initial cursor-pointer',
+                  filterStatus === status
+                    ? 'bg-[#0094EB] border-[#0094EB] text-white shadow-lg shadow-blue-500/15'
+                    : 'bg-slate-50 border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-100',
+                )}
+              >
+                {status === 'all'
+                  ? 'Todos'
+                  : status === 'active'
+                    ? 'Ativos'
+                    : 'Inativos'}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* ── DESIGN DO FILTRO ATUALIZADO (BORDA AZUL + TEXTO AZUL QUANDO ATIVO) ── */}
-        <div className="flex gap-2">
-          {['all', 'active', 'inactive'].map(status => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status as any)}
-              className={cn(
-                'px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer',
-                filterStatus === status
-                  ? 'bg-white border-[#0094EB] text-[#0094EB] shadow-sm'
-                  : 'bg-slate-50 border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-100',
-              )}
-            >
-              {status === 'all'
-                ? 'Todos'
-                : status === 'active'
-                  ? 'Ativos'
-                  : 'Inativos'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
+        {/* TABELA DE STORIES */}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
+              <tr className="bg-slate-50/50 border-b border-slate-200">
                 <th
                   onClick={() => handleSort('nome')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest hover:text-slate-600 transition-colors"
                 >
                   <span className="inline-flex items-center gap-1">
                     Nome{' '}
@@ -424,7 +429,7 @@ const getFormatLabel = (format: string) => {
 
                 <th
                   onClick={() => handleSort('tipo')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest hover:text-slate-600 transition-colors"
                 >
                   <span className="inline-flex items-center gap-1">
                     Tipo{' '}
@@ -439,7 +444,7 @@ const getFormatLabel = (format: string) => {
 
                 <th
                   onClick={() => handleSort('videos')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center hover:opacity-75"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-slate-600 transition-colors"
                 >
                   <span className="inline-flex items-center gap-1 justify-center">
                     Vídeos{' '}
@@ -454,7 +459,7 @@ const getFormatLabel = (format: string) => {
 
                 <th
                   onClick={() => handleSort('local')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest hover:opacity-75"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest hover:text-slate-600 transition-colors"
                 >
                   <span className="inline-flex items-center gap-1">
                     Local{' '}
@@ -469,7 +474,7 @@ const getFormatLabel = (format: string) => {
 
                 <th
                   onClick={() => handleSort('visualizacoes')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center hover:opacity-75"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-slate-600 transition-colors"
                 >
                   <span className="inline-flex items-center gap-1 justify-center">
                     Visualizações{' '}
@@ -484,7 +489,7 @@ const getFormatLabel = (format: string) => {
 
                 <th
                   onClick={() => handleSort('cliques')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center hover:opacity-75"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-slate-600 transition-colors"
                 >
                   <span className="inline-flex items-center gap-1 justify-center">
                     Cliques{' '}
@@ -499,7 +504,7 @@ const getFormatLabel = (format: string) => {
 
                 <th
                   onClick={() => handleSort('status')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center hover:opacity-75"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-slate-600 transition-colors"
                 >
                   <span className="inline-flex items-center gap-1 justify-center">
                     Status{' '}
@@ -512,7 +517,7 @@ const getFormatLabel = (format: string) => {
                   </span>
                 </th>
 
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">
                   Ações
                 </th>
               </tr>
@@ -538,80 +543,82 @@ const getFormatLabel = (format: string) => {
                 return (
                   <tr
                     key={story.id}
-                    className="hover:bg-slate-50/50 transition-colors align-middle"
+                    className="hover:bg-slate-50/40 transition-colors align-middle"
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <div className="min-w-0">
-                        <h3 className="text-sm font-black text-slate-800 truncate max-w-xs">
+                        <h3 className="text-sm font-black text-slate-800 truncate max-w-xs uppercase">
                           {story.title}
                         </h3>
                       </div>
                     </td>
 
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-5">
                       <span className={getTypeBadgeClass()}>
                         {getFormatIcon(story.format)}{' '}
                         {getFormatLabel(story.format)}
                       </span>
                     </td>
 
-                    <td className="px-6 py-4 text-center font-black text-slate-800">
+                    <td className="px-6 py-5 text-center font-black text-slate-800 text-sm">
                       {videoCounts[story.id] || 0}
                     </td>
 
-                    <td 
-                      className="px-6 py-4 text-sm font-bold text-slate-600 truncate max-w-[180px]"
-                      title={pageRules[story.id] || 'Todas as Páginas'}
-                    >
-                      {pageRules[story.id] || 'Todas as Páginas'}
+                    <td className="px-6 py-5">
+                      <span
+                        className={getLocalBadgeClass()}
+                        title={pageRules[story.id] || 'Todas as Páginas'}
+                      >
+                        {pageRules[story.id] || 'Todas as Páginas'}
+                      </span>
                     </td>
 
-                    <td className="px-6 py-4 text-center font-black text-slate-800">
+                    <td className="px-6 py-5 text-center font-black text-slate-800 text-sm">
                       {views}
                     </td>
 
-                    <td className="px-6 py-4 text-center font-black text-slate-800">
+                    <td className="px-6 py-5 text-center font-black text-slate-800 text-sm">
                       {clicks}
                     </td>
 
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-5 text-center">
                       <button
                         type="button"
                         onClick={() => handleToggleStatus(story)}
                         className={cn(
-                          'inline-flex h-8 w-[112px] min-w-[112px] items-center justify-center rounded-lg px-4 text-[10px] font-black uppercase tracking-wider border transition-all mx-auto cursor-pointer',
+                          'inline-flex h-7 items-center justify-center rounded-full px-4 text-[10px] font-black uppercase tracking-wider border transition-all mx-auto cursor-pointer',
                           isStoryActive(story)
-                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
-                            : 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100',
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/50'
+                            : 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100/50',
                         )}
                         title={
                           isStoryActive(story)
-                            ? 'Story ativo'
-                            : 'Story desativado'
+                            ? 'Clique para desativar'
+                            : 'Clique para ativar'
                         }
                       >
-                        {isStoryActive(story) ? 'ATIVO' : 'DESATIVADO'}
+                        {isStoryActive(story) ? 'ATIVO' : 'INATIVO'}
                       </button>
                     </td>
 
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex justify-center gap-2">
-{/* 1. 👁️ BOTÃO DO PREVIEW */}
-<button
-  onClick={() => {
-    window.open(
-      `/stories/preview/${story.id}`,
-      '_blank',
-      'noopener,noreferrer',
-    );
-  }}
-  className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
-  title="Preview Story"
->
-  <Eye size={16} />
-</button>
+                    <td className="px-6 py-5 text-center">
+                      <div className="flex justify-center gap-1">
+                        {/* 1. Preview */}
+                        <button
+                          onClick={() => {
+                            window.open(
+                              `/stories/preview/${story.id}`,
+                              '_blank',
+                              'noopener,noreferrer',
+                            );
+                          }}
+                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                          title="Preview Story"
+                        >
+                          <Eye size={16} />
+                        </button>
 
-                        {/* 2. 📝 BOTÃO DE EDITAR (Restaurado com Sucesso!) */}
+                        {/* 2. Editar */}
                         <button
                           onClick={() => navigate(`/stories/${story.id}`)}
                           className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
@@ -620,7 +627,7 @@ const getFormatLabel = (format: string) => {
                           <Edit3 size={16} />
                         </button>
 
-                        {/* 3. 🗑️ BOTÃO DE EXCLUIR */}
+                        {/* 3. Excluir */}
                         <button
                           onClick={() => handleDeleteClick(story)}
                           className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
@@ -637,8 +644,9 @@ const getFormatLabel = (format: string) => {
           </table>
         </div>
 
+        {/* FEEDBACK CASO NÃO EXISTAM STORIES */}
         {filteredStories.length === 0 && (
-          <div className="p-12 text-center">
+          <div className="p-16 text-center">
             <PlayCircle size={48} className="mx-auto text-slate-300 mb-4" />
             <p className="text-slate-500 font-bold">
               Nenhum Story encontrado.
