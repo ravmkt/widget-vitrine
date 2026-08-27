@@ -1061,7 +1061,7 @@ var query = 'comments_public?select=id,store_id,video_id,user_name,content,statu
 function readStoreSettings() {
     if (!storeId || !hasSupabase) return Promise.resolve({});
     return supabaseFetch(
-'store_settings_public?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template,store_name,logo_url,widget_enabled&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1'
+'store_settings_public?select=auto_approve_comments,whatsapp_number,whatsapp_message,whatsapp_message_template,store_name,logo_url,widget_enabled&store_id=eq.' + encodeURIComponent(storeId) + '&limit=1',
       { method: 'GET' }
     )
       .then(function (response) { if (!response.ok) return {}; return response.json(); })
@@ -1070,7 +1070,7 @@ function readStoreSettings() {
         return {};
       })
       .catch(function () { return {}; })
-      .then(function (store) {
+            .then(function (store) {
         var isAutoApprove = store.auto_approve_comments === true ||
                             store.auto_approve_comments === 'true' ||
                             store.auto_approve_comments === 1 ||
