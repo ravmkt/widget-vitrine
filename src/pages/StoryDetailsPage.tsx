@@ -1055,6 +1055,18 @@ const SelectorModal = () => {
           </div>
         </div>
       </form>
+{/* ── BOTÃO SALVAR NO FINAL ── */}
+<div className="flex justify-end pt-4">
+  <button
+    type="button"
+    onClick={handleSave}
+    disabled={isSaving}
+    className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 transition-all hover:bg-[#0E4787] disabled:opacity-60"
+  >
+    {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+    {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+  </button>
+</div>
 
       {isGalleryOpen && <GalleryModal />}
       {selectorModalOpen && <SelectorModal />}
