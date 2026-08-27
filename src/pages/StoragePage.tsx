@@ -926,17 +926,23 @@ export default function StoragePage() {
             const isHostedOnPlatform = videoUrlStr.includes('supabase');
             const isExternalUrl = isExplicitUrlType || (!isHostedOnPlatform && videoUrlStr.startsWith('http'));
 
+            // Tamanho em bytes do vídeo físico no storage
             const videoBytes = isExternalUrl 
               ? 0 
               : (vid.file_size && Number(vid.file_size) > 0 
                   ? Number(vid.file_size) 
-                  : 20971520);
+                  : 20971520); // Fallback robusto de 20MB caso não esteja gravado
 
-            const thumbnailBytes = vid.thumbnail_source_type === 'upload' && vid.thumbnail_file_size
-              ? Number(vid.thumbnail_file_size)
+            // ⚠️ Correção Crucial: Se o Thumbnail está hospedado no Supabase, ele consome storage!
+            const isThumbHosted = rawThumb && rawThumb.includes('supabase');
+            const thumbnailBytes = isThumbHosted
+              ? (vid.thumbnail_file_size && Number(vid.thumbnail_file_size) > 0 
+                  ? Number(vid.thumbnail_file_size) 
+                  : 150 * 1024) // Fallback inteligente de 150KB para thumbnails hospedados sem metadado de tamanho
               : 0;
 
-            const totalMediaBytes = Math.max(videoBytes, thumbnailBytes);
+            // ⚠️ Correção Crucial: Soma o vídeo e a thumbnail que estão consumindo espaço no Storage (antes usava Math.max)
+            const totalMediaBytes = videoBytes + thumbnailBytes;
 
             const formattedDate = vid.created_at 
               ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
