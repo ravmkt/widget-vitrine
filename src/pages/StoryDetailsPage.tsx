@@ -31,6 +31,7 @@ import {
   CheckCircle2,
   Loader2,
   GripVertical,
+  Rocket,
 } from 'lucide-react';
 import { showError } from '@/utils/toast';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
