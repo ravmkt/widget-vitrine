@@ -179,25 +179,44 @@ const DashboardPage: React.FC = () => {
           console.error('[DashboardPage] Falha ao carregar usage_counters:', usageCounterRes.reason);
         }
 
-        const totalVideosCount = fetchedVideos.length;
-        const estimatedStorage = Math.round(totalVideosCount * 15);
+        // Tipagem flexível para evitar erros de compilação estrita
+        const storeDataObj = storeData as any;
+        const planData = storeDataObj.plans || {};
 
+        // 1. Consumo de Armazenamento Real convertido para MB (Igual à página de Storage)
+        const realStorageUsedBytes = storeDataObj.storage_used_bytes !== null && storeDataObj.storage_used_bytes !== undefined 
+          ? Number(storeDataObj.storage_used_bytes) 
+          : 0;
+        const realStorageUsedMB = Number((realStorageUsedBytes / (1024 * 1024)).toFixed(1));
+
+        // 2. Limite de Armazenamento do Plano Real convertido para MB (Fallback para 1GB caso não definido)
+        const realStorageLimitBytes = storeDataObj.storage_limit_bytes 
+          ? Number(storeDataObj.storage_limit_bytes) 
+          : (planData.storage_limit_bytes ? Number(planData.storage_limit_bytes) : 1024 * 1024 * 1024);
+        const realStorageLimitMB = Number((realStorageLimitBytes / (1024 * 1024)).toFixed(0));
+
+        // 3. Páginas com vídeos ativas
         const pagesCount = locationsRes.status === 'fulfilled' ? locationsRes.value.count || 0 : 0;
         if (locationsRes.status === 'rejected') {
           console.error('[DashboardPage] Falha ao carregar display_locations:', locationsRes.reason);
         }
 
+        // 4. Limites Dinâmicos do Plano Real (com fallbacks seguros para Starter)
+        const resolvedViewsLimit = storeDataObj.views_limit || planData.views_limit || 10000;
+        const resolvedPagesLimit = storeDataObj.pages_limit || planData.pages_limit || 5;
+        const resolvedPlanName = planData.name || storeDataObj.plan_tier || 'Starter';
+
         setUsage({
-          planName: String(storeData.plan_tier || 'starter').toUpperCase(),
-          subscriptionStatus: storeData.subscription_status || 'trialing',
+          planName: String(resolvedPlanName).toUpperCase(),
+          subscriptionStatus: storeDataObj.subscription_status || 'trialing',
           trialDaysLeft: trialDays,
-          currentPeriodEnd: storeData.current_period_end || storeData.trial_ends_at,
+          currentPeriodEnd: storeDataObj.current_period_end || storeDataObj.trial_ends_at,
           viewsUsed: usageData.views_count || 0,
-          viewsLimit: 10000,
-          storageUsedMB: estimatedStorage,
-          storageLimitMB: 2048,
+          viewsLimit: resolvedViewsLimit,
+          storageUsedMB: realStorageUsedMB,
+          storageLimitMB: realStorageLimitMB,
           pagesUsed: pagesCount,
-          pagesLimit: 5,
+          pagesLimit: resolvedPagesLimit,
         });
 
         // 4. Feed de Eventos de Log
