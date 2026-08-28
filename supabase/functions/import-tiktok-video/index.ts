@@ -153,6 +153,7 @@ serve(async (req) => {
       thumbnail_url: thumbnailPic,
       thumbnail_source_type: "auto",
       file_size: fileSize,
+      thumbnail_file_size: 120000, // 🚀 ~120KB estimativa segura para miniaturas externas
       status: "active",
       active: true,
       created_at: new Date().toISOString(),

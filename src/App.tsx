@@ -32,6 +32,7 @@ import InstagramCallback from "@/pages/auth/InstagramCallback";
 import { Toaster } from "sonner";
 import StoryPreviewPage from "@/pages/StoryPreviewPage";
 import AuthCallbackPage from '@/pages/AuthCallbackPage';
+import SupportPage from "@/pages/SupportPage";
 
 // â”€â”€ Protege rotas que exigem login â”€â”€
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -163,6 +164,9 @@ function App() {
           {/* Financeiro e Planos */}
           <Route path="/billing" element={<ProtectedRoute><AppLayout><BillingPage /></AppLayout></ProtectedRoute>} />
           <Route path="/plans" element={<ProtectedRoute><AppLayout><PlansPage /></AppLayout></ProtectedRoute>} />
+
+          {/* Suporte */}
+          <Route path="/suporte" element={<ProtectedRoute><AppLayout><SupportPage /></AppLayout></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

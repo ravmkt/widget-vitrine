@@ -778,7 +778,11 @@ const SelectorModal = () => {
     </div>
   </div>
 )}
-            {/* ── DESIGN E FORMATO ── */}
+            
+
+
+
+{/* ── DESIGN E FORMATO ── */}
             <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
               <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-6"><Layout className="text-[#0094EB]" size={20} /><h3 className="text-lg font-black uppercase tracking-tight text-slate-800">Design e Formato</h3></div>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -1067,6 +1071,10 @@ const SelectorModal = () => {
     {isSaving ? 'Salvando...' : 'Salvar Alterações'}
   </button>
 </div>
+
+      
+
+      
 
       {isGalleryOpen && <GalleryModal />}
       {selectorModalOpen && <SelectorModal />}

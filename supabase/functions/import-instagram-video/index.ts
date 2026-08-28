@@ -60,6 +60,7 @@ serve(async (req) => {
       thumbnail_url: videoData.thumbnail_url || publicUrlData.publicUrl,
       thumbnail_source_type: "auto",
       file_size: arrayBuffer.byteLength,
+      thumbnail_file_size: 120000, // 🚀 ~120KB estimativa segura para miniaturas externas
       status: "active",
       active: true,
       created_at: new Date().toISOString(),
