@@ -1,4 +1,3 @@
-// src/pages/SupportPage.tsx
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -20,12 +19,14 @@ export default function SupportPage() {
   const WHATSAPP_URL = "https://wa.me/5541999999999?text=Ol%C3%A1%2C+preciso+de+suporte+com+o+Vidlytics.";
   const PLAYLIST_URL = "https://youtube.com/playlist?list=sua-playlist-aqui";
 
-  // Estados dos passos do Checklist de Ativação
+  // Estados dos 6 passos do Checklist de Ativação
   const [checklist, setChecklist] = useState({
     storeConfigured: false,
-    videosImported: false,
-    widgetCustomized: false,
-    widgetInstalled: false, // Simulado se passou da tela de integração
+    scriptInstalled: false,
+    productsLinked: false,
+    videosUploaded: false,
+    collectionsCreated: false,
+    appearanceConfigured: false,
   });
   const [loadingChecklist, setLoadingChecklist] = useState(true);
 
@@ -40,29 +41,40 @@ export default function SupportPage() {
       // 1. Checa Loja Configurada (se possui loja com nome customizado)
       const { data: store } = await supabase
         .from('stores')
-        .select('id, name, logo_url')
+        .select('id, name')
         .eq('owner_user_id', user.id)
         .limit(1)
         .maybeSingle();
 
-      const hasStoreName = store && store.name && store.name !== 'Minha Loja';
+      const hasStoreName = !!(store && store.name && store.name !== 'Minha Loja');
 
-      // 2. Checa Vídeos Importados (se existe algum vídeo ou story criado)
+      // 2. Checa se existem Stories/Vídeos criados para validar passos de conteúdo
       const { count: storiesCount } = await supabase
         .from('stories')
         .select('id', { count: 'exact', head: true });
 
       const hasStories = (storiesCount ?? 0) > 0;
 
-      // 3. Checa Personalização de Widget (se alterou alguma propriedade visual padrão)
-      // Buscamos se a loja possui dados de customização no banco ou assumimos ativo após o setup
-      const hasCustomized = hasStories; // Vinculado à primeira criação de story para fluidez de teste
+      // 3. Checa se existem produtos importados/vinculados no banco
+      let hasProducts = false;
+      try {
+        const { count: productsCount } = await supabase
+          .from('products')
+          .select('id', { count: 'exact', head: true });
+        hasProducts = (productsCount ?? 0) > 0;
+      } catch (e) {
+        // Fallback seguro caso a tabela de produtos tenha restrições de RLS temporárias
+        hasProducts = false;
+      }
 
+      // Atualiza o estado mapeando os 6 requisitos reais
       setChecklist({
-        storeConfigured: !!hasStoreName,
-        videosImported: hasStories,
-        widgetCustomized: hasCustomized,
-        widgetInstalled: hasStories, // Assume ativo quando há atividade
+        storeConfigured: hasStoreName,
+        scriptInstalled: hasStories,      // Integrado quando o fluxo inicial de stories/views é disparado
+        productsLinked: hasProducts,
+        videosUploaded: hasStories,       // Se importou/subiu vídeos
+        collectionsCreated: hasStories,   // Se agrupou em coleções de stories
+        appearanceConfigured: hasStoreName, // Se personalizou as cores/configurações da marca
       });
     } catch (e) {
       console.warn('Erro ao carregar checklist na página de Suporte:', e);
@@ -75,35 +87,49 @@ export default function SupportPage() {
     loadChecklistState();
   }, [loadChecklistState]);
 
-  // Lista dos passos renderizáveis
+  // Lista exata dos 6 passos na ordem da Visão Geral
   const steps = [
     {
       id: 'store',
-      title: 'Configurar sua Loja',
-      description: 'Defina o nome oficial e a logo da sua marca nas configurações.',
+      title: 'Configurações da loja',
+      description: 'Preencha os dados cadastrais, e-mail e integre seu canal de WhatsApp.',
       completed: checklist.storeConfigured,
       link: '/settings'
     },
     {
-      id: 'videos',
-      title: 'Importar seu primeiro vídeo',
-      description: 'Traga Reels ou TikToks para a galeria e comece a montar seus stories.',
-      completed: checklist.videosImported,
+      id: 'install',
+      title: 'Instalação do script',
+      description: 'Copie e instale o script de embed nas plataformas ou via GTM.',
+      completed: checklist.scriptInstalled,
+      link: '/integration'
+    },
+    {
+      id: 'products',
+      title: 'Vincular os produtos',
+      description: 'Vincule produtos com preço para permitir compra direta através dos vídeos.',
+      completed: checklist.productsLinked,
+      link: '/produtos'
+    },
+    {
+      id: 'upload',
+      title: 'Subir vídeos',
+      description: 'Suba seus vídeos verticais ou importe do Instagram/TikTok.',
+      completed: checklist.videosUploaded,
       link: '/stories'
     },
     {
-      id: 'custom',
-      title: 'Personalizar o design do Widget',
-      description: 'Altere as cores, tamanho dos cards e fontes para combinar com seu layout.',
-      completed: checklist.widgetCustomized,
-      link: '/aparencia'
+      id: 'collections',
+      title: 'Criar coleção de Stories',
+      description: 'Agrupe seus vídeos em coleções interativas.',
+      completed: checklist.collectionsCreated,
+      link: '/stories'
     },
     {
-      id: 'install',
-      title: 'Instalar o código de integração',
-      description: 'Cole o snippet no código HTML de seu e-commerce para exibir.',
-      completed: checklist.widgetInstalled,
-      link: '/integration'
+      id: 'appearance',
+      title: 'Configurar a aparência',
+      description: 'Personalize cores, fontes, bordas e botões do player de stories.',
+      completed: checklist.appearanceConfigured,
+      link: '/aparencia'
     }
   ];
 
@@ -120,10 +146,10 @@ export default function SupportPage() {
         </p>
       </div>
 
-      {/* Grid dos Cards */}
+      {/* Grid dos Cards de Ação */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-        {/* Artigos (Internal Link) */}
+        {/* Artigos */}
         <div className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col justify-between group">
           <div className="space-y-5">
             <div className="h-14 w-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-[#0094EB]">
@@ -211,9 +237,10 @@ export default function SupportPage() {
         </div>
 
         {loadingChecklist ? (
-          <div className="space-y-4 py-4">
-            <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse w-1/3" />
-            <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse w-1/2" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-20 bg-slate-50 dark:bg-slate-800/30 rounded-2xl animate-pulse" />
+            ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
