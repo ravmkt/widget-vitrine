@@ -62,7 +62,7 @@ const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [storeName, setStoreName] = useState<string>('');
-  const [appEnabled, setAppEnabled] = useState<boolean>(true); // Controle de status do App
+  const [appEnabled, setAppEnabled] = useState<boolean>(true); // Controle de status do App (widget_enabled)
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsInterval>('30');
   const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
@@ -243,9 +243,9 @@ const DashboardPage: React.FC = () => {
           console.error('[DashboardPage] Falha ao carregar appearances:', appearanceRes.reason);
         }
 
-        // 6. Configurações da Loja & Ativação do App
+        // 6. Configurações da Loja & Ativação do App (Filtro corrigido de app_enabled para widget_enabled)
         const settingsData = settingsRes.status === 'fulfilled' ? settingsRes.value.data || {} : {};
-        const isAppActive = settingsData.app_enabled !== false; // Padrão ativo se não especificado
+        const isAppActive = settingsData.widget_enabled !== false; // Fallback ativo se não especificado
         setAppEnabled(isAppActive);
 
         // Validação de Configurações salvas
@@ -395,45 +395,69 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fade-in font-sans text-slate-900 dark:text-[#e8ecf4] min-h-screen -m-6 p-6 sm:p-8 bg-transparent dark:bg-[radial-gradient(ellipse_at_top,_#1a1f3a_0%,_#0f1220_55%,_#0a0e1a_100%)]">
-      {/* ── 1. HEADER ── */}
-      <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 rounded-[2rem] border border-slate-200 dark:border-orange-500/15 shadow-sm dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
-        <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-          <span className="text-xs font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
-            Plano {usage.planName}
-          </span>
-          {usage.subscriptionStatus === 'trialing' && usage.trialDaysLeft !== null ? (
-            <span className="text-xs font-extrabold text-amber-700 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-700/40">
-              Período de Testes ({usage.trialDaysLeft} dias restantes)
+      
+      {/* ── 1. HEADER (Grid de 2 Colunas: Boas Vindas + Card de Status do App) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 rounded-[2rem] border border-slate-200 dark:border-orange-500/15 shadow-sm dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
+        
+        {/* Coluna 1: Boas vindas e Plano */}
+        <div className="lg:col-span-2 flex flex-col justify-center space-y-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
+              Plano {usage.planName}
             </span>
-          ) : usage.subscriptionStatus === 'active' ? (
-            <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-700/40">
-              Assinatura Ativa
-            </span>
-          ) : null}
-
-          {/* 🟢/🔴 Badge de Status de Funcionamento do App */}
-          {appEnabled ? (
-            <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-700 bg-emerald-50 dark:bg-emerald-950/10 dark:text-emerald-400 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/25 dark:shadow-[0_0_10px_rgba(16,185,129,0.1)]">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            {usage.subscriptionStatus === 'trialing' && usage.trialDaysLeft !== null ? (
+              <span className="text-xs font-extrabold text-amber-700 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-700/40">
+                Período de Testes ({usage.trialDaysLeft} dias restantes)
               </span>
-              Aplicativo Ativado
-            </span>
+            ) : usage.subscriptionStatus === 'active' ? (
+              <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-700/40">
+                Assinatura Ativa
+              </span>
+            ) : null}
+          </div>
+
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              Olá, {storeName || 'seja bem-vindo(a)'}
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-[#c0c5d4] mt-1.5 font-medium leading-relaxed">
+              Visão Geral — Acompanhe o consumo do plano, performance dos vídeos e configuração da sua loja.
+            </p>
+          </div>
+        </div>
+
+        {/* Coluna 2: Card Exclusivo e Chamativo de Status do Aplicativo */}
+        <div className="lg:col-span-1 flex items-stretch">
+          {appEnabled ? (
+            <div className="w-full bg-emerald-500/[0.04] dark:bg-emerald-500/[0.02] border-2 border-emerald-500/25 rounded-[1.8rem] p-5 flex flex-col justify-center space-y-2.5 transition-all shadow-[0_4px_20px_rgba(16,185,129,0.06)] dark:shadow-[0_4px_25px_rgba(16,185,129,0.02)]">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-3.5 w-3.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
+                </span>
+                <span className="text-sm font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
+                  Aplicativo Ativado
+                </span>
+              </div>
+              <p className="text-xs font-semibold text-emerald-700/80 dark:text-emerald-400/80 leading-relaxed">
+                Seus vídeos estão online e sendo transmitidos publicamente no seu e-commerce.
+              </p>
+            </div>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-xs font-black text-rose-700 bg-rose-50 dark:bg-rose-950/10 dark:text-rose-400 px-3 py-1 rounded-full border border-rose-200 dark:border-rose-500/25">
-              <span className="h-2 w-2 rounded-full bg-rose-500"></span>
-              Aplicativo Pausado
-            </span>
+            <div className="w-full bg-rose-500/[0.04] dark:bg-rose-500/[0.02] border-2 border-rose-500/25 rounded-[1.8rem] p-5 flex flex-col justify-center space-y-2.5 transition-all shadow-[0_4px_20px_rgba(244,63,94,0.06)] dark:shadow-[0_4px_25px_rgba(244,63,94,0.02)]">
+              <div className="flex items-center gap-2">
+                <span className="h-3.5 w-3.5 rounded-full bg-rose-500"></span>
+                <span className="text-sm font-black text-rose-800 dark:text-rose-400 uppercase tracking-wider">
+                  Aplicativo Desativado
+                </span>
+              </div>
+              <p className="text-xs font-semibold text-rose-700/80 dark:text-rose-400/80 leading-relaxed">
+                Seus stories estão pausados e temporariamente ocultos para o público no seu site.
+              </p>
+            </div>
           )}
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-          Olá, {storeName || 'seja bem-vindo(a)'} 👋
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-[#c0c5d4] mt-1 font-medium">
-          Visão Geral — Acompanhe o consumo do plano, performance dos vídeos e configuração da sua loja.
-        </p>
       </div>
 
       {/* ── 2. CONSUMO DO PLANO ── */}
