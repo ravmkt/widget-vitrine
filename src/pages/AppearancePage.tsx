@@ -2571,6 +2571,14 @@ const AppearancePage = () => {
   const [gridDevice, setGridDevice] = useState<DeviceType>('mobile');
   
   const [activeTab, setActiveTab] = useState<ModalTab>('basic');
+
+  // Sempre que a aba de customizacao mudar, forca os previews para o modo Mobile (Celular)
+  useEffect(() => {
+    setFloatingDevice('mobile');
+    setCarouselDevice('mobile');
+    setDynamicCarouselDevice('mobile');
+    setGridDevice('mobile');
+  }, [activeTab]);
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
   useEffect(() => {
@@ -3102,7 +3110,7 @@ const AppearancePage = () => {
                   
                   {/* BÁSICO */}
                   {activeTab === 'basic' && (
-                    <SectionCard title="Dados Básicos" description="Defina o nome do estilo e o comportamento global entre Desktop e Mobile." onReset={handleResetTab}>
+                    <SectionCard title="Dados Básicos" description="Defina o nome do estilo e o comportamento global entre Desktop e Mobile.">
                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <FormField label="Nome do Estilo">
                           <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ex: Estilo padrão" className={inputClass} />
@@ -3121,7 +3129,7 @@ const AppearancePage = () => {
 
                   {/* FLUTUANTE */}
                   {activeTab === 'floating' && (
-                    <SectionCard title="Configurações do Flutuante" onReset={handleResetTab}>
+                    <SectionCard title="Configurações do Flutuante">
                       {/* Seletor Dispositivo */}
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
@@ -3239,7 +3247,7 @@ const AppearancePage = () => {
 
                   {/* CARROSSEL */}
                   {activeTab === 'carousel' && (
-                    <SectionCard title="Configurações do Carrossel" onReset={handleResetTab}>
+                    <SectionCard title="Configurações do Carrossel">
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
                         {formData.useGlobalAppearance ? (
@@ -3358,7 +3366,7 @@ const AppearancePage = () => {
 
                   {/* CARROSSEL DINÂMICO */}
                   {activeTab === 'dynamic_carousel' && (
-                    <SectionCard title="Configurações do Carrossel Dinâmico" onReset={handleResetTab}>
+                    <SectionCard title="Configurações do Carrossel Dinâmico">
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
                         {formData.useGlobalAppearance ? (
@@ -3461,7 +3469,7 @@ const AppearancePage = () => {
 
                   {/* GRADE */}
                   {activeTab === 'grid' && (
-                    <SectionCard title="Configurações da Grade" onReset={handleResetTab}>
+                    <SectionCard title="Configurações da Grade">
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
                         {formData.useGlobalAppearance ? (
@@ -3546,7 +3554,7 @@ const AppearancePage = () => {
 
                   {/* PLAYER */}
                   {activeTab === 'modal' && (
-                    <SectionCard title="Configurações do Player" onReset={handleResetTab}>
+                    <SectionCard title="Configurações do Player">
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0094EB]" /><Smartphone size={14} /></div>
@@ -3613,9 +3621,18 @@ const AppearancePage = () => {
             </div>
 
             <div className="flex items-center justify-between border-t border-slate-100 bg-white px-6 py-3 shrink-0">
-              <div className="hidden sm:flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50/80 px-3 py-1.5 rounded-lg border border-slate-100">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} className="text-[#0094EB]"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                <span>Este painel é um <strong>preview meramente visual</strong>. Para testar cliques e interações, use a visualização direta da loja.</span>
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={handleResetTab}
+                  className="text-[11px] font-black uppercase tracking-wider text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100/80 px-3.5 py-2 rounded-xl border border-rose-100 transition-all cursor-pointer shrink-0 shadow-sm"
+                >
+                  Resetar
+                </button>
+                <div className="hidden md:flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50/80 px-3 py-1.5 rounded-lg border border-slate-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} className="text-[#0094EB]"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+                  <span>Este painel é um <strong>preview meramente visual</strong>. Para testar cliques e interações, use a visualização direta da loja.</span>
+                </div>
               </div>
 
               <div className="flex items-center gap-3">
