@@ -251,7 +251,7 @@ const VideoEditPage = () => {
           if (!mounted) return;
 
           if (!v) {
-            navigate('/gallery');
+            navigate('/storage');
             return;
           }
 
@@ -709,7 +709,7 @@ const VideoEditPage = () => {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/gallery')}
+            onClick={() => navigate('/storage')}
             className="p-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
           >
             <ArrowLeft size={18} />
@@ -1016,7 +1016,10 @@ const VideoEditPage = () => {
       <SuccessDialog
         isOpen={showSuccessModal}
         description="Vídeo salvo com sucesso."
-        onClose={() => setShowSuccessModal(false)}
+        onClose={() => {
+          setShowSuccessModal(false);
+          navigate('/storage'); // Redireciona o lojista de volta para o Armazenamento
+        }}
       />
     </div>
   );
