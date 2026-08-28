@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, {
   useCallback,
@@ -1487,11 +1487,13 @@ const SectionCard = ({
   description,
   children,
   className,
+  onReset,
 }: {
   title: string;
   description?: string;
   children: React.ReactNode;
   className?: string;
+  onReset?: () => void;
 }) => {
   return (
     <div
@@ -1500,10 +1502,21 @@ const SectionCard = ({
         className,
       )}
     >
-      <div className="border-b border-slate-100 pb-3">
-        <h3 className="text-base font-black text-slate-900">{title}</h3>
-        {description && (
-          <p className="mt-0.5 text-xs font-medium text-slate-500">{description}</p>
+      <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-black text-slate-900">{title}</h3>
+          {description && (
+            <p className="mt-0.5 text-xs font-medium text-slate-500">{description}</p>
+          )}
+        </div>
+        {onReset && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="text-[10px] font-black uppercase tracking-wider text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100/80 px-2.5 py-1.5 rounded-lg border border-rose-100 transition-all cursor-pointer shrink-0"
+          >
+            Resetar Aba
+          </button>
         )}
       </div>
       {children}
@@ -2552,10 +2565,10 @@ const AppearancePage = () => {
     createDefaultFormData(storeId),
   );
 
-  const [floatingDevice, setFloatingDevice] = useState<DeviceType>('desktop');
-  const [carouselDevice, setCarouselDevice] = useState<DeviceType>('desktop');
-  const [dynamicCarouselDevice, setDynamicCarouselDevice] = useState<DeviceType>('desktop');
-  const [gridDevice, setGridDevice] = useState<DeviceType>('desktop');
+  const [floatingDevice, setFloatingDevice] = useState<DeviceType>('mobile');
+  const [carouselDevice, setCarouselDevice] = useState<DeviceType>('mobile');
+  const [dynamicCarouselDevice, setDynamicCarouselDevice] = useState<DeviceType>('mobile');
+  const [gridDevice, setGridDevice] = useState<DeviceType>('mobile');
   
   const [activeTab, setActiveTab] = useState<ModalTab>('basic');
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -2907,6 +2920,52 @@ const AppearancePage = () => {
     setEditingStyle(null);
   };
 
+  const handleResetTab = () => {
+    const finalStoreId = resolvedStoreId || storeId;
+    const defaults = createDefaultFormData(finalStoreId);
+    
+    if (activeTab === 'basic') {
+      setFormData(prev => ({
+        ...prev,
+        name: '',
+        is_default: false,
+        useGlobalAppearance: false,
+        use_global_appearance: false,
+      }));
+      showSuccess('Configurações básicas resetadas!');
+    } else if (activeTab === 'floating') {
+      setFormData(prev => ({
+        ...prev,
+        floating_config: defaults.floating_config,
+      }));
+      showSuccess('Aparência flutuante resetada para o padrão!');
+    } else if (activeTab === 'carousel') {
+      setFormData(prev => ({
+        ...prev,
+        carousel_config: defaults.carousel_config,
+      }));
+      showSuccess('Carrossel resetado para o padrão!');
+    } else if (activeTab === 'dynamic_carousel') {
+      setFormData(prev => ({
+        ...prev,
+        dynamic_carousel_config: defaults.dynamic_carousel_config,
+      }));
+      showSuccess('Carrossel dinâmico resetado para o padrão!');
+    } else if (activeTab === 'grid') {
+      setFormData(prev => ({
+        ...prev,
+        grid_config: defaults.grid_config,
+      }));
+      showSuccess('Grade resetada para o padrão!');
+    } else if (activeTab === 'modal') {
+      setFormData(prev => ({
+        ...prev,
+        modal_config: defaults.modal_config,
+      }));
+      showSuccess('Player de vídeo resetado para o padrão!');
+    }
+  };
+
   const activeFloatingConfig = useMemo(() => getActiveResponsiveConfig(formData.floating_config, floatingDevice, formData.useGlobalAppearance), [formData.floating_config, floatingDevice, formData.useGlobalAppearance]);
   const activeCarouselConfig = useMemo(() => getActiveResponsiveConfig(formData.carousel_config, carouselDevice, formData.useGlobalAppearance), [formData.carousel_config, carouselDevice, formData.useGlobalAppearance]);
   const activeDynamicCarouselConfig = useMemo(() => getActiveResponsiveConfig(formData.dynamic_carousel_config, dynamicCarouselDevice, formData.useGlobalAppearance), [formData.dynamic_carousel_config, dynamicCarouselDevice, formData.useGlobalAppearance]);
@@ -3017,7 +3076,7 @@ const AppearancePage = () => {
             <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-3 shrink-0">
               <div>
                 <h2 className="text-xl font-black text-slate-900">{editingStyle ? 'Editar Estilo' : 'Criar Novo Estilo'}</h2>
-                <p className="mt-1 text-sm font-medium text-slate-500">Configure a identidade visual por área: global, flutuante, carrossel, grade e player.</p>
+                
               </div>
               <button type="button" onClick={handleCancel} disabled={saving} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-60"><X size={20} /></button>
             </div>
@@ -3043,7 +3102,7 @@ const AppearancePage = () => {
                   
                   {/* BÁSICO */}
                   {activeTab === 'basic' && (
-                    <SectionCard title="Dados Básicos" description="Defina o nome do estilo e o comportamento global entre Desktop e Mobile.">
+                    <SectionCard title="Dados Básicos" description="Defina o nome do estilo e o comportamento global entre Desktop e Mobile." onReset={handleResetTab}>
                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <FormField label="Nome do Estilo">
                           <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ex: Estilo padrão" className={inputClass} />
@@ -3062,7 +3121,7 @@ const AppearancePage = () => {
 
                   {/* FLUTUANTE */}
                   {activeTab === 'floating' && (
-                    <SectionCard title="Configurações do Flutuante">
+                    <SectionCard title="Configurações do Flutuante" onReset={handleResetTab}>
                       {/* Seletor Dispositivo */}
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
@@ -3180,7 +3239,7 @@ const AppearancePage = () => {
 
                   {/* CARROSSEL */}
                   {activeTab === 'carousel' && (
-                    <SectionCard title="Configurações do Carrossel">
+                    <SectionCard title="Configurações do Carrossel" onReset={handleResetTab}>
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
                         {formData.useGlobalAppearance ? (
@@ -3299,7 +3358,7 @@ const AppearancePage = () => {
 
                   {/* CARROSSEL DINÂMICO */}
                   {activeTab === 'dynamic_carousel' && (
-                    <SectionCard title="Configurações do Carrossel Dinâmico">
+                    <SectionCard title="Configurações do Carrossel Dinâmico" onReset={handleResetTab}>
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
                         {formData.useGlobalAppearance ? (
@@ -3402,7 +3461,7 @@ const AppearancePage = () => {
 
                   {/* GRADE */}
                   {activeTab === 'grid' && (
-                    <SectionCard title="Configurações da Grade">
+                    <SectionCard title="Configurações da Grade" onReset={handleResetTab}>
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
                         {formData.useGlobalAppearance ? (
@@ -3487,7 +3546,7 @@ const AppearancePage = () => {
 
                   {/* PLAYER */}
                   {activeTab === 'modal' && (
-                    <SectionCard title="Configurações do Player">
+                    <SectionCard title="Configurações do Player" onReset={handleResetTab}>
                       <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
                         <span className="text-xs font-bold text-slate-700">Dispositivo</span>
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0094EB]" /><Smartphone size={14} /></div>
@@ -3564,17 +3623,7 @@ const AppearancePage = () => {
                   <X size={14} /> Cancelar
                 </button>
                 
-                {storeUrl && (
-                  <button type="button" onClick={() => {
-                    let targetUrl = storeUrl.trim();
-                    if (!/^https?:\/\//i.test(targetUrl)) targetUrl = `https://${targetUrl}`;
-                    const connector = targetUrl.includes('?') ? '&' : '?';
-                    window.open(`${targetUrl}${connector}vidlytics_preview=true`, '_blank', 'noopener,noreferrer');
-                  }} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                    Ver na Loja
-                  </button>
-                )}
+
                 
                 <button type="button" onClick={handleSaveStyle} disabled={saving} className="flex items-center gap-1.5 rounded-xl bg-[#0094EB] px-5 py-2 text-xs font-bold text-white shadow-md hover:bg-[#0E4787] disabled:cursor-not-allowed disabled:opacity-60 transition-colors">
                   {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} {saving ? 'Salvando...' : 'Salvar'}
