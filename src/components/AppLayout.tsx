@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
-import FloatingSupportButton from './FloatingSupportButton';
+// Import do FloatingSupportButton removido para limpar o app
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { supabase } from '@/lib/supabase';
 import { Sparkles, Clock, AlertTriangle, XCircle } from 'lucide-react';
@@ -42,7 +42,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             .limit(1)
             .maybeSingle();
 
-if (userStore) {
+          if (userStore) {
             activeStoreId = userStore.id;
             localStorage.setItem('vidlytics_current_store_id', userStore.id);
             setSubscriptionStatus(userStore.subscription_status || 'trialing');
@@ -81,7 +81,7 @@ if (userStore) {
             }
           }
         }
-              } catch (e) {
+      } catch (e) {
         console.warn('[AppLayout] Falha ao verificar status da loja:', e);
       }
     };
@@ -124,7 +124,7 @@ if (userStore) {
           {/* Banner Global de Trial / Status (exceto na página de billing e plans para evitar duplicidade visual) */}
           {location.pathname !== '/billing' && location.pathname !== '/plans' && (
             <>
-{subscriptionStatus === 'trialing' && (() => {
+              {subscriptionStatus === 'trialing' && (() => {
                 const days = trialDaysRemaining ?? 7;
                 const isCritical = days <= 1;
                 const isWarning = days === 2;
@@ -247,7 +247,7 @@ if (userStore) {
             <div className="mx-auto max-w-7xl">
               {children}
             </div>
-            <FloatingSupportButton />
+            {/* O botão flutuante de suporte foi completamente removido daqui */}
           </main>
         </SidebarInset>
       </div>
