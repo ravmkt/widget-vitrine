@@ -129,7 +129,7 @@ const DashboardPage: React.FC = () => {
         // Execução resiliente com Promise.allSettled + Adição de consulta de store_settings
         const results = await Promise.allSettled([
           db.videos.getAll(storeId), // [0]
-          supabase.from('stores').select('*').eq('id', storeId).single(), // [1]
+          supabase.from('stores').select('*, plans(*)').eq('id', storeId).single(), // [1]
           supabase.from('usage_counters').select('*').eq('store_id', storeId).eq('month', currentMonth).maybeSingle(), // [2]
           supabase.from('products').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [3]
           supabase.from('stories').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [4]
