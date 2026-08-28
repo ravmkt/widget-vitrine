@@ -6,9 +6,10 @@ import {
   Loader2 
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { db } from '@/lib/db';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError, showWarning } from '@/lib/toast';
+
+type BillingCycle = 'monthly' | 'semiannual' | 'annual';
 
 export function PlansPage() {
   const navigate = useNavigate();
@@ -18,8 +19,11 @@ export function PlansPage() {
   const [storeId, setStoreId] = useState<string | null>(null);
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [plans, setPlans] = useState<any[]>([]);
+  
+  // Estado para controlar a periodicidade selecionada
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
 
-  /// Carrega a lista oficial de planos do Supabase e o plano atual da loja
+  // Carrega a lista oficial de planos do Supabase e o plano atual da loja
   useEffect(() => {
     const loadPlansData = async () => {
       try {
@@ -88,13 +92,41 @@ export function PlansPage() {
     loadPlansData();
   }, []);
 
+  // Simula e calcula o preço mensal proporcional e o total do ciclo com base na escolha
+  const calculatePrice = (priceCents: number, cycle: BillingCycle) => {
+    const basePrice = priceCents / 100;
+    
+    if (cycle === 'semiannual') {
+      const monthlyDiscounted = basePrice * 0.90; // 10% de desconto no preço mensal
+      return {
+        monthly: monthlyDiscounted,
+        total: monthlyDiscounted * 6,
+        text: 'semestral'
+      };
+    }
+    
+    if (cycle === 'annual') {
+      const monthlyDiscounted = basePrice * 0.80; // 20% de desconto no preço mensal
+      return {
+        monthly: monthlyDiscounted,
+        total: monthlyDiscounted * 12,
+        text: 'anual'
+      };
+    }
+
+    return {
+      monthly: basePrice,
+      total: basePrice,
+      text: 'mensal'
+    };
+  };
+
   // Processa o Checkout e Assinatura via Edge Function do Asaas
   const handleSelectPlan = async (
     targetPlan: any, 
     billingType: 'PIX' | 'BOLETO' | 'CREDIT_CARD' | 'UNDEFINED' = 'UNDEFINED'
   ) => {
-     console.log('🔥 handleSelectPlan CHAMADO', targetPlan.id); // <-- ADICIONE ESTA LINHA
-  if (!storeId || !supabase) return;
+    console.log('🔥 handleSelectPlan CHAMADO', targetPlan.id, 'Ciclo:', billingCycle);
     if (!storeId || !supabase) return;
     if (targetPlan.id === currentPlanId) return;
 
@@ -110,12 +142,13 @@ export function PlansPage() {
         return;
       }
 
-      // Invoca a Edge Function do Asaas
+      // Invoca a Edge Function do Asaas enviando o plano, loja e a periodicidade escolhida
       const { data, error } = await supabase.functions.invoke('create-asaas-subscription', {
         body: {
           plan_id: targetPlan.id,
           store_id: storeId,
           billing_type: billingType,
+          billing_cycle: billingCycle.toUpperCase() // Passa 'MONTHLY', 'SEMIANNUAL' ou 'ANNUAL'
         },
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -171,7 +204,7 @@ export function PlansPage() {
     );
   }
 
-return (
+  return (
     <div className="mx-auto max-w-7xl space-y-8 p-4 sm:p-6 pb-20 font-sans animate-fade-in">
       {/* ── CABEÇALHO & RETORNO ── */}
       <div>
@@ -184,7 +217,7 @@ return (
           Voltar para Minha Assinatura
         </button>
 
-        <div className="text-center max-w-2xl mx-auto space-y-2.5">
+        <div className="text-center max-w-2xl mx-auto space-y-4">
           <span className="inline-block text-[10px] font-black uppercase tracking-widest text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3.5 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
             Planos & Assinaturas
           </span>
@@ -194,15 +227,68 @@ return (
           <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">
             Faça upgrade ou downgrade a qualquer momento com cálculo proporcional automático.
           </p>
+
+          {/* ── SELETOR DE PERIODICIDADE (SWITCH) ── */}
+          <div className="flex justify-center pt-2">
+            <div className="inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-[#131725] rounded-2xl border border-slate-200/50 dark:border-white/5">
+              <button
+                type="button"
+                onClick={() => setBillingCycle('monthly')}
+                className={cn(
+                  "px-4 py-2 text-xs font-black rounded-xl cursor-pointer transition-all duration-200",
+                  billingCycle === 'monthly'
+                    ? "bg-white dark:bg-[#1c2237] text-[#0094EB] dark:text-[#ff7a29] shadow-sm"
+                    : "text-slate-400 hover:text-slate-600 dark:text-[#8a90a0] dark:hover:text-white"
+                )}
+              >
+                Mensal
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setBillingCycle('semiannual')}
+                className={cn(
+                  "px-4 py-2 text-xs font-black rounded-xl cursor-pointer transition-all duration-200 flex items-center gap-1.5",
+                  billingCycle === 'semiannual'
+                    ? "bg-white dark:bg-[#1c2237] text-[#0094EB] dark:text-[#ff7a29] shadow-sm"
+                    : "text-slate-400 hover:text-slate-600 dark:text-[#8a90a0] dark:hover:text-white"
+                )}
+              >
+                Semestral
+                <span className="text-[9px] bg-emerald-500 text-white px-1.5 py-0.5 rounded-md font-black">
+                  -10%
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBillingCycle('annual')}
+                className={cn(
+                  "px-4 py-2 text-xs font-black rounded-xl cursor-pointer transition-all duration-200 flex items-center gap-1.5",
+                  billingCycle === 'annual'
+                    ? "bg-white dark:bg-[#1c2237] text-[#0094EB] dark:text-[#ff7a29] shadow-sm"
+                    : "text-slate-400 hover:text-slate-600 dark:text-[#8a90a0] dark:hover:text-white"
+                )}
+              >
+                Anual
+                <span className="text-[9px] bg-[#ff7a29] text-white px-1.5 py-0.5 rounded-md font-black">
+                  -20%
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-{/* ── GRID DE CARDS MODULARES DE PLANOS ── */}
+      {/* ── GRID DE CARDS MODULARES DE PLANOS ── */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 pt-4 items-stretch">
         {plans.map((p, idx) => {
           const isCurrent = p.id === currentPlanId;
           const isUpdating = updatingPlanId === p.id;
           const isPopular = p.is_popular || p.slug === 'nivel_2' || idx === 1;
+
+          // Calcula os valores com desconto com base no ciclo selecionado
+          const priceDetails = calculatePrice(p.price_cents, billingCycle);
 
           return (
             <div
@@ -234,11 +320,24 @@ return (
                   )}
                 </div>
 
-                <div className="mt-2 flex items-baseline gap-1.5">
-                  <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                    R$ {(p.price_cents / 100).toFixed(0)}
-                  </span>
-                  <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">/mês</span>
+                <div className="mt-2 flex flex-col">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight transition-all duration-300">
+                      R$ {priceDetails.monthly.toFixed(0)}
+                    </span>
+                    <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">/mês</span>
+                  </div>
+                  
+                  {/* Informativo de Cobrança do Ciclo Selecionado */}
+                  {billingCycle !== 'monthly' ? (
+                    <span className="text-[10px] font-bold text-emerald-500 mt-1">
+                      Cobrado R$ {priceDetails.total.toFixed(2).replace('.', ',')} {priceDetails.text}mente
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#8a90a0] mt-1">
+                      Cobrado mensalmente
+                    </span>
+                  )}
                 </div>
 
                 {/* Lista de Recursos com Checkmark Dual-Theme */}
@@ -294,6 +393,6 @@ return (
           );
         })}
       </div>
-          </div>
+    </div>
   );
-  }
+}
