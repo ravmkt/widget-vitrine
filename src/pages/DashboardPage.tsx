@@ -347,13 +347,13 @@ const DashboardPage: React.FC = () => {
     if (act.includes('plan') || act.includes('assinatura') || act.includes('fatura') || act.includes('upgrade') || act.includes('pagamento')) {
       return { label: '💎 Plano', style: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30' };
     }
-    if (act.includes('storie') || act.includes('coleção') || act.includes('grupo') || act.includes('stories')) {
+    if (act.includes('storie') || act.includes('coleção') || act.includes('grupo') || act.includes('stories') || act.includes('layout')) {
       return { label: '📱 Stories', style: 'bg-pink-50 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 border border-pink-100 dark:border-pink-900/30' };
     }
     if (act.includes('aparência') || act.includes('design') || act.includes('player') || act.includes('personaliz')) {
       return { label: '🎨 Design', style: 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-900/30' };
     }
-    if (act.includes('script') || act.includes('embed') || act.includes('integra')) {
+    if (act.includes('script') || act.includes('embed') || act.includes('integra') || act.includes('widget') || act.includes('local')) {
       return { label: '🚀 Script', style: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30' };
     }
     return { label: '⚡ Ação', style: 'bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border border-slate-150 dark:border-slate-800/30' };
