@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   var WIDGET_VERSION = '2026.08.27-04';
 
   console.info(
@@ -1906,7 +1906,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       media.preload = 'auto';
       media.autoplay = true;
       media.muted = isUserMuted; // Mantém o som ligado se o usuário já tiver desmutado anteriormente
-      media.loop = true;
+      media.loop = false; // Corrigido para disparar evento 'ended' e avancar sequencialmente
       media.playsInline = true;
       media.setAttribute('playsinline', '');
       media.setAttribute('webkit-playsinline', '');
@@ -3865,7 +3865,7 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     });
 
     var videoFrame = document.createElement('div');
-    videoFrame.style.cssText = 'position:relative;width:100%;aspect-ratio:' + aspectRatio + ';overflow:hidden;border-radius:' + (isCircle ? '999px' : cfg.borderRadius + 'px') + ';background:' + (cfg.bgColor || '#000') + ';transition:filter ' + cfg.transitionMs + 'ms ease;';
+    videoFrame.style.cssText = 'position:relative;width:100%;aspect-ratio:' + aspectRatio + ';overflow:hidden;border-radius:' + (isCircle ? '999px' : cfg.borderRadius + 'px') + ';background:' + (cfg.bgColor || '#000') + ';transition:filter ' + cfg.transitionMs + 'ms ease;transform:translateZ(0) !important;-webkit-backface-visibility:hidden !important;-webkit-mask-image:-webkit-radial-gradient(white, black) !important;';
 
     var video = document.createElement('video');
     video.src = item.url || '';
@@ -4865,6 +4865,7 @@ function renderGridWidget(container, stories, appearance) {
       '-webkit-transform:translateZ(0);',
       'backface-visibility:hidden;',
       '-webkit-backface-visibility:hidden;',
+      '-webkit-mask-image:-webkit-radial-gradient(white, black);',
       hasBorder ? ('box-shadow: inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';') : '',
     ].join('');
 
