@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 
 interface ConfirmDeleteDialogProps {
@@ -6,7 +6,8 @@ interface ConfirmDeleteDialogProps {
   onClose: () => void;
   onConfirm: () => void;
   title: string;
-  description: string;
+  description?: string;
+  itemName?: string; // Prop opcional para destacar o nome do arquivo em azul como no print
 }
 
 const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
@@ -15,40 +16,73 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
   onConfirm,
   title,
   description,
+  itemName,
 }) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[99999] bg-amber-950/20 flex items-center justify-center px-4 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-md bg-[#FFFBEB] rounded-2xl p-6 shadow-2xl border border-amber-200 overflow-hidden animate-scale-up">
-        
-        {/* Botão X de fechar no canto superior direito */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full bg-white/80 hover:bg-white text-amber-900 shadow-sm border border-amber-100 transition-all cursor-pointer"
-          aria-label="Fechar"
-        >
-          <X size={14} />
-        </button>
+  // Lógica inteligente para retrocompatibilidade: 
+  // Se houver itemName, renderiza o texto padrão do print.
+  // Se não houver, mas a descrição tiver algo entre aspas, destaca o texto entre aspas em azul!
+  let highlightedContent: React.ReactNode = description;
 
-        {/* Conteúdo Centralizado */}
-        <div className="flex flex-col items-center text-center mt-2 mb-6">
-          <div className="p-3.5 bg-amber-100 rounded-full mb-3.5 border border-amber-200">
-            <AlertTriangle className="h-7 w-7 text-amber-600 animate-pulse" />
-          </div>
-          <h3 className="text-base font-extrabold text-amber-950 mb-1.5">
-            {title}
+  if (itemName) {
+    highlightedContent = (
+      <>
+        Esta ação é irreversível. O item <span className="text-[#0091FF] font-extrabold">"{itemName}"</span> será removido permanentemente.
+      </>
+    );
+  } else if (description) {
+    const match = description.match(/"([^"]+)"/);
+    if (match) {
+      const parts = description.split(match[0]);
+      highlightedContent = (
+        <>
+          {parts[0]}
+          <span className="text-[#0091FF] font-extrabold">"{match[1]}"</span>
+          {parts[1]}
+        </>
+      );
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[99999] bg-slate-900/40 flex items-center justify-center px-4 backdrop-blur-[2px] animate-fade-in">
+      <div className="relative w-full max-w-[480px] bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 overflow-hidden animate-scale-up flex flex-col">
+        
+        {/* Cabeçalho */}
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-sm font-extrabold text-slate-800 tracking-wider uppercase font-sans">
+            {title || 'EXCLUIR ARQUIVO'}
           </h3>
-          <p className="text-xs font-medium text-amber-800/90 leading-relaxed max-w-[280px]">
-            {description}
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+            aria-label="Fechar"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Ícone de Alerta Centralizado */}
+        <div className="flex justify-center mb-6">
+          <div className="w-20 h-20 rounded-full border border-amber-100 bg-amber-50/40 flex items-center justify-center">
+            <AlertTriangle className="h-10 w-10 text-amber-500" />
+          </div>
+        </div>
+
+        {/* Banner de Aviso */}
+        <div className="mb-8 p-4 bg-[#FFFDF5] border border-amber-100 rounded-2xl flex items-start gap-3">
+          <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+          <p className="text-xs font-semibold text-amber-950/90 leading-relaxed text-left">
+            {highlightedContent}
           </p>
         </div>
 
-        {/* Botões de Ação */}
-        <div className="flex items-center gap-2.5">
+        {/* Rodapé de Ações */}
+        <div className="flex items-center gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl bg-white border border-amber-200 text-xs font-bold text-amber-900 hover:bg-amber-50 transition-colors shadow-sm cursor-pointer text-center"
+            className="flex-1 py-3 rounded-xl bg-white border border-slate-200 text-xs font-extrabold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-all cursor-pointer text-center"
           >
             Cancelar
           </button>
@@ -57,11 +91,12 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
               onConfirm();
               onClose();
             }}
-            className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white transition-colors shadow-sm cursor-pointer text-center"
+            className="flex-1 py-3 rounded-xl bg-[#0091FF] hover:bg-[#0081e0] text-xs font-extrabold text-white transition-all cursor-pointer text-center shadow-sm"
           >
             Excluir
           </button>
         </div>
+
       </div>
     </div>
   );
