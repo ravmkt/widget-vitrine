@@ -62,6 +62,7 @@ const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [storeName, setStoreName] = useState<string>('');
+  const [appEnabled, setAppEnabled] = useState<boolean>(true); // Controle de status do App
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsInterval>('30');
   const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
@@ -242,6 +243,11 @@ const DashboardPage: React.FC = () => {
           console.error('[DashboardPage] Falha ao carregar appearances:', appearanceRes.reason);
         }
 
+        // 6. Configurações da Loja & Ativação do App
+        const settingsData = settingsRes.status === 'fulfilled' ? settingsRes.value.data || {} : {};
+        const isAppActive = settingsData.app_enabled !== false; // Padrão ativo se não especificado
+        setAppEnabled(isAppActive);
+
         // Validação de Configurações salvas
         const hasSettingsSaved = settingsRes.status === 'fulfilled' && !!settingsRes.value.data && !!settingsRes.value.data.store_name;
 
@@ -275,7 +281,7 @@ const DashboardPage: React.FC = () => {
             title: 'Subir vídeos',
             description: 'Suba seus vídeos verticais ou importe do Instagram/TikTok.',
             route: '/videos',
-            completed: totalVideosCount > 0,
+            completed: fetchedVideos.length > 0,
           },
           {
             id: 'stories',
@@ -391,7 +397,7 @@ const DashboardPage: React.FC = () => {
     <div className="space-y-8 animate-fade-in font-sans text-slate-900 dark:text-[#e8ecf4] min-h-screen -m-6 p-6 sm:p-8 bg-transparent dark:bg-[radial-gradient(ellipse_at_top,_#1a1f3a_0%,_#0f1220_55%,_#0a0e1a_100%)]">
       {/* ── 1. HEADER ── */}
       <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 rounded-[2rem] border border-slate-200 dark:border-orange-500/15 shadow-sm dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
-        <div className="flex items-center gap-2 mb-2.5">
+        <div className="flex items-center gap-2 mb-2.5 flex-wrap">
           <span className="text-xs font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
             Plano {usage.planName}
           </span>
@@ -404,6 +410,22 @@ const DashboardPage: React.FC = () => {
               Assinatura Ativa
             </span>
           ) : null}
+
+          {/* 🟢/🔴 Badge de Status de Funcionamento do App */}
+          {appEnabled ? (
+            <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-700 bg-emerald-50 dark:bg-emerald-950/10 dark:text-emerald-400 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/25 dark:shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              Aplicativo Ativado
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-xs font-black text-rose-700 bg-rose-50 dark:bg-rose-950/10 dark:text-rose-400 px-3 py-1 rounded-full border border-rose-200 dark:border-rose-500/25">
+              <span className="h-2 w-2 rounded-full bg-rose-500"></span>
+              Aplicativo Pausado
+            </span>
+          )}
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -601,9 +623,7 @@ const DashboardPage: React.FC = () => {
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-slate-400 dark:text-[#8a90a0] uppercase">CTR</p>
-                          <p className="text-xs font-black text-slate-900 dark:text-white">
-                            {item.metrics?.ctr ? `${item.metrics.ctr.toFixed(1).replace('.', ',')}%` : '0,0%'}
-                          </p>
+                          <p className="text-xs font-black text-slate-900 dark:text-white">{item.metrics?.ctr ? `${item.metrics.ctr.toFixed(1).replace('.', ',')}%` : '0,0%'}</p>
                         </div>
                       </div>
                     </div>
