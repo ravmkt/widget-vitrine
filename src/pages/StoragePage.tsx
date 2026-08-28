@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError } from '@/utils/toast';
+import CustomDialog from '@/components/CustomDialog'; // 🚀 Importado para manter o padrão visual dos modais
 
 // Utilitário robusto para extrair e gerar a capa de links externos (YouTube Shorts, Vídeos e Instagram Reels)
 const getExternalVideoThumbnail = (url: string): string => {
@@ -335,6 +336,9 @@ export default function StoragePage() {
   const [selectedModelId, setSelectedModelId] = useState('');
   const [sizingModelsList, setSizingModelsList] = useState<any[]>([]);
   const [savingUrl, setSavingUrl] = useState(false);
+  
+  // ── ESTADO PARA O POPUP DE CONFIRMAÇÃO DE EXCLUSÃO PERSONALIZADO ──
+  const [deleteFileConfirm, setDeleteFileConfirm] = useState<{ id: string; name: string } | null>(null);
 
   // Estado para gerenciar a visualização da mídia atual no modal interno
   const [previewMedia, setPreviewMedia] = useState<{
@@ -345,10 +349,8 @@ export default function StoragePage() {
 
   // ── RESOLUÇÃO DE STORE ID ULTRA RESILIENTE (ANTI-FALHAS E MULTI-TENANT) ──
   const resolveActiveStoreId = useCallback(async (): Promise<string | null> => {
-    // 1. Prioriza o estado carregado em memória
     if (storeId) return storeId;
 
-    // 2. Tenta recuperar de todas as chaves comuns de armazenamento local
     const keys = [
       'vidlytics_current_store_id',
       'current_store_id',
@@ -367,7 +369,6 @@ export default function StoragePage() {
       }
     }
 
-    // 3. Tenta recuperar do IndexedDB local de configurações
     try {
       const settings = await db.getSettings();
       if (settings) {
@@ -380,13 +381,11 @@ export default function StoragePage() {
       }
     } catch (_) {}
 
-    // 4. Fallback de API do Supabase (autenticação) de forma resiliente a falhas de colunas
     if (supabase) {
       try {
         const { data: sessionData } = await supabase.auth.getSession();
         const user = sessionData?.session?.user;
         if (user) {
-          // Tenta query na tabela stores tratando erros (caso mude owner_user_id por user_id)
           const { data: storeRow } = await supabase
             .from('stores')
             .select('id')
@@ -401,7 +400,6 @@ export default function StoragePage() {
             return storeRow.id;
           }
 
-          // Segunda tentativa na tabela profiles/users comuns
           const { data: profileRow } = await supabase
             .from('profiles')
             .select('store_id')
@@ -417,7 +415,6 @@ export default function StoragePage() {
       } catch (_) {}
     }
 
-    // 5. Tenta extrair diretamente do caminho de URL ativa ou query params (Fallback definitivo)
     try {
       const pathParts = window.location.pathname.split('/');
       for (const part of pathParts) {
@@ -444,11 +441,9 @@ export default function StoragePage() {
   useEffect(() => {
     const checkIntegrations = async () => {
       try {
-        // Verifica se a URL retornou com sucesso do OAuth (ex: TikTok ou Instagram)
         const params = new URLSearchParams(window.location.search);
         if (params.get('tiktok') === 'connected' || params.get('success') === 'true') {
           showSuccess('Conta conectada com sucesso!');
-          // Limpa os parâmetros da URL mantendo a limpa
           window.history.replaceState({}, document.title, window.location.pathname);
         }
 
@@ -551,7 +546,6 @@ export default function StoragePage() {
 
       showSuccess('Importando vídeo para a sua biblioteca... Isso pode levar alguns segundos.');
 
-      // Chama a Edge Function para lidar com o download, bypass de CORS e upload para o Storage
       const { data, error } = await supabase.functions.invoke('import-instagram-video', {
         body: { storeId, videoData: video },
       });
@@ -624,7 +618,6 @@ export default function StoragePage() {
         throw new Error('ID da loja não encontrado.');
       }
 
-      // 🔴 Fluxo Pinterest: Baixa e hospeda o arquivo via Edge Function
       if (isPinterestUrl) {
         if (!supabase) {
           throw new Error('Conexão com o banco de dados indisponível.');
@@ -646,7 +639,6 @@ export default function StoragePage() {
           throw new Error(error?.message || data?.error || 'Erro ao importar o Pin.');
         }
 
-        // Atualiza os vínculos opcionais caso tenham sido selecionados no modal
         if (data.videoId && (selectedProductId || selectedModelId)) {
           const updatePayload: Record<string, any> = {};
           if (selectedProductId) updatePayload.product_id = selectedProductId;
@@ -665,7 +657,6 @@ export default function StoragePage() {
         return;
       }
 
-      // Fluxo padrão para outras URLs externas (YouTube, links diretos, etc.)
       const extractedThumb = getExternalVideoThumbnail(formattedUrl);
       const title = externalTitle.trim() || `VÍDEO_EXTERNO_${Date.now().toString().slice(-4)}`;
 
@@ -727,7 +718,6 @@ export default function StoragePage() {
         throw new Error('ID da loja não encontrado. Recarregue a página.');
       }
 
-      // 🛑 Validação cirúrgica contra duplicados (mesmo nome e tamanho)
       if (supabase) {
         const { data: duplicate } = await supabase
           .from('videos')
@@ -788,17 +778,14 @@ export default function StoragePage() {
         finalThumbUrl = finalVideoUrl;
         thumbnailSize = file.size;
       } else if (isVideo) {
-        // ── ESTEIRA DE GERAÇÃO ULTRA-RESILIENTE DE THUMBNAIL (3 NÍVEIS) ──
         let thumbBlob: Blob | null = null;
 
-        // Nível 1: Geração Local no Browser usando o arquivo File original (Super rápido)
         try {
           thumbBlob = await generateVideoThumbnail(file);
           console.log('[Vidlytics Storage] Nível 1: Thumbnail obtida localmente do File com sucesso.');
         } catch (localFileErr) {
           console.warn('[Vidlytics Storage] Nível 1 falhou (File local incompatível):', localFileErr);
 
-          // Nível 2: Geração Local no Browser usando a URL pública recém-enviada
           try {
             if (finalVideoUrl) {
               thumbBlob = await generateVideoThumbnailFromUrl(finalVideoUrl);
@@ -809,7 +796,6 @@ export default function StoragePage() {
           }
         }
 
-        // Se conseguimos obter o Blob localmente (seja do Nível 1 ou Nível 2), fazemos o upload
         if (thumbBlob && thumbBlob.size > 0) {
           thumbnailSize = thumbBlob.size;
           if (supabase) {
@@ -835,14 +821,13 @@ export default function StoragePage() {
           }
         }
 
-        // Nível 3: Fallback Definitivo via Edge Function se todos os métodos do navegador falharem
         if (!finalThumbUrl) {
           console.log('[Vidlytics Storage] Nível 3: Chamando Edge Function "fetch-thumbnail" para decodificação remota...');
           try {
             const edgeThumbUrl = await fetchThumbnailFromEdge(finalVideoUrl, activeId);
             if (edgeThumbUrl) {
               finalThumbUrl = edgeThumbUrl;
-              thumbnailSize = 120 * 1024; // Tamanho estimado de 120KB para estatísticas do plano
+              thumbnailSize = 120 * 1024;
               console.log('[Vidlytics Storage] Nível 3: Thumbnail obtida do servidor com sucesso!');
             }
           } catch (edgeErr) {
@@ -971,7 +956,6 @@ export default function StoragePage() {
 
       const activeStoreId = await resolveActiveStoreId();
 
-      // Busca vídeos reais da loja ativa com joints relacionais e fallback defensivo
       let realVideos: any[] = [];
       if (activeStoreId) {
         if (supabase) {
@@ -1012,7 +996,6 @@ export default function StoragePage() {
           if (str.startsWith('data:')) return str;
           if (str.startsWith('blob:')) return '';
 
-          // Se já for uma URL absoluta completa com scheme (Supabase store-assets, videos ou CDN externo)
           if (/^https?:\/\//i.test(str)) {
             try {
               const [baseUrl, ...queryParts] = str.split('?');
@@ -1023,7 +1006,6 @@ export default function StoragePage() {
             }
           }
 
-          // Caminho relativo dentro do bucket videos
           const cleanPath = str
             .replace(/^\/+/, '')
             .replace(/^storage\/v1\/object\/public\/videos\//, '')
@@ -1053,7 +1035,6 @@ export default function StoragePage() {
                                 vid.source_type === 'image' ||
                                 vid.video_source_type === 'image';
 
-            // Para imagens, a própria URL do arquivo serve como thumbnail
             let finalThumbnail = '';
             if (isFileImage) {
               finalThumbnail = rawThumb || validVideoUrl;
@@ -1070,36 +1051,31 @@ export default function StoragePage() {
             const isHostedOnPlatform = videoUrlStr.includes('supabase');
             const isExternalUrl = isExplicitUrlType || (!isHostedOnPlatform && videoUrlStr.startsWith('http'));
 
-            // Tamanho em bytes do vídeo físico no storage
             const videoBytes = isExternalUrl 
               ? 0 
               : (vid.file_size && Number(vid.file_size) > 0 
                   ? Number(vid.file_size) 
-                  : 20971520); // Fallback robusto de 20MB caso não esteja gravado
+                  : 20971520);
 
-            // ⚠️ Correção Crucial: Se o Thumbnail está hospedado no Supabase, ele consome storage!
             const isThumbHosted = rawThumb && rawThumb.includes('supabase');
             const thumbnailBytes = isThumbHosted
               ? (vid.thumbnail_file_size && Number(vid.thumbnail_file_size) > 0 
                   ? Number(vid.thumbnail_file_size) 
-                  : 150 * 1024) // Fallback inteligente de 150KB para thumbnails hospedados sem metadado de tamanho
+                  : 150 * 1024)
               : 0;
 
-            // ⚠️ Correção Crucial: Soma o vídeo e a thumbnail que estão consumindo espaço no Storage (antes usava Math.max)
             const totalMediaBytes = videoBytes + thumbnailBytes;
 
             const formattedDate = vid.created_at 
               ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
               : 'Hoje';
 
-            // Resolução do Nome e Imagem do Produto
             const resolvedProductName = vid.products?.name || vid.product_name || vid.product?.name || vid.product?.title || undefined;
             const resolvedProductImage = sanitizeUrl(
               vid.products?.image_url || (vid.products as any)?.image ||
               vid.product?.image_url || (vid.product as any)?.image || vid.product_image_url
             );
 
-            // Resolução do Nome do Story Vinculado (cobre array 1:N e objeto 1:1)
             let resolvedStoryTitle: string | undefined = undefined;
             if (Array.isArray(vid.story_videos) && vid.story_videos.length > 0) {
               const firstStory = vid.story_videos[0]?.stories;
@@ -1135,7 +1111,6 @@ export default function StoragePage() {
         });
       }
 
-      // Busca cota oficial e plano da loja ativa no Supabase
       if (activeStoreId && supabase) {
         try {
           const { data: storeRow } = await supabase
@@ -1167,16 +1142,13 @@ export default function StoragePage() {
             .maybeSingle();
 
           if (settingsData?.logo_url) {
-            // ── CÁLCULO DINÂMICO DE TAMANHO DA LOGO (EVITA 0 B) ──
-            let logoSize = 150 * 1024; // Fallback elegante: 150 KB padrão caso CORS bloqueie HEAD e GET
+            let logoSize = 150 * 1024;
             try {
-              // Tenta HEAD request para capturar o Content-Length sem baixar o arquivo inteiro
               const response = await fetch(settingsData.logo_url, { method: 'HEAD' });
               const contentLength = response.headers.get('content-length');
               if (contentLength) {
                 logoSize = parseInt(contentLength, 10);
               } else {
-                // Caso o header não venha de primeira, fazemos um GET simples para obter o Blob
                 const getResponse = await fetch(settingsData.logo_url);
                 const blob = await getResponse.blob();
                 if (blob && blob.size > 0) {
@@ -1191,7 +1163,7 @@ export default function StoragePage() {
               id: 'logo-setting-file',
               name: 'LOGOTIPO_OFICIAL_LOJA.png',
               type: 'image',
-              sizeInBytes: logoSize, // Agora calcula o tamanho real!
+              sizeInBytes: logoSize,
               createdAt: 'Ativo',
               thumbnailUrl: settingsData.logo_url,
               fileUrl: settingsData.logo_url,
@@ -1214,7 +1186,7 @@ export default function StoragePage() {
     loadAccountStorageData();
   }, [loadAccountStorageData]);
 
-  // Cálculo oficial do consumo de armazenamento (prioriza a autoridade do banco de dados)
+  // Cálculo oficial do consumo de armazenamento
   const totalUsedBytes = useMemo(() => {
     if (serverStorageUsedBytes !== null) {
       return serverStorageUsedBytes;
@@ -1248,84 +1220,87 @@ export default function StoragePage() {
     });
   }, [files, searchTerm, selectedType]);
 
-  const handleDeleteFile = async (id: string, name: string) => {
+  // ── FUNÇÃO QUE DISPARA O MODAL DE EXCLUSÃO PERSONALIZADO (ANTI-POPUP NATIVO) ──
+  const triggerDeleteConfirm = (id: string, name: string) => {
     if (id === 'logo-setting-file') {
       showError('O logotipo da loja não pode ser excluído por este painel.');
       return;
     }
+    setDeleteFileConfirm({ id, name });
+  };
 
-    if (window.confirm(`Tem certeza que deseja excluir o arquivo "${name}"?`)) {
-      try {
-        if (supabase) {
-          // 1. Busca as URLs da mídia no banco de dados antes de remover o registro
-          const { data: videoData, error: fetchError } = await supabase
-            .from('videos')
-            .select('video_url, thumbnail_url')
-            .eq('id', id)
-            .maybeSingle();
+  // ── PROCESSA A EXCLUSÃO FÍSICA E REGISTRAL APÓS A CONFIRMAÇÃO DO USUÁRIO ──
+  const handleDeleteFile = async () => {
+    if (!deleteFileConfirm) return;
+    const { id, name } = deleteFileConfirm;
 
-          if (fetchError) throw fetchError;
+    try {
+      if (supabase) {
+        // 1. Busca as URLs da mídia no banco de dados antes de remover o registro
+        const { data: videoData, error: fetchError } = await supabase
+          .from('videos')
+          .select('video_url, thumbnail_url')
+          .eq('id', id)
+          .maybeSingle();
 
-          // 2. Exclui o registro definitivo na tabela 'videos'
-          const { error: dbError } = await supabase.from('videos').delete().eq('id', id);
-          if (dbError) throw dbError;
+        if (fetchError) throw fetchError;
 
-          // 3. Se a mídia existia e temos as URLs, deletamos fisicamente do Supabase Storage
-          if (videoData) {
-            // Helper resiliente para extrair bucket e path interno das URLs do Storage
-            const extractStorageParams = (url: string) => {
-              if (!url) return null;
-              const match = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
-              if (match) {
-                return { bucket: match[1], path: match[2] };
-              }
-              return null;
-            };
+        // 2. Exclui o registro definitivo na tabela 'videos'
+        const { error: dbError } = await supabase.from('videos').delete().eq('id', id);
+        if (dbError) throw dbError;
 
-            // Remove o arquivo principal (vídeo ou imagem) do Storage
-            const mainFile = extractStorageParams(videoData.video_url || '');
-            if (mainFile) {
-              const { error: mainDeleteErr } = await supabase.storage
-                .from(mainFile.bucket)
-                .remove([mainFile.path]);
-              if (mainDeleteErr) {
-                console.warn(`[Storage Hard Delete] Erro ao remover arquivo principal (${mainFile.path}):`, mainDeleteErr);
-              }
+        // 3. Deleta os arquivos físicos correspondentes de forma transparente do Supabase Storage
+        if (videoData) {
+          const extractStorageParams = (url: string) => {
+            if (!url) return null;
+            const match = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+            if (match) {
+              return { bucket: match[1], path: match[2] };
             }
+            return null;
+          };
 
-            // Remove a thumbnail (miniatura) do Storage, caso exista e seja um arquivo diferente
-            const thumbFile = extractStorageParams(videoData.thumbnail_url || '');
-            if (thumbFile && thumbFile.path !== mainFile?.path) {
-              const { error: thumbDeleteErr } = await supabase.storage
-                .from(thumbFile.bucket)
-                .remove([thumbFile.path]);
-              if (thumbDeleteErr) {
-                console.warn(`[Storage Hard Delete] Erro ao remover miniatura (${thumbFile.path}):`, thumbDeleteErr);
-              }
+          const mainFile = extractStorageParams(videoData.video_url || '');
+          if (mainFile) {
+            const { error: mainDeleteErr } = await supabase.storage
+              .from(mainFile.bucket)
+              .remove([mainFile.path]);
+            if (mainDeleteErr) {
+              console.warn(`[Storage Hard Delete] Erro ao remover arquivo principal (${mainFile.path}):`, mainDeleteErr);
             }
           }
-        } else if (typeof db.videos?.delete === 'function') {
-          await db.videos.delete(id);
-        }
 
-        showSuccess('Arquivo removido com sucesso!');
-        await loadAccountStorageData();
-      } catch (err) {
-        console.error('Erro ao excluir arquivo:', err);
-        showError('Não foi possível excluir o arquivo.');
+          const thumbFile = extractStorageParams(videoData.thumbnail_url || '');
+          if (thumbFile && thumbFile.path !== mainFile?.path) {
+            const { error: thumbDeleteErr } = await supabase.storage
+              .from(thumbFile.bucket)
+              .remove([thumbFile.path]);
+            if (thumbDeleteErr) {
+              console.warn(`[Storage Hard Delete] Erro ao remover miniatura (${thumbFile.path}):`, thumbDeleteErr);
+            }
+          }
+        }
+      } else if (typeof db.videos?.delete === 'function') {
+        await db.videos.delete(id);
       }
+
+      showSuccess('Arquivo removido com sucesso!');
+      setDeleteFileConfirm(null); // Fecha o modal
+      await loadAccountStorageData();
+    } catch (err) {
+      console.error('Erro ao excluir arquivo:', err);
+      showError('Não foi possível excluir o arquivo.');
     }
   };
 
   return (
     <div className="animate-fade-in space-y-8 pb-20 font-sans">
-      {/* ── CABEÇALHO DA PÁGINA (Sincronizado perfeitamente com o layout dos Stories) ── */}
+      {/* ── CABEÇALHO DA PÁGINA ── */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Armazenamento
           </h1>
-          {/* Subtítulo perfeitamente padronizado com o tamanho de Stories */}
           <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-[#c0c5d4] leading-relaxed">
             Gerencie os vídeos e imagens hospedados no seu plano e monitore o uso de espaço.
           </p>
@@ -1644,10 +1619,8 @@ export default function StoragePage() {
       {/* ── CARD PRINCIPAL UNIFICADO (Tabela e Busca) ── */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         
-        {/* BARRA INTERNA DE FILTROS E BUSCA (Padrão exato do print com filtros independentes) */}
+        {/* BARRA INTERNA DE FILTROS E BUSCA */}
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center border-b border-slate-100 dark:border-white/5 pb-5">
-          
-          {/* Input de Busca Flexível (Usa flex-1 para se estender totalmente) */}
           <div className="relative flex-1 w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8a90a0]" size={18} />
             <input
@@ -1659,7 +1632,6 @@ export default function StoragePage() {
             />
           </div>
 
-          {/* BOTÕES DE FILTRO INDEPENDENTES E SEPARADOS (Padrão exato do print de Stories) */}
           <div className="flex flex-wrap items-center gap-2 shrink-0 w-full md:w-auto">
             <button
               type="button"
@@ -1702,7 +1674,7 @@ export default function StoragePage() {
           </div>
         </div>
         
-        {/* Tabela de Mídias com Estilo Limpo */}
+        {/* Tabela de Mídias */}
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
@@ -1734,7 +1706,6 @@ export default function StoragePage() {
                   <tr key={file.id} className="transition-colors hover:bg-slate-50/60 dark:hover:bg-white/[0.02]">
                     <td className="px-6 py-3.5">
                       <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#0f1220] shadow-xs flex items-center justify-center shrink-0">
-                        {/* Camada de Imagem */}
                         {file.thumbnailUrl || (file.type === 'image' && file.fileUrl) ? (
                           <img 
                             src={file.thumbnailUrl || file.fileUrl} 
@@ -1755,7 +1726,6 @@ export default function StoragePage() {
                           />
                         ) : null}
 
-                        {/* Ícones de Fundo / Overlay */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           {file.type === 'video' ? (
                             <div className="flex h-full w-full items-center justify-center bg-black/20 text-white">
@@ -1869,7 +1839,7 @@ export default function StoragePage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDeleteFile(file.id, file.name)}
+                          onClick={() => triggerDeleteConfirm(file.id, file.name)} // 🚀 Substituído pelo gatilho do CustomDialog
                           className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
                           title="Excluir arquivo"
                         >
@@ -2100,6 +2070,34 @@ export default function StoragePage() {
           </div>
         </div>
       )}
+
+      {/* ── 🚀 MODAL DE CONFIRMAÇÃO DE EXCLUSÃO DE MÍDIA PERSONALIZADO (PADRÃO DO SISTEMA) ── */}
+      <CustomDialog
+        isOpen={!!deleteFileConfirm}
+        type="form"
+        title="EXCLUIR ARQUIVO"
+        maxWidth="max-w-md"
+        onCancel={() => setDeleteFileConfirm(null)}
+        onConfirm={handleDeleteFile}
+        confirmText="Excluir"
+      >
+        <div className="space-y-6 py-2">
+          {/* Ícone de Atenção centralizado grande */}
+          <div className="flex justify-center">
+            <div className="p-4 bg-amber-500/[0.06] dark:bg-amber-500/[0.03] rounded-full border border-amber-500/10">
+              <AlertTriangle className="h-12 w-12 text-amber-500 stroke-[1.5]" />
+            </div>
+          </div>
+
+          {/* Caixa de Alerta amarela estilizada conforme o print 1 */}
+          <div className="flex items-start gap-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] p-4 text-left">
+            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-xs font-bold text-amber-800 dark:text-amber-300 leading-relaxed">
+              Esta ação é irreversível. O item <span className="text-[#0094EB] dark:text-[#ff7a29]">"{deleteFileConfirm?.name}"</span> será removido permanentemente.
+            </p>
+          </div>
+        </div>
+      </CustomDialog>
     </div>
   );
 }
