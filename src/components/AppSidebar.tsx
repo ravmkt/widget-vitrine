@@ -14,7 +14,8 @@ import {
   HardDrive,
   BarChart3,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  HelpCircle // ← Adicionado aqui
 } from "lucide-react";
 import {
   Sidebar,
@@ -45,6 +46,7 @@ const menuItems = [
   { title: "Comentários", url: "/comentarios", icon: MessageSquare },
   { title: "Instalação", url: "/integration", icon: Code },
   { title: "Configurações", url: "/settings", icon: Settings },
+  { title: "Suporte", url: "/suporte", icon: HelpCircle }, // ← Adicionado aqui
 ];
 
 export function AppSidebar() {
@@ -147,7 +149,7 @@ export function AppSidebar() {
           )}
         </div>
 
-{/* Botão de Recolher / Expandir Destacado */}
+        {/* Botão de Recolher / Expandir Destacado */}
         <div className="relative group">
           <button
             type="button"
@@ -178,13 +180,13 @@ export function AppSidebar() {
             </div>
           )}
         </div>
-              </SidebarHeader>
+      </SidebarHeader>
 
       <SidebarContent className={cn("px-3 py-2 overflow-y-auto [&::-webkit-scrollbar]:hidden", isExpanded ? "overflow-x-hidden" : "overflow-x-visible")}>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5">
-{menuItems.map((item) => {
+              {menuItems.map((item) => {
                 const isItemActive = location.pathname === item.url;
                 return (
                   <SidebarMenuItem key={item.title} className="relative group">
@@ -228,14 +230,14 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
-                                                      </SidebarMenu>
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-[#F1F5F9] dark:border-slate-800 overflow-hidden shrink-0">
         <div className="relative group mb-3">
-<Link
+          <Link
             to="/billing"
             className={cn(
               "flex items-center gap-3 min-w-0 p-1.5 -m-1.5 rounded-xl transition-all duration-200 cursor-pointer",
@@ -274,7 +276,7 @@ export function AppSidebar() {
               </div>
             </div>
           )}
-                  </div>
+        </div>
 
         <div className="relative group">
           <button
