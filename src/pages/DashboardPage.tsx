@@ -45,9 +45,10 @@ interface ChecklistItem {
   completed: boolean;
 }
 
-interface ActivityEvent {
+interface ActivityLog {
   id: string;
-  event_type: string;
+  action: string;
+  details: string | null;
   created_at: string;
 }
 
@@ -99,7 +100,7 @@ const DashboardPage: React.FC = () => {
     pagesLimit: 5,
   });
 
-  const [activities, setActivities] = useState<ActivityEvent[]>([]);
+  const [activities, setActivities] = useState<ActivityLog[]>([]);
   
   // ── Checklist Inicial Reorganizado (6 Passos) ──
   const [checklist, setChecklist] = useState<ChecklistItem[]>([
@@ -134,7 +135,7 @@ const DashboardPage: React.FC = () => {
           supabase.from('stories').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [4]
           supabase.from('appearances').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [5]
           supabase.from('display_locations').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [6]
-          supabase.from('store_activity_events').select('*').eq('store_id', storeId).order('created_at', { ascending: false }).limit(6), // [7]
+          supabase.from('activity_logs').select('*').eq('store_id', storeId).order('created_at', { ascending: false }).limit(6), // [7] (Buscando da tabela activity_logs)
           supabase.from('store_settings').select('*').eq('store_id', storeId).maybeSingle(), // [8]
         ]);
 
@@ -199,10 +200,10 @@ const DashboardPage: React.FC = () => {
           pagesLimit: 5,
         });
 
-        // 4. Feed de Eventos
+        // 4. Feed de Eventos de Log
         const fetchedEvents = eventsRes.status === 'fulfilled' ? eventsRes.value.data || [] : [];
         if (eventsRes.status === 'rejected') {
-          console.error('[DashboardPage] Falha ao carregar store_activity_events:', eventsRes.reason);
+          console.error('[DashboardPage] Falha ao carregar activity_logs:', eventsRes.reason);
         }
         setActivities(fetchedEvents);
 
@@ -332,6 +333,30 @@ const DashboardPage: React.FC = () => {
     if (pct >= 90) return '!bg-[#ef4444]'; // Ultrapassou 90% -> Vermelho
     if (pct >= 75) return '!bg-[#ff7a29]'; // Ultrapassou 75% -> Laranja
     return '!bg-[#22c55e]'; // Padrão normal -> Verde
+  };
+
+  // Helper para renderizar badges dinâmicos baseados no tipo de ação logada
+  const getActionBadge = (action: string) => {
+    const act = action.toLowerCase();
+    if (act.includes('vídeo') || act.includes('video') || act.includes('import')) {
+      return { label: '🎬 Vídeo', style: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30' };
+    }
+    if (act.includes('config') || act.includes('loja') || act.includes('parâmetro') || act.includes('whatsapp')) {
+      return { label: '⚙️ Config', style: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30' };
+    }
+    if (act.includes('plan') || act.includes('assinatura') || act.includes('fatura') || act.includes('upgrade') || act.includes('pagamento')) {
+      return { label: '💎 Plano', style: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30' };
+    }
+    if (act.includes('storie') || act.includes('coleção') || act.includes('grupo') || act.includes('stories')) {
+      return { label: '📱 Stories', style: 'bg-pink-50 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 border border-pink-100 dark:border-pink-900/30' };
+    }
+    if (act.includes('aparência') || act.includes('design') || act.includes('player') || act.includes('personaliz')) {
+      return { label: '🎨 Design', style: 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-900/30' };
+    }
+    if (act.includes('script') || act.includes('embed') || act.includes('integra')) {
+      return { label: '🚀 Script', style: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30' };
+    }
+    return { label: '⚡ Ação', style: 'bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border border-slate-150 dark:border-slate-800/30' };
   };
 
   if (loading) {
@@ -570,7 +595,7 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Botão Cápsula de Relatório Alinhado no Canto Inferior Direito ── */}
+        {/* ── Botão Relatório ── */}
         <div className="flex justify-end mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
           <button
             onClick={() => navigate('/videos/performance')}
@@ -582,7 +607,7 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 4 & 5. LINHA DIVIDIDA: CHECKLIST REORGANIZADO + ATIVIDADE RECENTE ── */}
+      {/* ── 4 & 5. CHECKLIST REORGANIZADO + LOG DE ATIVIDADES RECENTES ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
         <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
@@ -630,7 +655,6 @@ const DashboardPage: React.FC = () => {
                       : 'bg-slate-50/70 dark:bg-[#0f1220]/60 border-slate-200 dark:border-white/5 hover:bg-white dark:hover:bg-[#1a1f35] hover:border-[#0094EB] dark:hover:border-[#ff7a29] hover:shadow-md'
                   )}
                 >
-                  {/* Círculo do checklist redimensionado de w-5 h-5 para w-7 h-7 com números maiores text-sm */}
                   <div
                     className={cn(
                       'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-sm transition-all',
@@ -668,39 +692,53 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Atividade Recente */}
+        {/* Atividade Recente (Transformada em Audit Log de Ações do Lojista) */}
         <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
             <div className="border-b border-slate-100 dark:border-white/5 pb-5 mb-5">
               <h2 className="text-base font-black text-slate-800 dark:text-white">
-                Atividade Recente
+                Atividade Recente (Log do Painel)
               </h2>
               <p className="text-xs font-semibold text-slate-500 dark:text-[#c0c5d4] mt-0.5">
-                Feed de eventos e interações em tempo real.
+                Histórico em tempo real de alterações e atividades do usuário.
               </p>
             </div>
 
             {activities.length === 0 ? (
               <div className="text-center py-12 text-slate-400 dark:text-[#8a90a0] text-xs font-semibold">
-                Nenhuma interação recente registrada.
+                Nenhuma atividade administrativa registrada ainda.
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 dark:divide-white/5">
-                {activities.map((ev) => (
-                  <div key={ev.id} className="py-3.5 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <span className="px-2.5 py-1 bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0094EB] dark:text-[#ff7a29] rounded-lg font-black text-[10px] uppercase">
-                        {ev.event_type === 'video_view' ? '👁️ View' : ev.event_type === 'cta_click' ? '🛍️ Clique CTA' : '⚡ Evento'}
-                      </span>
-                      <span className="font-bold text-slate-700 dark:text-[#e8ecf4]">
-                        Interação no widget da loja
+              <div className="divide-y divide-slate-100 dark:divide-white/5 max-h-[360px] overflow-y-auto pr-1">
+                {activities.map((ev) => {
+                  const badge = getActionBadge(ev.action);
+
+                  return (
+                    <div key={ev.id} className="py-3.5 flex items-start justify-between gap-4 text-xs animate-fade-in">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <span className={cn(
+                          'px-2.5 py-1 rounded-lg font-black text-[10px] uppercase shrink-0 mt-0.5 text-center min-w-[75px]',
+                          badge.style
+                        )}>
+                          {badge.label}
+                        </span>
+                        <div className="min-w-0">
+                          <span className="font-bold text-slate-700 dark:text-[#e8ecf4] block truncate">
+                            {ev.action}
+                          </span>
+                          {ev.details && (
+                            <p className="text-[11px] text-slate-400 dark:text-[#8a90a0] mt-0.5 font-medium leading-relaxed">
+                              {ev.details}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-slate-400 dark:text-[#8a90a0] font-medium text-[11px] shrink-0 mt-1">
+                        {new Date(ev.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <span className="text-slate-400 dark:text-[#8a90a0] font-medium text-[11px]">
-                      {new Date(ev.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
