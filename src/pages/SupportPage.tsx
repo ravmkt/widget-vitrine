@@ -16,7 +16,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function SupportPage() {
   const navigate = useNavigate();
-  const WHATSAPP_URL = "https://wa.me/5541999999999?text=Ol%C3%A1%2C+preciso+de+suporte+com+o+Vidlytics.";
+  const WHATSAPP_URL = "https://wa.me/5545998370536?text=Ol%C3%A1%2C+preciso+de+suporte+com+o+Vidlytics.";
   const PLAYLIST_URL = "https://youtube.com/playlist?list=sua-playlist-aqui";
 
   // Estados dos 6 passos do Checklist de Ativação
