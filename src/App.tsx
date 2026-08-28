@@ -33,6 +33,7 @@ import { Toaster } from "sonner";
 import StoryPreviewPage from "@/pages/StoryPreviewPage";
 import AuthCallbackPage from '@/pages/AuthCallbackPage';
 import SupportPage from "@/pages/SupportPage";
+import HelpArticlesPage from "@/pages/HelpArticlesPage";
 
 // â”€â”€ Protege rotas que exigem login â”€â”€
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -166,6 +167,7 @@ function App() {
           <Route path="/plans" element={<ProtectedRoute><AppLayout><PlansPage /></AppLayout></ProtectedRoute>} />
 
           {/* Suporte */}
+          <Route path="/suporte/artigos" element={<ProtectedRoute><AppLayout><HelpArticlesPage /></AppLayout></ProtectedRoute>} />
           <Route path="/suporte" element={<ProtectedRoute><AppLayout><SupportPage /></AppLayout></ProtectedRoute>} />
 
           {/* Fallback */}
