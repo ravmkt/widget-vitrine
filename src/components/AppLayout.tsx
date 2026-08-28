@@ -304,7 +304,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 &copy; {new Date().getFullYear()} Vidlytics Stories. Todos os direitos reservados.
               </div>
               
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#111422] px-4 py-2 rounded-xl border border-slate-100 dark:border-white/5 shadow-xs">
+              <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-[#111422] px-4 py-2 rounded-xl border border-slate-100 dark:border-white/5 shadow-xs">
                 <span className="text-[10px] uppercase font-black tracking-wider text-slate-400 dark:text-[#8a90a0]">
                   Desenvolvido por:
                 </span>
@@ -317,7 +317,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <img 
                     src="/assets/sll-logotipo.png" 
                     alt="Sistema Loja Lucrativa" 
-                    className="h-5 w-auto object-contain brightness-100 dark:brightness-110" 
+                    className="w-[120px] h-auto object-contain brightness-100 dark:brightness-110" 
                   />
                 </a>
               </div>
