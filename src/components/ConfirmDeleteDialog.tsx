@@ -1,5 +1,5 @@
-﻿import React from 'react';
-import { X, Trash2 } from 'lucide-react';
+import React from 'react';
+import { X, AlertTriangle } from 'lucide-react';
 
 interface ConfirmDeleteDialogProps {
   isOpen: boolean;
@@ -19,45 +19,45 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-md bg-white rounded-2xl p-6 shadow-2xl border border-slate-100">
-        {/* Botão X de Fechar */}
+    <div className="fixed inset-0 z-[99999] bg-amber-950/20 flex items-center justify-center px-4 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-md bg-[#FFFBEB] rounded-2xl p-6 shadow-2xl border border-amber-200 overflow-hidden animate-scale-up">
+        
+        {/* Botão X de fechar no canto superior direito */}
         <button
-          type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 p-1.5 rounded-full bg-white/80 hover:bg-white text-amber-900 shadow-sm border border-amber-100 transition-all cursor-pointer"
           aria-label="Fechar"
         >
-          <X size={16} />
+          <X size={14} />
         </button>
 
-        {/* Ícone e Título */}
-        <div className="flex items-center gap-3 mb-3 text-rose-500">
-          <Trash2 size={20} className="stroke-[2.5]" />
-          <h3 className="text-base font-black text-slate-900">{title}</h3>
+        {/* Conteúdo Centralizado */}
+        <div className="flex flex-col items-center text-center mt-2 mb-6">
+          <div className="p-3.5 bg-amber-100 rounded-full mb-3.5 border border-amber-200">
+            <AlertTriangle className="h-7 w-7 text-amber-600 animate-pulse" />
+          </div>
+          <h3 className="text-base font-extrabold text-amber-950 mb-1.5">
+            {title}
+          </h3>
+          <p className="text-xs font-medium text-amber-800/90 leading-relaxed max-w-[280px]">
+            {description}
+          </p>
         </div>
 
-        {/* Descrição */}
-        <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-6">
-          {description}
-        </p>
-
         {/* Botões de Ação */}
-        <div className="flex justify-end gap-3">
+        <div className="flex items-center gap-2.5">
           <button
-            type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+            className="flex-1 py-2.5 rounded-xl bg-white border border-amber-200 text-xs font-bold text-amber-900 hover:bg-amber-50 transition-colors shadow-sm cursor-pointer text-center"
           >
             Cancelar
           </button>
           <button
-            type="button"
             onClick={() => {
               onConfirm();
               onClose();
             }}
-            className="px-4 py-2 text-xs font-bold text-white bg-rose-500 rounded-xl hover:bg-rose-600 transition-colors shadow-md shadow-rose-500/10 cursor-pointer"
+            className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white transition-colors shadow-sm cursor-pointer text-center"
           >
             Excluir
           </button>
