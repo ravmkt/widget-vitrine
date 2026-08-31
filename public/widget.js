@@ -4804,7 +4804,7 @@ track.appendChild(item);
     }, true);
   });
   
-  target.insertAdjacentElement(position, wrapper);
+  target.insertAdjacentElement(position, container);
 }
 
 function renderGridWidget(container, stories, appearance) {
