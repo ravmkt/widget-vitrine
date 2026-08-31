@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, {
   useCallback,
@@ -3355,7 +3355,22 @@ const AppearancePage = () => {
                                   </FormField>
                                   <div className="grid grid-cols-2 gap-2.5">
                                     <FormField label="Tamanho da fonte">
-                                      <input type="number" min="8" max="48" step="1" value={activeCarouselConfig.title_font_size ?? 14} onChange={e => updateCarouselConfig({ title_font_size: safeNumber(e.target.value, 14, 8) })} className={inputClass} />
+<input 
+  type="number" 
+  min="8" 
+  max="48" 
+  step="1" 
+  value={activeCarouselConfig.title_font_size ?? ''} 
+  onChange={e => {
+    const val = e.target.value;
+    updateCarouselConfig({ title_font_size: val === '' ? undefined : Number(val) });
+  }}
+  onBlur={e => {
+    const val = activeCarouselConfig.title_font_size;
+    updateCarouselConfig({ title_font_size: limitNumber(val ?? 14, 14, 8, 48) });
+  }}
+  className={inputClass} 
+/>
                                     </FormField>
                                     <FormField label="Alinhamento">
                                       <select value={activeCarouselConfig.title_align ?? 'center'} onChange={e => updateCarouselConfig({ title_align: e.target.value as 'left' | 'center' | 'right' })} className={selectClass}>
