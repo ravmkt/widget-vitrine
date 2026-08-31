@@ -5170,9 +5170,9 @@ function renderGridWidget(container, stories, appearance) {
         'display:flex !important;',
         'align-items:center !important;',
         'justify-content:space-between !important;',
-        'gap:10px !important;',
+        'gap:8px !important;',
         'width:100% !important;',
-        'padding:10px 12px !important;',
+        'padding:6px 10px !important;', // Margens topo/base e laterais bem compactas
         'margin-top:8px !important;',
         'background:' + cfg.productCardBg + ' !important;',
         'border-radius:' + cfg.productCardRadius + 'px !important;',
@@ -5185,12 +5185,13 @@ function renderGridWidget(container, stories, appearance) {
 
       // Lado esquerdo (Imagem + Dados)
       var leftPart = createEl('div');
-      leftPart.style.cssText = 'display:flex !important;align-items:center !important;gap:10px !important;min-width:0 !important;flex:1 !important;';
+      leftPart.style.cssText = 'display:flex !important;align-items:center !important;gap:8px !important;min-width:0 !important;flex:1 !important;';
 
       var prodImg = createEl('img', 'vl-grid-product-img');
       prodImg.src = getThumbnailFromObject(productData) || '';
       prodImg.alt = productData.name || 'Produto';
-      prodImg.style.cssText = 'width:48px !important;height:48px !important;border-radius:8px !important;object-fit:cover !important;flex-shrink:0 !important;background:#f1f5f9 !important;';
+      // Foto ampliada para 60px aproveitando as margens curtas
+      prodImg.style.cssText = 'width:60px !important;height:60px !important;border-radius:6px !important;object-fit:cover !important;flex-shrink:0 !important;background:#f1f5f9 !important;';
       leftPart.appendChild(prodImg);
 
       var prodInfo = createEl('div', 'vl-grid-product-info');
@@ -5238,33 +5239,11 @@ function renderGridWidget(container, stories, appearance) {
       leftPart.appendChild(prodInfo);
       prodCard.appendChild(leftPart);
 
-      // Elemento de Ação à direita (Setinha / Chevron ou Botão configurado)
+      // Setinha (Chevron) elegante idêntica ao carrossel
       var chevronColor = cfg.productCardPriceColor || '#0094EB';
-      var actionElement;
-
-      if (cfg.showProductButton) {
-        actionElement = createEl('div', 'vl-grid-product-btn');
-        actionElement.textContent = 'Exibir';
-        actionElement.style.cssText = [
-          'font-family:' + fontFamily + ' !important;',
-          'font-size:11px !important;',
-          'font-weight:800 !important;',
-          'padding:6px 12px !important;',
-          'background:' + cfg.productCardButtonBg + ' !important;',
-          'color:' + cfg.productCardButtonColor + ' !important;',
-          'border-radius:999px !important;',
-          'text-transform:uppercase !important;',
-          'white-space:nowrap !important;',
-          'flex-shrink:0 !important;',
-          'box-shadow:0 2px 4px rgba(0,0,0,0.08) !important;',
-          'text-align:center !important;',
-          'transition:transform 0.2s ease !important;'
-        ].join('');
-      } else {
-        actionElement = createEl('div', 'vl-grid-product-chevron');
-        actionElement.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + chevronColor + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-        actionElement.style.cssText = 'display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;transition:transform 0.2s ease !important;';
-      }
+      var actionElement = createEl('div', 'vl-grid-product-chevron');
+      actionElement.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + chevronColor + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+      actionElement.style.cssText = 'display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;transition:transform 0.2s ease !important;margin-left:4px !important;';
       prodCard.appendChild(actionElement);
 
       // Micro-interações de Hover
