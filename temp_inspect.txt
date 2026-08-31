@@ -1,0 +1,1761 @@
+function renderDynamicCarouselWidget(options, items, cfg) {
+  if (!options) return;
+
+  // Normalizar cfg caso venha o objeto de aparencia bruto
+  if (cfg && typeof getDynamicCarouselConfig === 'function' && !cfg._isNormalized) {
+    cfg = getDynamicCarouselConfig(cfg);
+    cfg._isNormalized = true;
+  }
+
+  // 1. Resolver o target (onde o container do carrossel será inserido)
+  var target = null;
+  var position = 'beforeend';
+
+  if (typeof options === 'string') {
+    target = document.querySelector(options);
+  } else if (options instanceof HTMLElement) {
+    target = options;
+  } else if (options && typeof options === 'object') {
+    if (typeof options.jquery !== 'undefined') {
+      target = options[0];
+    } else {
+      var rawTarget = options.target || options.selector || options.container;
+      if (typeof rawTarget === 'string') {
+        target = document.querySelector(rawTarget);
+      } else if (rawTarget instanceof HTMLElement) {
+        target = rawTarget;
+      } else if (rawTarget && typeof rawTarget.jquery !== 'undefined') {
+        target = rawTarget[0];
+      }
+      position = options.position || options.placement || 'beforeend';
+    }
+  }
+
+  // Se não encontramos o target de inserção, aborta com segurança
+  if (!target) {
+    console.warn('[Vidlytics] Target de renderização do carrossel dinâmico não encontrado:', options);
+    return;
+  }
+
+  if (!items || items.length === 0) return;
+
+  // 2. Higienização das configurações & fallbacks
+  cfg = cfg || {};
+  cfg.width = parseFloat(cfg.width) || 200;
+  cfg.spacing = parseFloat(cfg.spacing) || 16;
+  cfg.borderWidth = parseFloat(cfg.borderWidth) || 0;
+  cfg.borderColor = cfg.borderColor || '#ccc';
+  cfg.enlargeActive = cfg.enlargeActive !== false;
+  cfg.activeScale = parseFloat(cfg.activeScale) || 1.15;
+  cfg.highlightShadow = cfg.highlightShadow !== false;
+  cfg.highlightMode = cfg.highlightMode || 'ring';
+  cfg.highlightBorderWidth = parseFloat(cfg.highlightBorderWidth) || 3;
+  cfg.highlightBorderColor = cfg.highlightBorderColor || '#ff0055';
+  cfg.desaturateInactive = cfg.desaturateInactive !== false;
+  cfg.borderRadius = parseFloat(cfg.borderRadius) || 12;
+  cfg.autoplayVideos = cfg.autoplayVideos !== false;
+  cfg.autoplayDelay = parseFloat(cfg.autoplayDelay) || 4000;
+  cfg.transitionMs = parseFloat(cfg.transitionMs) || 300;
+
+  // Parâmetros do Produto e Estilo Geral
+  cfg.showTitle = cfg.showTitle !== false;
+  cfg.titleAlign = cfg.titleAlign || 'center';
+  cfg.titleFontSize = parseFloat(cfg.titleFontSize) || 18;
+  cfg.titleColor = cfg.titleColor || '#000';
+  cfg.titleBold = cfg.titleBold !== false;
+  cfg.showPlayIcon = cfg.showPlayIcon !== false;
+  cfg.bgColor = cfg.bgColor || '#000';
+  cfg.objectFit = cfg.objectFit || 'cover';
+  cfg.showProduct = cfg.showProduct !== false;
+
+  var isCircle = cfg.isCircle === true || cfg.shape === 'circle';
+  var aspectRatio = isCircle ? '1/1' : (cfg.aspectRatio || '9/16');
+  var extraWidth = cfg.enlargeActive ? (cfg.width * (cfg.activeScale - 1)) : 0;
+
+  // 3. Cálculo Dinâmico de Clones baseados na resolução de tela (Evita buracos nas laterais)
+  var viewportWidthForClones = window.innerWidth;
+  var cardTotalWidth = cfg.width + cfg.spacing;
+  var neededVisible = Math.ceil((viewportWidthForClones / 2) / cardTotalWidth) + 1;
+  var visibleCount = Math.max(4, neededVisible);
+
+  // Controle de barreira para cliques acidentais pós-drag
+  var wasDragged = false;
+
+  // 4. Criação do CONTAINER principal do widget (com os estilos originais flex)
+  var container = document.createElement('div');
+  container.className = 'vidlytics-dynamic-carousel-container';
+  Object.assign(container.style, {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'visible',
+    paddingTop: '8px',
+    paddingBottom: '8px',
+    marginTop: (cfg.marginTop || 0) + 'px',
+    marginBottom: (cfg.marginBottom || 0) + 'px',
+    paddingLeft: (cfg.marginLeft || 0) + 'px',
+    paddingRight: (cfg.marginRight || 0) + 'px',
+    boxSizing: 'border-box',
+  });
+
+  var wrapper = document.createElement('div');
+  wrapper.className = 'vidlytics-dynamic-carousel-wrapper';
+  Object.assign(wrapper.style, {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    overflow: 'visible',
+  });
+
+  var resolvedTitle = cfg.titleText ||
+    (items[0] && (items[0].title || items[0].name) ? (items[0].title || items[0].name) : '');
+
+  if (cfg.showTitle && items.length > 0 && resolvedTitle) {
+    var carouselTitle = document.createElement('div');
+    carouselTitle.className = 'vidlytics-dynamic-carousel-title';
+    carouselTitle.textContent = resolvedTitle;
+    carouselTitle.style.cssText = 'width:100%;max-width:100%;margin:0 auto 14px;' +
+      'text-align:' + cfg.titleAlign + ';' +
+      'font-size:' + cfg.titleFontSize + 'px;' +
+      'font-weight:' + (cfg.titleBold ? '800' : '400') + ';' +
+      'color:' + cfg.titleColor + ';' +
+      'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    wrapper.appendChild(carouselTitle);
+  }
+
+  var viewport = document.createElement('div');
+  viewport.className = 'vidlytics-dynamic-carousel-viewport';
+  Object.assign(viewport.style, {
+    width: '100%',
+    overflow: 'hidden',
+    display: 'block',
+    paddingTop: '24px',
+    paddingBottom: '24px',
+  });
+
+  var track = document.createElement('div');
+  track.className = 'vidlytics-dynamic-carousel-track';
+  Object.assign(track.style, {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    gap: cfg.spacing + 'px',
+    willChange: 'transform',
+    transition: 'transform ' + cfg.transitionMs + 'ms ease',
+  });
+
+  var cardEls = [];
+  var videoEls = [];
+  var frameEls = [];
+
+  // 5. Montagem Dinâmica de Itens + Clones (Garante loop infinito perfeito)
+  var clones = [];
+  
+  // Clones esquerdos
+  for (var i = 0; i < visibleCount; i++) {
+    var targetIdx = (items.length - (visibleCount - i) % items.length) % items.length;
+    var originalItem = items[targetIdx];
+    clones.push(Object.assign({}, originalItem, { storyIndex: targetIdx, videoIndex: 0, isClone: true }));
+  }
+  
+  // Itens originais
+  for (var i = 0; i < items.length; i++) {
+    clones.push(Object.assign({}, items[i], { storyIndex: i, videoIndex: 0, isClone: false }));
+  }
+  
+  // Clones direitos
+  for (var i = 0; i < visibleCount; i++) {
+    var targetIdx = i % items.length;
+    var originalItem = items[targetIdx];
+    clones.push(Object.assign({}, originalItem, { storyIndex: targetIdx, videoIndex: 0, isClone: true }));
+  }
+
+  clones.forEach(function (item, idx) {
+    var card = document.createElement('div');
+    card.className = 'vidlytics-dc-card';
+    Object.assign(card.style, {
+      position: 'relative',
+      flex: '0 0 ' + cfg.width + 'px',
+      width: cfg.width + 'px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      gap: '12px',
+      overflow: 'visible',
+      background: 'transparent',
+      border: 'none',
+      boxShadow: 'none',
+      transition: 'transform ' + cfg.transitionMs + 'ms ease, margin ' + cfg.transitionMs + 'ms ease',
+      cursor: 'pointer',
+      userSelect: 'none',
+      webkitUserDrag: 'none'
+    });
+
+    var videoFrame = document.createElement('div');
+    videoFrame.style.cssText = 'position:relative;width:100%;aspect-ratio:' + aspectRatio + ';overflow:hidden;border-radius:' + (isCircle ? '999px' : cfg.borderRadius + 'px') + ';background:' + (cfg.bgColor || '#000') + ';transition:filter ' + cfg.transitionMs + 'ms ease;transform:translateZ(0) !important;-webkit-backface-visibility:hidden !important;-webkit-mask-image:-webkit-radial-gradient(white, black) !important;';
+
+    var firstVideo = (item.videos && item.videos[0]) || {};
+    var video = document.createElement('video');
+    video.src = firstVideo.video_url || firstVideo.videoUrl || item.video_url || item.videoUrl || item.url || '';
+    var posterUrl = firstVideo.thumbnail_url || firstVideo.thumbnailUrl || item.thumbnail_url || item.thumbnailUrl || item.thumb || '';
+    if (posterUrl) {
+      video.poster = posterUrl;
+    }
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute('webkit-playsinline', 'true');
+    Object.assign(video.style, {
+      width: '100%',
+      height: '100%',
+      objectFit: cfg.objectFit === 'contain' ? 'contain' : cfg.objectFit === 'fill' ? 'fill' : 'cover',
+      pointerEvents: 'none',
+      display: 'block',
+    });
+
+    videoFrame.appendChild(video);
+    if (cfg.showPlayIcon) {
+      var playOverlay = document.createElement('div');
+      playOverlay.className = 'vidlytics-dc-play';
+      playOverlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:4;';
+      playOverlay.innerHTML = '<div style="width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 14 16" fill="white"><path d="M0 0l14 8-14 8z"/></svg></div>';
+      videoFrame.appendChild(playOverlay);
+    }
+
+    card.appendChild(videoFrame);
+
+    // Evento de Clique Inteligente (Prevenindo cliques no arrasto)
+    card.addEventListener('click', function (e) {
+      if (wasDragged) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      if (e.target.closest && e.target.closest('.vidlytics-dc-product-card')) return;
+      openStoryModal(item.storyIndex, item.videoIndex);
+    });
+
+    if (cfg.showProduct) {
+      var firstVideo = (item.videos && item.videos[0]) || {};
+      var vpId = firstVideo.product_id || firstVideo.productId || item.product_id || item.productId || null;
+      var pData = vpId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, vpId); }) : null;
+      if (pData) {
+        var pUrl = pData.product_url || pData.url || '';
+        var initialShadow = cfg.highlightShadow ? '0 2px 8px rgba(0,0,0,0.15)' : 'none';
+
+        var prodCard = document.createElement('div');
+        prodCard.className = 'vidlytics-dc-product-card';
+        prodCard.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 12px;box-sizing:border-box;z-index:6;cursor:pointer;transition:all 0.2s ease-in-out;' +
+          'background:' + (cfg.productCardBg || '#fff') + ';' +
+          'border-radius:' + (cfg.productCardRadius || 12) + 'px;' +
+          'border:' + (cfg.productCardBorderWidth || 0) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ';' +
+          'box-shadow:' + initialShadow + ';';
+
+        var pHeader = document.createElement('div');
+        pHeader.style.cssText = 'display:flex;align-items:center;gap:10px;flex:1;min-width:0;';
+
+        var pImgSrc = getThumbnailFromObject(pData) || '';
+        if (pImgSrc) {
+          var pImg = document.createElement('img');
+          pImg.src = pImgSrc;
+          pImg.style.cssText = 'width:48px;height:48px;border-radius:8px;object-fit:cover;background:#f1f5f9;flex-shrink:0;display:block;';
+          pHeader.appendChild(pImg);
+        }
+
+        var pInfo = document.createElement('div');
+        pInfo.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px;';
+
+        var pName = document.createElement('div');
+        pName.textContent = pData.name || 'Produto';
+        pName.style.cssText = 'font-size:' + (cfg.productCardNameSize || 11) + 'px;font-weight:700;color:' + (cfg.productCardNameColor || '#0f172a') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;';
+        pInfo.appendChild(pName);
+
+        if (pData.price) {
+          var pPrice = document.createElement('div');
+          pPrice.textContent = 'R$ ' + parseFloat(pData.price).toFixed(2).replace('.', ',');
+          pPrice.style.cssText = 'font-size:' + (cfg.productCardPriceSize || 12) + 'px;font-weight:' + (cfg.productCardPriceBold ? '800' : '600') + ';color:' + (cfg.productCardPriceColor || '#0094EB') + ';';
+          pInfo.appendChild(pPrice);
+        }
+        pHeader.appendChild(pInfo);
+        prodCard.appendChild(pHeader);
+
+        var chevron = document.createElement('div');
+        chevron.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + (cfg.productCardPriceColor || '#0094EB') + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+        chevron.style.cssText = 'display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.2s ease;';
+        prodCard.appendChild(chevron);
+
+        prodCard.addEventListener('mouseenter', function() {
+          prodCard.style.transform = 'translateY(-2px)';
+          prodCard.style.boxShadow = '0 6px 16px rgba(0,0,0,0.12)';
+          chevron.style.transform = 'translateX(2px)';
+        });
+        prodCard.addEventListener('mouseleave', function() {
+          prodCard.style.transform = 'none';
+          prodCard.style.boxShadow = initialShadow;
+          chevron.style.transform = 'none';
+        });
+
+        prodCard.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (pUrl) {
+            window.open(pUrl, '_blank');
+            sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
+          }
+        });
+
+        card.appendChild(prodCard);
+        sendAnalyticsEvent('product_view', item.id || null, pData.id || null);
+      }
+    }
+
+    cardEls.push(card);
+    videoEls.push(video);
+    frameEls.push(videoFrame);
+    track.appendChild(card);
+  });
+
+  viewport.appendChild(track);
+  wrapper.appendChild(viewport);
+  container.appendChild(wrapper);
+  target.insertAdjacentElement(position, container);
+
+  var activeIndex = visibleCount;
+
+  function updateViewportPadding() {
+    var activeCard = cardEls[activeIndex];
+    var cardHeight = activeCard ? activeCard.offsetHeight : 0;
+    var grow = cfg.enlargeActive ? Math.ceil((cardHeight * (cfg.activeScale - 1)) / 2) : 0;
+    var pad = grow + 16;
+    viewport.style.paddingTop = pad + 'px';
+    viewport.style.paddingBottom = pad + 'px';
+  }
+
+  // 6. Atualização visual de escalas, filtros e reprodução de vídeo
+  function applyStyles() {
+    if (container) {
+      container.style.width = '100vw';
+      container.style.marginLeft = 'calc(-50vw + 50%)';
+      container.style.marginRight = 'calc(-50vw + 50%)';
+      container.style.maxWidth = '100vw';
+      container.style.boxSizing = 'border-box';
+      container.style.overflow = 'hidden';
+    }
+
+    cardEls.forEach(function (card, idx) {
+      var isActive = idx === activeIndex;
+      var scale = 1;
+      var boxShadow = 'none';
+      var border = 'none';
+      var filter = 'none';
+
+      if (cfg.borderWidth > 0) {
+        border = cfg.borderWidth + 'px solid ' + cfg.borderColor;
+      }
+      if (isActive) {
+        if (cfg.enlargeActive) scale = cfg.activeScale;
+        if (cfg.highlightShadow) boxShadow = '0 12px 30px rgba(0,0,0,.35)';
+        if (cfg.highlightMode === 'ring' && cfg.highlightBorderWidth > 0) {
+          border = cfg.highlightBorderWidth + 'px solid ' + cfg.highlightBorderColor;
+        }
+      } else {
+        if (cfg.desaturateInactive) filter = 'saturate(50%)';
+      }
+
+      card.style.transform = 'scale(' + scale + ')';
+      card.style.opacity = '1';
+      card.style.zIndex = isActive ? '10' : '1';
+      card.style.marginLeft = (isActive ? extraWidth / 2 : 0) + 'px';
+      card.style.marginRight = (isActive ? extraWidth / 2 : 0) + 'px';
+
+      var frame = frameEls[idx];
+      if (frame) {
+        frame.style.border = border;
+        frame.style.boxShadow = boxShadow;
+        frame.style.filter = filter;
+        frame.style.borderRadius = isCircle ? '999px' : cfg.borderRadius + 'px';
+      }
+
+      var video = card.querySelector('video');
+      if (video) {
+        if (isActive) {
+          if (video.paused) {
+            video.currentTime = 0;
+            video.play().catch(function () {});
+          }
+        } else {
+          if (!video.paused || video.currentTime > 0) {
+            video.pause();
+            video.currentTime = 0;
+          }
+        }
+      }
+
+      var prodCardEl = card.querySelector('.vidlytics-dc-product-card');
+      if (prodCardEl) {
+        if (!cfg.highlightShadow) {
+          prodCardEl.style.boxShadow = 'none';
+        } else {
+          prodCardEl.style.boxShadow = isActive ? '0 6px 18px rgba(0,0,0,0.18)' : '0 2px 8px rgba(0,0,0,0.12)';
+        }
+      }
+    });
+
+    videoEls.forEach(function (video, idx) {
+      if (idx === activeIndex) {
+        if (video.paused) {
+          video.play().catch(function () {});
+        }
+      } else if (cfg.autoplayVideos) {
+        if (video.paused) {
+          video.play().catch(function () {});
+        }
+      } else {
+        video.pause();
+      }
+    });
+
+    updateViewportPadding();
+
+    var activeCenter = activeIndex * (cfg.width + cfg.spacing) + extraWidth / 2 + cfg.width / 2;
+    var viewportWidth = viewport.getBoundingClientRect().width || 0;
+    track.style.transform = 'translateX(' + (viewportWidth / 2 - activeCenter) + 'px)';
+  }
+
+  // 7. Looping Infinito da Track
+  track.addEventListener('transitionend', function (e) {
+    if (e.target !== track || e.propertyName !== 'transform') return;
+
+    var transitionMs = parseFloat(cfg.transitionMs) || 300;
+
+    if (activeIndex >= visibleCount + items.length) {
+      var slides = track.children;
+      var cloneVideo = slides[activeIndex] ? slides[activeIndex].querySelector('video') : null;
+      var originalVideo = slides[visibleCount] ? slides[visibleCount].querySelector('video') : null;
+
+      if (cloneVideo && originalVideo) {
+        originalVideo.currentTime = cloneVideo.currentTime;
+        if (!cloneVideo.paused) {
+          originalVideo.play().catch(function () {});
+        }
+      }
+
+      track.style.transition = 'none';
+      cardEls.forEach(function (card) {
+        card.style.transition = 'none';
+      });
+
+      activeIndex = visibleCount;
+      applyStyles();
+
+      track.offsetHeight; // Força reflow síncrono
+
+      track.style.transition = 'transform ' + transitionMs + 'ms ease';
+      cardEls.forEach(function (card) {
+        card.style.transition = 'transform ' + transitionMs + 'ms ease, margin ' + transitionMs + 'ms ease';
+      });
+    }
+    else if (activeIndex < visibleCount) {
+      var slides = track.children;
+      var targetIndex = visibleCount + items.length - 1;
+      var cloneVideo = slides[activeIndex] ? slides[activeIndex].querySelector('video') : null;
+      var originalVideo = slides[targetIndex] ? slides[targetIndex].querySelector('video') : null;
+
+      if (cloneVideo && originalVideo) {
+        originalVideo.currentTime = cloneVideo.currentTime;
+        if (!cloneVideo.paused) {
+          originalVideo.play().catch(function () {});
+        }
+      }
+
+      track.style.transition = 'none';
+      cardEls.forEach(function (card) {
+        card.style.transition = 'none';
+      });
+
+      activeIndex = targetIndex;
+      applyStyles();
+
+      track.offsetHeight; // Força reflow síncrono
+
+      track.style.transition = 'transform ' + transitionMs + 'ms ease';
+      cardEls.forEach(function (card) {
+        card.style.transition = 'transform ' + transitionMs + 'ms ease, margin ' + transitionMs + 'ms ease';
+      });
+    }
+  });
+
+  function goNext() {
+    activeIndex += 1;
+    applyStyles();
+  }
+
+  function goPrev() {
+    activeIndex -= 1;
+    applyStyles();
+  }
+
+  // 8. Lógica de Drag & Touch (Arraste lateral)
+  var isDragging = false;
+  var startX = 0;
+  var dragDeltaX = 0;
+  var originalTransformX = 0;
+
+  function getTranslateX(element) {
+    var style = window.getComputedStyle(element);
+    var matrix = new (window.WebKitCSSMatrix || window.MSCSSMatrix || window.CSSMatrix || DOMMatrix)(style.transform);
+    return matrix.m41 || 0;
+  }
+
+  function onDragStart(e) {
+    if (e.type === 'mousedown') {
+      e.preventDefault();
+    }
+    isDragging = true;
+    wasDragged = false;
+    stopAutoplay();
+
+    startX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    dragDeltaX = 0;
+    originalTransformX = getTranslateX(track);
+
+    track.style.transition = 'none';
+    cardEls.forEach(function (card) {
+      card.style.transition = 'none';
+    });
+  }
+
+  function onDragMove(e) {
+    if (!isDragging) return;
+
+    var currentX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    dragDeltaX = currentX - startX;
+
+    if (Math.abs(dragDeltaX) > 8) {
+      wasDragged = true;
+    }
+
+    track.style.transform = 'translateX(' + (originalTransformX + dragDeltaX) + 'px)';
+  }
+
+  // Finalização do Drag com Retenção de Flag por 50ms
+  function onDragEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+
+    setTimeout(function () {
+      wasDragged = false;
+    }, 50);
+
+    var transitionMs = parseFloat(cfg.transitionMs) || 300;
+    track.style.transition = 'transform ' + transitionMs + 'ms ease';
+    cardEls.forEach(function (card) {
+      card.style.transition = 'transform ' + transitionMs + 'ms ease, margin ' + transitionMs + 'ms ease';
+    });
+
+    var threshold = (cfg.width + cfg.spacing) * 0.25;
+
+    if (dragDeltaX < -threshold) {
+      goNext();
+    } else if (dragDeltaX > threshold) {
+      goPrev();
+    } else {
+      applyStyles();
+    }
+
+    startAutoplay();
+  }
+
+  track.addEventListener('mousedown', onDragStart);
+  track.addEventListener('touchstart', onDragStart, { passive: true });
+
+  window.addEventListener('mousemove', onDragMove);
+  window.addEventListener('touchmove', onDragMove, { passive: true });
+
+  window.addEventListener('mouseup', onDragEnd);
+  window.addEventListener('touchend', onDragEnd);
+
+  var interval = null;
+
+  function startAutoplay() {
+    stopAutoplay();
+    interval = setInterval(goNext, cfg.autoplayDelay);
+  }
+
+  function stopAutoplay() {
+    if (interval) {
+      clearInterval(interval);
+      interval = null;
+    }
+  }
+
+  applyStyles();
+  requestAnimationFrame(function () { applyStyles(); });
+
+  // Recalculo inteligente do layout e de clones dinâmicos
+  var onResize = function () {
+    var updatedWidth = window.innerWidth;
+    var updatedNeeded = Math.ceil((updatedWidth / 2) / (cfg.width + cfg.spacing)) + 1;
+    var updatedCount = Math.max(4, updatedNeeded);
+    
+    if (updatedCount !== visibleCount) {
+      renderDynamicCarouselWidget(options, items, cfg);
+    } else {
+      applyStyles();
+    }
+  };
+  window.addEventListener('resize', onResize);
+
+  startAutoplay();
+
+  var observer = new MutationObserver(function () {
+    if (!document.body.contains(container)) {
+      stopAutoplay();
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('mousemove', onDragMove);
+      window.removeEventListener('touchmove', onDragMove);
+      window.removeEventListener('mouseup', onDragEnd);
+      window.removeEventListener('touchend', onDragEnd);
+      observer.disconnect();
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+function getWidgetDisplayMode(appearance) {
+  var mode = readAppearanceValue(appearance, [
+    'display_mode', 'displayMode', 'widget_type', 'widgetType', 'mode',
+    'tipo_exibicao', 'tipoExibicao'
+  ]);
+  if (mode) {
+    mode = String(mode).trim().toLowerCase();
+    if (mode === 'dynamic_carousel' || mode === 'carrossel_dinamico') {
+      var dcCfg = appearance.dynamic_carousel_config;
+      if (typeof dcCfg === 'string') { try { dcCfg = JSON.parse(dcCfg); } catch(e) { dcCfg = null; } }
+      var dcEnabled = false;
+      if (dcCfg && typeof dcCfg === 'object') {
+        dcEnabled = dcCfg['enabled'] === true || dcCfg['enabled'] === 'true' ||
+          (dcCfg['mobile'] && (dcCfg['mobile']['enabled'] === true || dcCfg['mobile']['enabled'] === 'true')) ||
+          (dcCfg['desktop'] && (dcCfg['desktop']['enabled'] === true || dcCfg['desktop']['enabled'] === 'true'));
+      }
+      // Fallback para campos flattened (caso o flatten tenha destruído o objeto jsonb)
+      if (!dcEnabled) dcEnabled = appearance['enabled'] === true || appearance['enabled'] === 'true';
+      if (dcEnabled) return 'dynamic_carousel';
+      // enabled=false cai para o próximo modo (não quebra usuários existentes)
+    }
+    if (mode === 'carousel' || mode === 'carrossel') return 'carousel';
+    if (mode === 'grid' || mode === 'grade') return 'grid';
+    if (mode === 'floating' || mode === 'flutuante') return 'floating';
+    if (mode === 'stories' || mode === 'bubbles' || mode === 'bolhas') return 'stories';
+  }
+
+  // Fallback: detecta pelo jsonb preenchido
+  var gridCfg = appearance.grid_config;
+  var carouselCfg = appearance.carousel_config;
+  var floatingCfg = appearance.floating_config;
+
+  if (typeof gridCfg === 'string') { try { gridCfg = JSON.parse(gridCfg); } catch(e) { gridCfg = null; } }
+  if (typeof carouselCfg === 'string') { try { carouselCfg = JSON.parse(carouselCfg); } catch(e) { carouselCfg = null; } }
+  if (typeof floatingCfg === 'string') { try { floatingCfg = JSON.parse(floatingCfg); } catch(e) { floatingCfg = null; } }
+
+  var gridPopulated = gridCfg && typeof gridCfg === 'object' && Object.keys(gridCfg).length > 0;
+  var carouselPopulated = carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0;
+  var floatingPopulated = floatingCfg && typeof floatingCfg === 'object' && Object.keys(floatingCfg).length > 0;
+
+  // ✅ floating tem prioridade máxima (sempre que configurado)
+  if (floatingPopulated) return 'floating';
+  if (gridPopulated && carouselPopulated) return 'stories';
+  if (gridPopulated) return 'grid';
+  if (carouselPopulated) return 'carousel';
+  
+  return 'stories';
+}
+
+function enableDragScroll(el) {
+  var isDown = false;
+  var startX, scrollStart;
+  var moved = false;
+  var DRAG_THRESHOLD = 2;
+  var SPEED = 2.0;
+  var currentX = 0;
+  var velX = 0;
+  var lastX = 0;
+  var momentumId = null;
+  var cards = el.querySelectorAll('.vl-carousel-item');
+
+  function getX(e) {
+    return e.touches ? e.touches[0].pageX : e.pageX;
+  }
+
+  function cancelMomentum() {
+    if (momentumId) {
+      cancelAnimationFrame(momentumId);
+      momentumId = null;
+    }
+    velX = 0;
+  }
+
+function startMomentum() {
+  cancelMomentum();
+  if (Math.abs(velX) < 2) return; // deixa o scroll-snap nativo alinhar, sem forçar via JS
+  momentumId = requestAnimationFrame(function animate() {
+    velX *= 0.92;
+    el.scrollLeft -= velX;
+    if (Math.abs(velX) > 0.5) {
+      momentumId = requestAnimationFrame(animate);
+    }
+  });
+}
+
+  function snapToNearest() {
+    var firstItem = el.querySelector('.vl-carousel-item');
+    if (!firstItem) return;
+    var itemWidth = firstItem.offsetWidth;
+    var track = el.querySelector('.vl-carousel-track');
+    var gap = track ? parseFloat(getComputedStyle(track).gap) || 0 : 0;
+    var step = itemWidth + gap;
+    var targetScroll = Math.round(el.scrollLeft / step) * step;
+    el.scrollTo({ left: targetScroll, behavior: 'smooth' });
+  }
+
+function onStart(e) {
+  cancelMomentum();
+  isDown = true;
+  moved = false;
+  el.classList.add('is-dragging');
+  el.style.cursor = 'grabbing';
+  startX = getX(e);
+  lastX = startX;
+  scrollStart = el.scrollLeft;
+  currentX = startX;
+  if (e.type === 'mousedown') e.preventDefault(); // 👈 adicionar isso
+}
+
+  function onMove(e) {
+    if (!isDown) return;
+    var x = getX(e);
+    var dx = x - startX;
+
+    if (Math.abs(dx) > DRAG_THRESHOLD) {
+      moved = true;
+    }
+
+    if (moved) {
+      e.preventDefault();
+      velX = x - lastX;
+      lastX = x;
+      currentX = x;
+      var walk = (startX - x) * SPEED;
+      el.scrollLeft = scrollStart + walk;
+    }
+  }
+
+  function onEnd() {
+    if (!isDown) return;
+    isDown = false;
+    el.classList.remove('is-dragging');
+    el.style.cursor = 'grab';
+
+    if (!moved) return;
+    startMomentum();
+  }
+
+  el.addEventListener('mousedown', onStart);
+  el.addEventListener('mousemove', onMove);
+  el.addEventListener('mouseup', onEnd);
+  el.addEventListener('mouseleave', onEnd);
+  el.addEventListener('touchstart', onStart, { passive: false });
+  el.addEventListener('touchmove', onMove, { passive: false });
+  el.addEventListener('touchend', onEnd);
+}
+
+function renderCarouselWidget(targetOrOptions, stories, appearance) {
+  
+  var target, position;
+  
+  // Suporta { target, position } ou elemento/string direto
+  if (targetOrOptions && typeof targetOrOptions === 'object' && targetOrOptions.nodeType !== 1) {
+    target = targetOrOptions.target;
+    position = targetOrOptions.position || 'afterend';
+  } else {
+    target = targetOrOptions;
+    position = 'afterend';
+  }
+  
+  if (typeof target === 'string') {
+    target = document.querySelector(target);
+  }
+  
+  if (!target) {
+    console.warn('[Vidlytics] Target não encontrado para carrossel:', targetOrOptions);
+    return;
+  }
+  
+  // Remove carrossel anterior se existir
+  var existing = target.parentNode ? target.parentNode.querySelector('.vidlytics-carousel-container') : null;
+  if (existing) existing.remove();
+  
+  var cfg = getCarouselConfig(appearance);
+  var primaryColor = getPrimaryColor(appearance);
+  var textColor = getTextColor ? getTextColor(appearance) : '#333';
+  
+  // 1. CONTAINER EXTERNO (Mesma estrutura do Carrossel Dinâmico)
+  var container = document.createElement('div');
+  container.className = 'vidlytics-carousel-container';
+  container.setAttribute('data-vidlytics-widget', 'carousel');
+
+  // Função auxiliar para garantir que as margens tenham "px" sem duplicar
+  var parseMargin = function(val) {
+    if (val === undefined || val === null || val === '') return '0px';
+    var s = String(val).trim();
+    if (s.endsWith('px')) return s;
+    return s + 'px';
+  };
+
+  // Aplica os estilos usando Object.assign (Fórmula idêntica ao dinâmico)
+  Object.assign(container.style, {
+    width: '100%',
+    maxWidth: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'visible',
+    marginTop: parseMargin(cfg.marginTop),
+    marginBottom: parseMargin(cfg.marginBottom),
+    paddingLeft: parseMargin(cfg.marginLeft),
+    paddingRight: parseMargin(cfg.marginRight),
+    boxSizing: 'border-box',
+    fontFamily: appearance.font_family || 'inherit',
+    visibility: 'visible',
+    opacity: '1',
+    position: 'relative',
+    zIndex: '1',
+    background: 'transparent'
+  });
+
+  // 2. WRAPPER INTERNO (Empilha verticalmente o título e os vídeos)
+  var wrapper = document.createElement('div');
+  wrapper.className = 'vidlytics-carousel-wrapper';
+  Object.assign(wrapper.style, {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'visible',
+    background: 'transparent'
+  });
+
+  // Insere o wrapper dentro do container principal
+  container.appendChild(wrapper);
+  
+    // Header
+  if (cfg.showTitle && (cfg.titleText || (stories[0] && stories[0].title))) {
+    var header = document.createElement('div');
+    header.className = 'vidlytics-carousel-header';
+    header.style.cssText =
+      'display:block !important;' +
+      'width:100% !important;' +
+      'margin-bottom:12px !important;' +
+      'text-align:' + cfg.titleAlign + ' !important;';
+
+    var title = document.createElement('h3');
+    title.className = 'vidlytics-carousel-title';
+    title.textContent = cfg.titleText || (stories[0] && stories[0].title);
+    title.style.cssText =
+      'margin:0 !important;' +
+      'display:block !important;' +
+      'font-size:' + cfg.titleFontSize + 'px !important;' +
+      'font-weight:' + (cfg.titleBold ? '700' : '400') + ' !important;' +
+      'color:' + textColor + ' !important;' +
+      'text-align:' + cfg.titleAlign + ' !important;';
+    header.appendChild(title);
+    wrapper.appendChild(header);
+  }
+  
+  // Track container
+  var trackContainer = document.createElement('div');
+  trackContainer.className = 'vidlytics-carousel-track-container';
+
+  var itemWidthPx = parseFloat(cfg.itemWidth) || 120;
+  var gapPx = parseFloat(cfg.itemSpacing) || 8;
+  var visibleItems = cfg.visibleItems || 4;
+
+  var containerWidthPx = (itemWidthPx * visibleItems) + (gapPx * (visibleItems - 1));
+
+  trackContainer.style.cssText =
+    'overflow:hidden !important;' +
+    'position:relative !important;' +
+    'width:' + containerWidthPx + 'px !important;' +
+    'max-width:100% !important;' +
+    'margin:0 auto !important;'; // Opcional: Garante que o trackContainer fique centralizado se o wrapper for maior que ele
+  
+  var track = document.createElement('div');
+  track.className = 'vidlytics-carousel-track';
+  track.style.cssText =
+    'display:flex !important;' +
+    'gap:' + cfg.itemSpacing + ' !important;' +
+    'transition:transform 0.3s ease !important;' +
+    'will-change:transform !important;';
+  track.style.transform = 'translateX(0px)';
+  
+// Items renderizam completamente com suporte robusto a vídeo e imagem
+  stories.forEach(function(story, storyIndex) {
+    var videos = (story.videos || []).filter(Boolean);
+    videos.forEach(function(video, videoIndex) {
+      // 1. Resolução completa e defensiva de URLs
+      var rawVideoUrl = getVideoUrl(video);
+      var thumbUrl = getVideoThumbnail(video) || 
+                     (video && (video.thumbnail_url || video.cover_image_url || video.poster_url || video.image_url)) ||
+                     (story && (story.cover_url || story.thumbnail_url || story.cover || story.thumbnail)) || '';
+      var effectiveMediaUrl = thumbUrl || rawVideoUrl;
+      
+      // 2. Container principal do item em coluna
+      var item = document.createElement('div');
+      item.className = 'vidlytics-carousel-item';
+      item.style.cssText =
+        'flex:0 0 ' + cfg.itemWidth + ' !important;' +
+        'width:' + cfg.itemWidth + ' !important;' +
+        'min-width:' + cfg.itemWidth + ' !important;' +
+        'max-width:' + cfg.itemWidth + ' !important;' +
+        'display:flex !important;' +
+        'flex-direction:column !important;' +
+        'gap:6px !important;' +
+        'background:transparent !important;' +
+        'cursor:pointer !important;';
+
+      // 3. Resolução precisa de bordas e raios (preserva 0 para canto reto)
+      var parsedBorder = parseFloat(cfg.borderWidth);
+      var borderWidthNum = !isNaN(parsedBorder) ? Math.max(0, parsedBorder) : 0;
+
+      var parsedRadius = parseFloat(cfg.itemRadius);
+      var rawRadiusNum = !isNaN(parsedRadius) ? Math.max(0, parsedRadius) : 12;
+
+      var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
+      var innerRadiusCss = (typeof cfg.itemRadius === 'string' && cfg.itemRadius.indexOf('%') !== -1)
+        ? cfg.itemRadius
+        : (innerRadiusVal + 'px');
+
+      // 4. Card visual do vídeo
+      var videoCard = document.createElement('div');
+      var carouselBorderCss = (borderWidthNum > 0)
+        ? ('box-shadow: inset 0 0 0 ' + borderWidthNum + 'px ' + cfg.borderColor + ' !important;')
+        : '';
+
+      videoCard.style.cssText =
+        'width:100% !important;' +
+        'aspect-ratio:' + cfg.itemAspect + ' !important;' +
+        'border-radius:' + cfg.itemRadius + ' !important;' +
+        'overflow:hidden !important;' +
+        'position:relative !important;' +
+        'background:#000 !important;' +
+        'transform:translateZ(0) !important;' +
+        '-webkit-backface-visibility:hidden !important;' +
+        '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
+        carouselBorderCss;
+
+      // 5. Máscara interna para corte perfeito da mídia (Decisão por view_mode)
+      var innerMask = document.createElement('div');
+      innerMask.className = 'vidlytics-carousel-inner-mask';
+      innerMask.style.cssText = [
+        'position:absolute !important;',
+        'inset:' + borderWidthNum + 'px !important;',
+        'overflow:hidden !important;',
+        'border-radius:' + innerRadiusCss + ' !important;',
+        'z-index:1 !important;',
+        'pointer-events:none !important;',
+        'transform:translateZ(0) !important;',
+        '-webkit-transform:translateZ(0) !important;',
+        'background:#000 !important;'
+      ].join('');
+
+      // Modo 'playing' (preview): reproduz vídeo mutado com poster nativo da capa
+      // Modo 'static': renderiza exclusivamente tag <img> da capa
+      if (cfg.carouselPlayMode === 'playing' && rawVideoUrl) {
+        var previewVideo = document.createElement('video');
+        var videoUrlWithFragment = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+
+        previewVideo.preload = 'metadata';
+        previewVideo.muted = true;
+        previewVideo.defaultMuted = true;
+        previewVideo.autoplay = true;
+        previewVideo.loop = true;
+        previewVideo.playsInline = true;
+        previewVideo.setAttribute('playsinline', '');
+        previewVideo.setAttribute('webkit-playsinline', '');
+        previewVideo.setAttribute('muted', '');
+        if (thumbUrl) {
+          previewVideo.poster = thumbUrl;
+        }
+
+        previewVideo.style.cssText =
+          'width:100% !important;' +
+          'height:100% !important;' +
+          'object-fit:' + cfg.objectFit + ' !important;' +
+          'display:block !important;' +
+          'border-radius:' + innerRadiusCss + ' !important;' +
+          '-webkit-backface-visibility:hidden !important;' +
+          'background:#000 !important;';
+
+previewVideo.src = videoUrlWithFragment;
+
+innerMask.appendChild(previewVideo);
+var pvPlayPromise = previewVideo.play();
+if (pvPlayPromise && typeof pvPlayPromise.catch === 'function') {
+  pvPlayPromise.catch(function () {});
+}
+      } else {
+        var displayImgSrc = thumbUrl;
+
+        if (displayImgSrc) {
+          var cardImg = document.createElement('img');
+          cardImg.src = displayImgSrc;
+          cardImg.alt = (story && story.title) || 'Story';
+          cardImg.loading = 'lazy';
+          cardImg.style.cssText =
+            'width:100% !important;' +
+            'height:100% !important;' +
+            'object-fit:' + cfg.objectFit + ' !important;' +
+            'display:block !important;' +
+            'border-radius:' + innerRadiusCss + ' !important;' +
+            '-webkit-backface-visibility:hidden !important;';
+
+          cardImg.onerror = function () {
+            if (rawVideoUrl) {
+              cardImg.style.display = 'none';
+              var fallbackVid = document.createElement('video');
+              var fallbackUrl = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+              fallbackVid.preload = 'metadata';
+              fallbackVid.muted = true;
+              fallbackVid.defaultMuted = true;
+              fallbackVid.playsInline = true;
+              fallbackVid.setAttribute('playsinline', '');
+              fallbackVid.setAttribute('webkit-playsinline', '');
+              fallbackVid.setAttribute('muted', '');
+              fallbackVid.style.cssText =
+                'width:100% !important;' +
+                'height:100% !important;' +
+                'object-fit:' + cfg.objectFit + ' !important;' +
+                'display:block !important;' +
+                'border-radius:' + innerRadiusCss + ' !important;' +
+                '-webkit-backface-visibility:hidden !important;' +
+                'background:#000 !important;';
+fallbackVid.src = fallbackUrl;
+              innerMask.appendChild(fallbackVid);
+            }
+          };
+
+          innerMask.appendChild(cardImg);
+        } else if (rawVideoUrl) {
+          var directFrameVid = document.createElement('video');
+          var directUrl = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+          directFrameVid.preload = 'metadata';
+          directFrameVid.muted = true;
+          directFrameVid.defaultMuted = true;
+          directFrameVid.playsInline = true;
+          directFrameVid.setAttribute('playsinline', '');
+          directFrameVid.setAttribute('webkit-playsinline', '');
+          directFrameVid.setAttribute('muted', '');
+          directFrameVid.style.cssText =
+            'width:100% !important;' +
+            'height:100% !important;' +
+            'object-fit:' + cfg.objectFit + ' !important;' +
+            'display:block !important;' +
+            'border-radius:' + innerRadiusCss + ' !important;' +
+            '-webkit-backface-visibility:hidden !important;' +
+            'background:#000 !important;';
+directFrameVid.src = directUrl;
+          innerMask.appendChild(directFrameVid);
+        }
+      }
+
+      videoCard.appendChild(innerMask);
+
+      // 6. Ícone de Play centralizado
+      if (cfg.showPlayIcon) {
+        var play = document.createElement('div');
+        play.className = 'vidlytics-carousel-play';
+        play.style.cssText =
+          'position:absolute !important;' +
+          'top:50% !important;' +
+          'left:50% !important;' +
+          'transform:translate(-50%,-50%) !important;' +
+          'width:36px !important;' +
+          'height:36px !important;' +
+          'border-radius:50% !important;' +
+          'background:rgba(0,0,0,0.5) !important;' +
+          'display:flex !important;' +
+          'align-items:center !important;' +
+          'justify-content:center !important;' +
+          'z-index:2 !important;';
+        play.innerHTML = '<svg width="14" height="16" viewBox="0 0 14 16" fill="white"><path d="M0 0l14 8-14 8z"/></svg>';
+        videoCard.appendChild(play);
+      }
+      
+      // 7. Título do Item sobreposto
+      if (cfg.showItemTitle && story.title) {
+        var titleOverlay = document.createElement('div');
+        titleOverlay.className = 'vidlytics-carousel-item-title';
+        titleOverlay.textContent = story.title;
+        titleOverlay.style.cssText =
+          'position:absolute !important;' +
+          'bottom:0 !important;' +
+          'left:0 !important;' +
+          'right:0 !important;' +
+          'padding:8px !important;' +
+          'background:linear-gradient(transparent, rgba(0,0,0,0.7)) !important;' +
+          'color:#fff !important;' +
+          'font-size:12px !important;' +
+          'font-weight:600 !important;' +
+          'text-align:left !important;' +
+          'z-index:2 !important;';
+        videoCard.appendChild(titleOverlay);
+      }
+
+      // 8. Evento de clique para abrir Story
+      videoCard.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openStoryModal(storyIndex, videoIndex);
+      });
+
+      item.appendChild(videoCard);
+
+      // 9. Card de produto acoplado
+      if (cfg.showProduct) {
+        var videoProductId = video.product_id || video.productId || null;
+        var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
+
+        if (productData) {
+          var productUrl = productData.product_url || productData.url || '';
+          var cardRadiusVal = (cfg.productCardRadius !== undefined && cfg.productCardRadius !== null) ? cfg.productCardRadius : 12;
+
+          var prodCard = document.createElement('div');
+          prodCard.className = 'vidlytics-carousel-product-card';
+          prodCard.style.cssText =
+            'display:flex !important;' +
+            'align-items:center !important;' +
+            'gap:8px !important;' +
+            'padding:6px !important;' +
+            'width:100% !important;' +
+            'background:' + (cfg.productCardBg || '#fff') + ' !important;' +
+            'border-radius:' + cardRadiusVal + 'px !important;' +
+            'border:' + (cfg.productCardBorderWidth !== undefined ? cfg.productCardBorderWidth : 1) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ' !important;' +
+            'box-shadow:0 2px 8px rgba(0,0,0,0.04) !important;' +
+            'box-sizing:border-box !important;' +
+            'cursor:pointer !important;' +
+            'text-align:left !important;';
+
+          var prodImgUrl = getThumbnailFromObject(productData) || '';
+          if (prodImgUrl) {
+            var pImg = document.createElement('img');
+            pImg.src = prodImgUrl;
+            pImg.alt = productData.name || 'Produto';
+            pImg.style.cssText =
+              'width:54px !important;' +
+              'height:54px !important;' +
+              'min-width:54px !important;' +
+              'max-width:54px !important;' +
+              'border-radius:8px !important;' +
+              'object-fit:cover !important;' +
+              'background:#f1f5f9 !important;' +
+              'display:block !important;' +
+              'flex-shrink:0 !important;';
+            prodCard.appendChild(pImg);
+          }
+
+          var pInfo = document.createElement('div');
+          pInfo.style.cssText =
+            'flex:1 !important;' +
+            'min-width:0 !important;' +
+            'display:flex !important;' +
+            'flex-direction:column !important;' +
+            'justify-content:center !important;' +
+            'gap:2px !important;';
+
+          var pName = document.createElement('div');
+          pName.textContent = productData.name || 'Produto';
+          pName.style.cssText =
+            'font-size:' + (cfg.productCardNameSize || 11) + 'px !important;' +
+            'font-weight:700 !important;' +
+            'color:' + (cfg.productCardNameColor || '#0f172a') + ' !important;' +
+            'white-space:nowrap !important;' +
+            'overflow:hidden !important;' +
+            'text-overflow:ellipsis !important;' +
+            'width:100% !important;';
+          pInfo.appendChild(pName);
+
+          var pBottomRow = document.createElement('div');
+          pBottomRow.style.cssText =
+            'display:flex !important;' +
+            'align-items:center !important;' +
+            'justify-content:space-between !important;' +
+            'width:100% !important;';
+
+          if (productData.price) {
+            var pPrice = document.createElement('div');
+            pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
+            pPrice.style.cssText =
+              'font-size:' + (cfg.productCardPriceSize || 12) + 'px !important;' +
+              'font-weight:' + (cfg.productCardPriceBold ? '800' : '600') + ' !important;' +
+              'color:' + (cfg.productCardPriceColor || getPrimaryColor(appearance)) + ' !important;';
+            pBottomRow.appendChild(pPrice);
+          }
+
+          var arrowIndicator = document.createElement('div');
+          arrowIndicator.innerHTML = '&rarr;';
+          arrowIndicator.style.cssText =
+            'font-size:13px !important;' +
+            'font-weight:800 !important;' +
+            'color:' + (cfg.productCardPriceColor || getPrimaryColor(appearance)) + ' !important;' +
+            'padding-left:4px !important;' +
+            'flex-shrink:0 !important;';
+          pBottomRow.appendChild(arrowIndicator);
+
+          pInfo.appendChild(pBottomRow);
+          prodCard.appendChild(pInfo);
+
+          prodCard.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (productUrl) {
+              window.open(productUrl, '_blank');
+            }
+            sendAnalyticsEvent('product_click', video ? video.id : null, productData ? productData.id : null);
+          });
+
+          // Registra a visualização do produto na vitrine do carrossel
+          sendAnalyticsEvent('product_view', video ? video.id : null, productData ? productData.id : null);
+
+          item.appendChild(prodCard);
+        }
+      }
+
+track.appendChild(item);
+    });
+  });
+      
+  trackContainer.appendChild(track);
+  wrapper.appendChild(trackContainer);
+  
+  // --- DRAG TO SCROLL ---
+  var isDragging = false;
+  var startX = 0;
+  var currentTranslate = 0;
+  var dragStartTranslate = 0;
+
+  function getTranslateX(el) {
+    var style = window.getComputedStyle(el);
+    var transform = style.transform;
+    if (!transform || transform === 'none') return 0;
+    var matrix = new DOMMatrixReadOnly(transform);
+    return matrix.m41;
+  }
+
+  function getMaxScroll() {
+    var trackWidth = track.scrollWidth;
+    var containerWidth = trackContainer.offsetWidth;
+    return Math.max(0, trackWidth - containerWidth);
+  }
+
+  function clamp(val, min, max) {
+    return Math.min(max, Math.max(min, val));
+  }
+
+  function onDragStart(clientX) {
+    isDragging = true;
+    startX = clientX;
+    dragStartTranslate = getTranslateX(track);
+    track.style.transition = 'none';
+    track.style.cursor = 'grabbing';
+  }
+
+  function onDragMove(clientX) {
+    if (!isDragging) return;
+    var delta = clientX - startX;
+    var maxScroll = getMaxScroll();
+    var newTranslate = clamp(dragStartTranslate + delta, -maxScroll, 0);
+    track.style.transform = 'translateX(' + newTranslate + 'px)';
+  }
+
+  function onDragEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    track.style.transition = 'transform 0.3s ease';
+    track.style.cursor = 'grab';
+  }
+
+  track.style.cursor = 'grab';
+
+  // Mouse events
+  track.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    onDragStart(e.clientX);
+  });
+  window.addEventListener('mousemove', function(e) {
+    onDragMove(e.clientX);
+  });
+  window.addEventListener('mouseup', onDragEnd);
+
+  // Touch events
+  track.addEventListener('touchstart', function(e) {
+    onDragStart(e.touches[0].clientX);
+  }, { passive: true });
+  track.addEventListener('touchmove', function(e) {
+    onDragMove(e.touches[0].clientX);
+  }, { passive: true });
+  track.addEventListener('touchend', onDragEnd);
+
+  // Previne clique acidental durante drag
+  track.querySelectorAll('.vidlytics-carousel-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      var moved = Math.abs(getTranslateX(track) - dragStartTranslate);
+      if (moved > 5) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }, true);
+  });
+  
+  target.insertAdjacentElement(position, container);
+}
+
+function renderGridWidget(container, stories, appearance) {
+  var allVideos = [];
+  (stories || []).forEach(function (story, storyIdx) {
+    var videos = story.videos || [];
+    videos.forEach(function (video, videoIdx) {
+      allVideos.push({
+        story: story,
+        storyIndex: storyIdx,
+        video: video,
+        videoIndex: videoIdx
+      });
+    });
+  });
+
+  if (allVideos.length === 0) {
+    var emptyMsg = createEl('div');
+    emptyMsg.textContent = 'Nenhum vídeo disponível.';
+    emptyMsg.style.cssText = 'font-size:14px;color:#94a3b8;text-align:center;padding:20px;';
+    container.appendChild(emptyMsg);
+    return;
+  }
+
+  var cfg = getGridConfig(appearance);
+  var fontFamily = getFontFamily(appearance);
+
+  // --- 1. RENDERIZAR TÍTULO DA VITRINE NO TOPO ---
+  if (cfg.showTitle && cfg.titleText) {
+    var titleEl = createEl('h2', 'vl-grid-title');
+    titleEl.textContent = cfg.titleText;
+    titleEl.style.cssText = [
+      'display:block;',
+      'width:100%;',
+      'margin:0 auto 16px auto;',
+      'padding:0 4px;',
+      'box-sizing:border-box;',
+      'font-family:' + fontFamily + ';',
+      'font-size:' + cfg.titleFontSize + 'px;',
+      'font-weight:' + (cfg.titleBold ? '800' : 'normal') + ';',
+      'color:' + cfg.titleColor + ';',
+      'text-align:' + cfg.titleAlign + ';',
+      'line-height:1.3;'
+    ].join('');
+    container.appendChild(titleEl);
+  }
+
+  var columns = cfg.columns || 4;
+  var gapPx = cfg.spacing + 'px';
+  var cardMaxWidth = (cfg.size || 200) + 'px';
+
+  var gridWrapper = createEl('div', 'vl-grid-wrapper');
+  gridWrapper.style.cssText = [
+    'display:grid;',
+    'grid-template-columns:repeat(' + columns + ', 1fr);',
+    'gap:' + gapPx + ';',
+    'width:100%;',
+    'max-width:' + (columns * ((cfg.size || 200) + cfg.spacing)) + 'px;',
+    'margin:0 auto;',
+    'padding:4px;',
+  ].join('');
+
+  var cardsData = [];
+
+  allVideos.forEach(function (item, itemIdx) {
+    var story = item.story;
+    var video = item.video;
+
+    // Elemento wrapper para envelopar o Vídeo + Card de Produto abaixo
+    var itemWrapper = createEl('div', 'vl-grid-item-wrapper');
+    itemWrapper.style.cssText = [
+      'display:flex;',
+      'flex-direction:column;',
+      'width:100%;',
+      'max-width:' + cardMaxWidth + ';',
+      'box-sizing:border-box;'
+    ].join('');
+
+    var card = createEl('div', 'vl-grid-card');
+    var hasBorder = cfg.borderWidth > 0;
+    card.style.cssText = [
+      'width:100%;',
+      'aspect-ratio:' + cfg.aspectRatio + ';',
+      'border-radius:' + cfg.borderRadius + ';',
+      'overflow:hidden;',
+      'position:relative;',
+      'background:transparent;',
+      'cursor:pointer;',
+      'transition:transform .2s ease, box-shadow .2s ease, opacity 0.3s ease;',
+      'transform:translateZ(0);',
+      '-webkit-transform:translateZ(0);',
+      'backface-visibility:hidden;',
+      '-webkit-backface-visibility:hidden;',
+      '-webkit-mask-image:-webkit-radial-gradient(white, black);',
+      hasBorder ? ('box-shadow: inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';') : '',
+    ].join('');
+
+    var rawVideoUrl = getVideoUrl(video);
+    var thumbUrl = getVideoThumbnail(video) ||
+                   (video && (video.thumbnail_url || video.cover_image_url || video.poster_url || video.image_url)) ||
+                   (story && (story.cover_url || story.thumbnail_url || story.cover || story.thumbnail)) || '';
+    var sourceType = String(video.source_type || video.sourceType || '').toLowerCase();
+    var isImageItem = sourceType === 'image' || (video && video.type === 'image');
+    var effectiveMediaUrl = thumbUrl || rawVideoUrl;
+
+    var cardData = {
+      card: card,
+      video: null,
+      isImage: isImageItem || !rawVideoUrl,
+      playBadge: null
+    };
+    cardsData.push(cardData);
+
+    if (effectiveMediaUrl) {
+      var innerMask = createEl('div', 'vl-grid-img-mask');
+
+      var borderWidthNum = cfg.borderWidth || 0;
+      var rawRadiusNum = parseFloat(cfg.borderRadius);
+      if (isNaN(rawRadiusNum)) {
+        rawRadiusNum = 12;
+      }
+      var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
+      var innerRadiusCss = (typeof cfg.borderRadius === 'string' && cfg.borderRadius.indexOf('%') !== -1)
+        ? cfg.borderRadius
+        : (innerRadiusVal + 'px');
+
+      innerMask.style.cssText = [
+        'position:absolute;',
+        'inset:' + borderWidthNum + 'px;',
+        'overflow:hidden;',
+        'border-radius:' + innerRadiusCss + ';',
+        'z-index:1;',
+        'pointer-events:none;',
+        'transform:translateZ(0);',
+        '-webkit-transform:translateZ(0);',
+        'will-change:transform;',
+        '-webkit-mask-image:-webkit-radial-gradient(white, black);',
+        'background:#000;'
+      ].join('');
+
+      var shouldAutoplay = !!cfg.autoplayVideos;
+      var willUseImage = isImageItem || !rawVideoUrl || (!shouldAutoplay && !cfg.sequentialPlayback && thumbUrl);
+
+      if (willUseImage) {
+        var img = createEl('img');
+        img.src = thumbUrl || rawVideoUrl;
+        img.alt = (video && video.title) || (story && story.title) || 'Story';
+        img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;will-change:transform;';
+        img.loading = 'lazy';
+
+        img.onerror = function () {
+          if (rawVideoUrl && !isImageItem) {
+            img.style.display = 'none';
+            var fallbackGridVid = createEl('video');
+            var fallbackGridUrlWithFragment = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+
+            fallbackGridVid.preload = 'metadata';
+            fallbackGridVid.muted = true;
+            fallbackGridVid.defaultMuted = true;
+            fallbackGridVid.playsInline = true;
+            fallbackGridVid.setAttribute('playsinline', '');
+            fallbackGridVid.setAttribute('webkit-playsinline', '');
+            fallbackGridVid.setAttribute('muted', '');
+
+            if (shouldAutoplay && !cfg.sequentialPlayback) {
+              fallbackGridVid.autoplay = true;
+              fallbackGridVid.loop = true;
+              fallbackGridVid.setAttribute('autoplay', '');
+              fallbackGridVid.setAttribute('loop', '');
+            }
+
+            fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
+            fallbackGridVid.src = fallbackGridUrlWithFragment;
+
+            if (shouldAutoplay && !cfg.sequentialPlayback) {
+              var fallbackPlayPromise = fallbackGridVid.play();
+              if (fallbackPlayPromise && typeof fallbackPlayPromise.catch === 'function') {
+                fallbackPlayPromise.catch(function () {});
+              }
+            }
+
+            cardData.video = fallbackGridVid;
+            innerMask.appendChild(fallbackGridVid);
+          }
+        };
+
+        innerMask.appendChild(img);
+      } else if (rawVideoUrl) {
+        var gridVideo = createEl('video');
+        var gridUrlWithFragment = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+
+        gridVideo.preload = 'metadata';
+        gridVideo.muted = true;
+        gridVideo.defaultMuted = true;
+        gridVideo.playsInline = true;
+        gridVideo.setAttribute('playsinline', '');
+        gridVideo.setAttribute('webkit-playsinline', '');
+        gridVideo.setAttribute('muted', '');
+
+        if (shouldAutoplay && !cfg.sequentialPlayback) {
+          gridVideo.autoplay = true;
+          gridVideo.loop = true;
+          gridVideo.setAttribute('autoplay', '');
+          gridVideo.setAttribute('loop', '');
+        }
+
+        gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
+        gridVideo.src = gridUrlWithFragment;
+
+        if (shouldAutoplay && !cfg.sequentialPlayback) {
+          var gridPlayPromise = gridVideo.play();
+          if (gridPlayPromise && typeof gridPlayPromise.catch === 'function') {
+            gridPlayPromise.catch(function () {});
+          }
+        }
+
+        cardData.video = gridVideo;
+        innerMask.appendChild(gridVideo);
+      }
+
+      card.appendChild(innerMask);
+    }
+
+    // --- 2. RENDERIZAR BOTÃO DE PLAY CENTRADO (ESTRITO) ---
+    if (cfg.showPlayIcon) {
+      var playBadge = createEl('div');
+      playBadge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2;transition:opacity 0.2s ease;';
+      var playIcon = createEl('div');
+      playIcon.style.cssText = 'width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;';
+      playIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"></polygon></svg>';
+      playBadge.appendChild(playIcon);
+      card.appendChild(playBadge);
+      cardData.playBadge = playBadge;
+    }
+
+    card.addEventListener('click', function (e) {
+      e.preventDefault();
+      openStoryModal(item.storyIndex, item.videoIndex);
+      sendAnalyticsEvent('video_view', item.video ? item.video.id : null, null);
+    });
+
+    var borderBoxShadow = hasBorder ? ('inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor) : '';
+
+    card.addEventListener('mouseenter', function () {
+      card.style.transform = 'translateY(-4px)';
+      card.style.boxShadow = borderBoxShadow ? ('0 8px 24px rgba(0,0,0,.15), ' + borderBoxShadow) : '0 8px 24px rgba(0,0,0,.15)';
+    });
+    card.addEventListener('mouseleave', function () {
+      card.style.transform = 'translateY(0)';
+      card.style.boxShadow = borderBoxShadow ? borderBoxShadow : 'none';
+    });
+
+    itemWrapper.appendChild(card);
+
+    // --- 3. RENDERIZAR CARD DE PRODUTO ABAIXO DO CARD (ESTILO PREMIUM CARROSSEL/MODAL) ---
+    var videoProductId = video.product_id || video.productId || null;
+    var productData = videoProductId && typeof readProductsData !== 'undefined'
+      ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); })
+      : null;
+
+    if (cfg.showProduct && productData) {
+      var productUrl = productData.product_url || productData.url || '';
+      var prodCard = createEl('div', 'vl-grid-product');
+      var borderCss = cfg.productCardBorderWidth > 0
+        ? ('border:' + cfg.productCardBorderWidth + 'px solid ' + cfg.productCardBorderColor + ' !important;')
+        : 'border:none !important;';
+
+      var initialShadow = '0 2px 8px rgba(0,0,0,0.06)';
+
+      prodCard.style.cssText = [
+        'display:flex !important;',
+        'align-items:center !important;', // Mantém a seta verticalmente centralizada no card
+        'justify-content:space-between !important;',
+        'gap:6px !important;', // Gap reduzido para aproximar o conteúdo da setinha
+        'width:100% !important;',
+        'padding:6px 10px !important;',
+        'margin-top:8px !important;',
+        'background:' + cfg.productCardBg + ' !important;',
+        'border-radius:' + cfg.productCardRadius + 'px !important;',
+        borderCss,
+        'box-shadow:' + initialShadow + ' !important;',
+        'box-sizing:border-box !important;',
+        'cursor:pointer !important;',
+        'transition:transform 0.2s ease, box-shadow 0.2s ease !important;',
+      ].join('');
+
+      // Lado esquerdo (Imagem + Dados) - Agora alinhado ao topo!
+      var leftPart = createEl('div');
+      leftPart.style.cssText = 'display:flex !important;align-items:flex-start !important;gap:8px !important;min-width:0 !important;flex:1 !important;';
+
+      var prodImg = createEl('img', 'vl-grid-product-img');
+      prodImg.src = getThumbnailFromObject(productData) || '';
+      prodImg.alt = productData.name || 'Produto';
+      prodImg.style.cssText = 'width:60px !important;height:60px !important;border-radius:6px !important;object-fit:cover !important;flex-shrink:0 !important;background:#f1f5f9 !important;';
+      leftPart.appendChild(prodImg);
+
+      var prodInfo = createEl('div', 'vl-grid-product-info');
+      // Alinhamento ao topo com um micro padding-top para alinhar pixel a pixel com a foto
+      prodInfo.style.cssText = 'min-width:0 !important;flex:1 !important;display:flex !important;flex-direction:column !important;justify-content:flex-start !important;gap:2px !important;padding-top:2px !important;';
+
+      var pName = createEl('div', 'vl-grid-product-name');
+      pName.textContent = productData.name || 'Produto';
+      // Implementação de 2 linhas limite com reticências automáticas
+      pName.style.cssText = [
+        'font-family:' + fontFamily + ' !important;',
+        'font-size:' + cfg.productCardNameSize + 'px !important;',
+        'color:' + cfg.productCardNameColor + ' !important;',
+        'font-weight:700 !important;',
+        'margin:0 !important;',
+        'line-height:1.25 !important;',
+        'display:-webkit-box !important;',
+        '-webkit-line-clamp:2 !important;',
+        '-webkit-box-orient:vertical !important;',
+        'overflow:hidden !important;',
+        'text-overflow:ellipsis !important;',
+        'word-break:break-word !important;'
+      ].join('');
+      prodInfo.appendChild(pName);
+
+      var priceVal = productData.price || productData.sale_price || productData.salePrice || '';
+      var formattedPrice = '';
+      if (priceVal) {
+        var numPrice = parseFloat(priceVal);
+        if (!isNaN(numPrice)) {
+          formattedPrice = 'R$ ' + numPrice.toFixed(2).replace('.', ',');
+        } else {
+          formattedPrice = String(priceVal);
+        }
+      }
+
+      if (formattedPrice) {
+        var pPrice = createEl('div', 'vl-grid-product-price');
+        pPrice.textContent = formattedPrice;
+        pPrice.style.cssText = [
+          'font-family:' + fontFamily + ' !important;',
+          'font-size:' + cfg.productCardPriceSize + 'px !important;',
+          'color:' + (cfg.productCardPriceColor || '#0094EB') + ' !important;',
+          'font-weight:' + (cfg.productCardPriceBold ? '800' : '700') + ' !important;',
+          'margin:2px 0 0 0 !important;', // Espaço sutil entre o título de até 2 linhas e o preço
+          'line-height:1.2 !important;'
+        ].join('');
+        prodInfo.appendChild(pPrice);
+      }
+      leftPart.appendChild(prodInfo);
+      prodCard.appendChild(leftPart);
+
+      // Setinha (Chevron) elegante
+      var chevronColor = cfg.productCardPriceColor || '#0094EB';
+      var actionElement = createEl('div', 'vl-grid-product-chevron');
+      actionElement.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + chevronColor + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+      actionElement.style.cssText = 'display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;transition:transform 0.2s ease !important;';
+      prodCard.appendChild(actionElement);
+
+      // Micro-interações de Hover
+      prodCard.addEventListener('mouseenter', function() {
+        prodCard.style.transform = 'translateY(-2px)';
+        prodCard.style.boxShadow = '0 6px 16px rgba(0,0,0,0.12) !important';
+        if (actionElement) {
+          actionElement.style.transform = 'translateX(2px)';
+        }
+      });
+      prodCard.addEventListener('mouseleave', function() {
+        prodCard.style.transform = 'none';
+        prodCard.style.boxShadow = initialShadow + ' !important';
+        if (actionElement) {
+          actionElement.style.transform = 'none';
+        }
+      });
+
+      // Lógica de clique unificada
+      prodCard.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (productUrl) {
+          window.open(productUrl, '_blank');
+          if (typeof sendAnalyticsEvent === 'function') {
+            sendAnalyticsEvent('product_click', video ? video.id : null, productData ? productData.id : null);
+          }
+        }
+      });
+
+      itemWrapper.appendChild(prodCard);
+    }
+
+    gridWrapper.appendChild(itemWrapper);
+  });
+
+  container.appendChild(gridWrapper);
+
+  // --- 4. LÓGICA DE REPRODUÇÃO SEQUENCIAL DO GRID (5 SEGUNDOS) ---
+  if (cfg.sequentialPlayback && cardsData.length > 0) {
+    var activeSeqIndex = 0;
+
+    function updateSequentialPlayback() {
+      cardsData.forEach(function (data, idx) {
+        var isActive = idx === activeSeqIndex;
+
+        // Visual do Card: Ativo fica 100% visível, inativos esmaecidos (0.4)
+        data.card.style.opacity = isActive ? '1' : '0.4';
+
+        // Esconde o play overlay central apenas no ativo que está reproduzindo
+        if (data.playBadge) {
+          data.playBadge.style.opacity = isActive ? '0' : '1';
+        }
+
+        if (!data.isImage) {
+          var vid = data.video || data.card.querySelector('video');
+          if (vid) {
+            if (isActive) {
+              vid.muted = true;
+              vid.currentTime = 0;
+              var playPromise = vid.play();
+              if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(function () {});
+              }
+            } else {
+              vid.pause();
+            }
+          }
+        }
+      });
+    }
+
+    // Inicialização instantânea do primeiro card
+    updateSequentialPlayback();
+
+    var seqInterval = setInterval(function () {
+      activeSeqIndex = (activeSeqIndex + 1) % cardsData.length;
+      updateSequentialPlayback();
+    }, 5000);
+
+    // Desconecta o interval se o elemento for removido da página
+    var seqObserver = new MutationObserver(function () {
+      if (!document.body.contains(container)) {
+        clearInterval(seqInterval);
+        seqObserver.disconnect();
+      }
+    });
+    seqObserver.observe(document.body, { childList: true, subtree: true });
+  }
+}

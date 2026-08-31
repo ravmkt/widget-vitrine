@@ -5587,7 +5587,7 @@ function initInlineWidget(options) {
   
 if (displayMode === 'dynamic_carousel') {
   var activeStoriesCount = (stories || []).length;
-  if (activeStoriesCount < 1) { ... return false; }
+  if (activeStoriesCount < 1) { return false; }
 
   // 🔧 Achatar vídeos das stories em itens individuais
   var dcItems = [];
@@ -5603,9 +5603,7 @@ if (displayMode === 'dynamic_carousel') {
     });
   });
 
-  if (dcItems.length < 1) { ... return false; }
-
-  ...
+  if (dcItems.length < 1) { return false; }
   renderDynamicCarouselWidget({
     target: '#' + dcWrapper.id,
     position: 'beforeend',

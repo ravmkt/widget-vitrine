@@ -1,0 +1,161 @@
+    // Previne comportamento padrão de arrastar imagens/links internos
+    if (e.type === 'mousedown') {
+      e.preventDefault();
+    }
+    isDragging = true;
+    stopAutoplay();
+
+    startX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    dragDeltaX = 0;
+    originalTransformX = getTranslateX(track);
+
+    track.style.transition = 'none';
+    cardEls.forEach(function (card) {
+      card.style.transition = 'none';
+    });
+  }
+
+  function onDragMove(e) {
+    if (!isDragging) return;
+
+    var currentX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    dragDeltaX = currentX - startX;
+
+    track.style.transform = 'translateX(' + (originalTransformX + dragDeltaX) + 'px)';
+  }
+
+  function onDragEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+
+    var transitionMs = parseFloat(cfg.transitionMs) || 300;
+    track.style.transition = 'transform ' + transitionMs + 'ms ease';
+    cardEls.forEach(function (card) {
+      card.style.transition = 'transform ' + transitionMs + 'ms ease, margin ' + transitionMs + 'ms ease';
+    });
+
+    var threshold = (cfg.width + cfg.spacing) * 0.25; // 25% da largura do card
+
+    if (dragDeltaX < -threshold) {
+      goNext();
+    } else if (dragDeltaX > threshold) {
+      goPrev();
+    } else {
+      applyStyles(); // Retorna suavemente para a posição padrão
+    }
+
+    startAutoplay();
+  }
+
+  // Eventos de Toque e Mouse no Track
+  track.addEventListener('mousedown', onDragStart);
+  track.addEventListener('touchstart', onDragStart, { passive: true });
+
+  window.addEventListener('mousemove', onDragMove);
+  window.addEventListener('touchmove', onDragMove, { passive: true });
+
+  window.addEventListener('mouseup', onDragEnd);
+  window.addEventListener('touchend', onDragEnd);
+
+  // Controle de Loops do Autoplay
+  var interval = null;
+
+  function startAutoplay() {
+    stopAutoplay();
+    interval = setInterval(goNext, cfg.autoplayDelay);
+  }
+
+  function stopAutoplay() {
+    if (interval) {
+      clearInterval(interval);
+      interval = null;
+    }
+  }
+
+  applyStyles();
+  requestAnimationFrame(function () { applyStyles(); });
+  var onResize = function () { applyStyles(); };
+  window.addEventListener('resize', onResize);
+  
+  startAutoplay();
+
+  // Limpa interval se o wrapper for removido do DOM (evita leak em SPA)
+  var observer = new MutationObserver(function () {
+    if (!document.body.contains(container)) {
+      stopAutoplay();
+      window.removeEventListener('resize', onResize);
+      
+      // Remove listeners do escopo global
+      window.removeEventListener('mousemove', onDragMove);
+      window.removeEventListener('touchmove', onDragMove);
+      window.removeEventListener('mouseup', onDragEnd);
+      window.removeEventListener('touchend', onDragEnd);
+      
+      observer.disconnect();
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+function getWidgetDisplayMode(appearance) {
+  var mode = readAppearanceValue(appearance, [
+    'display_mode', 'displayMode', 'widget_type', 'widgetType', 'mode',
+    'tipo_exibicao', 'tipoExibicao'
+  ]);
+  if (mode) {
+    mode = String(mode).trim().toLowerCase();
+    if (mode === 'dynamic_carousel' || mode === 'carrossel_dinamico') {
+      var dcCfg = appearance.dynamic_carousel_config;
+      if (typeof dcCfg === 'string') { try { dcCfg = JSON.parse(dcCfg); } catch(e) { dcCfg = null; } }
+      var dcEnabled = false;
+      if (dcCfg && typeof dcCfg === 'object') {
+        dcEnabled = dcCfg['enabled'] === true || dcCfg['enabled'] === 'true' ||
+          (dcCfg['mobile'] && (dcCfg['mobile']['enabled'] === true || dcCfg['mobile']['enabled'] === 'true')) ||
+          (dcCfg['desktop'] && (dcCfg['desktop']['enabled'] === true || dcCfg['desktop']['enabled'] === 'true'));
+      }
+      // Fallback para campos flattened (caso o flatten tenha destruído o objeto jsonb)
+      if (!dcEnabled) dcEnabled = appearance['enabled'] === true || appearance['enabled'] === 'true';
+      if (dcEnabled) return 'dynamic_carousel';
+      // enabled=false cai para o próximo modo (não quebra usuários existentes)
+    }
+    if (mode === 'carousel' || mode === 'carrossel') return 'carousel';
+    if (mode === 'grid' || mode === 'grade') return 'grid';
+    if (mode === 'floating' || mode === 'flutuante') return 'floating';
+    if (mode === 'stories' || mode === 'bubbles' || mode === 'bolhas') return 'stories';
+  }
+
+  // Fallback: detecta pelo jsonb preenchido
+  var gridCfg = appearance.grid_config;
+  var carouselCfg = appearance.carousel_config;
+  var floatingCfg = appearance.floating_config;
+
+  if (typeof gridCfg === 'string') { try { gridCfg = JSON.parse(gridCfg); } catch(e) { gridCfg = null; } }
+  if (typeof carouselCfg === 'string') { try { carouselCfg = JSON.parse(carouselCfg); } catch(e) { carouselCfg = null; } }
+  if (typeof floatingCfg === 'string') { try { floatingCfg = JSON.parse(floatingCfg); } catch(e) { floatingCfg = null; } }
+
+  var gridPopulated = gridCfg && typeof gridCfg === 'object' && Object.keys(gridCfg).length > 0;
+  var carouselPopulated = carouselCfg && typeof carouselCfg === 'object' && Object.keys(carouselCfg).length > 0;
+  var floatingPopulated = floatingCfg && typeof floatingCfg === 'object' && Object.keys(floatingCfg).length > 0;
+
+  // ✅ floating tem prioridade máxima (sempre que configurado)
+  if (floatingPopulated) return 'floating';
+  if (gridPopulated && carouselPopulated) return 'stories';
+  if (gridPopulated) return 'grid';
+  if (carouselPopulated) return 'carousel';
+  
+  return 'stories';
+}
+
+function enableDragScroll(el) {
+  var isDown = false;
+  var startX, scrollStart;
+  var moved = false;
+  var DRAG_THRESHOLD = 2;
+  var SPEED = 2.0;
+  var currentX = 0;
+  var velX = 0;
+  var lastX = 0;
+  var momentumId = null;
+  var cards = el.querySelectorAll('.vl-carousel-item');
+
+  function getX(e) {

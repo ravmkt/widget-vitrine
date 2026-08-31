@@ -1,0 +1,170 @@
+        label.style.cssText = 'font-size:11px;font-weight:600;color:#334155;max-width:' + (bubbleSize + 20) + 'px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;font-family:' + fontFamily + ';';
+        bubbleWrapper.appendChild(label);
+      }
+
+      bubbleWrapper.addEventListener('click', function (e) {
+        e.preventDefault();
+        openStoryModal(index);
+      });
+
+      bubbleWrapper.addEventListener('mouseenter', function () {
+        bubble.style.transform = 'scale(1.05)';
+        bubble.style.boxShadow = '0 4px 14px rgba(0,0,0,.18)';
+      });
+      bubbleWrapper.addEventListener('mouseleave', function () {
+        bubble.style.transform = 'scale(1)';
+        bubble.style.boxShadow = '0 2px 8px rgba(0,0,0,.12)';
+      });
+
+      bubbleList.appendChild(bubbleWrapper);
+    });
+
+    container.appendChild(bubbleList);
+  }
+
+function getDynamicCarouselConfig(appearance) {
+  appearance = normalizeAppearanceItem(appearance || {});
+
+  // Dupla leitura (padrão do carousel/grid): jsonb dynamic_carousel_config + campos flattened
+  function rcv(jsonbField, fallback) {
+    return readConfigValue(appearance, 'dynamic_carousel_config', jsonbField, jsonbField, fallback);
+  }
+
+  // enabled vem de "enabled" no jsonb OU do flattened no topo
+  var enabled = toBoolean(rcv('enabled', false), false);
+  if (!enabled) {
+    var rawDc = appearance.dynamic_carousel_config;
+    if (typeof rawDc === 'string') { try { rawDc = JSON.parse(rawDc); } catch(e) { rawDc = null; } }
+    if (rawDc && typeof rawDc === 'object') {
+      var device = window.innerWidth < 768 ? 'mobile' : 'desktop';
+      var layer = (rawDc[device] && typeof rawDc[device] === 'object') ? rawDc[device] : rawDc;
+      if (layer && typeof layer === 'object' && (layer['enabled'] === true || layer['enabled'] === 'true')) {
+        enabled = true;
+      }
+    }
+  }
+
+  var clampNum = function(n, min, max) { n = Number(n); if (!isFinite(n)) return min; return Math.min(max, Math.max(min, n)); };
+
+  var shape = String(rcv('shape', 'portrait')).trim().toLowerCase();
+  if (['square', 'landscape', 'circle'].indexOf(shape) === -1) shape = 'portrait';
+
+  // O painel salva a largura da borda em 'border_style' (legado) — aceitar ambas
+  var borderWidthNumber = toNumber(firstDefined(rcv('border_width', null), rcv('border_style', null), '0'), 0);
+  var highlightBorderWidthNumber = toNumber(firstDefined(rcv('highlight_border_width', null), borderWidthNumber > 0 ? String(borderWidthNumber) : null, '0'), 0);
+
+  return {
+    enabled: enabled,
+    width: toNumber(rcv('width', '160'), 160),
+    spacing: toNumber(rcv('spacing', '14'), 14),
+    shape: shape,
+    borderRadius: toNumber(rcv('border_radius', '14'), 14),
+    bgColor: rcv('bg_color', '#000000') || '#000000',
+
+    highlightMode: String(rcv('highlight_mode', 'ring')).trim().toLowerCase(),
+    highlightShadow: toBoolean(rcv('highlight_shadow', false), false),
+    highlightBorderColor: rcv('border_color', '#0094EB') || '#0094EB',
+    highlightBorderWidth: highlightBorderWidthNumber,
+    highlightBorderRadius: toNumber(rcv('highlight_border_radius', '14'), 14),
+
+    // Dessatura os vídeos inativos (50%)
+    desaturateInactive: toBoolean(rcv('highlight_desaturate_inactive', false), false),
+
+    enlargeActive: toBoolean(rcv('highlight_enlarge_active', false), false),
+    activeScale: clampNum(rcv('active_scale', '1.08'), 1, 1.3),
+
+    transitionMs: clampNum(rcv('highlight_transition', '300'), 100, 1000),
+    autoplayDelay: clampNum(rcv('autoplay_delay', '5000'), 1500, 20000),
+    autoplayVideos: toBoolean(rcv('autoplay_videos', true), true),
+    objectFit: String(rcv('object_fit', 'cover')).trim().toLowerCase(),
+    marginTop: toNumber(rcv('margin_top', '0'), 0),
+    marginBottom: toNumber(rcv('margin_bottom', '0'), 0),
+    marginLeft: toNumber(rcv('margin_left', '0'), 0),
+    marginRight: toNumber(rcv('margin_right', '0'), 0),
+    productCardPriceSize: toNumber(rcv('product_card_price_size', '12'), 12),
+    productCardPriceBold: toBoolean(rcv('product_card_price_bold', true), true),
+    productCardPriceColor: rcv('product_card_price_color', '#0094EB') || '#0094EB',
+
+    productCardBg: rcv('product_card_bg', '#FFFFFF') || '#FFFFFF',
+    borderColor: rcv('border_color', '#0094EB') || '#0094EB',
+    borderWidth: borderWidthNumber,
+    productCardRadius: toNumber(rcv('product_card_border_radius', '12'), 0),
+    productCardNameSize: toNumber(rcv('product_card_name_size', '11'), 11),
+    productCardNameColor: rcv('product_card_name_color', '#FFFFFF') || '#FFFFFF',
+    showProduct: toBoolean(rcv('show_product', false), false),
+    showProductButton: toBoolean(rcv('show_product_button', true), true),
+
+    // Estilo visual do card (item 5)
+    productCardBorderColor: rcv('product_card_border_color', '#E2E8F0') || '#E2E8F0',
+    productCardBorderWidth: toNumber(rcv('product_card_border_width', '0'), 0),
+    productCardButtonBg: rcv('product_card_button_bg', '#0094EB') || '#0094EB',
+    productCardButtonColor: rcv('product_card_button_color', '#FFFFFF') || '#FFFFFF',
+    showPlayIcon: toBoolean(rcv('show_play_icon', true), true),
+
+    // Título da vitrine
+    showTitle: toBoolean(rcv('show_title', true), true),
+    titleText: String(rcv('title_text', '') || '').trim(),
+    titleFontSize: toNumber(rcv('title_font_size', '14'), 14),
+    titleBold: toBoolean(rcv('title_bold', true), true),
+    titleColor: rcv('title_color', '#0F172A') || '#0F172A',
+    titleAlign: (function () {
+      var a = String(rcv('title_align', 'center')).trim().toLowerCase();
+      return ['left', 'center', 'right'].indexOf(a) === -1 ? 'center' : a;
+    })(),
+  };
+}
+
+function renderDynamicCarouselWidget(options, stories, appearance) {
+  var cfg = getDynamicCarouselConfig(appearance);
+  if (!cfg.enabled) return;
+
+  // Coleta itens renderizáveis (vídeo válido OU thumb do vídeo OU thumb do story)
+  var items = [];
+  (stories || []).forEach(function (story, storyIdx) {
+    (story.videos || []).forEach(function (v, videoIdx) {
+      var url = v.video_url || v.videoUrl || v.url || '';
+      var thumb = v.thumbnail_url || v.thumbnailUrl || v.poster_url || story.thumbnail_url || '';
+      if (url || thumb) {
+        items.push({
+          url: url,
+          thumb: thumb,
+          title: story.title || v.title || '',
+          id: v.id || story.id || null,
+          product_id: v.product_id || v.productId || null,
+          product_name: v.product_name || v.productName || (v.product && v.product.name) || story.title || v.title || '',
+          storyIndex: storyIdx,
+          videoIndex: videoIdx
+        });
+      }
+    });
+  });
+
+  // Guard: mínimo 3 vídeos
+  if (items.length < 3) {
+    console.warn('[Vidlytics] Carrossel Dinâmico requer no mínimo 3 vídeos. Encontrados:', items.length);
+    return;
+  }
+
+  var visibleCount = Math.min(items.length, Math.max(3, cfg.visibleItems || 3));
+  var clones = items.slice(-visibleCount).concat(items, items.slice(0, visibleCount));
+
+  var target = document.querySelector(options.target);
+  if (!target) return;
+
+  var isCircle = cfg.shape === 'circle';
+  var aspectRatio = cfg.shape === 'landscape' ? '16 / 9' : cfg.shape === 'square' || isCircle ? '1 / 1' : '9 / 16';
+
+    var container = document.createElement('div');
+  container.className = 'vidlytics-dynamic-carousel-container';
+  Object.assign(container.style, {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'visible',
+    paddingTop: '8px',
+    paddingBottom: '8px',
+    marginTop: cfg.marginTop + 'px',
+    marginBottom: cfg.marginBottom + 'px',
+    paddingLeft: cfg.marginLeft + 'px',
+    paddingRight: cfg.marginRight + 'px',
