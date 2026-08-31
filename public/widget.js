@@ -4922,8 +4922,28 @@ function renderGridWidget(container, stories, appearance) {
   }
 
   var cfg = getGridConfig(appearance);
-
   var fontFamily = getFontFamily(appearance);
+
+  // --- 1. RENDERIZAR TÍTULO DA VITRINE NO TOPO ---
+  if (cfg.showTitle && cfg.titleText) {
+    var titleEl = createEl('h2', 'vl-grid-title');
+    titleEl.textContent = cfg.titleText;
+    titleEl.style.cssText = [
+      'display:block;',
+      'width:100%;',
+      'margin:0 auto 16px auto;',
+      'padding:0 4px;',
+      'box-sizing:border-box;',
+      'font-family:' + fontFamily + ';',
+      'font-size:' + cfg.titleFontSize + 'px;',
+      'font-weight:' + (cfg.titleBold ? '800' : 'normal') + ';',
+      'color:' + cfg.titleColor + ';',
+      'text-align:' + cfg.titleAlign + ';',
+      'line-height:1.3;'
+    ].join('');
+    container.appendChild(titleEl);
+  }
+
   var columns = cfg.columns || 4;
   var gapPx = cfg.spacing + 'px';
   var cardMaxWidth = (cfg.size || 200) + 'px';
@@ -4945,6 +4965,16 @@ function renderGridWidget(container, stories, appearance) {
     var story = item.story;
     var video = item.video;
 
+    // Elemento wrapper para envelopar o Vídeo + Card de Produto abaixo
+    var itemWrapper = createEl('div', 'vl-grid-item-wrapper');
+    itemWrapper.style.cssText = [
+      'display:flex;',
+      'flex-direction:column;',
+      'width:100%;',
+      'max-width:' + cardMaxWidth + ';',
+      'box-sizing:border-box;'
+    ].join('');
+
     var card = createEl('div', 'vl-grid-card');
     var hasBorder = cfg.borderWidth > 0;
     card.style.cssText = [
@@ -4956,7 +4986,6 @@ function renderGridWidget(container, stories, appearance) {
       'background:transparent;',
       'cursor:pointer;',
       'transition:transform .2s ease, box-shadow .2s ease, opacity 0.3s ease;',
-      'max-width:' + cardMaxWidth + ';',
       'transform:translateZ(0);',
       '-webkit-transform:translateZ(0);',
       'backface-visibility:hidden;',
@@ -5009,7 +5038,6 @@ function renderGridWidget(container, stories, appearance) {
       ].join('');
 
       var shouldAutoplay = !!cfg.autoplayVideos;
-      // Garante que criamos a tag video se autoplay OU reprodução sequencial estiverem ligados
       var willUseImage = isImageItem || !rawVideoUrl || (!shouldAutoplay && !cfg.sequentialPlayback && thumbUrl);
 
       if (willUseImage) {
@@ -5033,7 +5061,6 @@ function renderGridWidget(container, stories, appearance) {
             fallbackGridVid.setAttribute('webkit-playsinline', '');
             fallbackGridVid.setAttribute('muted', '');
 
-            // Só liga o autoplay nativo direto se não estiver em modo sequencial
             if (shouldAutoplay && !cfg.sequentialPlayback) {
               fallbackGridVid.autoplay = true;
               fallbackGridVid.loop = true;
@@ -5069,7 +5096,6 @@ function renderGridWidget(container, stories, appearance) {
         gridVideo.setAttribute('webkit-playsinline', '');
         gridVideo.setAttribute('muted', '');
 
-        // Só liga o autoplay nativo direto se não estiver em modo sequencial
         if (shouldAutoplay && !cfg.sequentialPlayback) {
           gridVideo.autoplay = true;
           gridVideo.loop = true;
@@ -5094,9 +5120,10 @@ function renderGridWidget(container, stories, appearance) {
       card.appendChild(innerMask);
     }
 
+    // --- 2. RENDERIZAR BOTÃO DE PLAY CENTRADO (ESTRITO) ---
     if (cfg.showPlayIcon) {
       var playBadge = createEl('div');
-      playBadge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity 0.2s ease;';
+      playBadge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2;transition:opacity 0.2s ease;';
       var playIcon = createEl('div');
       playIcon.style.cssText = 'width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;';
       playIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"></polygon></svg>';
@@ -5104,7 +5131,7 @@ function renderGridWidget(container, stories, appearance) {
       card.appendChild(playBadge);
       cardData.playBadge = playBadge;
 
-      // Se autoplay global estiver ligado direto (não sequencial), esconde o play overlay
+      // Se o autoplay direto estiver rodando (e não for sequencial ou imagem), esconde o play overlay
       if (shouldAutoplay && !cfg.sequentialPlayback && !isImageItem) {
         playBadge.style.opacity = '0';
       }
@@ -5127,12 +5154,129 @@ function renderGridWidget(container, stories, appearance) {
       card.style.boxShadow = borderBoxShadow ? borderBoxShadow : 'none';
     });
 
-    gridWrapper.appendChild(card);
+    itemWrapper.appendChild(card);
+
+    // --- 3. RENDERIZAR CARD DE PRODUTO ABAIXO DO CARD (BOTÃO EXIBIR) ---
+    var videoProductId = video.product_id || video.productId || null;
+    var productData = videoProductId && typeof readProductsData !== 'undefined'
+      ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); })
+      : null;
+
+    if (cfg.showProduct && productData) {
+      var productUrl = productData.product_url || productData.url || '';
+      var prodCard = createEl('div', 'vl-grid-product');
+      var borderCss = cfg.productCardBorderWidth > 0 
+        ? ('border:' + cfg.productCardBorderWidth + 'px solid ' + cfg.productCardBorderColor + ';') 
+        : 'border:none;';
+
+      prodCard.style.cssText = [
+        'display:flex;',
+        'align-items:center;',
+        'justify-content:space-between;',
+        'gap:8px;',
+        'width:100%;',
+        'padding:8px;',
+        'margin-top:8px;',
+        'background:' + cfg.productCardBg + ';',
+        'border-radius:' + cfg.productCardRadius + 'px;',
+        borderCss,
+        'box-sizing:border-box;',
+        'cursor:pointer;',
+        'transition:transform .2s ease, box-shadow .2s ease;',
+      ].join('');
+
+      prodCard.addEventListener('click', function (e) {
+        e.stopPropagation(); // Evita acionar o modal do story ao clicar no produto
+        if (productUrl) {
+          window.open(productUrl, '_blank');
+        }
+      });
+
+      // Lado esquerdo (Imagem + Dados)
+      var leftPart = createEl('div');
+      leftPart.style.cssText = 'display:flex;align-items:center;gap:8px;min-width:0;flex:1;';
+
+      var prodImg = createEl('img', 'vl-grid-product-img');
+      prodImg.src = getThumbnailFromObject(productData) || '';
+      prodImg.alt = productData.name || 'Produto';
+      prodImg.style.cssText = 'width:32px;height:32px;border-radius:4px;object-fit:cover;flex-shrink:0;background:#f1f5f9;';
+      leftPart.appendChild(prodImg);
+
+      var prodInfo = createEl('div', 'vl-grid-product-info');
+      prodInfo.style.cssText = 'min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;gap:1px;';
+
+      var pName = createEl('div', 'vl-grid-product-name');
+      pName.textContent = productData.name || 'Produto';
+      pName.style.cssText = [
+        'font-family:' + fontFamily + ';',
+        'font-size:' + cfg.productCardNameSize + 'px;',
+        'color:' + cfg.productCardNameColor + ';',
+        'font-weight:600;',
+        'white-space:nowrap;',
+        'overflow:hidden;',
+        'text-overflow:ellipsis;',
+        'margin:0;',
+        'line-height:1.2;'
+      ].join('');
+      prodInfo.appendChild(pName);
+
+      var priceVal = productData.price || productData.sale_price || productData.salePrice || '';
+      var formattedPrice = '';
+      if (priceVal) {
+        var numPrice = parseFloat(priceVal);
+        if (!isNaN(numPrice)) {
+          formattedPrice = 'R$ ' + numPrice.toFixed(2).replace('.', ',');
+        } else {
+          formattedPrice = String(priceVal);
+        }
+      }
+
+      if (formattedPrice) {
+        var pPrice = createEl('div', 'vl-grid-product-price');
+        pPrice.textContent = formattedPrice;
+        pPrice.style.cssText = [
+          'font-family:' + fontFamily + ';',
+          'font-size:' + cfg.productCardPriceSize + 'px;',
+          'color:' + cfg.productCardPriceColor + ';',
+          'font-weight:' + (cfg.productCardPriceBold ? '800' : 'normal') + ';',
+          'margin:0;',
+          'line-height:1.2;'
+        ].join('');
+        prodInfo.appendChild(pPrice);
+      }
+      leftPart.appendChild(prodInfo);
+      prodCard.appendChild(leftPart);
+
+      // Botão de Exibição / Ação à direita
+      if (cfg.showProductButton) {
+        var actionBtn = createEl('div', 'vl-grid-product-btn');
+        actionBtn.textContent = 'Exibir';
+        actionBtn.style.cssText = [
+          'font-family:' + fontFamily + ';',
+          'font-size:10px;',
+          'font-weight:800;',
+          'padding:4px 8px;',
+          'background:' + cfg.productCardButtonBg + ';',
+          'color:' + cfg.productCardButtonColor + ';',
+          'border-radius:999px;',
+          'text-transform:uppercase;',
+          'white-space:nowrap;',
+          'flex-shrink:0;',
+          'box-shadow:0 1px 3px rgba(0,0,0,0.1);',
+          'text-align:center;'
+        ].join('');
+        prodCard.appendChild(actionBtn);
+      }
+
+      itemWrapper.appendChild(prodCard);
+    }
+
+    gridWrapper.appendChild(itemWrapper);
   });
 
   container.appendChild(gridWrapper);
 
-  // --- Lógica de Reprodução Sequencial do Grid (1 Vídeo por Vez - 5 segundos) ---
+  // --- 4. LÓGICA DE REPRODUÇÃO SEQUENCIAL DO GRID (5 SEGUNDOS) ---
   if (cfg.sequentialPlayback && cardsData.length > 0) {
     var activeSeqIndex = 0;
 
@@ -5140,16 +5284,15 @@ function renderGridWidget(container, stories, appearance) {
       cardsData.forEach(function (data, idx) {
         var isActive = idx === activeSeqIndex;
 
-        // Visual do Card: Ativo fica 100% visível, inativos ficam esmaecidos (0.4)
+        // Visual do Card: Ativo fica 100% visível, inativos esmaecidos (0.4)
         data.card.style.opacity = isActive ? '1' : '0.4';
 
-        // Esconde o ícone de Play central apenas no vídeo ativo em reprodução
+        // Esconde o play overlay central apenas no ativo que está reproduzindo
         if (data.playBadge) {
           data.playBadge.style.opacity = isActive ? '0' : '1';
         }
 
         if (!data.isImage) {
-          // Busca elemento de vídeo interno (seja o nativo ou o injetado pelo erro)
           var vid = data.video || data.card.querySelector('video');
           if (vid) {
             if (isActive) {
@@ -5167,7 +5310,7 @@ function renderGridWidget(container, stories, appearance) {
       });
     }
 
-    // Dispara a primeira atualização instantaneamente (roda o index 0)
+    // Inicialização instantânea do primeiro card
     updateSequentialPlayback();
 
     var seqInterval = setInterval(function () {
@@ -5175,7 +5318,7 @@ function renderGridWidget(container, stories, appearance) {
       updateSequentialPlayback();
     }, 5000);
 
-    // Evita memory leaks em SPAs monitorando se o container sumiu da tela
+    // Desconecta o interval se o elemento for removido da página
     var seqObserver = new MutationObserver(function () {
       if (!document.body.contains(container)) {
         clearInterval(seqInterval);
