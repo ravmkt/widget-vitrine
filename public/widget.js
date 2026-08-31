@@ -4330,8 +4330,8 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     'justify-content:center !important;' +
     'align-items:center !important;' +
     'overflow:visible !important;' +
-    'margin-top:' + (cfg.marginTop || 0) + 'px !important;' +
-    'margin-bottom:' + (cfg.marginBottom || 0) + 'px !important;' +
+    'margin-top:' + (cfg.marginTop || '0px') + ' !important;' +      // <-- Corrigido (Sem o 'px' duplicado)
+    'margin-bottom:' + (cfg.marginBottom || '0px') + ' !important;' +  // <-- Corrigido (Sem o 'px' duplicado)
     'padding-left:' + (cfg.marginLeft || 0) + 'px !important;' +
     'padding-right:' + (cfg.marginRight || 0) + 'px !important;' +
     'box-sizing:border-box !important;' +
