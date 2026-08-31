@@ -3577,7 +3577,22 @@ const AppearancePage = () => {
                                 <>
                                   <FormField label="Texto do título"><input type="text" value={(activeGridConfig as any).title_text ?? ''} onChange={e => updateGridConfig({ title_text: e.target.value } as any)} className={inputClass} /></FormField>
                                   <div className="grid grid-cols-2 gap-2.5">
-                                    <FormField label="Tamanho da fonte"><input type="number" min="8" value={(activeGridConfig as any).title_font_size ?? 14} onChange={e => updateGridConfig({ title_font_size: safeNumber(e.target.value, 14, 8) } as any)} className={inputClass} /></FormField>
+<FormField label="Tamanho da fonte">
+  <input 
+    type="number" 
+    min="8" 
+    value={(activeGridConfig as any).title_font_size ?? ''} 
+    onChange={e => {
+      const val = e.target.value;
+      updateGridConfig({ title_font_size: val === '' ? undefined : Number(val) } as any);
+    }} 
+    onBlur={e => {
+      const val = (activeGridConfig as any).title_font_size;
+      updateGridConfig({ title_font_size: safeNumber(val ?? 14, 14, 8) } as any);
+    }}
+    className={inputClass} 
+  />
+</FormField>
                                     <FormField label="Alinhamento"><select value={(activeGridConfig as any).title_align ?? 'center'} onChange={e => updateGridConfig({ title_align: e.target.value } as any)} className={selectClass}><option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option></select></FormField>
                                   </div>
                                   <ToggleSwitch label="Título em negrito" checked={(activeGridConfig as any).title_bold ?? true} onChange={e => updateGridConfig({ title_bold: e.target.checked } as any)} />
