@@ -4887,7 +4887,9 @@ function renderGridWidget(container, stories, appearance) {
     'padding:4px;',
   ].join('');
 
-  allVideos.forEach(function (item) {
+  var cardsData = [];
+
+  allVideos.forEach(function (item, itemIdx) {
     var story = item.story;
     var video = item.video;
 
@@ -4901,7 +4903,7 @@ function renderGridWidget(container, stories, appearance) {
       'position:relative;',
       'background:transparent;',
       'cursor:pointer;',
-      'transition:transform .2s ease, box-shadow .2s ease;',
+      'transition:transform .2s ease, box-shadow .2s ease, opacity 0.3s ease;',
       'max-width:' + cardMaxWidth + ';',
       'transform:translateZ(0);',
       '-webkit-transform:translateZ(0);',
@@ -4919,21 +4921,27 @@ function renderGridWidget(container, stories, appearance) {
     var isImageItem = sourceType === 'image' || (video && video.type === 'image');
     var effectiveMediaUrl = thumbUrl || rawVideoUrl;
 
+    var cardData = {
+      card: card,
+      video: null,
+      isImage: isImageItem || !rawVideoUrl,
+      playBadge: null
+    };
+    cardsData.push(cardData);
+
     if (effectiveMediaUrl) {
       var innerMask = createEl('div', 'vl-grid-img-mask');
 
       var borderWidthNum = cfg.borderWidth || 0;
       var rawRadiusNum = parseFloat(cfg.borderRadius);
-      // Correção estrita para o bug do 0px (evita o fallback "|| 20" quando o raio é zero)
       if (isNaN(rawRadiusNum)) {
-        rawRadiusNum = 12; // Fallback seguro apenas se for realmente NaN
+        rawRadiusNum = 12;
       }
       var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
-      var innerRadiusCss = (typeof cfg.borderRadius === 'string' && cfg.borderRadius.indexOf('%') !== -1) 
-        ? cfg.borderRadius 
+      var innerRadiusCss = (typeof cfg.borderRadius === 'string' && cfg.borderRadius.indexOf('%') !== -1)
+        ? cfg.borderRadius
         : (innerRadiusVal + 'px');
 
-      // Hardening de CSS para remover serrilhados em qualquer navegador
       innerMask.style.cssText = [
         'position:absolute;',
         'inset:' + borderWidthNum + 'px;',
@@ -4949,8 +4957,9 @@ function renderGridWidget(container, stories, appearance) {
       ].join('');
 
       var shouldAutoplay = !!cfg.autoplayVideos;
-      var willUseImage = isImageItem || !rawVideoUrl || (!shouldAutoplay && thumbUrl);
-      
+      // Garante que criamos a tag video se autoplay OU reprodução sequencial estiverem ligados
+      var willUseImage = isImageItem || !rawVideoUrl || (!shouldAutoplay && !cfg.sequentialPlayback && thumbUrl);
+
       if (willUseImage) {
         var img = createEl('img');
         img.src = thumbUrl || rawVideoUrl;
@@ -4971,25 +4980,26 @@ function renderGridWidget(container, stories, appearance) {
             fallbackGridVid.setAttribute('playsinline', '');
             fallbackGridVid.setAttribute('webkit-playsinline', '');
             fallbackGridVid.setAttribute('muted', '');
-            
-            // Só ativa autoplay e loop se a config global permitir
-            if (shouldAutoplay) {
+
+            // Só liga o autoplay nativo direto se não estiver em modo sequencial
+            if (shouldAutoplay && !cfg.sequentialPlayback) {
               fallbackGridVid.autoplay = true;
               fallbackGridVid.loop = true;
               fallbackGridVid.setAttribute('autoplay', '');
               fallbackGridVid.setAttribute('loop', '');
             }
-            
+
             fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
             fallbackGridVid.src = fallbackGridUrlWithFragment;
 
-            if (shouldAutoplay) {
+            if (shouldAutoplay && !cfg.sequentialPlayback) {
               var fallbackPlayPromise = fallbackGridVid.play();
               if (fallbackPlayPromise && typeof fallbackPlayPromise.catch === 'function') {
                 fallbackPlayPromise.catch(function () {});
               }
             }
 
+            cardData.video = fallbackGridVid;
             innerMask.appendChild(fallbackGridVid);
           }
         };
@@ -5006,38 +5016,47 @@ function renderGridWidget(container, stories, appearance) {
         gridVideo.setAttribute('playsinline', '');
         gridVideo.setAttribute('webkit-playsinline', '');
         gridVideo.setAttribute('muted', '');
-        
-        // Só ativa autoplay e loop se a config global permitir
-        if (shouldAutoplay) {
+
+        // Só liga o autoplay nativo direto se não estiver em modo sequencial
+        if (shouldAutoplay && !cfg.sequentialPlayback) {
           gridVideo.autoplay = true;
           gridVideo.loop = true;
           gridVideo.setAttribute('autoplay', '');
           gridVideo.setAttribute('loop', '');
         }
-        
+
         gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
         gridVideo.src = gridUrlWithFragment;
 
-        if (shouldAutoplay) {
+        if (shouldAutoplay && !cfg.sequentialPlayback) {
           var gridPlayPromise = gridVideo.play();
           if (gridPlayPromise && typeof gridPlayPromise.catch === 'function') {
             gridPlayPromise.catch(function () {});
           }
         }
 
+        cardData.video = gridVideo;
         innerMask.appendChild(gridVideo);
       }
 
       card.appendChild(innerMask);
     }
 
-    var playBadge = createEl('div');
-    playBadge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;';
-    var playIcon = createEl('div');
-    playIcon.style.cssText = 'width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;';
-    playIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"></polygon></svg>';
-    playBadge.appendChild(playIcon);
-    card.appendChild(playBadge);
+    if (cfg.showPlayIcon) {
+      var playBadge = createEl('div');
+      playBadge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity 0.2s ease;';
+      var playIcon = createEl('div');
+      playIcon.style.cssText = 'width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;';
+      playIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"></polygon></svg>';
+      playBadge.appendChild(playIcon);
+      card.appendChild(playBadge);
+      cardData.playBadge = playBadge;
+
+      // Se autoplay global estiver ligado direto (não sequencial), esconde o play overlay
+      if (shouldAutoplay && !cfg.sequentialPlayback && !isImageItem) {
+        playBadge.style.opacity = '0';
+      }
+    }
 
     card.addEventListener('click', function (e) {
       e.preventDefault();
@@ -5060,6 +5079,59 @@ function renderGridWidget(container, stories, appearance) {
   });
 
   container.appendChild(gridWrapper);
+
+  // --- Lógica de Reprodução Sequencial do Grid (1 Vídeo por Vez - 5 segundos) ---
+  if (cfg.sequentialPlayback && cardsData.length > 0) {
+    var activeSeqIndex = 0;
+
+    function updateSequentialPlayback() {
+      cardsData.forEach(function (data, idx) {
+        var isActive = idx === activeSeqIndex;
+
+        // Visual do Card: Ativo fica 100% visível, inativos ficam esmaecidos (0.4)
+        data.card.style.opacity = isActive ? '1' : '0.4';
+
+        // Esconde o ícone de Play central apenas no vídeo ativo em reprodução
+        if (data.playBadge) {
+          data.playBadge.style.opacity = isActive ? '0' : '1';
+        }
+
+        if (!data.isImage) {
+          // Busca elemento de vídeo interno (seja o nativo ou o injetado pelo erro)
+          var vid = data.video || data.card.querySelector('video');
+          if (vid) {
+            if (isActive) {
+              vid.muted = true;
+              vid.currentTime = 0;
+              var playPromise = vid.play();
+              if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(function () {});
+              }
+            } else {
+              vid.pause();
+            }
+          }
+        }
+      });
+    }
+
+    // Dispara a primeira atualização instantaneamente (roda o index 0)
+    updateSequentialPlayback();
+
+    var seqInterval = setInterval(function () {
+      activeSeqIndex = (activeSeqIndex + 1) % cardsData.length;
+      updateSequentialPlayback();
+    }, 5000);
+
+    // Evita memory leaks em SPAs monitorando se o container sumiu da tela
+    var seqObserver = new MutationObserver(function () {
+      if (!document.body.contains(container)) {
+        clearInterval(seqInterval);
+        seqObserver.disconnect();
+      }
+    });
+    seqObserver.observe(document.body, { childList: true, subtree: true });
+  }
 }
 
 function initInlineWidget(options) {
