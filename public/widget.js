@@ -4077,7 +4077,7 @@ function cloneItemDeeply(original, index, isClone) {
           if (pImgSrc) {
             var pImg = document.createElement('img');
             pImg.src = pImgSrc;
-            pImg.style.cssText = 'width:48px;height:48px;border-radius:8px;object-fit:cover;background:#f1f5f9;flex-shrink:0;display:block;';
+            pImg.style.cssText = 'width:60px;height:60px;border-radius:6px;object-fit:cover;background:#f1f5f9;flex-shrink:0;display:block;';
             pHeader.appendChild(pImg);
           }
 
@@ -4086,7 +4086,7 @@ function cloneItemDeeply(original, index, isClone) {
 
           var pName = document.createElement('div');
           pName.textContent = pData.name || 'Produto';
-          pName.style.cssText = 'font-size:' + (cfg.productCardNameSize || 11) + 'px;font-weight:700;color:' + (cfg.productCardNameColor || '#0f172a') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;';
+          pName.style.cssText = 'font-size:' + (cfg.productCardNameSize || 11) + 'px;font-weight:700;color:' + (cfg.productCardNameColor || '#0f172a') + ';margin:0;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;width:100%;white-space:normal;';
           pInfo.appendChild(pName);
 
           if (pData.price) {
@@ -4962,11 +4962,11 @@ directFrameVid.src = directUrl;
             pImg.src = prodImgUrl;
             pImg.alt = productData.name || 'Produto';
             pImg.style.cssText =
-              'width:54px !important;' +
-              'height:54px !important;' +
-              'min-width:54px !important;' +
-              'max-width:54px !important;' +
-              'border-radius:8px !important;' +
+              'width:60px !important;' +
+              'height:60px !important;' +
+              'min-width:60px !important;' +
+              'max-width:60px !important;' +
+              'border-radius:6px !important;' +
               'object-fit:cover !important;' +
               'background:#f1f5f9 !important;' +
               'display:block !important;' +
@@ -4989,9 +4989,14 @@ directFrameVid.src = directUrl;
             'font-size:' + (cfg.productCardNameSize || 11) + 'px !important;' +
             'font-weight:700 !important;' +
             'color:' + (cfg.productCardNameColor || '#0f172a') + ' !important;' +
-            'white-space:nowrap !important;' +
+            'margin:0 !important;' +
+            'line-height:1.25 !important;' +
+            'display:-webkit-box !important;' +
+            '-webkit-line-clamp:2 !important;' +
+            '-webkit-box-orient:vertical !important;' +
             'overflow:hidden !important;' +
             'text-overflow:ellipsis !important;' +
+            'white-space:normal !important;' +
             'width:100% !important;';
           pInfo.appendChild(pName);
 
