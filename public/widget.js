@@ -824,17 +824,25 @@ function getGridConfig(appearance) {
     aspectRatio = '1 / 1';
   }
 
-return {
-  shape: shape, size: sizeNumber,
-  columns: columns, rows: rows, spacing: spacing,
-  borderColor: borderColor, borderWidth: borderWidth,
-  borderRadius: borderRadius, objectFit: objectFit,
-  showTitle: showTitle, aspectRatio: aspectRatio,
-  autoplayVideos: (function () {
-    var v = rcv('autoplay_videos', 'grid_autoplay_videos');
-    return v === null || v === undefined ? true : toBoolean(v);
-  })()
-};
+  return {
+    shape: shape,
+    size: sizeNumber,
+    columns: columns,
+    rows: rows,
+    spacing: spacing,
+    borderColor: borderColor,
+    borderWidth: borderWidth,
+    borderRadius: borderRadius,
+    objectFit: objectFit,
+    showTitle: showTitle,
+    showPlayIcon: toBoolean(rcv('show_play_icon', 'grid_show_play_icon', true), true),
+    aspectRatio: aspectRatio,
+    autoplayVideos: (function () {
+      var v = rcv('autoplay_videos', 'grid_autoplay_videos');
+      return v === null || v === undefined ? true : toBoolean(v);
+    })(),
+    sequentialPlayback: toBoolean(rcv('sequential_playback', 'grid_sequential_playback', false), false)
+  };
 }
 
   function getPrimaryColor(appearance) {
