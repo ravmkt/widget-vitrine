@@ -3649,7 +3649,6 @@ const AppearancePage = () => {
                         <AccordionSection title="3. Elementos Visíveis" isOpen={activeSection === 'mod-3'} onToggle={() => setActiveSection(activeSection === 'mod-3' ? null : 'mod-3')}>
                           <div className="space-y-1.5">
                             <ToggleSwitch label="Exibir título do vídeo" checked={formData.modal_config.show_title} onChange={e => updateModalConfig({ show_title: e.target.checked })} />
-                            <ToggleSwitch label="Exibir botão Play/Pause central" checked={formData.modal_config.show_play_button} onChange={e => updateModalConfig({ show_play_button: e.target.checked })} />
                             <ToggleSwitch label="Exibir botão Like (Curtir)" checked={formData.modal_config.show_like_button} onChange={e => updateModalConfig({ show_like_button: e.target.checked })} />
                             <ToggleSwitch label="Exibir botão de Comentários" checked={formData.modal_config.show_comment_button} onChange={e => updateModalConfig({ show_comment_button: e.target.checked })} />
                             <ToggleSwitch label="Exibir botão de Compartilhar" checked={formData.modal_config.show_share_button} onChange={e => updateModalConfig({ show_share_button: e.target.checked })} />
