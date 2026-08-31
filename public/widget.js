@@ -5130,11 +5130,6 @@ function renderGridWidget(container, stories, appearance) {
       playBadge.appendChild(playIcon);
       card.appendChild(playBadge);
       cardData.playBadge = playBadge;
-
-      // Se o autoplay direto estiver rodando (e não for sequencial ou imagem), esconde o play overlay
-      if (shouldAutoplay && !cfg.sequentialPlayback && !isImageItem) {
-        playBadge.style.opacity = '0';
-      }
     }
 
     card.addEventListener('click', function (e) {
