@@ -4330,8 +4330,8 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     'justify-content:center !important;' +
     'align-items:center !important;' +
     'overflow:visible !important;' +
-     marginTop: cfg.marginTop + 'px',
-     marginBottom: cfg.marginBottom + 'px',
+    'marginTop: cfg.marginTop !important;' + 'px',
+    'marginBottom: cfg.marginBottom !important;' + 'px',
     'padding-left:' + (cfg.marginLeft || 0) + 'px !important;' +
     'padding-right:' + (cfg.marginRight || 0) + 'px !important;' +
     'box-sizing:border-box !important;' +
