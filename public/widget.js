@@ -3794,22 +3794,36 @@ function getDynamicCarouselConfig(appearance) {
   };
 }
 
-function renderDynamicCarouselWidget(container, items, cfg) {
-  // 1. DOM Resolver: Garante que temos um elemento DOM nativo e válido,
-  // mesmo se receber um seletor String, objeto jQuery ou NodeList.
-  if (typeof container === 'string') {
-    container = document.querySelector(container);
-  }
-  if (container && typeof container.jquery !== 'undefined') {
-    container = container[0];
-  }
-  if (container && container instanceof NodeList && container.length > 0) {
-    container = container[0];
+function renderDynamicCarouselWidget(options, items, cfg) {
+  if (!options) return;
+
+  // 1. Resolver o target (onde o container do carrossel será inserido)
+  var target = null;
+  var position = 'beforeend';
+
+  if (typeof options === 'string') {
+    target = document.querySelector(options);
+  } else if (options instanceof HTMLElement) {
+    target = options;
+  } else if (options && typeof options === 'object') {
+    if (typeof options.jquery !== 'undefined') {
+      target = options[0];
+    } else {
+      var rawTarget = options.target || options.selector || options.container;
+      if (typeof rawTarget === 'string') {
+        target = document.querySelector(rawTarget);
+      } else if (rawTarget instanceof HTMLElement) {
+        target = rawTarget;
+      } else if (rawTarget && typeof rawTarget.jquery !== 'undefined') {
+        target = rawTarget[0];
+      }
+      position = options.position || options.placement || 'beforeend';
+    }
   }
 
-  // Se mesmo após a resolução o container ou seu style não existir, aborta com segurança
-  if (!container || !container.style) {
-    console.warn('[Vidlytics] Container de renderização do carrossel dinâmico é inválido ou inexistente.');
+  // Se não encontramos o target de inserção, aborta com segurança
+  if (!target) {
+    console.warn('[Vidlytics] Target de renderização do carrossel dinâmico não encontrado:', options);
     return;
   }
 
@@ -3833,7 +3847,19 @@ function renderDynamicCarouselWidget(container, items, cfg) {
   cfg.autoplayDelay = parseFloat(cfg.autoplayDelay) || 4000;
   cfg.transitionMs = parseFloat(cfg.transitionMs) || 300;
 
+  // Parâmetros do Produto e Estilo Geral
+  cfg.showTitle = cfg.showTitle !== false;
+  cfg.titleAlign = cfg.titleAlign || 'center';
+  cfg.titleFontSize = parseFloat(cfg.titleFontSize) || 18;
+  cfg.titleColor = cfg.titleColor || '#000';
+  cfg.titleBold = cfg.titleBold !== false;
+  cfg.showPlayIcon = cfg.showPlayIcon !== false;
+  cfg.bgColor = cfg.bgColor || '#000';
+  cfg.objectFit = cfg.objectFit || 'cover';
+  cfg.showProduct = cfg.showProduct !== false;
+
   var isCircle = cfg.isCircle === true || cfg.shape === 'circle';
+  var aspectRatio = isCircle ? '1/1' : (cfg.aspectRatio || '9/16');
   var extraWidth = cfg.enlargeActive ? (cfg.width * (cfg.activeScale - 1)) : 0;
 
   // 3. Cálculo Dinâmico de Clones baseados na resolução de tela (Evita buracos nas laterais)
@@ -3845,146 +3871,256 @@ function renderDynamicCarouselWidget(container, items, cfg) {
   // Controle de barreira para cliques acidentais pós-drag
   var wasDragged = false;
 
-  // Resetar e preparar containers com segurança total
-  container.innerHTML = '';
-  container.style.position = 'relative';
-  container.style.overflow = 'hidden';
+  // 4. Criação do CONTAINER principal do widget (com os estilos originais flex)
+  var container = document.createElement('div');
+  container.className = 'vidlytics-dynamic-carousel-container';
+  Object.assign(container.style, {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'visible',
+    paddingTop: '8px',
+    paddingBottom: '8px',
+    marginTop: (cfg.marginTop || 0) + 'px',
+    marginBottom: (cfg.marginBottom || 0) + 'px',
+    paddingLeft: (cfg.marginLeft || 0) + 'px',
+    paddingRight: (cfg.marginRight || 0) + 'px',
+    boxSizing: 'border-box',
+  });
 
-  var viewport = document.createElement('div');
-  viewport.className = 'vidlytics-dc-viewport';
-  viewport.style.width = '100%';
-  viewport.style.overflow = 'visible';
-  viewport.style.position = 'relative';
-  viewport.style.boxSizing = 'border-box';
-  container.appendChild(viewport);
+  var wrapper = document.createElement('div');
+  wrapper.className = 'vidlytics-dynamic-carousel-wrapper';
+  Object.assign(wrapper.style, {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    overflow: 'visible',
+  });
 
-  var track = document.createElement('div');
-  track.className = 'vidlytics-dc-track';
-  track.style.display = 'flex';
-  track.style.alignItems = 'center';
-  track.style.willChange = 'transform';
-  track.style.transition = 'transform ' + cfg.transitionMs + 'ms ease';
-  track.style.cursor = 'grab';
-  viewport.appendChild(track);
+  var resolvedTitle = cfg.titleText ||
+    (items[0] && (items[0].title || items[0].name) ? (items[0].title || items[0].name) : '');
 
-  var cardEls = [];
-  var frameEls = [];
-  var videoEls = [];
-
-  function updateViewportPadding() {
-    // Mantemos fluido sem a necessidade de paddings estáticos rígidos no viewport
+  if (cfg.showTitle && items.length > 0 && resolvedTitle) {
+    var carouselTitle = document.createElement('div');
+    carouselTitle.className = 'vidlytics-dynamic-carousel-title';
+    carouselTitle.textContent = resolvedTitle;
+    carouselTitle.style.cssText = 'width:100%;max-width:100%;margin:0 auto 14px;' +
+      'text-align:' + cfg.titleAlign + ';' +
+      'font-size:' + cfg.titleFontSize + 'px;' +
+      'font-weight:' + (cfg.titleBold ? '800' : '400') + ';' +
+      'color:' + cfg.titleColor + ';' +
+      'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    wrapper.appendChild(carouselTitle);
   }
 
-  // 3. Helper de Criação dos Cards individuais
-  function createCardElement(item, originalIndex) {
+  var viewport = document.createElement('div');
+  viewport.className = 'vidlytics-dynamic-carousel-viewport';
+  Object.assign(viewport.style, {
+    width: '100%',
+    overflow: 'hidden',
+    display: 'block',
+    paddingTop: '24px',
+    paddingBottom: '24px',
+  });
+
+  var track = document.createElement('div');
+  track.className = 'vidlytics-dynamic-carousel-track';
+  Object.assign(track.style, {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    gap: cfg.spacing + 'px',
+    willChange: 'transform',
+    transition: 'transform ' + cfg.transitionMs + 'ms ease',
+  });
+
+  var cardEls = [];
+  var videoEls = [];
+  var frameEls = [];
+
+  // 5. Montagem Dinâmica de Itens + Clones (Garante loop infinito perfeito)
+  var clones = [];
+  
+  // Clones esquerdos
+  for (var i = 0; i < visibleCount; i++) {
+    var targetIdx = (items.length - (visibleCount - i) % items.length) % items.length;
+    var originalItem = items[targetIdx];
+    clones.push(Object.assign({}, originalItem, { storyIndex: targetIdx, videoIndex: 0, isClone: true }));
+  }
+  
+  // Itens originais
+  for (var i = 0; i < items.length; i++) {
+    clones.push(Object.assign({}, items[i], { storyIndex: i, videoIndex: 0, isClone: false }));
+  }
+  
+  // Clones direitos
+  for (var i = 0; i < visibleCount; i++) {
+    var targetIdx = i % items.length;
+    var originalItem = items[targetIdx];
+    clones.push(Object.assign({}, originalItem, { storyIndex: targetIdx, videoIndex: 0, isClone: true }));
+  }
+
+  clones.forEach(function (item, idx) {
     var card = document.createElement('div');
     card.className = 'vidlytics-dc-card';
-    card.style.flex = '0 0 ' + cfg.width + 'px';
-    card.style.width = cfg.width + 'px';
-    card.style.marginRight = cfg.spacing + 'px';
-    card.style.boxSizing = 'border-box';
-    card.style.position = 'relative';
-    card.style.transition = 'transform ' + cfg.transitionMs + 'ms ease, margin ' + cfg.transitionMs + 'ms ease';
-    card.style.transformOrigin = 'center center';
-    card.style.userSelect = 'none';
-    card.style.webkitUserDrag = 'none';
+    Object.assign(card.style, {
+      position: 'relative',
+      flex: '0 0 ' + cfg.width + 'px',
+      width: cfg.width + 'px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      gap: '12px',
+      overflow: 'visible',
+      background: 'transparent',
+      border: 'none',
+      boxShadow: 'none',
+      transition: 'transform ' + cfg.transitionMs + 'ms ease, margin ' + cfg.transitionMs + 'ms ease',
+      cursor: 'pointer',
+      userSelect: 'none',
+      webkitUserDrag: 'none'
+    });
 
-    var frame = document.createElement('div');
-    frame.className = 'vidlytics-dc-frame';
-    frame.style.width = '100%';
-    frame.style.position = 'relative';
-    frame.style.overflow = 'hidden';
-    frame.style.boxSizing = 'border-box';
-    frame.style.transition = 'border 0.3s, box-shadow 0.3s, filter 0.3s';
+    var videoFrame = document.createElement('div');
+    videoFrame.style.cssText = 'position:relative;width:100%;aspect-ratio:' + aspectRatio + ';overflow:hidden;border-radius:' + (isCircle ? '999px' : cfg.borderRadius + 'px') + ';background:' + (cfg.bgColor || '#000') + ';transition:filter ' + cfg.transitionMs + 'ms ease;transform:translateZ(0) !important;-webkit-backface-visibility:hidden !important;-webkit-mask-image:-webkit-radial-gradient(white, black) !important;';
 
-    if (isCircle) {
-      frame.style.paddingTop = '100%';
-      frame.style.borderRadius = '999px';
-    } else {
-      frame.style.paddingTop = '177.77%'; // proporção 16:9 de stories
-      frame.style.borderRadius = cfg.borderRadius + 'px';
+    var video = document.createElement('video');
+    video.src = item.video_url || item.videoUrl || item.url || '';
+    if (item.thumbnail_url || item.thumbnailUrl || item.thumb) {
+      video.poster = item.thumbnail_url || item.thumbnailUrl || item.thumb;
     }
-    card.appendChild(frame);
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute('webkit-playsinline', 'true');
+    Object.assign(video.style, {
+      width: '100%',
+      height: '100%',
+      objectFit: cfg.objectFit === 'contain' ? 'contain' : cfg.objectFit === 'fill' ? 'fill' : 'cover',
+      pointerEvents: 'none',
+      display: 'block',
+    });
 
-    var mediaWrap = document.createElement('div');
-    mediaWrap.style.position = 'absolute';
-    mediaWrap.style.top = '0';
-    mediaWrap.style.left = '0';
-    mediaWrap.style.width = '100%';
-    mediaWrap.style.height = '100%';
-    frame.appendChild(mediaWrap);
-
-    if (item.video_url || item.videoUrl) {
-      var video = document.createElement('video');
-      video.src = item.video_url || item.videoUrl;
-      video.muted = true;
-      video.loop = true;
-      video.playsInline = true;
-      video.style.width = '100%';
-      video.style.height = '100%';
-      video.style.objectFit = 'cover';
-      video.style.display = 'block';
-      video.setAttribute('webkit-playsinline', 'true');
-      mediaWrap.appendChild(video);
-      videoEls.push(video);
-    } else if (item.thumbnail_url || item.thumbnailUrl) {
-      var img = document.createElement('img');
-      img.src = item.thumbnail_url || item.thumbnailUrl;
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'cover';
-      img.style.display = 'block';
-      mediaWrap.appendChild(img);
+    videoFrame.appendChild(video);
+    if (cfg.showPlayIcon) {
+      var playOverlay = document.createElement('div');
+      playOverlay.className = 'vidlytics-dc-play';
+      playOverlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:4;';
+      playOverlay.innerHTML = '<div style="width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 14 16" fill="white"><path d="M0 0l14 8-14 8z"/></svg></div>';
+      videoFrame.appendChild(playOverlay);
     }
 
-    // Lógica inteligente de clique: Bloqueia caso tenha ocorrido drag
+    card.appendChild(videoFrame);
+
+    // Evento de Clique Inteligente (Prevenindo cliques no arrasto)
     card.addEventListener('click', function (e) {
       if (wasDragged) {
         e.preventDefault();
         e.stopPropagation();
         return;
       }
-      if (typeof openVideoModal === 'function') {
-        openVideoModal(item, originalIndex);
-      } else if (typeof window.openVideoModal === 'function') {
-        window.openVideoModal(item, originalIndex);
-      }
+      if (e.target.closest && e.target.closest('.vidlytics-dc-product-card')) return;
+      openStoryModal(item.storyIndex, item.videoIndex);
     });
 
-    frameEls.push(frame);
-    return card;
-  }
+    if (cfg.showProduct) {
+      var vpId = item.product_id || item.productId || null;
+      var pData = vpId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, vpId); }) : null;
+      if (pData) {
+        var pUrl = pData.product_url || pData.url || '';
+        var initialShadow = cfg.highlightShadow ? '0 2px 8px rgba(0,0,0,0.15)' : 'none';
 
-  // 4. Construção da Track Infinita com cálculo dinâmico de clones
-  // Clones da esquerda (Fim da lista rotacionado)
-  for (var i = 0; i < visibleCount; i++) {
-    var targetIdx = (items.length - (visibleCount - i) % items.length) % items.length;
-    var cloneCard = createCardElement(items[targetIdx], targetIdx);
-    cloneCard.classList.add('vidlytics-dc-clone');
-    track.appendChild(cloneCard);
-    cardEls.push(cloneCard);
-  }
+        var prodCard = document.createElement('div');
+        prodCard.className = 'vidlytics-dc-product-card';
+        prodCard.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 12px;box-sizing:border-box;z-index:6;cursor:pointer;transition:all 0.2s ease-in-out;' +
+          'background:' + (cfg.productCardBg || '#fff') + ';' +
+          'border-radius:' + (cfg.productCardRadius || 12) + 'px;' +
+          'border:' + (cfg.productCardBorderWidth || 0) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ';' +
+          'box-shadow:' + initialShadow + ';';
 
-  // Elementos originais
-  for (var i = 0; i < items.length; i++) {
-    var card = createCardElement(items[i], i);
-    track.appendChild(card);
+        var pHeader = document.createElement('div');
+        pHeader.style.cssText = 'display:flex;align-items:center;gap:10px;flex:1;min-width:0;';
+
+        var pImgSrc = getThumbnailFromObject(pData) || '';
+        if (pImgSrc) {
+          var pImg = document.createElement('img');
+          pImg.src = pImgSrc;
+          pImg.style.cssText = 'width:48px;height:48px;border-radius:8px;object-fit:cover;background:#f1f5f9;flex-shrink:0;display:block;';
+          pHeader.appendChild(pImg);
+        }
+
+        var pInfo = document.createElement('div');
+        pInfo.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px;';
+
+        var pName = document.createElement('div');
+        pName.textContent = pData.name || 'Produto';
+        pName.style.cssText = 'font-size:' + (cfg.productCardNameSize || 11) + 'px;font-weight:700;color:' + (cfg.productCardNameColor || '#0f172a') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;';
+        pInfo.appendChild(pName);
+
+        if (pData.price) {
+          var pPrice = document.createElement('div');
+          pPrice.textContent = 'R$ ' + parseFloat(pData.price).toFixed(2).replace('.', ',');
+          pPrice.style.cssText = 'font-size:' + (cfg.productCardPriceSize || 12) + 'px;font-weight:' + (cfg.productCardPriceBold ? '800' : '600') + ';color:' + (cfg.productCardPriceColor || '#0094EB') + ';';
+          pInfo.appendChild(pPrice);
+        }
+        pHeader.appendChild(pInfo);
+        prodCard.appendChild(pHeader);
+
+        var chevron = document.createElement('div');
+        chevron.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + (cfg.productCardPriceColor || '#0094EB') + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+        chevron.style.cssText = 'display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.2s ease;';
+        prodCard.appendChild(chevron);
+
+        prodCard.addEventListener('mouseenter', function() {
+          prodCard.style.transform = 'translateY(-2px)';
+          prodCard.style.boxShadow = '0 6px 16px rgba(0,0,0,0.12)';
+          chevron.style.transform = 'translateX(2px)';
+        });
+        prodCard.addEventListener('mouseleave', function() {
+          prodCard.style.transform = 'none';
+          prodCard.style.boxShadow = initialShadow;
+          chevron.style.transform = 'none';
+        });
+
+        prodCard.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (pUrl) {
+            window.open(pUrl, '_blank');
+            sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
+          }
+        });
+
+        card.appendChild(prodCard);
+        sendAnalyticsEvent('product_view', item.id || null, pData.id || null);
+      }
+    }
+
     cardEls.push(card);
-  }
+    videoEls.push(video);
+    frameEls.push(videoFrame);
+    track.appendChild(card);
+  });
 
-  // Clones da direita (Início da lista rotacionado)
-  for (var i = 0; i < visibleCount; i++) {
-    var targetIdx = i % items.length;
-    var cloneCard = createCardElement(items[targetIdx], targetIdx);
-    cloneCard.classList.add('vidlytics-dc-clone');
-    track.appendChild(cloneCard);
-    cardEls.push(cloneCard);
-  }
+  viewport.appendChild(track);
+  wrapper.appendChild(viewport);
+  container.appendChild(wrapper);
+  target.insertAdjacentElement(position, container);
 
-  // O activeIndex inicial foca no primeiro elemento original
   var activeIndex = visibleCount;
 
-  // 5. Atualização visual de escalas, bordas, filtros e autoplay
+  function updateViewportPadding() {
+    var activeCard = cardEls[activeIndex];
+    var cardHeight = activeCard ? activeCard.offsetHeight : 0;
+    var grow = cfg.enlargeActive ? Math.ceil((cardHeight * (cfg.activeScale - 1)) / 2) : 0;
+    var pad = grow + 16;
+    viewport.style.paddingTop = pad + 'px';
+    viewport.style.paddingBottom = pad + 'px';
+  }
+
+  // 6. Atualização visual de escalas, filtros e reprodução de vídeo
   function applyStyles() {
     if (container) {
       container.style.width = '100vw';
@@ -4055,12 +4191,7 @@ function renderDynamicCarouselWidget(container, items, cfg) {
     });
 
     videoEls.forEach(function (video, idx) {
-      // Encontra se o card pai deste vídeo específico é o card atualmente ativo
-      var cardParent = video.closest('.vidlytics-dc-card');
-      var cardIdx = cardEls.indexOf(cardParent);
-      var isActive = cardIdx === activeIndex;
-
-      if (isActive) {
+      if (idx === activeIndex) {
         if (video.paused) {
           video.play().catch(function () {});
         }
@@ -4080,13 +4211,12 @@ function renderDynamicCarouselWidget(container, items, cfg) {
     track.style.transform = 'translateX(' + (viewportWidth / 2 - activeCenter) + 'px)';
   }
 
-  // 6. Transição de Pulo Infinito (Ajustado ao visibleCount dinâmico)
+  // 7. Looping Infinito da Track
   track.addEventListener('transitionend', function (e) {
     if (e.target !== track || e.propertyName !== 'transform') return;
 
     var transitionMs = parseFloat(cfg.transitionMs) || 300;
 
-    // Loop infinito para frente
     if (activeIndex >= visibleCount + items.length) {
       var slides = track.children;
       var cloneVideo = slides[activeIndex] ? slides[activeIndex].querySelector('video') : null;
@@ -4107,14 +4237,13 @@ function renderDynamicCarouselWidget(container, items, cfg) {
       activeIndex = visibleCount;
       applyStyles();
 
-      track.offsetHeight; // Força reflow síncrono para o navegador computar a mudança de transition
+      track.offsetHeight; // Força reflow síncrono
 
       track.style.transition = 'transform ' + transitionMs + 'ms ease';
       cardEls.forEach(function (card) {
         card.style.transition = 'transform ' + transitionMs + 'ms ease, margin ' + transitionMs + 'ms ease';
       });
     }
-    // Loop infinito para trás
     else if (activeIndex < visibleCount) {
       var slides = track.children;
       var targetIndex = visibleCount + items.length - 1;
@@ -4155,7 +4284,7 @@ function renderDynamicCarouselWidget(container, items, cfg) {
     applyStyles();
   }
 
-  // 7. Lógica de Drag & Touch Avançada
+  // 8. Lógica de Drag & Touch (Arraste lateral)
   var isDragging = false;
   var startX = 0;
   var dragDeltaX = 0;
@@ -4172,7 +4301,7 @@ function renderDynamicCarouselWidget(container, items, cfg) {
       e.preventDefault();
     }
     isDragging = true;
-    wasDragged = false; // Reset no início do clique/toque
+    wasDragged = false;
     stopAutoplay();
 
     startX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
@@ -4191,7 +4320,6 @@ function renderDynamicCarouselWidget(container, items, cfg) {
     var currentX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
     dragDeltaX = currentX - startX;
 
-    // Se moveu mais do que 8 pixels, ativa flag de arraste
     if (Math.abs(dragDeltaX) > 8) {
       wasDragged = true;
     }
@@ -4199,11 +4327,11 @@ function renderDynamicCarouselWidget(container, items, cfg) {
     track.style.transform = 'translateX(' + (originalTransformX + dragDeltaX) + 'px)';
   }
 
+  // Finalização do Drag com Retenção de Flag por 50ms
   function onDragEnd() {
     if (!isDragging) return;
     isDragging = false;
 
-    // Retém a flag de arrasto ativa por 50ms para que o loop de eventos capture e evite o 'click' correspondente
     setTimeout(function () {
       wasDragged = false;
     }, 50);
@@ -4214,7 +4342,7 @@ function renderDynamicCarouselWidget(container, items, cfg) {
       card.style.transition = 'transform ' + transitionMs + 'ms ease, margin ' + transitionMs + 'ms ease';
     });
 
-    var threshold = (cfg.width + cfg.spacing) * 0.25; // Sensibilidade de transição (25% do card)
+    var threshold = (cfg.width + cfg.spacing) * 0.25;
 
     if (dragDeltaX < -threshold) {
       goNext();
@@ -4227,7 +4355,6 @@ function renderDynamicCarouselWidget(container, items, cfg) {
     startAutoplay();
   }
 
-  // Registro de Eventos
   track.addEventListener('mousedown', onDragStart);
   track.addEventListener('touchstart', onDragStart, { passive: true });
 
@@ -4237,7 +4364,6 @@ function renderDynamicCarouselWidget(container, items, cfg) {
   window.addEventListener('mouseup', onDragEnd);
   window.addEventListener('touchend', onDragEnd);
 
-  // 8. Autoplay e Gerenciamento de Ciclo de Vida (MutationObserver anti-leak)
   var interval = null;
 
   function startAutoplay() {
@@ -4254,17 +4380,15 @@ function renderDynamicCarouselWidget(container, items, cfg) {
 
   applyStyles();
   requestAnimationFrame(function () { applyStyles(); });
-  
+
+  // Recalculo inteligente do layout e de clones dinâmicos
   var onResize = function () {
-    // Recalcula o número ideal de clones ao mudar o tamanho do browser (responsivo total)
     var updatedWidth = window.innerWidth;
     var updatedNeeded = Math.ceil((updatedWidth / 2) / (cfg.width + cfg.spacing)) + 1;
     var updatedCount = Math.max(4, updatedNeeded);
     
     if (updatedCount !== visibleCount) {
-      // Se a resolução mudar drasticamente e exigir contagem de clones diferente,
-      // reconstruímos o carrossel de forma limpa para garantir que a track continue perfeita
-      renderDynamicCarouselWidget(container, items, cfg);
+      renderDynamicCarouselWidget(options, items, cfg);
     } else {
       applyStyles();
     }
