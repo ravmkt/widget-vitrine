@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   var WIDGET_VERSION = '2026.08.27-04';
 
   console.info(
@@ -4323,13 +4323,13 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   wrapper.className = 'vidlytics-carousel-container';
   wrapper.setAttribute('data-vidlytics-widget', 'carousel');
   wrapper.style.cssText =
-'width:100% !important;' +
-'max-width:100% !important;' +
-'margin:' + cfg.marginTop + ' auto ' + cfg.marginBottom + ' !important;' +
-'padding:' + cfg.padding + ' !important;' +
-'padding-left:' + (cfg.marginLeft || 0) + 'px !important;' +
-'padding-right:' + (cfg.marginRight || 0) + 'px !important;' +
-'box-sizing:border-box !important;' +
+    'width:100% !important;' +
+    'max-width:100% !important;' +
+    'margin:' + (cfg.marginTop || 0) + 'px auto ' + (cfg.marginBottom || 0) + 'px !important;' + // Corrigido px
+    'padding:' + (typeof cfg.padding === 'number' ? cfg.padding + 'px' : (cfg.padding || '0px')) + ' !important;' + // Defensivo com px
+    'padding-left:' + (cfg.marginLeft || 0) + 'px !important;' +
+    'padding-right:' + (cfg.marginRight || 0) + 'px !important;' +
+    'box-sizing:border-box !important;' +
     'font-family:' + (appearance.font_family || 'inherit') + ' !important;' +
     'display:block !important;' +
     'visibility:visible !important;' +
