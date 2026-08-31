@@ -4319,43 +4319,55 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   var primaryColor = getPrimaryColor(appearance);
   var textColor = getTextColor ? getTextColor(appearance) : '#333';
   
-  // 1. CONTAINER EXTERNO (Controla margens, paddings de fora e alinhamento centralizado)
+  // 1. CONTAINER EXTERNO (Mesma estrutura do Carrossel Dinâmico)
   var container = document.createElement('div');
   container.className = 'vidlytics-carousel-container';
   container.setAttribute('data-vidlytics-widget', 'carousel');
-  container.style.cssText =
-    'width:100% !important;' +
-    'max-width:100% !important;' +
-    'display:flex !important;' +
-    'justify-content:center !important;' +
-    'align-items:center !important;' +
-    'overflow:visible !important;' +
-    'marginTop: cfg.marginTop !important;' + 'px',
-    'marginBottom: cfg.marginBottom !important;' + 'px',
-    'padding-left:' + (cfg.marginLeft || 0) + 'px !important;' +
-    'padding-right:' + (cfg.marginRight || 0) + 'px !important;' +
-    'box-sizing:border-box !important;' +
-    'font-family:' + (appearance.font_family || 'inherit') + ' !important;' +
-    'visibility:visible !important;' +
-    'opacity:1 !important;' +
-    'position:relative !important;' +
-    'z-index:1 !important;' +
-    'background:transparent !important;';
 
-  // 2. WRAPPER INTERNO (Empilha verticalmente e centraliza o título e os vídeos)
+  // Função auxiliar para garantir que as margens tenham "px" sem duplicar
+  var parseMargin = function(val) {
+    if (val === undefined || val === null || val === '') return '0px';
+    var s = String(val).trim();
+    if (s.endsWith('px')) return s;
+    return s + 'px';
+  };
+
+  // Aplica os estilos usando Object.assign (Fórmula idêntica ao dinâmico)
+  Object.assign(container.style, {
+    width: '100%',
+    maxWidth: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'visible',
+    marginTop: parseMargin(cfg.marginTop),
+    marginBottom: parseMargin(cfg.marginBottom),
+    paddingLeft: parseMargin(cfg.marginLeft),
+    paddingRight: parseMargin(cfg.marginRight),
+    boxSizing: 'border-box',
+    fontFamily: appearance.font_family || 'inherit',
+    visibility: 'visible',
+    opacity: '1',
+    position: 'relative',
+    zIndex: '1',
+    background: 'transparent'
+  });
+
+  // 2. WRAPPER INTERNO (Empilha verticalmente o título e os vídeos)
   var wrapper = document.createElement('div');
   wrapper.className = 'vidlytics-carousel-wrapper';
-  wrapper.style.cssText =
-    'display:flex !important;' +
-    'flex-direction:column !important;' +
-    'align-items:center !important;' +
-    'justify-content:center !important;' +
-    'width:100% !important;' +
-    'max-width:100% !important;' +
-    'overflow:visible !important;' +
-    'background:transparent !important;';
+  Object.assign(wrapper.style, {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'visible',
+    background: 'transparent'
+  });
 
-  // Insere o wrapper de empilhamento dentro do container principal
+  // Insere o wrapper dentro do container principal
   container.appendChild(wrapper);
   
     // Header
