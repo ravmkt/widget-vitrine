@@ -5589,6 +5589,19 @@ if (displayMode === 'dynamic_carousel') {
   var activeStoriesCount = (stories || []).length;
   if (activeStoriesCount < 1) { return false; }
 
+  document.querySelectorAll('[id^="vidlytics-wrapper-"]').forEach(function (w) { w.remove(); });
+
+  var dcWrapper = document.createElement('div');
+  dcWrapper.id = 'vidlytics-wrapper-' + Date.now();
+  Object.assign(dcWrapper.style, {
+    width: '100%',
+    minHeight: '260px',
+    margin: '20px 0',
+    overflow: 'visible',
+    display: 'block',
+  });
+  target.insertAdjacentElement('afterend', dcWrapper);
+
   // 🔧 Achatar vídeos das stories em itens individuais
   var dcItems = [];
   (stories || []).forEach(function (story, sIdx) {
