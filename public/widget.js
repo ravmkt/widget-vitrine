@@ -5168,11 +5168,11 @@ function renderGridWidget(container, stories, appearance) {
 
       prodCard.style.cssText = [
         'display:flex !important;',
-        'align-items:center !important;',
+        'align-items:center !important;', // Mantém a seta verticalmente centralizada no card
         'justify-content:space-between !important;',
-        'gap:8px !important;',
+        'gap:6px !important;', // Gap reduzido para aproximar o conteúdo da setinha
         'width:100% !important;',
-        'padding:6px 10px !important;', // Margens topo/base e laterais bem compactas
+        'padding:6px 10px !important;',
         'margin-top:8px !important;',
         'background:' + cfg.productCardBg + ' !important;',
         'border-radius:' + cfg.productCardRadius + 'px !important;',
@@ -5183,32 +5183,36 @@ function renderGridWidget(container, stories, appearance) {
         'transition:transform 0.2s ease, box-shadow 0.2s ease !important;',
       ].join('');
 
-      // Lado esquerdo (Imagem + Dados)
+      // Lado esquerdo (Imagem + Dados) - Agora alinhado ao topo!
       var leftPart = createEl('div');
-      leftPart.style.cssText = 'display:flex !important;align-items:center !important;gap:8px !important;min-width:0 !important;flex:1 !important;';
+      leftPart.style.cssText = 'display:flex !important;align-items:flex-start !important;gap:8px !important;min-width:0 !important;flex:1 !important;';
 
       var prodImg = createEl('img', 'vl-grid-product-img');
       prodImg.src = getThumbnailFromObject(productData) || '';
       prodImg.alt = productData.name || 'Produto';
-      // Foto ampliada para 60px aproveitando as margens curtas
       prodImg.style.cssText = 'width:60px !important;height:60px !important;border-radius:6px !important;object-fit:cover !important;flex-shrink:0 !important;background:#f1f5f9 !important;';
       leftPart.appendChild(prodImg);
 
       var prodInfo = createEl('div', 'vl-grid-product-info');
-      prodInfo.style.cssText = 'min-width:0 !important;flex:1 !important;display:flex !important;flex-direction:column !important;justify-content:center !important;gap:2px !important;';
+      // Alinhamento ao topo com um micro padding-top para alinhar pixel a pixel com a foto
+      prodInfo.style.cssText = 'min-width:0 !important;flex:1 !important;display:flex !important;flex-direction:column !important;justify-content:flex-start !important;gap:2px !important;padding-top:2px !important;';
 
       var pName = createEl('div', 'vl-grid-product-name');
       pName.textContent = productData.name || 'Produto';
+      // Implementação de 2 linhas limite com reticências automáticas
       pName.style.cssText = [
         'font-family:' + fontFamily + ' !important;',
         'font-size:' + cfg.productCardNameSize + 'px !important;',
         'color:' + cfg.productCardNameColor + ' !important;',
         'font-weight:700 !important;',
-        'white-space:nowrap !important;',
+        'margin:0 !important;',
+        'line-height:1.25 !important;',
+        'display:-webkit-box !important;',
+        '-webkit-line-clamp:2 !important;',
+        '-webkit-box-orient:vertical !important;',
         'overflow:hidden !important;',
         'text-overflow:ellipsis !important;',
-        'margin:0 !important;',
-        'line-height:1.2 !important;'
+        'word-break:break-word !important;'
       ].join('');
       prodInfo.appendChild(pName);
 
@@ -5231,7 +5235,7 @@ function renderGridWidget(container, stories, appearance) {
           'font-size:' + cfg.productCardPriceSize + 'px !important;',
           'color:' + (cfg.productCardPriceColor || '#0094EB') + ' !important;',
           'font-weight:' + (cfg.productCardPriceBold ? '800' : '700') + ' !important;',
-          'margin:0 !important;',
+          'margin:2px 0 0 0 !important;', // Espaço sutil entre o título de até 2 linhas e o preço
           'line-height:1.2 !important;'
         ].join('');
         prodInfo.appendChild(pPrice);
@@ -5239,11 +5243,11 @@ function renderGridWidget(container, stories, appearance) {
       leftPart.appendChild(prodInfo);
       prodCard.appendChild(leftPart);
 
-      // Setinha (Chevron) elegante idêntica ao carrossel
+      // Setinha (Chevron) elegante
       var chevronColor = cfg.productCardPriceColor || '#0094EB';
       var actionElement = createEl('div', 'vl-grid-product-chevron');
       actionElement.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + chevronColor + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-      actionElement.style.cssText = 'display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;transition:transform 0.2s ease !important;margin-left:4px !important;';
+      actionElement.style.cssText = 'display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;transition:transform 0.2s ease !important;';
       prodCard.appendChild(actionElement);
 
       // Micro-interações de Hover
@@ -5262,9 +5266,9 @@ function renderGridWidget(container, stories, appearance) {
         }
       });
 
-      // Lógica de clique unificada (Abre link e dispara evento de Analytics)
+      // Lógica de clique unificada
       prodCard.addEventListener('click', function (e) {
-        e.stopPropagation(); // Evita acionar o modal do story ao clicar no produto
+        e.stopPropagation();
         if (productUrl) {
           window.open(productUrl, '_blank');
           if (typeof sendAnalyticsEvent === 'function') {
