@@ -5585,34 +5585,34 @@ function initInlineWidget(options) {
   
   var displayMode = options.storyFormat || getWidgetDisplayMode(appearance);
   
-    if (displayMode === 'dynamic_carousel') {
-    // 🔒 REGRA DE NEGÓCIO: Mínimo de 3 vídeos ativos para exibição do Carrossel Dinâmico
-    var activeStoriesCount = (stories || []).length;
-    if (activeStoriesCount < 1) {
-      console.warn('[Vidlytics] Carrossel Dinâmico ocultado: mínimo de 1 vídeo ativo necessário (atual: ' + activeStoriesCount + ').');
-      return false;
-    }
+if (displayMode === 'dynamic_carousel') {
+  var activeStoriesCount = (stories || []).length;
+  if (activeStoriesCount < 1) { ... return false; }
 
-    document.querySelectorAll('[id^="vidlytics-wrapper-"]').forEach(function (w) { w.remove(); });
-
-    var dcWrapper = document.createElement('div');
-    dcWrapper.id = 'vidlytics-wrapper-' + Date.now();
-    Object.assign(dcWrapper.style, {
-      width: '100%',
-      minHeight: '260px',
-      margin: '20px 0',
-      overflow: 'visible',
-      display: 'block',
+  // 🔧 Achatar vídeos das stories em itens individuais
+  var dcItems = [];
+  (stories || []).forEach(function (story, sIdx) {
+    (story.videos || []).forEach(function (video, vIdx) {
+      dcItems.push(Object.assign({}, story, {
+        videos: [video],       // mantém compat com firstVideo = item.videos[0]
+        storyIndex: sIdx,
+        videoIndex: vIdx,
+        id: story.id + '_' + vIdx,
+        product_id: video.product_id || video.productId || null
+      }));
     });
-    target.insertAdjacentElement('afterend', dcWrapper);
+  });
 
-    renderDynamicCarouselWidget({
-      target: '#' + dcWrapper.id,
-      position: 'beforeend',
-    }, stories, appearance);
+  if (dcItems.length < 1) { ... return false; }
 
-    return true;
-  }
+  ...
+  renderDynamicCarouselWidget({
+    target: '#' + dcWrapper.id,
+    position: 'beforeend',
+  }, dcItems, appearance);
+
+  return true;
+}
 
   if (displayMode === 'carousel') {
     var wrapper = document.createElement('div');
