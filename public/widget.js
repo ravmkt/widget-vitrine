@@ -4940,7 +4940,9 @@ function renderGridWidget(container, stories, appearance) {
         'background:#000;'
       ].join('');
 
-      var willUseImage = isImageItem || !rawVideoUrl || (!cfg.autoplayVideos && thumbUrl);
+      var shouldAutoplay = !!cfg.autoplayVideos;
+      var willUseImage = isImageItem || !rawVideoUrl || (!shouldAutoplay && thumbUrl);
+      
       if (willUseImage) {
         var img = createEl('img');
         img.src = thumbUrl || rawVideoUrl;
@@ -4958,19 +4960,26 @@ function renderGridWidget(container, stories, appearance) {
             fallbackGridVid.muted = true;
             fallbackGridVid.defaultMuted = true;
             fallbackGridVid.playsInline = true;
-            fallbackGridVid.loop = true;
-            fallbackGridVid.autoplay = true;
             fallbackGridVid.setAttribute('playsinline', '');
             fallbackGridVid.setAttribute('webkit-playsinline', '');
             fallbackGridVid.setAttribute('muted', '');
-            fallbackGridVid.setAttribute('autoplay', '');
-            fallbackGridVid.setAttribute('loop', '');
+            
+            // Só ativa autoplay e loop se a config global permitir
+            if (shouldAutoplay) {
+              fallbackGridVid.autoplay = true;
+              fallbackGridVid.loop = true;
+              fallbackGridVid.setAttribute('autoplay', '');
+              fallbackGridVid.setAttribute('loop', '');
+            }
+            
             fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
-
             fallbackGridVid.src = fallbackGridUrlWithFragment;
-            var fallbackPlayPromise = fallbackGridVid.play();
-            if (fallbackPlayPromise && typeof fallbackPlayPromise.catch === 'function') {
-              fallbackPlayPromise.catch(function () {});
+
+            if (shouldAutoplay) {
+              var fallbackPlayPromise = fallbackGridVid.play();
+              if (fallbackPlayPromise && typeof fallbackPlayPromise.catch === 'function') {
+                fallbackPlayPromise.catch(function () {});
+              }
             }
 
             innerMask.appendChild(fallbackGridVid);
@@ -4989,16 +4998,23 @@ function renderGridWidget(container, stories, appearance) {
         gridVideo.setAttribute('playsinline', '');
         gridVideo.setAttribute('webkit-playsinline', '');
         gridVideo.setAttribute('muted', '');
-        gridVideo.loop = true;
-        gridVideo.autoplay = true;
-        gridVideo.setAttribute('autoplay', '');
-        gridVideo.setAttribute('loop', '');
+        
+        // Só ativa autoplay e loop se a config global permitir
+        if (shouldAutoplay) {
+          gridVideo.autoplay = true;
+          gridVideo.loop = true;
+          gridVideo.setAttribute('autoplay', '');
+          gridVideo.setAttribute('loop', '');
+        }
+        
         gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
+        gridVideo.src = gridUrlWithFragment;
 
-        gridVideo.src = gridUrlWithFragment; // Removido a atribuição duplicada que existia aqui
-        var gridPlayPromise = gridVideo.play();
-        if (gridPlayPromise && typeof gridPlayPromise.catch === 'function') {
-          gridPlayPromise.catch(function () {});
+        if (shouldAutoplay) {
+          var gridPlayPromise = gridVideo.play();
+          if (gridPlayPromise && typeof gridPlayPromise.catch === 'function') {
+            gridPlayPromise.catch(function () {});
+          }
         }
 
         innerMask.appendChild(gridVideo);
