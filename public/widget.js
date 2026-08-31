@@ -4915,10 +4915,17 @@ function renderGridWidget(container, stories, appearance) {
       var innerMask = createEl('div', 'vl-grid-img-mask');
 
       var borderWidthNum = cfg.borderWidth || 0;
-      var rawRadiusNum = parseFloat(cfg.borderRadius) || 20;
+      var rawRadiusNum = parseFloat(cfg.borderRadius);
+      // Correção estrita para o bug do 0px (evita o fallback "|| 20" quando o raio é zero)
+      if (isNaN(rawRadiusNum)) {
+        rawRadiusNum = 12; // Fallback seguro apenas se for realmente NaN
+      }
       var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
-      var innerRadiusCss = (typeof cfg.borderRadius === 'string' && cfg.borderRadius.indexOf('%') !== -1) ? cfg.borderRadius : (innerRadiusVal + 'px');
+      var innerRadiusCss = (typeof cfg.borderRadius === 'string' && cfg.borderRadius.indexOf('%') !== -1) 
+        ? cfg.borderRadius 
+        : (innerRadiusVal + 'px');
 
+      // Hardening de CSS para remover serrilhados em qualquer navegador
       innerMask.style.cssText = [
         'position:absolute;',
         'inset:' + borderWidthNum + 'px;',
@@ -4928,6 +4935,8 @@ function renderGridWidget(container, stories, appearance) {
         'pointer-events:none;',
         'transform:translateZ(0);',
         '-webkit-transform:translateZ(0);',
+        'will-change:transform;',
+        '-webkit-mask-image:-webkit-radial-gradient(white, black);',
         'background:#000;'
       ].join('');
 
@@ -4936,7 +4945,7 @@ function renderGridWidget(container, stories, appearance) {
         var img = createEl('img');
         img.src = thumbUrl || rawVideoUrl;
         img.alt = (video && video.title) || (story && story.title) || 'Story';
-        img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;';
+        img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;will-change:transform;';
         img.loading = 'lazy';
 
         img.onerror = function () {
@@ -4956,7 +4965,7 @@ function renderGridWidget(container, stories, appearance) {
             fallbackGridVid.setAttribute('muted', '');
             fallbackGridVid.setAttribute('autoplay', '');
             fallbackGridVid.setAttribute('loop', '');
-            fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
+            fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
 
             fallbackGridVid.src = fallbackGridUrlWithFragment;
             var fallbackPlayPromise = fallbackGridVid.play();
@@ -4980,15 +4989,13 @@ function renderGridWidget(container, stories, appearance) {
         gridVideo.setAttribute('playsinline', '');
         gridVideo.setAttribute('webkit-playsinline', '');
         gridVideo.setAttribute('muted', '');
-                gridVideo.loop = true;
+        gridVideo.loop = true;
         gridVideo.autoplay = true;
         gridVideo.setAttribute('autoplay', '');
         gridVideo.setAttribute('loop', '');
-        gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;';
+        gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
 
-gridVideo.src = gridUrlWithFragment;
-
-        gridVideo.src = gridUrlWithFragment;
+        gridVideo.src = gridUrlWithFragment; // Removido a atribuição duplicada que existia aqui
         var gridPlayPromise = gridVideo.play();
         if (gridPlayPromise && typeof gridPlayPromise.catch === 'function') {
           gridPlayPromise.catch(function () {});
