@@ -804,25 +804,59 @@ function getGridConfig(appearance) {
   }
   var rawShape = rcv('shape', 'grid_shape', 'portrait');
   var shape = String(rawShape !== undefined && rawShape !== null ? rawShape : 'portrait').trim().toLowerCase();
-  var sizeNumber = toNumber(rcv('width', 'grid_size', '30'), 30);
+  var sizeNumber = toNumber(rcv('width', 'grid_size', '200'), 200);
   var columns = safeInt(rcv('visible_items', 'grid_columns', '4'), 4);
   var rows = safeInt(rcv('rows', 'grid_rows', '1'), 1);
   var spacing = safeInt(rcv('spacing', 'grid_spacing', '16'), 16);
   var borderColor = rcv('border_color', 'grid_border_color', '#0094EB') || '#0094EB';
   var borderWidth = safeInt(rcv('border_style', 'grid_border_width', '2'), 2);
-  
+
   var rawBorderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
   // Se o formato for círculo, força o border-radius para 50%
   var borderRadius = (shape === 'circle') ? '50%' : (rawBorderRadius + 'px');
 
   var objectFit = String(rcv('object_fit', 'grid_object_fit', 'cover') || 'cover').trim().toLowerCase();
-  var showTitle = toBoolean(rcv('show_title', 'grid_show_title', false), false);
+  
   var aspectRatio = '9 / 16';
   if (typeof shape === 'string' && (shape.indexOf('landscape') !== -1 || shape.indexOf('paisagem') !== -1 || shape.indexOf('16_9') !== -1 || shape.indexOf('16-9') !== -1)) {
     aspectRatio = '16 / 9';
   } else if (typeof shape === 'string' && (shape.indexOf('square') !== -1 || shape.indexOf('1_1') !== -1 || shape.indexOf('1-1') !== -1 || shape === 'circle')) {
     aspectRatio = '1 / 1';
   }
+
+  // --- Título da vitrine ---
+  var showTitle = toBoolean(rcv('show_title', 'grid_show_title', false), false);
+  var titleText = String(rcv('title_text', 'grid_title_text', '') || '').trim();
+  var titleFontSize = toNumber(rcv('title_font_size', 'grid_title_font_size', '14'), 14);
+  var titleBold = toBoolean(rcv('title_bold', 'grid_title_bold', true), true);
+  var titleColor = rcv('title_color', 'grid_title_color', '#0F172A') || '#0F172A';
+  var titleAlign = (function () {
+    var a = String(rcv('title_align', 'grid_title_align', 'center')).trim().toLowerCase();
+    return ['left', 'center', 'right'].indexOf(a) === -1 ? 'center' : a;
+  })();
+
+  // --- Ícone de Play e Playback ---
+  var showPlayIcon = toBoolean(rcv('show_play_icon', 'grid_show_play_icon', true), true);
+  var autoplayVideos = (function () {
+    var v = rcv('autoplay_videos', 'grid_autoplay_videos');
+    return v === null || v === undefined ? true : toBoolean(v);
+  })();
+  var sequentialPlayback = toBoolean(rcv('sequential_playback', 'grid_sequential_playback', false), false);
+
+  // --- Card de Produto na Grade ---
+  var showProduct = toBoolean(rcv('show_product', 'grid_show_product', false), false);
+  var productCardBg = rcv('product_card_bg', 'grid_product_card_bg', '#FFFFFF') || '#FFFFFF';
+  var productCardBorderColor = rcv('product_card_border_color', 'grid_product_card_border_color', '#E2E8F0') || '#E2E8F0';
+  var productCardBorderWidth = toNumber(rcv('product_card_border_width', 'grid_product_card_border_width', '0'), 0);
+  var productCardRadius = toNumber(rcv('product_card_border_radius', 'grid_product_card_border_radius', '12'), 12);
+  var productCardNameSize = toNumber(rcv('product_card_name_size', 'grid_product_card_name_size', '11'), 11);
+  var productCardNameColor = rcv('product_card_name_color', 'grid_product_card_name_color', '#0F172A') || '#0F172A';
+  var productCardPriceSize = toNumber(rcv('product_card_price_size', 'grid_product_card_price_size', '12'), 12);
+  var productCardPriceColor = rcv('product_card_price_color', 'grid_product_card_price_color', '#0094EB') || '#0094EB';
+  var productCardPriceBold = toBoolean(rcv('product_card_price_bold', 'grid_product_card_price_bold', true), true);
+  var productCardButtonBg = rcv('product_card_button_bg', 'grid_product_card_button_bg', '#0094EB') || '#0094EB';
+  var productCardButtonColor = rcv('product_card_button_color', 'grid_product_card_button_color', '#FFFFFF') || '#FFFFFF';
+  var showProductButton = toBoolean(rcv('show_product_button', 'grid_show_product_button', true), true);
 
   return {
     shape: shape,
@@ -834,14 +868,32 @@ function getGridConfig(appearance) {
     borderWidth: borderWidth,
     borderRadius: borderRadius,
     objectFit: objectFit,
-    showTitle: showTitle,
-    showPlayIcon: toBoolean(rcv('show_play_icon', 'grid_show_play_icon', true), true),
     aspectRatio: aspectRatio,
-    autoplayVideos: (function () {
-      var v = rcv('autoplay_videos', 'grid_autoplay_videos');
-      return v === null || v === undefined ? true : toBoolean(v);
-    })(),
-    sequentialPlayback: toBoolean(rcv('sequential_playback', 'grid_sequential_playback', false), false)
+    // Título
+    showTitle: showTitle,
+    titleText: titleText,
+    titleFontSize: titleFontSize,
+    titleBold: titleBold,
+    titleColor: titleColor,
+    titleAlign: titleAlign,
+    // Ícones e Reprodução
+    showPlayIcon: showPlayIcon,
+    autoplayVideos: autoplayVideos,
+    sequentialPlayback: sequentialPlayback,
+    // Card de Produto
+    showProduct: showProduct,
+    productCardBg: productCardBg,
+    productCardBorderColor: productCardBorderColor,
+    productCardBorderWidth: productCardBorderWidth,
+    productCardRadius: productCardRadius,
+    productCardNameSize: productCardNameSize,
+    productCardNameColor: productCardNameColor,
+    productCardPriceSize: productCardPriceSize,
+    productCardPriceColor: productCardPriceColor,
+    productCardPriceBold: productCardPriceBold,
+    productCardButtonBg: productCardButtonBg,
+    productCardButtonColor: productCardButtonColor,
+    showProductButton: showProductButton
   };
 }
 
