@@ -5103,13 +5103,13 @@ function initInlineWidget(options) {
         return;
       }
 
-// trecho novo
       Object.assign(carousel.style, {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         width: '100%',
-        margin: '0 auto',
+        marginLeft: 'auto',
+        marginRight: 'auto',
         padding: '0',
         minHeight: 'auto'
       });
