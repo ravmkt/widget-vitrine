@@ -4319,24 +4319,44 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   var primaryColor = getPrimaryColor(appearance);
   var textColor = getTextColor ? getTextColor(appearance) : '#333';
   
-  var wrapper = document.createElement('div');
-  wrapper.className = 'vidlytics-carousel-container';
-  wrapper.setAttribute('data-vidlytics-widget', 'carousel');
-  wrapper.style.cssText =
+  // 1. CONTAINER EXTERNO (Controla margens, paddings de fora e alinhamento centralizado)
+  var container = document.createElement('div');
+  container.className = 'vidlytics-carousel-container';
+  container.setAttribute('data-vidlytics-widget', 'carousel');
+  container.style.cssText =
     'width:100% !important;' +
     'max-width:100% !important;' +
-    'margin:' + (cfg.marginTop || 0) + 'px auto ' + (cfg.marginBottom || 0) + 'px !important;' + // Corrigido px
-    'padding:' + (typeof cfg.padding === 'number' ? cfg.padding + 'px' : (cfg.padding || '0px')) + ' !important;' + // Defensivo com px
+    'display:flex !important;' +
+    'justify-content:center !important;' +
+    'align-items:center !important;' +
+    'overflow:visible !important;' +
+    'margin-top:' + (cfg.marginTop || 0) + 'px !important;' +
+    'margin-bottom:' + (cfg.marginBottom || 0) + 'px !important;' +
     'padding-left:' + (cfg.marginLeft || 0) + 'px !important;' +
     'padding-right:' + (cfg.marginRight || 0) + 'px !important;' +
     'box-sizing:border-box !important;' +
     'font-family:' + (appearance.font_family || 'inherit') + ' !important;' +
-    'display:block !important;' +
     'visibility:visible !important;' +
     'opacity:1 !important;' +
     'position:relative !important;' +
     'z-index:1 !important;' +
     'background:transparent !important;';
+
+  // 2. WRAPPER INTERNO (Empilha verticalmente e centraliza o título e os vídeos)
+  var wrapper = document.createElement('div');
+  wrapper.className = 'vidlytics-carousel-wrapper';
+  wrapper.style.cssText =
+    'display:flex !important;' +
+    'flex-direction:column !important;' +
+    'align-items:center !important;' +
+    'justify-content:center !important;' +
+    'width:100% !important;' +
+    'max-width:100% !important;' +
+    'overflow:visible !important;' +
+    'background:transparent !important;';
+
+  // Insere o wrapper de empilhamento dentro do container principal
+  container.appendChild(wrapper);
   
     // Header
   if (cfg.showTitle && (cfg.titleText || (stories[0] && stories[0].title))) {
