@@ -714,7 +714,7 @@ function getCarouselConfig(appearance) {
   // 2. BORDAS
   // ==========================================
   var borderColor = String(rcv('border_color', 'carousel_border_color', 'transparent') || 'transparent');
-  var borderWidth = toNumber(rcv('border_width', 'carousel_border_width', '0'), 0);
+  var borderWidth = toNumber(rcv('border_style', 'carousel_border_width', '0') || rcv('border_width', 'carousel_border_width', '0'), 0);
   
   var rawRadiusInput = rcv('border_radius', 'carousel_item_radius', 12);
   var parsedRadiusVal = parseFloat(rawRadiusInput);
@@ -4338,24 +4338,26 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
     'z-index:1 !important;' +
     'background:transparent !important;';
   
-  // Header
-  if (cfg.showTitle && stories[0] && stories[0].title) {
+    // Header
+  if (cfg.showTitle && (cfg.titleText || (stories[0] && stories[0].title))) {
     var header = document.createElement('div');
     header.className = 'vidlytics-carousel-header';
     header.style.cssText =
-      'display:flex !important;' +
-      'justify-content:space-between !important;' +
-      'align-items:center !important;' +
-      'margin-bottom:12px !important;';
-    
+      'display:block !important;' +
+      'width:100% !important;' +
+      'margin-bottom:12px !important;' +
+      'text-align:' + cfg.titleAlign + ' !important;';
+
     var title = document.createElement('h3');
     title.className = 'vidlytics-carousel-title';
-    title.textContent = stories[0].title;
+    title.textContent = cfg.titleText || (stories[0] && stories[0].title);
     title.style.cssText =
       'margin:0 !important;' +
-      'font-size:18px !important;' +
-      'font-weight:700 !important;' +
-      'color:' + textColor + ' !important;';
+      'display:block !important;' +
+      'font-size:' + cfg.titleFontSize + 'px !important;' +
+      'font-weight:' + (cfg.titleBold ? '700' : '400') + ' !important;' +
+      'color:' + textColor + ' !important;' +
+      'text-align:' + cfg.titleAlign + ' !important;';
     header.appendChild(title);
     wrapper.appendChild(header);
   }
@@ -4478,7 +4480,7 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         previewVideo.style.cssText =
           'width:100% !important;' +
           'height:100% !important;' +
-          'object-fit:cover !important;' +
+          'object-fit:' + cfg.objectFit + ' !important;' +
           'display:block !important;' +
           'border-radius:' + innerRadiusCss + ' !important;' +
           '-webkit-backface-visibility:hidden !important;' +
@@ -4502,7 +4504,7 @@ if (pvPlayPromise && typeof pvPlayPromise.catch === 'function') {
           cardImg.style.cssText =
             'width:100% !important;' +
             'height:100% !important;' +
-            'object-fit:cover !important;' +
+            'object-fit:' + cfg.objectFit + ' !important;' +
             'display:block !important;' +
             'border-radius:' + innerRadiusCss + ' !important;' +
             '-webkit-backface-visibility:hidden !important;';
@@ -4522,7 +4524,7 @@ if (pvPlayPromise && typeof pvPlayPromise.catch === 'function') {
               fallbackVid.style.cssText =
                 'width:100% !important;' +
                 'height:100% !important;' +
-                'object-fit:cover !important;' +
+                'object-fit:' + cfg.objectFit + ' !important;' +
                 'display:block !important;' +
                 'border-radius:' + innerRadiusCss + ' !important;' +
                 '-webkit-backface-visibility:hidden !important;' +
@@ -4546,7 +4548,7 @@ fallbackVid.src = fallbackUrl;
           directFrameVid.style.cssText =
             'width:100% !important;' +
             'height:100% !important;' +
-            'object-fit:cover !important;' +
+            'object-fit:' + cfg.objectFit + ' !important;' +
             'display:block !important;' +
             'border-radius:' + innerRadiusCss + ' !important;' +
             '-webkit-backface-visibility:hidden !important;' +

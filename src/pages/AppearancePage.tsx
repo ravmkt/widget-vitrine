@@ -1765,9 +1765,40 @@ const CarouselPreview = ({
   const cardHeight = `${cardHeightPx}px`;
   const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
 
+  const getObjectFitClass = (fit: string) => {
+    const f = String(fit || 'cover').trim().toLowerCase();
+    if (f === 'contain') return 'object-contain';
+    if (f === 'fill' || f === 'stretch') return 'object-fill';
+    return 'object-cover';
+  };
+
   return (
-    <div className="relative w-full h-[440px] flex items-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 p-6 overflow-hidden">
-      <div 
+    <div 
+      className="relative w-full flex flex-col justify-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 p-6 overflow-hidden transition-all"
+      style={{
+        marginTop: `${safeNumber(carousel.margin_top, 0, 0)}px`,
+        marginBottom: `${safeNumber(carousel.margin_bottom, 0, 0)}px`
+      }}
+    >
+      {carousel.show_title && (carousel.title_text || 'Stories') && (
+        <div 
+          className="w-full mb-3" 
+          style={{ textAlign: (carousel.title_align || 'left') as any }}
+        >
+          <h3 
+            style={{
+              fontSize: `${carousel.title_font_size || 18}px`,
+              fontWeight: carousel.title_bold ?? true ? '700' : '400',
+              color: carousel.title_color || colors.text || '#0F172A',
+              margin: 0
+            }}
+          >
+            {carousel.title_text || 'Stories'}
+          </h3>
+        </div>
+      )}
+
+      <div
         className="w-full flex items-start overflow-x-auto py-6 px-2 scrollbar-none"
         style={{ gap: `${spacing}px` }}
       >
@@ -1795,13 +1826,15 @@ const CarouselPreview = ({
                 playsInline
                 preload="auto"
                 poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-                className="h-full w-full object-cover pointer-events-none"
+                className={`h-full w-full pointer-events-none ${getObjectFitClass(carousel.object_fit || 'cover')}`}
               />
 
               {carousel.show_play_icon && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-                    <PlaySquare size={12} />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10">
+                  <div className="w-8 h-8 rounded-full bg-white/90 shadow-md flex items-center justify-center transition-transform hover:scale-105">
+                    <svg className="w-4.5 h-4.5 text-slate-900 fill-current ml-0.5" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
                   </div>
                 </div>
               )}
@@ -1809,7 +1842,7 @@ const CarouselPreview = ({
 
             {carousel.show_product && !isCircle && (
               <div
-                className="flex items-center gap-1.5 p-1 shadow-sm"
+                className="p-1.5 flex flex-col gap-0.5 transition-all"
                 style={{
                   backgroundColor: carousel.product_card_bg || '#FFFFFF',
                   borderColor: carousel.product_card_border_color || '#E2E8F0',
@@ -1818,28 +1851,25 @@ const CarouselPreview = ({
                   borderRadius: `${safeNumber(carousel.product_card_border_radius, 8, 0)}px`,
                 }}
               >
-                <div className="h-7 w-7 shrink-0 rounded bg-slate-200" />
-                <div className="min-w-0 flex-1 flex flex-col justify-center">
-                  <div
-                    className="truncate font-bold leading-tight"
+                <div
+                  className="truncate font-medium"
+                  style={{
+                    fontSize: `${safeNumber(carousel.product_card_name_size, 10, 8)}px`,
+                    color: carousel.product_card_name_color || '#0F172A',
+                  }}
+                >
+                  Produto Exemplo {index + 1}
+                </div>
+                <div className="flex items-center justify-between gap-1">
+                  <span
                     style={{
-                      fontSize: `${safeNumber(carousel.product_card_name_size, 10, 8)}px`,
-                      color: carousel.product_card_name_color || '#0F172A',
+                      fontSize: `${safeNumber(carousel.product_card_price_size, 10, 8)}px`,
+                      fontWeight: carousel.product_card_price_bold ?? true ? '800' : '600',
+                      color: carousel.product_card_price_color || colors.primary,
                     }}
                   >
-                    Calça Confort
-                  </div>
-                  <div className="flex items-center justify-between mt-0.5">
-                    <span
-                      style={{
-                        fontSize: `${safeNumber(carousel.product_card_price_size, 10, 8)}px`,
-                        fontWeight: carousel.product_card_price_bold ?? true ? '800' : '600',
-                        color: carousel.product_card_price_color || colors.primary,
-                      }}
-                    >
-                      R$ 149,95
-                    </span>
-                  </div>
+                    R$ 99,90
+                  </span>
                 </div>
               </div>
             )}
