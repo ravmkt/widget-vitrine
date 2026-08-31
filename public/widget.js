@@ -3797,6 +3797,12 @@ function getDynamicCarouselConfig(appearance) {
 function renderDynamicCarouselWidget(options, items, cfg) {
   if (!options) return;
 
+  // Normalizar cfg caso venha o objeto de aparencia bruto
+  if (cfg && typeof getDynamicCarouselConfig === 'function' && !cfg._isNormalized) {
+    cfg = getDynamicCarouselConfig(cfg);
+    cfg._isNormalized = true;
+  }
+
   // 1. Resolver o target (onde o container do carrossel será inserido)
   var target = null;
   var position = 'beforeend';
@@ -3987,10 +3993,12 @@ function renderDynamicCarouselWidget(options, items, cfg) {
     var videoFrame = document.createElement('div');
     videoFrame.style.cssText = 'position:relative;width:100%;aspect-ratio:' + aspectRatio + ';overflow:hidden;border-radius:' + (isCircle ? '999px' : cfg.borderRadius + 'px') + ';background:' + (cfg.bgColor || '#000') + ';transition:filter ' + cfg.transitionMs + 'ms ease;transform:translateZ(0) !important;-webkit-backface-visibility:hidden !important;-webkit-mask-image:-webkit-radial-gradient(white, black) !important;';
 
+    var firstVideo = (item.videos && item.videos[0]) || {};
     var video = document.createElement('video');
-    video.src = item.video_url || item.videoUrl || item.url || '';
-    if (item.thumbnail_url || item.thumbnailUrl || item.thumb) {
-      video.poster = item.thumbnail_url || item.thumbnailUrl || item.thumb;
+    video.src = firstVideo.video_url || firstVideo.videoUrl || item.video_url || item.videoUrl || item.url || '';
+    var posterUrl = firstVideo.thumbnail_url || firstVideo.thumbnailUrl || item.thumbnail_url || item.thumbnailUrl || item.thumb || '';
+    if (posterUrl) {
+      video.poster = posterUrl;
     }
     video.muted = true;
     video.loop = true;
@@ -4027,7 +4035,8 @@ function renderDynamicCarouselWidget(options, items, cfg) {
     });
 
     if (cfg.showProduct) {
-      var vpId = item.product_id || item.productId || null;
+      var firstVideo = (item.videos && item.videos[0]) || {};
+      var vpId = firstVideo.product_id || firstVideo.productId || item.product_id || item.productId || null;
       var pData = vpId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, vpId); }) : null;
       if (pData) {
         var pUrl = pData.product_url || pData.url || '';
