@@ -3854,7 +3854,8 @@ function renderDynamicCarouselWidget(options, items, cfg) {
     cfg.highlightBorderWidth = parseFloat(cfg.highlightBorderWidth) || 3;
     cfg.highlightBorderColor = cfg.highlightBorderColor || '#ff0055';
     cfg.desaturateInactive = cfg.desaturateInactive !== false;
-    cfg.borderRadius = parseFloat(cfg.borderRadius) || 12;
+    var parsedRadius = parseFloat(cfg.borderRadius);
+cfg.borderRadius = isNaN(parsedRadius) ? 12 : parsedRadius;
     cfg.autoplayVideos = cfg.autoplayVideos !== false;
     cfg.autoplayDelay = parseFloat(cfg.autoplayDelay) || 4000;
     cfg.transitionMs = parseFloat(cfg.transitionMs) || 300;
