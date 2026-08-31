@@ -2235,8 +2235,12 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   function openSharePanel(btnEl) {
     var existing = document.getElementById('vl-share-panel');
     if (existing) { existing.remove(); return; }
-    var shareUrl = window.location.href;
     var story = currentStories[currentStoryIndex];
+    var video = story ? (story.videos || [])[currentVideoIndex] : null;
+    var videoProductId = video ? (video.product_id || video.productId || null) : null;
+    var productData = videoProductId ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
+    var shareUrl = (productData && (productData.product_url || productData.url)) || 'https://useanny.com';
+
     var shareText = story ? (story.title || 'Confira este vídeo!') : 'Confira este vídeo!';
     var panel = createEl('div');
     panel.id = 'vl-share-panel';
@@ -3097,9 +3101,18 @@ if (hasSupabase) {
         nextStoryOrVideo();
       });
       body.appendChild(player);
+      var centerPlayOverlay = createEl('div', 'vl-center-play');
+      centerPlayOverlay.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;cursor:pointer;z-index:5;';
+      centerPlayOverlay.innerHTML = svgIcon('play');
+      centerPlayOverlay.onclick = function (e) {
+        e.stopPropagation();
+        playBtn.click();
+      };
+      player.style.position = player.style.position || 'relative';
+      player.appendChild(centerPlayOverlay);
 
       var vidEl = player.querySelector('video');
-      
+
       // Garante a sincronização bidirecional entre o vídeo e os botões da UI
       if (vidEl) {
         vidEl.addEventListener('volumechange', function () {
@@ -3111,10 +3124,12 @@ if (hasSupabase) {
         });
         vidEl.addEventListener('play', function () {
           var pb = modalContent.querySelector('#vl-play-btn');
+          centerPlayOverlay.style.display = 'none';
           if (pb) { pb.innerHTML = svgIcon('pause'); pb.title = 'Pausar'; }
         });
         vidEl.addEventListener('pause', function () {
           var pb = modalContent.querySelector('#vl-play-btn');
+          centerPlayOverlay.style.display = 'flex';
           if (pb) { pb.innerHTML = svgIcon('play'); pb.title = 'Reproduzir'; }
         });
       }
