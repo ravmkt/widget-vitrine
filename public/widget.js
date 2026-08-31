@@ -3956,13 +3956,13 @@ function renderDynamicCarouselWidget(options, items, cfg) {
     var clones = [];
 
     // Função interna para clonar profundamente o item e seu array de vídeos
-    function cloneItemDeeply(original, index, isClone) {
-      var baseClone = Object.assign({}, original, {
-        storyIndex: index,
-        videoIndex: 0,
-        isClone: isClone
-      });
-      // Isolar o array de vídeos para evitar referência compartilhada em memória
+function cloneItemDeeply(original, index, isClone) {
+  var baseClone = Object.assign({}, original, {
+    storyIndex: original.storyIndex,
+    videoIndex: original.videoIndex,
+    isClone: isClone
+  });
+        // Isolar o array de vídeos para evitar referência compartilhada em memória
       if (original.videos && Array.isArray(original.videos)) {
         baseClone.videos = original.videos.map(function(vid) {
           return Object.assign({}, vid);
