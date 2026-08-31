@@ -3795,9 +3795,27 @@ function getDynamicCarouselConfig(appearance) {
 }
 
 function renderDynamicCarouselWidget(container, items, cfg) {
-  if (!container || !items || items.length === 0) return;
+  // 1. DOM Resolver: Garante que temos um elemento DOM nativo e válido,
+  // mesmo se receber um seletor String, objeto jQuery ou NodeList.
+  if (typeof container === 'string') {
+    container = document.querySelector(container);
+  }
+  if (container && typeof container.jquery !== 'undefined') {
+    container = container[0];
+  }
+  if (container && container instanceof NodeList && container.length > 0) {
+    container = container[0];
+  }
 
-  // 1. Higienização das configurações & fallbacks
+  // Se mesmo após a resolução o container ou seu style não existir, aborta com segurança
+  if (!container || !container.style) {
+    console.warn('[Vidlytics] Container de renderização do carrossel dinâmico é inválido ou inexistente.');
+    return;
+  }
+
+  if (!items || items.length === 0) return;
+
+  // 2. Higienização das configurações & fallbacks
   cfg = cfg || {};
   cfg.width = parseFloat(cfg.width) || 200;
   cfg.spacing = parseFloat(cfg.spacing) || 16;
@@ -3818,18 +3836,16 @@ function renderDynamicCarouselWidget(container, items, cfg) {
   var isCircle = cfg.isCircle === true || cfg.shape === 'circle';
   var extraWidth = cfg.enlargeActive ? (cfg.width * (cfg.activeScale - 1)) : 0;
 
-  // 2. Cálculo Dinâmico de Clones baseados na resolução de tela (Evita buracos nas laterais)
+  // 3. Cálculo Dinâmico de Clones baseados na resolução de tela (Evita buracos nas laterais)
   var viewportWidthForClones = window.innerWidth;
   var cardTotalWidth = cfg.width + cfg.spacing;
-  // Quantidade necessária de clones de cada lado para cobrir a metade da tela se o ativo estiver centralizado
   var neededVisible = Math.ceil((viewportWidthForClones / 2) / cardTotalWidth) + 1;
-  // Garantimos um mínimo saudável de clones e uma margem de segurança
   var visibleCount = Math.max(4, neededVisible);
 
   // Controle de barreira para cliques acidentais pós-drag
   var wasDragged = false;
 
-  // Resetar e preparar containers
+  // Resetar e preparar containers com segurança total
   container.innerHTML = '';
   container.style.position = 'relative';
   container.style.overflow = 'hidden';
@@ -3837,7 +3853,7 @@ function renderDynamicCarouselWidget(container, items, cfg) {
   var viewport = document.createElement('div');
   viewport.className = 'vidlytics-dc-viewport';
   viewport.style.width = '100%';
-  viewport.style.overflow = 'visible'; // Mantém as laterais visíveis de forma fluida (Full-bleed)
+  viewport.style.overflow = 'visible';
   viewport.style.position = 'relative';
   viewport.style.boxSizing = 'border-box';
   container.appendChild(viewport);
