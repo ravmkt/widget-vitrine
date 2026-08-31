@@ -4059,6 +4059,16 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
   }
 
   function applyStyles() {
+    // Força o container a ocupar toda a largura da tela de forma fluida (Full-bleed)
+    if (container) {
+      container.style.width = '100vw';
+      container.style.marginLeft = 'calc(-50vw + 50%)';
+      container.style.marginRight = 'calc(-50vw + 50%)';
+      container.style.maxWidth = '100vw';
+      container.style.boxSizing = 'border-box';
+      container.style.overflow = 'hidden';
+    }
+
     cardEls.forEach(function (card, idx) {
       var isActive = idx === activeIndex;
       var scale = 1;
@@ -4138,18 +4148,20 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
     var activeCenter =
       activeIndex * (cfg.width + cfg.spacing) + extraWidth / 2 + cfg.width / 2;
     var viewportWidth = viewport.getBoundingClientRect().width || 0;
-  track.style.transform = 'translateX(' + (viewportWidth / 2 - activeCenter) + 'px)';
-}
+    track.style.transform = 'translateX(' + (viewportWidth / 2 - activeCenter) + 'px)';
+  }
 
   track.addEventListener('transitionend', function (e) {
     if (e.target !== track || e.propertyName !== 'transform') return;
 
+    var transitionMs = parseFloat(cfg.transitionMs) || 300;
+
+    // Pulo infinito para frente
     if (activeIndex >= visibleCount + items.length) {
       var slides = track.children;
       var cloneVideo = slides[activeIndex] ? slides[activeIndex].querySelector('video') : null;
       var originalVideo = slides[visibleCount] ? slides[visibleCount].querySelector('video') : null;
 
-      // 1. Sincroniza o vídeo clone com o original instantaneamente
       if (cloneVideo && originalVideo) {
         originalVideo.currentTime = cloneVideo.currentTime;
         if (!cloneVideo.paused) {
@@ -4157,45 +4169,168 @@ function renderDynamicCarouselWidget(options, stories, appearance) {
         }
       }
 
-      // 2. DESATIVAS as transições de movimento (track) E de zoom (cards) simultaneamente para o salto
       track.style.transition = 'none';
       cardEls.forEach(function (card) {
         card.style.transition = 'none';
       });
 
-      // 3. Executa o salto invisível
       activeIndex = visibleCount;
       applyStyles();
 
-      // Força o navegador a renderizar o novo estado instantaneamente (reflow)
-      track.offsetHeight;
+      track.offsetHeight; // Força reflow
 
-      // 4. RESTAURA as transições para os próximos cliques ficarem suaves
-      var transitionMs = parseFloat(cfg.transitionMs) || 300;
       track.style.transition = 'transform ' + transitionMs + 'ms ease';
-      
+      cardEls.forEach(function (card) {
+        card.style.transition = 'transform ' + transitionMs + 'ms ease, margin ' + transitionMs + 'ms ease';
+      });
+    } 
+    // Pulo infinito para trás
+    else if (activeIndex < visibleCount) {
+      var slides = track.children;
+      var targetIndex = visibleCount + items.length - 1;
+      var cloneVideo = slides[activeIndex] ? slides[activeIndex].querySelector('video') : null;
+      var originalVideo = slides[targetIndex] ? slides[targetIndex].querySelector('video') : null;
+
+      if (cloneVideo && originalVideo) {
+        originalVideo.currentTime = cloneVideo.currentTime;
+        if (!cloneVideo.paused) {
+          originalVideo.play().catch(function () {});
+        }
+      }
+
+      track.style.transition = 'none';
+      cardEls.forEach(function (card) {
+        card.style.transition = 'none';
+      });
+
+      activeIndex = targetIndex;
+      applyStyles();
+
+      track.offsetHeight; // Força reflow
+
+      track.style.transition = 'transform ' + transitionMs + 'ms ease';
       cardEls.forEach(function (card) {
         card.style.transition = 'transform ' + transitionMs + 'ms ease, margin ' + transitionMs + 'ms ease';
       });
     }
   });
 
-function goNext() {
-  activeIndex += 1;
-  applyStyles();
-}
+  function goNext() {
+    activeIndex += 1;
+    applyStyles();
+  }
+
+  function goPrev() {
+    activeIndex -= 1;
+    applyStyles();
+  }
+
+  // Lógica de Arrasto (Drag & Touch)
+  var isDragging = false;
+  var startX = 0;
+  var dragDeltaX = 0;
+  var originalTransformX = 0;
+
+  function getTranslateX(element) {
+    var style = window.getComputedStyle(element);
+    var matrix = new (window.WebKitCSSMatrix || window.MSCSSMatrix || window.CSSMatrix || DOMMatrix)(style.transform);
+    return matrix.m41 || 0;
+  }
+
+  function onDragStart(e) {
+    // Previne comportamento padrão de arrastar imagens/links internos
+    if (e.type === 'mousedown') {
+      e.preventDefault();
+    }
+    isDragging = true;
+    stopAutoplay();
+
+    startX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    dragDeltaX = 0;
+    originalTransformX = getTranslateX(track);
+
+    track.style.transition = 'none';
+    cardEls.forEach(function (card) {
+      card.style.transition = 'none';
+    });
+  }
+
+  function onDragMove(e) {
+    if (!isDragging) return;
+
+    var currentX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    dragDeltaX = currentX - startX;
+
+    track.style.transform = 'translateX(' + (originalTransformX + dragDeltaX) + 'px)';
+  }
+
+  function onDragEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+
+    var transitionMs = parseFloat(cfg.transitionMs) || 300;
+    track.style.transition = 'transform ' + transitionMs + 'ms ease';
+    cardEls.forEach(function (card) {
+      card.style.transition = 'transform ' + transitionMs + 'ms ease, margin ' + transitionMs + 'ms ease';
+    });
+
+    var threshold = (cfg.width + cfg.spacing) * 0.25; // 25% da largura do card
+
+    if (dragDeltaX < -threshold) {
+      goNext();
+    } else if (dragDeltaX > threshold) {
+      goPrev();
+    } else {
+      applyStyles(); // Retorna suavemente para a posição padrão
+    }
+
+    startAutoplay();
+  }
+
+  // Eventos de Toque e Mouse no Track
+  track.addEventListener('mousedown', onDragStart);
+  track.addEventListener('touchstart', onDragStart, { passive: true });
+
+  window.addEventListener('mousemove', onDragMove);
+  window.addEventListener('touchmove', onDragMove, { passive: true });
+
+  window.addEventListener('mouseup', onDragEnd);
+  window.addEventListener('touchend', onDragEnd);
+
+  // Controle de Loops do Autoplay
+  var interval = null;
+
+  function startAutoplay() {
+    stopAutoplay();
+    interval = setInterval(goNext, cfg.autoplayDelay);
+  }
+
+  function stopAutoplay() {
+    if (interval) {
+      clearInterval(interval);
+      interval = null;
+    }
+  }
 
   applyStyles();
   requestAnimationFrame(function () { applyStyles(); });
   var onResize = function () { applyStyles(); };
   window.addEventListener('resize', onResize);
-  var interval = setInterval(goNext, cfg.autoplayDelay);
+  
+  startAutoplay();
 
   // Limpa interval se o wrapper for removido do DOM (evita leak em SPA)
   var observer = new MutationObserver(function () {
     if (!document.body.contains(container)) {
-      clearInterval(interval);
+      stopAutoplay();
       window.removeEventListener('resize', onResize);
+      
+      // Remove listeners do escopo global
+      window.removeEventListener('mousemove', onDragMove);
+      window.removeEventListener('touchmove', onDragMove);
+      window.removeEventListener('mouseup', onDragEnd);
+      window.removeEventListener('touchend', onDragEnd);
+      
       observer.disconnect();
     }
   });
