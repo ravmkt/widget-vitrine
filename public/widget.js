@@ -4364,15 +4364,13 @@ function cloneItemDeeply(original, index, isClone) {
       card.style.transition = 'transform ' + transitionMs + 'ms ease, margin ' + transitionMs + 'ms ease';
     });
 
-    var threshold = (cfg.width + cfg.spacing) * 0.25;
+    var itemSize = cfg.width + cfg.spacing;
+    var itemsDragged = Math.round(-dragDeltaX / itemSize);
 
-    if (dragDeltaX < -threshold) {
-      goNext();
-    } else if (dragDeltaX > threshold) {
-      goPrev();
-    } else {
-      applyStyles();
+    if (itemsDragged !== 0) {
+      activeIndex += itemsDragged;
     }
+    applyStyles();
 
     startAutoplay();
   }
