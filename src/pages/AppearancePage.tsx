@@ -3466,7 +3466,22 @@ const AppearancePage = () => {
                                 <>
                                   <FormField label="Texto do título"><input type="text" value={activeDynamicCarouselConfig.title_text ?? ''} onChange={e => updateDynamicCarouselConfig({ title_text: e.target.value })} className={inputClass} /></FormField>
                                   <div className="grid grid-cols-2 gap-2.5">
-                                    <FormField label="Tamanho da fonte"><input type="number" min="8" value={activeDynamicCarouselConfig.title_font_size ?? 14} onChange={e => updateDynamicCarouselConfig({ title_font_size: safeNumber(e.target.value, 14, 8) })} className={inputClass} /></FormField>
+<FormField label="Tamanho da fonte">
+  <input 
+    type="number" 
+    min="8" 
+    value={activeDynamicCarouselConfig.title_font_size ?? ''} 
+    onChange={e => {
+      const val = e.target.value;
+      updateDynamicCarouselConfig({ title_font_size: val === '' ? undefined : Number(val) });
+    }} 
+    onBlur={e => {
+      const val = activeDynamicCarouselConfig.title_font_size;
+      updateDynamicCarouselConfig({ title_font_size: safeNumber(val ?? 14, 14, 8) });
+    }}
+    className={inputClass} 
+  />
+</FormField>
                                     <FormField label="Alinhamento"><select value={activeDynamicCarouselConfig.title_align ?? 'center'} onChange={e => updateDynamicCarouselConfig({ title_align: e.target.value as 'left' | 'center' | 'right' })} className={selectClass}><option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option></select></FormField>
                                   </div>
                                   <ToggleSwitch label="Título em negrito" checked={activeDynamicCarouselConfig.title_bold ?? true} onChange={e => updateDynamicCarouselConfig({ title_bold: e.target.checked })} />
