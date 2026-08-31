@@ -5151,7 +5151,7 @@ function renderGridWidget(container, stories, appearance) {
 
     itemWrapper.appendChild(card);
 
-    // --- 3. RENDERIZAR CARD DE PRODUTO ABAIXO DO CARD (BOTÃO EXIBIR) ---
+    // --- 3. RENDERIZAR CARD DE PRODUTO ABAIXO DO CARD (ESTILO PREMIUM CARROSSEL/MODAL) ---
     var videoProductId = video.product_id || video.productId || null;
     var productData = videoProductId && typeof readProductsData !== 'undefined'
       ? readProductsData.find(function (p) { return idsEqual(p.id, videoProductId); })
@@ -5160,58 +5160,54 @@ function renderGridWidget(container, stories, appearance) {
     if (cfg.showProduct && productData) {
       var productUrl = productData.product_url || productData.url || '';
       var prodCard = createEl('div', 'vl-grid-product');
-      var borderCss = cfg.productCardBorderWidth > 0 
-        ? ('border:' + cfg.productCardBorderWidth + 'px solid ' + cfg.productCardBorderColor + ';') 
-        : 'border:none;';
+      var borderCss = cfg.productCardBorderWidth > 0
+        ? ('border:' + cfg.productCardBorderWidth + 'px solid ' + cfg.productCardBorderColor + ' !important;')
+        : 'border:none !important;';
+
+      var initialShadow = '0 2px 8px rgba(0,0,0,0.06)';
 
       prodCard.style.cssText = [
-        'display:flex;',
-        'align-items:center;',
-        'justify-content:space-between;',
-        'gap:8px;',
-        'width:100%;',
-        'padding:8px;',
-        'margin-top:8px;',
-        'background:' + cfg.productCardBg + ';',
-        'border-radius:' + cfg.productCardRadius + 'px;',
+        'display:flex !important;',
+        'align-items:center !important;',
+        'justify-content:space-between !important;',
+        'gap:10px !important;',
+        'width:100% !important;',
+        'padding:10px 12px !important;',
+        'margin-top:8px !important;',
+        'background:' + cfg.productCardBg + ' !important;',
+        'border-radius:' + cfg.productCardRadius + 'px !important;',
         borderCss,
-        'box-sizing:border-box;',
-        'cursor:pointer;',
-        'transition:transform .2s ease, box-shadow .2s ease;',
+        'box-shadow:' + initialShadow + ' !important;',
+        'box-sizing:border-box !important;',
+        'cursor:pointer !important;',
+        'transition:transform 0.2s ease, box-shadow 0.2s ease !important;',
       ].join('');
-
-      prodCard.addEventListener('click', function (e) {
-        e.stopPropagation(); // Evita acionar o modal do story ao clicar no produto
-        if (productUrl) {
-          window.open(productUrl, '_blank');
-        }
-      });
 
       // Lado esquerdo (Imagem + Dados)
       var leftPart = createEl('div');
-      leftPart.style.cssText = 'display:flex;align-items:center;gap:8px;min-width:0;flex:1;';
+      leftPart.style.cssText = 'display:flex !important;align-items:center !important;gap:10px !important;min-width:0 !important;flex:1 !important;';
 
       var prodImg = createEl('img', 'vl-grid-product-img');
       prodImg.src = getThumbnailFromObject(productData) || '';
       prodImg.alt = productData.name || 'Produto';
-      prodImg.style.cssText = 'width:32px;height:32px;border-radius:4px;object-fit:cover;flex-shrink:0;background:#f1f5f9;';
+      prodImg.style.cssText = 'width:48px !important;height:48px !important;border-radius:8px !important;object-fit:cover !important;flex-shrink:0 !important;background:#f1f5f9 !important;';
       leftPart.appendChild(prodImg);
 
       var prodInfo = createEl('div', 'vl-grid-product-info');
-      prodInfo.style.cssText = 'min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;gap:1px;';
+      prodInfo.style.cssText = 'min-width:0 !important;flex:1 !important;display:flex !important;flex-direction:column !important;justify-content:center !important;gap:2px !important;';
 
       var pName = createEl('div', 'vl-grid-product-name');
       pName.textContent = productData.name || 'Produto';
       pName.style.cssText = [
-        'font-family:' + fontFamily + ';',
-        'font-size:' + cfg.productCardNameSize + 'px;',
-        'color:' + cfg.productCardNameColor + ';',
-        'font-weight:600;',
-        'white-space:nowrap;',
-        'overflow:hidden;',
-        'text-overflow:ellipsis;',
-        'margin:0;',
-        'line-height:1.2;'
+        'font-family:' + fontFamily + ' !important;',
+        'font-size:' + cfg.productCardNameSize + 'px !important;',
+        'color:' + cfg.productCardNameColor + ' !important;',
+        'font-weight:700 !important;',
+        'white-space:nowrap !important;',
+        'overflow:hidden !important;',
+        'text-overflow:ellipsis !important;',
+        'margin:0 !important;',
+        'line-height:1.2 !important;'
       ].join('');
       prodInfo.appendChild(pName);
 
@@ -5230,38 +5226,73 @@ function renderGridWidget(container, stories, appearance) {
         var pPrice = createEl('div', 'vl-grid-product-price');
         pPrice.textContent = formattedPrice;
         pPrice.style.cssText = [
-          'font-family:' + fontFamily + ';',
-          'font-size:' + cfg.productCardPriceSize + 'px;',
-          'color:' + cfg.productCardPriceColor + ';',
-          'font-weight:' + (cfg.productCardPriceBold ? '800' : 'normal') + ';',
-          'margin:0;',
-          'line-height:1.2;'
+          'font-family:' + fontFamily + ' !important;',
+          'font-size:' + cfg.productCardPriceSize + 'px !important;',
+          'color:' + (cfg.productCardPriceColor || '#0094EB') + ' !important;',
+          'font-weight:' + (cfg.productCardPriceBold ? '800' : '700') + ' !important;',
+          'margin:0 !important;',
+          'line-height:1.2 !important;'
         ].join('');
         prodInfo.appendChild(pPrice);
       }
       leftPart.appendChild(prodInfo);
       prodCard.appendChild(leftPart);
 
-      // Botão de Exibição / Ação à direita
+      // Elemento de Ação à direita (Setinha / Chevron ou Botão configurado)
+      var chevronColor = cfg.productCardPriceColor || '#0094EB';
+      var actionElement;
+
       if (cfg.showProductButton) {
-        var actionBtn = createEl('div', 'vl-grid-product-btn');
-        actionBtn.textContent = 'Exibir';
-        actionBtn.style.cssText = [
-          'font-family:' + fontFamily + ';',
-          'font-size:10px;',
-          'font-weight:800;',
-          'padding:4px 8px;',
-          'background:' + cfg.productCardButtonBg + ';',
-          'color:' + cfg.productCardButtonColor + ';',
-          'border-radius:999px;',
-          'text-transform:uppercase;',
-          'white-space:nowrap;',
-          'flex-shrink:0;',
-          'box-shadow:0 1px 3px rgba(0,0,0,0.1);',
-          'text-align:center;'
+        actionElement = createEl('div', 'vl-grid-product-btn');
+        actionElement.textContent = 'Exibir';
+        actionElement.style.cssText = [
+          'font-family:' + fontFamily + ' !important;',
+          'font-size:11px !important;',
+          'font-weight:800 !important;',
+          'padding:6px 12px !important;',
+          'background:' + cfg.productCardButtonBg + ' !important;',
+          'color:' + cfg.productCardButtonColor + ' !important;',
+          'border-radius:999px !important;',
+          'text-transform:uppercase !important;',
+          'white-space:nowrap !important;',
+          'flex-shrink:0 !important;',
+          'box-shadow:0 2px 4px rgba(0,0,0,0.08) !important;',
+          'text-align:center !important;',
+          'transition:transform 0.2s ease !important;'
         ].join('');
-        prodCard.appendChild(actionBtn);
+      } else {
+        actionElement = createEl('div', 'vl-grid-product-chevron');
+        actionElement.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + chevronColor + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+        actionElement.style.cssText = 'display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;transition:transform 0.2s ease !important;';
       }
+      prodCard.appendChild(actionElement);
+
+      // Micro-interações de Hover
+      prodCard.addEventListener('mouseenter', function() {
+        prodCard.style.transform = 'translateY(-2px)';
+        prodCard.style.boxShadow = '0 6px 16px rgba(0,0,0,0.12) !important';
+        if (actionElement) {
+          actionElement.style.transform = 'translateX(2px)';
+        }
+      });
+      prodCard.addEventListener('mouseleave', function() {
+        prodCard.style.transform = 'none';
+        prodCard.style.boxShadow = initialShadow + ' !important';
+        if (actionElement) {
+          actionElement.style.transform = 'none';
+        }
+      });
+
+      // Lógica de clique unificada (Abre link e dispara evento de Analytics)
+      prodCard.addEventListener('click', function (e) {
+        e.stopPropagation(); // Evita acionar o modal do story ao clicar no produto
+        if (productUrl) {
+          window.open(productUrl, '_blank');
+          if (typeof sendAnalyticsEvent === 'function') {
+            sendAnalyticsEvent('product_click', video ? video.id : null, productData ? productData.id : null);
+          }
+        }
+      });
 
       itemWrapper.appendChild(prodCard);
     }
