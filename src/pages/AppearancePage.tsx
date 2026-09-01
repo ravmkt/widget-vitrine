@@ -2305,10 +2305,10 @@ const GridPreview = ({
           {grid.title_text || 'Grade de Vídeos'}
         </h4>
       )}
-      <div
-        className="grid overflow-y-auto max-h-[300px] scrollbar-none w-full"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: `${spacing}px` }}
-      >
+<div
+  className="grid w-full"
+  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: `${spacing}px` }}
+>
         {items.map((_, i) => (
           <div key={i} className="w-full flex flex-col space-y-1">
             <div
