@@ -1906,7 +1906,6 @@ const DynamicCarouselPreview = ({
   isMobile?: boolean;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
-  const trackIndexRef = useRef(0); // sempre em sincronia com o state, sem closures velhas
   const videoSources = DEMO_PREVIEW_VIDEOS;
   const len = videoSources.length;
   const delay = Number(carousel?.autoplay_delay) || 5000;
@@ -1957,19 +1956,20 @@ const DynamicCarouselPreview = ({
 
   const scaleFactor = scaleHighlight ? 1.12 : 1;
   const cardMaxWidth = itemWidth * scaleFactor;
-  const cardBlockHeight = showProductCard && !isCircle ? 46 : 0; // espaço reservado pro card
+  const cardBlockHeight = showProductCard && !isCircle ? 46 : 0;
   const containerHeight = itemHeight * scaleFactor + cardBlockHeight;
   const step = itemWidth + spacingNum;
 
-  // Trilho: MUITAS repetições, garante nunca faltar vídeo nas bordas
-  const REPEAT_TILES = isMobile ? 14 : 31;
+  // Trilho posicional grande (garante nunca faltar espaço nas bordas),
+  // mas SÓ renderiza <video> real dentro de uma janela próxima ao ativo (performance).
+  const REPEAT_TILES = isMobile ? 14 : 21;
+  const RENDER_WINDOW = isMobile ? 3 : 6; // quantos itens de cada lado do ativo terão vídeo real
   const middleTile = Math.floor(REPEAT_TILES / 2);
   const baseIndex = middleTile * len;
-  const trackVideos = Array.from({ length: REPEAT_TILES }, () => videoSources).flat();
+  const totalTiles = REPEAT_TILES * len;
 
   const [trackIndex, setTrackIndex] = useState(baseIndex);
   const [noTransition, setNoTransition] = useState(false);
-  trackIndexRef.current = trackIndex;
 
   useEffect(() => {
     if (delay <= 0) return;
@@ -1977,7 +1977,6 @@ const DynamicCarouselPreview = ({
     return () => clearInterval(interval);
   }, [delay]);
 
-  // Reset de loop: só reage à transição do TRANSFORM, e sempre lê o valor mais atual via functional update
   const handleTransitionEnd = (e: React.TransitionEvent) => {
     if (e.propertyName !== 'transform') return;
     setTrackIndex((prev) => {
@@ -2016,10 +2015,12 @@ const DynamicCarouselPreview = ({
           }}
           onTransitionEnd={handleTransitionEnd}
         >
-          {trackVideos.map((videoSrc, i) => {
+          {Array.from({ length: totalTiles }).map((_, i) => {
             const isAct = i === trackIndex;
+            const withinWindow = Math.abs(i - trackIndex) <= RENDER_WINDOW;
             const w = isAct ? itemWidth * scaleFactor : itemWidth;
             const h = isAct ? itemHeight * scaleFactor : itemHeight;
+            const videoSrc = videoSources[i % len];
 
             return (
               <div
@@ -2029,15 +2030,19 @@ const DynamicCarouselPreview = ({
               >
                 <div
                   style={{ width: `${w}px`, height: `${h}px`, borderRadius, border: `${borderWidth}px solid ${borderColor}`, boxShadow: isAct ? shadowStyle : 'none', transition: 'width 0.3s ease, height 0.3s ease' }}
-                  className="relative overflow-hidden bg-slate-950 box-border"
+                  className="relative overflow-hidden bg-slate-800 box-border"
                 >
-                  <video
-                    ref={el => { if (el) videoRefs.current.set(i, el) }}
-                    src={videoSrc}
-                    loop muted playsInline autoPlay
-                    style={{ filter: !isAct && desaturate ? 'grayscale(100%) opacity(0.55)' : 'none' }}
-                    className="w-full h-full object-cover transition-all duration-500"
-                  />
+                  {withinWindow ? (
+                    <video
+                      ref={el => { if (el) videoRefs.current.set(i, el); else videoRefs.current.delete(i); }}
+                      src={videoSrc}
+                      loop muted playsInline autoPlay preload="auto"
+                      style={{ filter: !isAct && desaturate ? 'grayscale(100%) opacity(0.55)' : 'none' }}
+                      className="w-full h-full object-cover transition-all duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-slate-800" />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none" />
                   {isAct && (
                     <div style={{ backgroundColor: borderColor }} className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse">
