@@ -1901,69 +1901,60 @@ const DynamicCarouselPreview = ({
   colors,
   isMobile = false,
 }: {
-  carousel: any; // Aceita qualquer estrutura para evitar conflitos de tipagem estrita
+  carousel: any;
   colors: any;
   isMobile?: boolean;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
   const [activeIndex, setActiveIndex] = useState(1);
 
-  // Fallbacks de vídeos super estáveis caso os originais falhem ou estejam vazios
-  const FALLBACK_VIDEOS = [
-    "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-light-looking-at-camera-42284-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-woman-holding-a-smartphone-with-a-green-screen-42322-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-man-holding-a-smartphone-with-a-blue-screen-42323-large.mp4"
-  ];
-  const videoSources = (typeof DEMO_PREVIEW_VIDEOS !== 'undefined' && DEMO_PREVIEW_VIDEOS && DEMO_PREVIEW_VIDEOS.length >= 3)
-    ? DEMO_PREVIEW_VIDEOS
-    : FALLBACK_VIDEOS;
+  // Fallback de fontes de vídeo estáveis
+  const videoSources = (carousel?.demo_videos || carousel?.demoVideos || DEMO_PREVIEW_VIDEOS_FALLBACK);
 
-  // 1. SUPORTE UNIVERSAL (SNAKE_CASE & CAMELCASE) PARA TODAS AS PROPRIEDADES
-  const shape = carousel.shape || carousel.format || 'portrait';
+  // 1. SUPORTE UNIVERSAL (SNAKE_CASE & CAMELCASE)
+  const shape = carousel?.shape || carousel?.format || 'portrait';
   const isCircle = shape === 'circle';
 
   // Configurações do Título
-  const showTitle = carousel.show_title ?? carousel.showTitle ?? true;
-  const titleText = carousel.title_text ?? carousel.titleText ?? 'Destaques';
-  const titleAlign = carousel.title_align ?? carousel.titleAlign ?? 'center';
-  const titleSizeVal = carousel.title_size ?? carousel.titleSize ?? carousel.title_font_size ?? carousel.titleFontSize ?? '14px';
-  const isBold = carousel.title_bold ?? carousel.titleBold ?? true;
-  const isItalic = carousel.title_italic ?? carousel.titleItalic ?? false;
+  const showTitle = carousel?.show_title ?? carousel?.showTitle ?? true;
+  const titleText = carousel?.title_text ?? carousel?.titleText ?? 'Destaques';
+  const titleAlign = carousel?.title_align ?? carousel?.titleAlign ?? 'center';
+  const titleSizeVal = carousel?.title_size ?? carousel?.titleSize ?? carousel?.title_font_size ?? carousel?.titleFontSize ?? '14px';
+  const isBold = carousel?.title_bold ?? carousel?.titleBold ?? true;
+  const isItalic = carousel?.title_italic ?? carousel?.titleItalic ?? false;
 
   // Configurações de Layout e Estilo
-  const rawWidth = safeNumber(parseFloat(carousel.width || carousel.item_width || carousel.itemWidth || '120'), 120, 40);
-  const borderWidth = safeNumber(carousel.border_width ?? carousel.borderWidth ?? carousel.border, 2, 0);
-  const borderColor = carousel.border_color ?? carousel.borderColor ?? colors.primary ?? '#0094EB';
-  const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius ?? carousel.borderRadius, '12px');
-  const spacingNum = safeNumber(carousel.spacing ?? carousel.gap ?? carousel.item_spacing ?? carousel.itemSpacing, 12, 0);
+  const rawWidth = safeNumber(parseFloat(carousel?.width || carousel?.item_width || carousel?.itemWidth || '120'), 120, 40);
+  const borderWidth = safeNumber(carousel?.border_width ?? carousel?.borderWidth ?? carousel?.border, 2, 0);
+  const borderColor = carousel?.border_color ?? carousel?.borderColor ?? colors?.primary ?? '#0094EB';
+  const borderRadius = isCircle ? '50%' : cssSize(carousel?.border_radius ?? carousel?.borderRadius, '12px');
+  const spacingNum = safeNumber(carousel?.spacing ?? carousel?.gap ?? carousel?.item_spacing ?? carousel?.itemSpacing, 12, 0);
 
-  // Funcionalidades de Chaveamento/Toggle
-  const showPlayIcon = carousel.show_play_icon ?? carousel.showPlayIcon ?? carousel.play_icon ?? carousel.playIcon ?? true;
-  const showProductCard = carousel.show_product_card ?? carousel.showProductCard ?? carousel.show_card ?? carousel.showCard ?? carousel.product_card ?? carousel.productCard ?? true;
-  const applyShadow = carousel.apply_shadow ?? carousel.applyShadow ?? carousel.highlight_shadow ?? carousel.highlightShadow ?? carousel.shadow ?? true;
-  const scaleHighlight = carousel.scale_highlight ?? carousel.scaleHighlight ?? carousel.zoom_highlight ?? carousel.zoomHighlight ?? carousel.scale ?? true;
-  const desaturate = carousel.desaturate_inactive ?? carousel.desaturateInactive ?? carousel.grayscale_inactive ?? carousel.grayscaleInactive ?? carousel.desaturate ?? true;
-  const playInactive = carousel.autoplay_inactive ?? carousel.autoplayInactive ?? carousel.play_inactive ?? carousel.playInactive ?? carousel.play_inactive_videos ?? false;
-  const autoplayVideos = carousel.autoplay_videos ?? carousel.autoplayVideos ?? carousel.autoplay ?? true;
+  // Chaves de Funcionalidades/Toggles
+  const showPlayIcon = carousel?.show_play_icon ?? carousel?.showPlayIcon ?? carousel?.play_icon ?? carousel?.playIcon ?? true;
+  const showProductCard = carousel?.show_product_card ?? carousel?.showProductCard ?? carousel?.show_card ?? carousel?.showCard ?? carousel?.product_card ?? carousel?.productCard ?? true;
+  const applyShadow = carousel?.apply_shadow ?? carousel?.applyShadow ?? carousel?.highlight_shadow ?? carousel?.highlightShadow ?? carousel?.shadow ?? true;
+  const scaleHighlight = carousel?.scale_highlight ?? carousel?.scaleHighlight ?? carousel?.zoom_highlight ?? carousel?.zoomHighlight ?? carousel?.scale ?? true;
+  const desaturate = carousel?.desaturate_inactive ?? carousel?.desaturateInactive ?? carousel?.grayscale_inactive ?? carousel?.grayscaleInactive ?? carousel?.desaturate ?? true;
+  const playInactive = carousel?.autoplay_inactive ?? carousel?.autoplayInactive ?? carousel?.play_inactive ?? carousel?.playInactive ?? false;
+  const autoplayVideos = carousel?.autoplay_videos ?? carousel?.autoplayVideos ?? carousel?.autoplay ?? true;
 
-  // Troca de vídeo focado baseada no delay
+  // Troca de vídeo focado
   useEffect(() => {
-    const delay = carousel.autoplay_delay ?? carousel.autoplayDelay ?? 4000;
+    const delay = carousel?.autoplay_delay ?? carousel?.autoplayDelay ?? 4000;
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev === 2 ? 0 : prev + 1));
     }, delay);
     return () => clearInterval(interval);
-  }, [carousel.autoplay_delay, carousel.autoplayDelay]);
+  }, [carousel?.autoplay_delay, carousel?.autoplayDelay]);
 
   // Controle de Play/Pause robusto
   useEffect(() => {
-    // Ativo
     const activeVid = videoRefs.current.get(1);
     if (activeVid) {
       if (autoplayVideos) activeVid.play().catch(() => {});
       else activeVid.pause();
     }
-    // Inativos
     [0, 2].forEach((idx) => {
       const inactiveVid = videoRefs.current.get(idx);
       if (inactiveVid) {
@@ -1973,7 +1964,7 @@ const DynamicCarouselPreview = ({
     });
   }, [autoplayVideos, playInactive, activeIndex]);
 
-  // Estilização de Título Inline
+  // Estilo de Título Inline
   const titleStyle: React.CSSProperties = {
     fontSize: typeof titleSizeVal === 'number' ? `${titleSizeVal}px` : (String(titleSizeVal).match(/^\d+$/) ? `${titleSizeVal}px` : String(titleSizeVal)),
     fontWeight: isBold ? 'bold' : 'normal',
@@ -1990,11 +1981,9 @@ const DynamicCarouselPreview = ({
 
   // ==================== RENDERIZAÇÃO MOBILE ====================
   if (isMobile) {
-    // Escala menor (max-width 115px) para caber no celular sem clipping vertical
     const mobileActiveWidth = Math.min(rawWidth * 0.75, 115);
     
-    // Altura calculada pelo Aspect Ratio Real
-    let mobileActiveHeight = mobileActiveWidth * (16 / 9); // Proporção real 9:16
+    let mobileActiveHeight = mobileActiveWidth * (16 / 9);
     if (isCircle || shape === 'square') {
       mobileActiveHeight = mobileActiveWidth;
     } else if (shape === 'landscape') {
@@ -2004,7 +1993,7 @@ const DynamicCarouselPreview = ({
     const mobileSideWidth = mobileActiveWidth * 0.42;
     const mobileSideHeight = mobileActiveHeight * 0.85;
 
-    // Sombra unificada que projeta-se abaixo do card do produto
+    // Sombra unificada abaixo de todo o card de produto
     const unifiedDropShadow = applyShadow 
       ? `drop-shadow(0 15px 15px ${borderColor}45) drop-shadow(0 6px 6px rgba(0,0,0,0.18))`
       : 'none';
@@ -2019,7 +2008,6 @@ const DynamicCarouselPreview = ({
           </div>
         )}
 
-        {/* Padding vertical extra (py-4) para dar respiro ao scale(1.1) e evitar qualquer corte superior/inferior */}
         <div 
           className="flex items-center justify-center w-full overflow-visible py-4 px-1 transition-all duration-300"
           style={{ gap: `${spacingNum}px` }}
@@ -2048,7 +2036,7 @@ const DynamicCarouselPreview = ({
             />
           </div>
 
-          {/* CONTAINER CENTRAL ATIVO (Destaque Principal + Card) */}
+          {/* CONTAINER CENTRAL ATIVO (Vídeo Destaque + Card) */}
           <div 
             className="shrink-0 flex flex-col items-center space-y-2 transition-all duration-500"
             style={{ 
@@ -2081,9 +2069,9 @@ const DynamicCarouselPreview = ({
 
               <div 
                 style={{ backgroundColor: borderColor }}
-                className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5"
+                className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse"
               >
-                <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                <span className="w-1.5 h-1.5 bg-white rounded-full" />
                 Destaque
               </div>
 
@@ -2096,7 +2084,7 @@ const DynamicCarouselPreview = ({
               )}
             </div>
 
-            {/* Card de Produto com visibilidade controlada em tempo real */}
+            {/* Card de Produto Mobile */}
             {showProductCard && !isCircle && (
               <div className="bg-white border border-slate-100 rounded-xl p-1.5 flex items-center gap-2 shadow-sm w-full transition-all duration-300">
                 <div className="w-7 h-7 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
@@ -2208,23 +2196,22 @@ const DynamicCarouselPreview = ({
                       <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
                     </div>
                   </div>
+                )}
+              </div>
+
+              {/* Card de produto desktop */}
+              {isAct && showProductCard && !isCircle && (
+                <div className="bg-white border border-slate-100 rounded-xl p-2 flex items-center gap-2 shadow-sm w-full transition-all duration-300">
+                  <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
+                    <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-[9px] font-extrabold text-slate-800 truncate">Calça Confort</p>
+                    <p className="text-[8px] font-black text-[#0094EB]">R$ 154,95</p>
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* Card de produto desktop */}
-            {isAct && showProductCard && !isCircle && (
-              <div className="bg-white border border-slate-100 rounded-xl p-2 flex items-center gap-2 shadow-sm w-full transition-all duration-300">
-                <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
-                  <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-[9px] font-extrabold text-slate-800 truncate">Calça Confort</p>
-                  <p className="text-[8px] font-black text-[#0094EB]">R$ 154,95</p>
-                </div>
-              </div>
-            )}
-          </div>
           );
         })}
       </div>
