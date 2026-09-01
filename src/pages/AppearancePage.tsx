@@ -38,6 +38,7 @@ import {
   Share2,
   Link,
   Link2Off,
+  Play, // <--- Adicionado aqui!
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
