@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { db, Comment, Video } from "@/lib/db";
+import { logPanelActivity } from "@/lib/activityLog";
 import { useTenant } from "@/context/TenantContext";
 import { supabase } from "@/lib/supabase";
 import {
@@ -443,6 +444,7 @@ showSuccess(
 
     try {
       await db.comments.delete(deleteModal.commentId);
+      logPanelActivity('comment.deleted', 'Comentário do cliente');
       await loadComments();
 
       setDeleteModal({

@@ -31,6 +31,7 @@ import {
   isVideoPlayableNatively,
 } from '@/lib/videoEmbeds';
 import { fetchThumbnailViaEdgeFunction } from '@/lib/video';
+import { logPanelActivity } from '@/lib/activityLog';
 
 /* ─── Helpers ───────────────────────────────────────────── */
 
@@ -270,6 +271,7 @@ const VideoGalleryPage = () => {
     try {
       const safeId = resolvedStoreId || await resolveSafeStoreId();
       try { await (db.videos as any).delete(deleteModal.videoId, safeId); } catch { await db.videos.delete(deleteModal.videoId); }
+      logPanelActivity('video.deleted', deleteModal.videoTitle, safeId);
       setVideos(prev => prev.filter(v => v.id !== deleteModal.videoId));
       showSuccess('Vídeo removido permanentemente.');
       setDeleteModal(prev => ({ ...prev, isOpen: false }));

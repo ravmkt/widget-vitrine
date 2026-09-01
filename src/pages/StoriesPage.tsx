@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '@/context/TenantContext'; // 🆕 Importando o contexto do Tenant
 import { db, resolveStoreId, Story } from '@/lib/db';
+import { logPanelActivity } from '@/lib/activityLog';
 import {
   Plus,
   Search,
@@ -275,6 +276,7 @@ const StoriesPage = () => {
       };
 
       await db.stories.save(updatedStory);
+      logPanelActivity(nextActive ? 'story.activated' : 'story.deactivated', story.title, resolvedStoreId);
 
       setStories(prev =>
         prev.map(item =>
@@ -310,6 +312,7 @@ const StoriesPage = () => {
   const handleConfirmDelete = async () => {
     try {
       await db.stories.delete(deleteModal.storyId);
+      logPanelActivity('story.deleted', deleteModal.storyName);
 
       setStories(prev => prev.filter(s => s.id !== deleteModal.storyId));
 

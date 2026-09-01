@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { db, type GeneralSettings } from '@/lib/db';
+import { logPanelActivity } from '@/lib/activityLog';
 import { PLATFORM_OPTIONS } from '@/lib/platforms';
 import { Button } from '@/components/ui/button';
 import {
@@ -403,6 +404,9 @@ const SettingsPage = () => {
           })
           .eq('id', resolvedStoreId);
       }
+
+      // 📋 Registra a atividade no Log do Painel
+      logPanelActivity('settings.saved', updatedSettings.store_name || 'Configurações da loja', resolvedStoreId);
 
       setSettings(updatedSettings);
       setSelectedLogoFile(null);

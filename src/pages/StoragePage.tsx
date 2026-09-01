@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { db } from '@/lib/db';
+import { logPanelActivity } from '@/lib/activityLog';
 import { supabase } from '@/lib/supabase';
 import {
   connectInstagramAccount,
@@ -1285,6 +1286,7 @@ export default function StoragePage() {
       }
 
       showSuccess('Arquivo removido com sucesso!');
+      logPanelActivity('storage.file_deleted', name);
       setDeleteFileConfirm(null); // Fecha o modal
       await loadAccountStorageData();
     } catch (err) {

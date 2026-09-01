@@ -14,6 +14,20 @@ import {
   Play,
   Share2,
   ArrowRight,
+  Plus,
+  Trash2,
+  Pencil,
+  Video as VideoIcon,
+  Package,
+  Ruler,
+  Settings,
+  Palette,
+  Star,
+  MessageCircle,
+  Power,
+  Upload,
+  Code2,
+  Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ptBR } from 'date-fns/locale';
@@ -136,7 +150,7 @@ const DashboardPage: React.FC = () => {
           supabase.from('stories').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [4]
           supabase.from('appearances').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [5]
           supabase.from('display_locations').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [6]
-          supabase.from('activity_logs').select('*').eq('store_id', storeId).order('created_at', { ascending: false }).limit(6), // [7] (Buscando da tabela activity_logs)
+          supabase.from('activity_logs').select('*').eq('store_id', storeId).order('created_at', { ascending: false }).limit(15), // [7] (Buscando da tabela activity_logs)
           supabase.from('store_settings').select('*').eq('store_id', storeId).maybeSingle(), // [8]
         ]);
 
@@ -360,69 +374,90 @@ const DashboardPage: React.FC = () => {
     return '!bg-[#22c55e]'; // Padrão normal -> Verde
   };
 
-  // Helper para renderizar badges dinâmicos baseados no tipo de ação logada
-    const getActionBadge = (action: string, details: string = '') => {
-      const act = action.toLowerCase();
-      const det = details.toLowerCase();
+  // ── Mapeamento de ícones e labels do Log do Painel (códigos novos + textos legados) ──
+  const CHIP = {
+    emerald: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30',
+    rose: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30',
+    blue: 'bg-blue-50 dark:bg-blue-950/40 text-[#0094EB] dark:text-[#ff7a29] border border-blue-100 dark:border-orange-500/20',
+    amber: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30',
+    cyan: 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-900/30',
+    violet: 'bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border border-violet-100 dark:border-violet-900/30',
+    slate: 'bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800/30',
+  };
 
-      // Detecta ações semânticas de criação (Verde) ou exclusão (Vermelho)
-      const isDelete = act.includes('exclu') || act.includes('remov') || det.includes('exclui') || det.includes('remov');
-      const isInsert = act.includes('enviado') || act.includes('criado') || act.includes('import') || det.includes('adicionado') || det.includes('criado') || det.includes('enviado');
+  const ACTION_META: Record<string, { Icon: any; label: string; chip: string }> = {
+    // 🎬 Vídeos
+    'video.created': { Icon: Plus, label: 'Vídeo criado', chip: CHIP.emerald },
+    'video.updated': { Icon: Pencil, label: 'Vídeo atualizado', chip: CHIP.blue },
+    'video.deleted': { Icon: Trash2, label: 'Vídeo excluído', chip: CHIP.rose },
+    // 📱 Stories
+    'story.created': { Icon: Plus, label: 'Story criado', chip: CHIP.emerald },
+    'story.updated': { Icon: Pencil, label: 'Story editado', chip: CHIP.violet },
+    'story.deleted': { Icon: Trash2, label: 'Story excluído', chip: CHIP.rose },
+    'story.activated': { Icon: Power, label: 'Story ativado', chip: CHIP.emerald },
+    'story.deactivated': { Icon: Power, label: 'Story desativado', chip: CHIP.slate },
+    // 🛍️ Produtos
+    'product.created': { Icon: Plus, label: 'Produto criado', chip: CHIP.emerald },
+    'product.updated': { Icon: Pencil, label: 'Produto atualizado', chip: CHIP.blue },
+    'product.activated': { Icon: Power, label: 'Produto ativado', chip: CHIP.emerald },
+    'product.deactivated': { Icon: Power, label: 'Produto desativado', chip: CHIP.slate },
+    'product.deleted': { Icon: Trash2, label: 'Produto excluído', chip: CHIP.rose },
+    'product.imported': { Icon: Upload, label: 'Produtos importados', chip: CHIP.emerald },
+    // 📏 Medidas
+    'model.created': { Icon: Plus, label: 'Medida criada', chip: CHIP.emerald },
+    'model.updated': { Icon: Pencil, label: 'Medida atualizada', chip: CHIP.blue },
+    'model.deleted': { Icon: Trash2, label: 'Medida excluída', chip: CHIP.rose },
+    // ⚙️ Configurações
+    'settings.saved': { Icon: Settings, label: 'Configurações salvas', chip: CHIP.amber },
+    // 🎨 Aparências
+    'appearance.created': { Icon: Plus, label: 'Aparência criada', chip: CHIP.emerald },
+    'appearance.updated': { Icon: Palette, label: 'Aparência atualizada', chip: CHIP.cyan },
+    'appearance.default': { Icon: Star, label: 'Aparência definida como padrão', chip: CHIP.amber },
+    'appearance.deleted': { Icon: Trash2, label: 'Aparência excluída', chip: CHIP.rose },
+    // 💬 Comentários
+    'comment.deleted': { Icon: Trash2, label: 'Comentário excluído', chip: CHIP.rose },
+    // 💾 Armazenamento
+    'storage.file_deleted': { Icon: HardDrive, label: 'Arquivo excluído do armazenamento', chip: CHIP.rose },
+  };
 
-      // 🎬 VÍDEOS
-      if (act.includes('vídeo') || act.includes('video') || act.includes('import')) {
-        if (isDelete) {
-          return { label: '🗑️ Vídeo', style: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30' };
-        }
-        if (isInsert) {
-          return { label: '🎬 Vídeo', style: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30' };
-        }
-        return { label: '🎬 Vídeo', style: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30' };
-      }
+  // Helper: resolve ícone + label da atividade (códigos novos ou textos legados antigos)
+  const getActivityMeta = (action: string, details: string = '') => {
+    const known = ACTION_META[action];
+    if (known) return known;
 
-      // ⚙️ CONFIGURAÇÕES
-      if (act.includes('config') || act.includes('loja') || act.includes('parâmetro') || act.includes('whatsapp')) {
-        return { label: '⚙️ Config', style: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30' };
-      }
+    // Fallback heurístico para registros antigos em texto livre
+    const act = action.toLowerCase();
+    const det = details.toLowerCase();
+    const isDelete = act.includes('exclu') || act.includes('remov') || det.includes('exclui') || det.includes('remov');
+    const isInsert = act.includes('enviado') || act.includes('criado') || act.includes('import') || det.includes('adicionado') || det.includes('criado');
 
-      // 💎 PLANOS / COBRANÇA
-      if (act.includes('plan') || act.includes('assinatura') || act.includes('fatura') || act.includes('upgrade') || act.includes('pagamento')) {
-        return { label: '💎 Plano', style: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30' };
-      }
-
-      // 📱 STORIES
-      if (act.includes('storie') || act.includes('coleção') || act.includes('grupo') || act.includes('stories') || act.includes('layout')) {
-        if (isDelete) {
-          return { label: '🗑️ Story', style: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30' };
-        }
-        if (isInsert) {
-          return { label: '📱 Story', style: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30' };
-        }
-        return { label: '📱 Stories', style: 'bg-pink-50 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 border border-pink-100 dark:border-pink-900/30' };
-      }
-
-      // 🎨 DESIGN / APARÊNCIA (Como a Clara, Escura, etc.)
-      if (act.includes('aparência') || act.includes('design') || act.includes('player') || act.includes('personaliz')) {
-        if (isDelete) {
-          return { label: '🗑️ Design', style: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30' };
-        }
-        if (isInsert) {
-          return { label: '🎨 Design', style: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30' };
-        }
-        return { label: '🎨 Design', style: 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-900/30' };
-      }
-
-      // 🚀 SCRIPT / EMBED / INTEGRAÇÃO
-      if (act.includes('script') || act.includes('embed') || act.includes('integra') || act.includes('widget') || act.includes('local')) {
-        return { label: '🚀 Script', style: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30' };
-      }
-
-      // FALLBACK SEGURO
-      if (isDelete) {
-        return { label: '🗑️ Excluído', style: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30' };
-      }
-      return { label: '⚡ Ação', style: 'bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border border-slate-150 dark:border-slate-800/30' };
-    };
+    if (act.includes('vídeo') || act.includes('video') || act.includes('import')) {
+      if (isDelete) return { Icon: Trash2, label: 'Vídeo excluído', chip: CHIP.rose };
+      if (isInsert) return { Icon: VideoIcon, label: 'Vídeo criado', chip: CHIP.emerald };
+      return { Icon: VideoIcon, label: 'Vídeo atualizado', chip: CHIP.blue };
+    }
+    if (act.includes('storie') || act.includes('coleção') || act.includes('grupo') || act.includes('layout')) {
+      if (isDelete) return { Icon: Trash2, label: 'Story excluído', chip: CHIP.rose };
+      if (isInsert) return { Icon: Plus, label: 'Story criado', chip: CHIP.emerald };
+      return { Icon: Pencil, label: 'Story editado', chip: CHIP.violet };
+    }
+    if (act.includes('aparência') || act.includes('design') || act.includes('player') || act.includes('personaliz')) {
+      if (isDelete) return { Icon: Trash2, label: 'Aparência excluída', chip: CHIP.rose };
+      if (isInsert) return { Icon: Palette, label: 'Aparência criada', chip: CHIP.emerald };
+      return { Icon: Palette, label: 'Aparência atualizada', chip: CHIP.cyan };
+    }
+    if (act.includes('config') || act.includes('loja') || act.includes('whatsapp')) {
+      return { Icon: Settings, label: 'Configurações salvas', chip: CHIP.amber };
+    }
+    if (act.includes('script') || act.includes('embed') || act.includes('integra') || act.includes('widget')) {
+      return { Icon: Code2, label: 'Integração', chip: CHIP.blue };
+    }
+    if (act.includes('plan') || act.includes('assinatura') || act.includes('fatura')) {
+      return { Icon: Star, label: 'Plano', chip: CHIP.emerald };
+    }
+    if (isDelete) return { Icon: Trash2, label: 'Item excluído', chip: CHIP.rose };
+    return { Icon: Activity, label: action || 'Atividade', chip: CHIP.slate };
+  };
 
   if (loading) {
     return (
@@ -814,31 +849,30 @@ const DashboardPage: React.FC = () => {
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-white/5 max-h-[360px] overflow-y-auto pr-1">
                 {activities.map((ev) => {
-const badge = getActionBadge(ev.action, ev.details || '');
+                  const meta = getActivityMeta(ev.action, ev.details || '');
+                  const MetaIcon = meta.Icon;
 
                   return (
-                    <div key={ev.id} className="py-3.5 flex items-start justify-between gap-4 text-xs animate-fade-in">
+                    <div key={ev.id} className="py-3.5 flex items-start justify-between gap-3 text-xs animate-fade-in">
                       <div className="flex items-start gap-3 min-w-0">
                         <span className={cn(
-                          'px-2.5 py-1 rounded-lg font-black text-[10px] uppercase shrink-0 mt-0.5 text-center min-w-[75px]',
-                          badge.style
+                          'h-8 w-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5',
+                          meta.chip
                         )}>
-                          {badge.label}
+                          <MetaIcon size={14} className="stroke-[2.5]" />
                         </span>
                         <div className="min-w-0">
-                          <span className="font-bold text-slate-700 dark:text-[#e8ecf4] block truncate">
-                            {ev.action}
+                          <span className="font-bold text-slate-700 dark:text-[#e8ecf4] block leading-snug">
+                            {meta.label}
+                            {ev.details && (
+                              <span className="text-slate-900 dark:text-white">: {ev.details}</span>
+                            )}
                           </span>
-                          {ev.details && (
-                            <p className="text-[11px] text-slate-400 dark:text-[#8a90a0] mt-0.5 font-medium leading-relaxed">
-                              {ev.details}
-                            </p>
-                          )}
+                          <p className="text-[10px] text-slate-400 dark:text-[#8a90a0] mt-0.5 font-medium">
+                            {new Date(ev.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} às {new Date(ev.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
                         </div>
                       </div>
-                      <span className="text-slate-400 dark:text-[#8a90a0] font-medium text-[11px] shrink-0 mt-1">
-                        {new Date(ev.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
                     </div>
                   );
                 })}

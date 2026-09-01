@@ -13,6 +13,7 @@ import {
   generateUuid,
   resolveStoreId,
 } from '@/lib/db';
+import { logPanelActivity } from '@/lib/activityLog';
 import { supabase } from '@/lib/supabase';
 import { useTenant } from '@/context/TenantContext';
 import {
@@ -2806,6 +2807,7 @@ const AppearancePage = () => {
       );
       await syncDefaultAppearanceId(finalStoreId, id);
       window.dispatchEvent(new Event('storage'));
+      logPanelActivity('appearance.default', (appearances.find(style => style.id === id)?.name) || 'Estilo', finalStoreId);
       showSuccess('Estilo padrão atualizado!');
       await loadData();
     } catch (error) {
@@ -2836,6 +2838,7 @@ const AppearancePage = () => {
         }
       }
       window.dispatchEvent(new Event('storage'));
+      logPanelActivity('appearance.deleted', deleteModal.name, finalStoreId);
       showSuccess('Estilo excluído com sucesso.');
       setDeleteModal(prev => ({ ...prev, isOpen: false }));
       await loadData();
@@ -2930,6 +2933,7 @@ const AppearancePage = () => {
       }
 
       await db.appearances.save(stylePayload as unknown as Appearance);
+      logPanelActivity(editingStyle ? 'appearance.updated' : 'appearance.created', formData.name.trim(), finalStoreId);
 
       if (supabase) {
         await supabase.from('store_settings').upsert({ store_id: finalStoreId, default_appearance_id: shouldBeDefault ? id : null, updated_at: now }, { onConflict: 'store_id' });

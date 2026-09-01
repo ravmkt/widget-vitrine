@@ -8,6 +8,7 @@ import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { showError } from '@/utils/toast';
 import SuccessDialog from '@/components/SuccessDialog';
 import { generateVideoThumbnail, fetchThumbnailViaEdgeFunction } from '@/lib/video';
+import { logPanelActivity } from '@/lib/activityLog';
 import { useTenant } from '@/context/TenantContext';
 
 const STORAGE_BUCKET = 'store-assets';
@@ -674,6 +675,7 @@ const VideoEditPage = () => {
         } as Video;
 
         await db.videos.save(newVideo);
+        logPanelActivity('video.created', newVideo.title, safeStoreId);
       } else {
         if (!video) return;
 
@@ -685,6 +687,7 @@ const VideoEditPage = () => {
         };
 
         await db.videos.save(updatedVideo);
+        logPanelActivity('video.updated', updatedVideo.title, safeStoreId);
       }
 
       setShowSuccessModal(true);

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { db, SizingModel } from "@/lib/db";
+import { logPanelActivity } from "@/lib/activityLog";
 import { Plus, Trash2, Edit3, User, Package, X } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import CustomDialog from "@/components/CustomDialog";
@@ -298,6 +299,7 @@ const MedidasPage = () => {
       };
 
       await db.sizingModels.save(modelData as SizingModel);
+      logPanelActivity(editingModel ? 'model.updated' : 'model.created', formData.name.trim(), storeId);
 
       showSuccess(
         editingModel
@@ -328,6 +330,7 @@ const MedidasPage = () => {
   const handleConfirmDelete = async () => {
     try {
       await db.sizingModels.delete(deleteModal.id);
+      logPanelActivity('model.deleted', deleteModal.name);
       showSuccess("Medida removida com sucesso.");
       setDeleteModal((prev) => ({ ...prev, isOpen: false }));
       await loadData();

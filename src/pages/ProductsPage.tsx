@@ -24,6 +24,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import { db, Product, resolveStoreId, withStoreId, generateUuid } from '@/lib/db';
+import { logPanelActivity } from '@/lib/activityLog';
 
 import { useTenant } from '@/context/TenantContext';
 
@@ -505,6 +506,7 @@ const ProductsPage = () => {
         );
 
         await db.products.save(updated as Product);
+        logPanelActivity('product.updated', formData.name, resolvedStoreId);
 
         setProducts(prev =>
           prev.map(p => p.id === editingProduct.id ? updated as Product : p)
@@ -530,6 +532,7 @@ const ProductsPage = () => {
         );
 
         await db.products.save(newProduct as Product);
+        logPanelActivity('product.created', formData.name, resolvedStoreId);
 
         setProducts(prev => [newProduct as Product, ...prev]);
 
@@ -580,11 +583,13 @@ const ProductsPage = () => {
       if (deleteModal.bulkMode) {
         const ids = Array.from(selectedIds);
         await Promise.all(ids.map(id => db.products.delete(id)));
+        logPanelActivity('product.deleted', `${ids.length} ${ids.length === 1 ? 'produto' : 'produtos'} (exclusão em massa)`);
         setProducts(prev => prev.filter(p => !selectedIds.has(p.id)));
         setSelectedIds(new Set());
         showSuccess(`${ids.length} ${ids.length === 1 ? 'produto removido' : 'produtos removidos'}.`);
       } else {
         await db.products.delete(deleteModal.productId);
+        logPanelActivity('product.deleted', deleteModal.productTitle);
         setProducts(prev => prev.filter(p => p.id !== deleteModal.productId));
         setSelectedIds(prev => { const n = new Set(prev); n.delete(deleteModal.productId); return n; });
         showSuccess('Produto removido.');
@@ -613,6 +618,7 @@ const ProductsPage = () => {
       );
 
       await db.products.save(updated as Product);
+      logPanelActivity(nextActive ? 'product.activated' : 'product.deactivated', product.name, resolvedStoreId);
 
       setProducts(prev =>
         prev.map(p => p.id === product.id ? updated as Product : p)
@@ -896,6 +902,9 @@ const ProductsPage = () => {
 
       const refreshedProducts = await db.products.getAll(resolvedStoreId);
       setProducts(refreshedProducts);
+      if (summary.imported > 0) {
+        logPanelActivity('product.imported', `${summary.imported} ${summary.imported === 1 ? 'produto importado do XML' : 'produtos importados do XML'}`, resolvedStoreId);
+      }
       setSelectedIds(new Set());
       setSelectedXmlKeys(new Set());
       setImportedXmlProducts([]);

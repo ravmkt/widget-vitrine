@@ -17,6 +17,7 @@ import {
   generateUuid,
   isValidUuid,
 } from '@/lib/db';
+import { logPanelActivity } from '@/lib/activityLog';
 import { useTenant } from '@/context/TenantContext';
 import {
   ArrowLeft,
@@ -389,6 +390,7 @@ console.log('newRelations:', JSON.stringify(newRelations));
 console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
       await replaceStoryRelations('story_videos', finalStoreId, savedStory.id, newRelations);
       await saveLocationsAndRules(savedStory.id, finalStoreId);
+      logPanelActivity(isCreate ? 'story.created' : 'story.updated', formData.title.trim(), finalStoreId);
       window.dispatchEvent(new Event('storage'));
       setStory(savedStory);
       setSuccessOpen(true);
