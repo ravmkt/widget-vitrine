@@ -57,7 +57,7 @@ useEffect(() => {
       if (tenantLoading) return;
       if (!tenant?.id) return;
       
-            try {
+try {
         // 1. Busca o setor definido nas configurações da loja
         const { data: store, error: storeError } = await supabase
           .from('stores')
@@ -83,8 +83,8 @@ useEffect(() => {
     }
 
     loadSectorAndBenchmark();
-  }, [tenant]);
-
+  }, [tenant, tenantLoading]);
+  
   return (
     <div className="space-y-8 animate-fade-in pb-20 font-sans">
       {/* ── HEADER NOVO ESTILO VIDLYTICS ── */}
