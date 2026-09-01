@@ -3748,7 +3748,7 @@ const AppearancePage = () => {
                         <AccordionSection title="2. Bordas" isOpen={activeSection === 'grid-2'} onToggle={() => setActiveSection(activeSection === 'grid-2' ? null : 'grid-2')}>
                           <div className="grid grid-cols-2 gap-2.5">
                             <FormField label="Cor da Borda"><ColorInput label="Cor" value={activeGridConfig.border_color || formData.primary_color} onChange={e => updateGridConfig({ border_color: e.target.value })} /></FormField>
-                            <FormField label="Largura Borda (px)"><input type="number" min="0" value={toNumberInputValue(activeGridConfig.border_style)} onChange={e => updateGridConfig({ border_style: e.target.value })} className={inputClass} /></FormField>
+<FormField label="Largura Borda (px)"><input type="number" min="0" value={toNumberInputValue(activeGridConfig.border_width)} onChange={e => updateGridConfig({ border_width: e.target.value })} className={inputClass} /></FormField>
                             <FormField label="Raio da Borda (px)"><input type="number" min="0" value={toNumberInputValue(activeGridConfig.border_radius)} onChange={e => updateGridConfig({ border_radius: e.target.value })} className={inputClass} /></FormField>
                           </div>
                         </AccordionSection>
