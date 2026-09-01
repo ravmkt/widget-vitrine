@@ -35,12 +35,12 @@ export interface SectorBenchmark {
 }
 
 export default function PerformancePage() {
-  const { tenant } = useTenant()
+const { currentStore: tenant, loading: tenantLoading } = useTenant()
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [timeRange, setTimeRange] = useState<TimeRange>('30d')
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({})
-  
+    
   // Estado para armazenar o benchmark do setor da loja
   const [benchmark, setBenchmark] = useState<SectorBenchmark>({
     sector_key: 'moda_acessorios',
