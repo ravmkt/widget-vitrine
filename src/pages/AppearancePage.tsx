@@ -2074,7 +2074,7 @@ const unifiedDropShadow = applyShadow
               className="relative bg-slate-950 overflow-hidden w-full transition-all duration-500"
             >
               <video
-                key={`active-${activeIndex}`}
+                key="mobile-active"
                 ref={el => el && videoRefs.current.set(1, el)}
                 src={videoSources[activeIndex]}
                 autoPlay={autoplayVideos}
