@@ -2713,7 +2713,7 @@ const PreviewCard = ({
               </div>
             ) : (
               /* MOCKUP DESKTOP */
-              <div className="w-full max-w-full transition-all duration-300 px-4">
+<div className="w-full max-w-full h-[500px] transition-all duration-300 px-4">
                 {activeTab === 'floating' && (
                   <div className="relative w-full min-h-[350px] border-2 border-dashed border-slate-300 rounded-2xl bg-white p-4">
                     <FloatingPreview floating={floating} colors={colors} device={activeDevice} />
