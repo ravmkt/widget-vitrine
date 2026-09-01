@@ -1856,233 +1856,141 @@ const CarouselPreview = ({
 const DynamicCarouselPreview = ({
   carousel,
   colors,
+  isMobile = false,
 }: {
   carousel: DynamicCarouselConfig;
   colors: PreviewColors;
+  isMobile?: boolean;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
-  
-  // Criamos uma lista de 18 itens para preencher as laterais perfeitamente sem nunca mostrar fundo vazio
-  const items = Array.from({ length: 18 }); 
   const isCircle = shape === 'circle';
-  const isPortrait = shape === 'portrait';
-  const isLandscape = shape === 'landscape';
+  const [activeIndex, setActiveIndex] = useState(1);
 
-  // Começa no índice 4 para garantir que já existam itens renderizados preenchendo o lado esquerdo
-  const [activeIndex, setActiveIndex] = useState(4); 
-
-  // Troca automática infinita
+  // Troca automática apenas para manter dinâmica no preview
   useEffect(() => {
     const delay = carousel.autoplay_delay || 4000;
     const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % items.length);
+      setActiveIndex((prev) => (prev === 1 ? 2 : 1));
     }, delay);
     return () => clearInterval(interval);
-  }, [carousel.autoplay_delay, items.length]);
+  }, [carousel.autoplay_delay]);
 
-  // Controle de reprodução dos vídeos (Ativo vs Inativos)
-  useEffect(() => {
-    videoRefs.current.forEach((vid, index) => {
-      if (!vid) return;
-      const isActive = index === activeIndex;
-      
-      // O destaque sempre roda. Os outros dependem da flag de autoplay inativo
-      const shouldPlay = isActive || (carousel.autoplay_inactive_videos ?? false);
-
-      if (shouldPlay) {
-        vid.play().catch(() => {});
-      } else {
-        vid.pause();
-        vid.currentTime = 0; // Pausa estática no frame inicial
-      }
-    });
-  }, [carousel.autoplay_inactive_videos, activeIndex]);
-
-  const rawWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
-  const spacing = safeNumber(carousel.spacing, 12, 0);
-  const cardHeightPx = isPortrait
-    ? Math.round((rawWidth * 16) / 9)
-    : isLandscape
-      ? Math.round((rawWidth * 9) / 16)
-      : rawWidth;
-
-  const cardWidth = `${rawWidth}px`;
-  const cardHeight = `${cardHeightPx}px`;
   const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
 
-  // Ajuste matemático de centralização absoluta do item ativo de ponta a ponta
-  const centerAdjustment = `calc(50% - ${rawWidth / 2}px)`;
-  const translateOffset = `${-activeIndex * (rawWidth + spacing)}px`;
+  if (isMobile) {
+    return (
+      <div className="w-full py-2 flex flex-col space-y-3">
+        {carousel.show_title && (
+          <h4 className="text-xs font-black text-center text-slate-800 uppercase tracking-wider">
+            {carousel.title_text || 'Tendências'}
+          </h4>
+        )}
+        
+        <div className="flex items-center justify-between w-full overflow-hidden px-1 relative">
+          {/* Esquerda */}
+          <div className="w-[15%] aspect-[9/16] shrink-0 bg-slate-100 rounded-lg opacity-35 scale-85 overflow-hidden">
+            <div className="w-full h-full bg-gradient-to-b from-slate-200 to-slate-300" />
+          </div>
 
-  // Fotos reais para o carrossel ficar perfeito
-  const productImages = [
-    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=120&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=120&auto=format&fit=crop&q=80"
-  ];
+          {/* Centro Dinâmico em Destaque */}
+          <div className="w-[62%] shrink-0 flex flex-col space-y-2">
+            <div
+              className="relative aspect-[9/14] bg-slate-950 overflow-hidden shadow-xl transition-all duration-500"
+              style={{
+                borderRadius,
+                border: `${safeNumber(carousel.border_width, 2, 0)}px solid ${carousel.border_color || colors.primary}`,
+                boxShadow: `0 10px 15px -3px ${colors.primary}20`
+              }}
+            >
+              <video
+                ref={el => el && videoRefs.current.set(1, el)}
+                src={DEMO_PREVIEW_VIDEOS[0]}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 pointer-events-none" />
+              
+              {/* Overlay Dinâmico */}
+              <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse">
+                <span className="w-1 h-1 bg-white rounded-full" />
+                Destaque
+              </div>
+            </div>
+
+            {/* Card de Produto */}
+            {carousel.show_product_card && (
+              <div className="bg-white border border-slate-150 rounded-xl p-1.5 flex items-center gap-2 shadow-sm">
+                <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-50">
+                  <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[8px] font-extrabold text-slate-800 truncate">Calça Slim</p>
+                  <p className="text-[7.5px] font-black text-[#0094EB]">R$ 149,95</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Direita */}
+          <div className="w-[15%] aspect-[9/16] shrink-0 bg-slate-100 rounded-lg opacity-35 scale-85 overflow-hidden">
+            <div className="w-full h-full bg-gradient-to-b from-slate-200 to-slate-300" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // DESKTOP
+  const rawWidth = safeNumber(parseFloat(carousel.width || '130'), 130, 40);
+  const cardWidth = `${rawWidth}px`;
+  const cardHeight = isCircle ? cardWidth : `${Math.round(shape === 'landscape' ? (rawWidth * 9 / 16) : (rawWidth * 16 / 9))}px`;
 
   return (
-    <div className="relative w-full h-[440px] flex flex-col items-center justify-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 py-4 px-0 overflow-hidden">
-      {carousel.show_title && carousel.title_text && (
-        <div 
-          className="w-full mb-4 px-6 z-10"
-          style={{
-            textAlign: carousel.title_align || 'center',
-            fontSize: `${carousel.title_font_size || 14}px`,
-            fontWeight: carousel.title_bold ? 'bold' : 'normal',
-            color: colors.text,
-          }}
-        >
-          {carousel.title_text}
-        </div>
+    <div className="w-full py-3 space-y-3">
+      {carousel.show_title && (
+        <h4 className="text-sm font-black text-slate-800 tracking-wider">
+          {carousel.title_text || 'Destaques Dinâmicos'}
+        </h4>
       )}
-
-      {/* Viewport 100% de largura (Ponta a ponta do site) */}
-      <div className="w-full overflow-hidden py-4">
-        <div
-          className="flex transition-transform duration-700 ease-in-out"
-          style={{
-            transform: `translateX(calc(${centerAdjustment} + ${translateOffset}))`,
-            gap: `${spacing}px`,
-          }}
-        >
-          {items.map((_, index) => {
-            const isActive = index === activeIndex;
-            
-            // 1. Efeito de Escala
-            const applyScale = isActive && carousel.highlight_enlarge_active ? 'scale(1.12)' : 'scale(1)';
-            
-            // 2. Sombra isolada na moldura do vídeo (Sem invadir ou sobrepor o card do produto)
-            const applyShadow = isActive && carousel.highlight_shadow 
-              ? '0 10px 20px -6px rgba(0, 0, 0, 0.35)' 
-              : 'none';
-              
-            // 3. Dessaturação de inativos
-            const applySaturation = !isActive && carousel.highlight_desaturate_inactive 
-              ? 'grayscale(60%) opacity(60%)' 
-              : 'grayscale(0%) opacity(100%)';
-
-            // 4. Espaçamento extra dinâmico para evitar colisão quando o item ativo expande
-            const dynamicMarginX = isActive && carousel.highlight_enlarge_active
-              ? '10px' 
-              : '0px';
-
-            return (
-              <div 
-                key={index} 
-                className="flex flex-col shrink-0 transition-all duration-500 relative" 
-                style={{ 
-                  width: cardWidth,
-                  transform: applyScale,
-                  filter: applySaturation,
-                  marginLeft: dynamicMarginX,
-                  marginRight: dynamicMarginX,
-                  zIndex: isActive ? 30 : 10,
-                }}
-              >
-                {/* MOLDURA DO VÍDEO */}
-                <div
-                  className="relative overflow-hidden bg-slate-900 transition-all duration-500"
-                  style={{
-                    width: cardWidth,
-                    height: cardHeight,
-                    borderColor: isActive && carousel.highlight_border_color ? carousel.highlight_border_color : (carousel.border_color || colors.primary),
-                    borderWidth: `${safeNumber(carousel.border_style, 2, 0)}px`,
-                    borderStyle: 'solid',
-                    borderRadius,
-                    boxShadow: applyShadow,
-                  }}
-                >
-                  <video
-                    ref={(el) => {
-                      if (el) videoRefs.current.set(index, el);
-                      else videoRefs.current.delete(index);
-                    }}
-                    src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
-                    loop
-                    muted
-                    playsInline
-                    preload="auto"
-                    poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-                    className="h-full w-full object-cover pointer-events-none"
-                  />
-
-                  {carousel.show_play_icon && (
-                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-                        <PlaySquare size={12} />
-                      </div>
-                    </div>
-                  )}
+      <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-none">
+        {[1, 2, 3].map((num) => {
+          const isAct = num === activeIndex;
+          return (
+            <div
+              key={num}
+              style={{
+                width: isAct ? `${rawWidth * 1.15}px` : cardWidth,
+                height: isAct ? `${parseFloat(cardHeight) * 1.1}px` : cardHeight,
+                borderRadius,
+                border: isAct 
+                  ? `3px solid ${carousel.border_color || colors.primary}` 
+                  : `${safeNumber(carousel.border_width, 1, 0)}px solid ${carousel.border_color || '#E2E8F0'}`,
+                opacity: isAct ? 1 : 0.7,
+                transform: isAct ? 'scale(1.03)' : 'scale(1)'
+              }}
+              className="relative overflow-hidden bg-slate-950 transition-all duration-300 flex items-center justify-center shrink-0 cursor-pointer shadow-md"
+            >
+              <video
+                ref={el => el && videoRefs.current.set(num, el)}
+                src={DEMO_PREVIEW_VIDEOS[num % DEMO_PREVIEW_VIDEOS.length]}
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 pointer-events-none" />
+              {isAct && (
+                <div className="absolute top-2 right-2 bg-[#0094EB] text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">
+                  FOCADO
                 </div>
-
-                {/* CARD DO PRODUTO (Z-INDEX SUPERIOR PARA IMUNIDADE DE SOMBRA) */}
-                {carousel.show_product && !isCircle && (
-                  <div
-                    className="flex flex-col gap-1.5 p-1.5 shadow-md transition-all duration-500 relative z-40 bg-white"
-                    style={{
-                      backgroundColor: carousel.product_card_bg || '#FFFFFF',
-                      borderColor: carousel.product_card_border_color || '#E2E8F0',
-                      borderWidth: `${safeNumber(carousel.product_card_border_width, 1, 0)}px`,
-                      borderStyle: 'solid',
-                      borderRadius: `${safeNumber(carousel.product_card_border_radius, 8, 0)}px`,
-                      marginTop: '8px',
-                    }}
-                  >
-                    {/* Linha Horizontal: Foto Esquerda + Textos Direita */}
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={productImages[index % productImages.length]}
-                        alt="Preview Produto"
-                        className="w-9 h-9 rounded object-cover bg-slate-100 shrink-0 border border-slate-100"
-                      />
-                      <div className="min-w-0 flex-1 flex flex-col justify-center">
-                        <div
-                          className="truncate font-bold leading-tight"
-                          style={{
-                            fontSize: `${safeNumber(carousel.product_card_name_size, 10, 8)}px`,
-                            color: carousel.product_card_name_color || '#0F172A',
-                          }}
-                        >
-                          Calça Confort
-                        </div>
-                        <div className="flex items-center justify-between mt-0.5">
-                          <span
-                            className="font-black"
-                            style={{
-                              fontSize: `${safeNumber(carousel.product_card_price_size, 10, 8)}px`,
-                              color: carousel.product_card_price_color || colors.primary,
-                            }}
-                          >
-                            R$ 149,95
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Botão de Redirecionamento */}
-                    {carousel.show_product_button && (
-                      <button
-                        type="button"
-                        className="w-full rounded py-1 text-[9px] font-black uppercase text-center tracking-wider transition-colors duration-300"
-                        style={{
-                          backgroundColor: isActive 
-                            ? (carousel.product_card_button_bg || colors.button) 
-                            : '#94A3B8', // Cinza sutil (Slate 400) para cards inativos
-                          color: carousel.product_card_button_color || '#FFFFFF',
-                        }}
-                      >
-                        Ver No Site
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
