@@ -2196,7 +2196,7 @@ const unifiedDropShadow = applyShadow
                 className="relative overflow-hidden bg-slate-950 w-full transition-all duration-300 shadow-md"
               >
                 <video
-                  key={`desktop-${num}-${itemIndex}`}
+                  key={`desktop-slot-${num}`}
                   ref={el => el && videoRefs.current.set(num, el)}
                   src={videoSources[itemIndex]}
                   loop
