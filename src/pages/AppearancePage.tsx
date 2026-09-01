@@ -1944,9 +1944,9 @@ const REPEAT_TILES = 9; // quantidade de "cópias" do array de vídeos no trilho
     }
   }, [trackIndex, baseIndex, len]);
 
-  const safeActiveIndex = activeIndex % videoSources.length;
-  const leftIndex = (safeActiveIndex - 1 + videoSources.length) % videoSources.length;
-  const rightIndex = (safeActiveIndex + 1) % videoSources.length;
+const safeActiveIndex = ((trackIndex % len) + len) % len;
+const leftIndex = ((safeActiveIndex - 1) + len) % len;
+const rightIndex = (safeActiveIndex + 1) % len;
 
   const shape = carousel?.shape || 'portrait';
   const isCircle = shape === 'circle';
