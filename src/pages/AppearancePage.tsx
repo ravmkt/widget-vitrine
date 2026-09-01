@@ -2143,27 +2143,98 @@ const GridPreview = ({
   isMobile?: boolean;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+  const [activeSeqIndex, setActiveSeqIndex] = useState(0);
   const shape = normalizeWidgetShape(grid.shape, 'portrait');
   const isCircle = shape === 'circle';
+  const objectFit = (grid as any).object_fit || 'cover';
+  const spacing = safeNumber((grid as any).spacing, 12, 0);
+  const showPlayIcon = (grid as any).show_play_icon ?? true;
+  const showProduct = (grid as any).show_product ?? false;
+  const isSequential = grid.sequential_playback ?? false;
+
+  const totalPreviewItems = isMobile ? 4 : limitNumber(grid.visible_items, 10, 1, 10) * 2;
+
+  // Reprodução sequencial: avança 1 item a cada 5s
+  useEffect(() => {
+    if (!isSequential) return;
+    const interval = setInterval(() => {
+      setActiveSeqIndex(prev => (prev + 1) % totalPreviewItems);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isSequential, totalPreviewItems]);
 
   useEffect(() => {
-    videoRefs.current.forEach((vid) => {
+    videoRefs.current.forEach((vid, idx) => {
       if (!vid) return;
-      if (grid.autoplay_videos ?? true) {
+      const shouldPlay = isSequential
+        ? idx === activeSeqIndex
+        : (grid.autoplay_videos ?? true);
+      if (shouldPlay) {
         vid.play().catch(() => {});
       } else {
         vid.pause();
       }
     });
-  }, [grid.autoplay_videos]);
+  }, [grid.autoplay_videos, isSequential, activeSeqIndex]);
 
   const borderRadius = isCircle ? '50%' : cssSize(grid.border_radius, '12px');
+  const borderWidth = safeNumber((grid as any).border_width, 1, 0);
 
-  // MOBILE: Limitação de no máximo 2 colunas para mobile (Imagem 3)
+  const titleAlignClass = {
+    left: 'text-left',
+    center: 'text-center',
+    right: 'text-right',
+  }[(grid as any).title_align ?? 'center'] || 'text-center';
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: `${safeNumber((grid as any).title_font_size, 14, 8)}px`,
+    fontWeight: ((grid as any).title_bold ?? true) ? 900 : 500,
+  };
+
+  const renderProductCard = (i: number, compact = false) => (
+    <div
+      style={{
+        backgroundColor: (grid as any).product_card_bg || '#FFFFFF',
+        borderColor: (grid as any).product_card_border_color || '#E2E8F0',
+        borderWidth: `${safeNumber((grid as any).product_card_border_width, 1, 0)}px`,
+        borderRadius: `${safeNumber((grid as any).product_card_border_radius, 8, 0)}px`,
+      }}
+      className={`border flex items-center gap-1 shadow-sm ${compact ? 'p-1' : 'p-0.5'}`}
+    >
+      <div className={`rounded shrink-0 overflow-hidden ${compact ? 'w-5 h-5' : 'w-4 h-4'} bg-slate-200`}>
+        <img
+          src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=50&q=80"
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div className="flex-1 min-w-0 text-left">
+        <p
+          className="truncate"
+          style={{
+            fontSize: `${safeNumber((grid as any).product_card_name_size, 7, 6)}px`,
+            color: (grid as any).product_card_name_color || '#0F172A',
+            fontWeight: 700,
+          }}
+        >
+          Calça Bicolor
+        </p>
+        <p
+          style={{
+            fontSize: `${safeNumber((grid as any).product_card_price_size, 6.5, 6)}px`,
+            color: (grid as any).product_card_price_color || colors.primary,
+            fontWeight: 900,
+          }}
+        >
+          R$ 154,95
+        </p>
+      </div>
+    </div>
+  );
+
+  // MOBILE: Limitação de no máximo 2 colunas para mobile
   if (isMobile) {
-    const items = Array.from({ length: 4 }); // Mostra 4 itens em 2x2 perfeitamente
-    
-    // Evita deformação de shapes no mobile
+    const items = Array.from({ length: 4 });
+
     let aspectClass = "aspect-[9/15]";
     if (isCircle) {
       aspectClass = "aspect-square";
@@ -2176,20 +2247,22 @@ const GridPreview = ({
     return (
       <div className="w-full py-2 flex flex-col space-y-3">
         {grid.show_title && (
-          <h4 className="text-xs font-black text-center text-slate-800 uppercase tracking-wider">
+          <h4 className={`uppercase tracking-wider text-slate-800 ${titleAlignClass}`} style={titleStyle}>
             {grid.title_text || 'Grade de Vídeos'}
           </h4>
         )}
 
-        {/* Forçado estritamente em grid-cols-2 */}
-        <div className="grid grid-cols-2 gap-3 w-full px-2">
+        <div
+          className="grid grid-cols-2 w-full px-2"
+          style={{ gap: `${spacing}px` }}
+        >
           {items.map((_, i) => (
-            <div key={i} className="flex flex-col space-y-1.5">
+            <div key={i} className="flex flex-col" style={{ gap: '6px' }}>
               <div
                 className={`relative bg-slate-950 overflow-hidden shadow-sm flex items-center justify-center transition-all duration-300 ${aspectClass}`}
                 style={{
                   borderRadius: isCircle ? '50%' : borderRadius,
-                  border: `${safeNumber(grid.border_width, 1, 0)}px solid ${grid.border_color || colors.primary}`
+                  border: `${borderWidth}px solid ${grid.border_color || colors.primary}`
                 }}
               >
                 <video
@@ -2198,30 +2271,20 @@ const GridPreview = ({
                   loop
                   muted
                   playsInline
-                  className="w-full h-full object-cover"
+                  className="w-full h-full"
+                  style={{ objectFit: objectFit as any }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/45 pointer-events-none" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-5 h-5 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
-                    <Play size={8} className="text-slate-900 fill-slate-900 ml-0.5" />
+                {showPlayIcon && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
+                      <Play size={8} className="text-slate-900 fill-slate-900 ml-0.5" />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
-              {grid.show_product_card && !isCircle && (
-                <div className="bg-white border border-slate-100 rounded-lg p-1 flex items-center gap-1 shadow-sm">
-                  <div className="w-5 h-5 rounded bg-slate-200 shrink-0 overflow-hidden">
-                    <img 
-                      src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=50&q=80" 
-                      className="w-full h-full object-cover" 
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="text-[7px] font-bold text-slate-800 truncate">Calça Bicolor</p>
-                    <p className="text-[6.5px] font-black text-[#0094EB]">R$ 154,95</p>
-                  </div>
-                </div>
-              )}
+              {showProduct && !isCircle && renderProductCard(i, true)}
             </div>
           ))}
         </div>
@@ -2233,29 +2296,27 @@ const GridPreview = ({
   const cols = limitNumber(grid.visible_items, 10, 1, 10);
   const totalItems = cols * 2; // Mostra duas linhas no desktop
   const items = Array.from({ length: totalItems });
-  const rawWidth = safeNumber(parseFloat(grid.width || '90'), 90, 40);
-  const cardWidth = `${rawWidth}px`;
-  const cardHeight = isCircle ? cardWidth : `${Math.round(shape === 'landscape' ? (rawWidth * 9 / 16) : (rawWidth * 16 / 9))}px`;
+  const shapeRatio = shape === 'landscape' ? (9 / 16) : (16 / 9);
 
   return (
     <div className="w-full py-3 space-y-3">
       {grid.show_title && (
-        <h4 className="text-sm font-black text-slate-800 tracking-wider">
+        <h4 className={`tracking-wider text-slate-800 ${titleAlignClass}`} style={titleStyle}>
           {grid.title_text || 'Grade de Vídeos'}
         </h4>
       )}
       <div
-        className="grid gap-3 overflow-y-auto max-h-[300px] scrollbar-none"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        className="grid overflow-y-auto max-h-[300px] scrollbar-none w-full"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: `${spacing}px` }}
       >
         {items.map((_, i) => (
-          <div key={i} style={{ width: cardWidth }} className="flex flex-col space-y-1">
+          <div key={i} className="w-full flex flex-col space-y-1">
             <div
               style={{
-                width: cardWidth,
-                height: cardHeight,
+                width: '100%',
+                aspectRatio: isCircle ? '1 / 1' : `${1} / ${shapeRatio}`,
                 borderRadius,
-                border: `${safeNumber(grid.border_width, 1, 0)}px solid ${grid.border_color || colors.primary}`
+                border: `${borderWidth}px solid ${grid.border_color || colors.primary}`
               }}
               className="relative overflow-hidden bg-slate-950 shadow-sm flex items-center justify-center shrink-0"
             >
@@ -2265,15 +2326,19 @@ const GridPreview = ({
                 loop
                 muted
                 playsInline
-                className="w-full h-full object-cover"
+                className="w-full h-full"
+                style={{ objectFit: objectFit as any }}
               />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none" />
+              {showPlayIcon && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
+                    <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
+                  </div>
+                </div>
+              )}
             </div>
-            {grid.show_product_card && !isCircle && (
-              <div className="bg-slate-50 border border-slate-100 rounded p-0.5 text-center">
-                <p className="text-[7px] font-bold text-slate-800 truncate">Item {i + 1}</p>
-              </div>
-            )}
+            {showProduct && !isCircle && renderProductCard(i)}
           </div>
         ))}
       </div>
