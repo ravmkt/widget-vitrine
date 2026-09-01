@@ -1879,7 +1879,6 @@ const DynamicCarouselPreview = ({
   const isCircle = shape === 'circle';
   const [activeIndex, setActiveIndex] = useState(1);
 
-  // Troca automática apenas para manter dinâmica no preview
   useEffect(() => {
     const delay = carousel.autoplay_delay || 4000;
     const interval = setInterval(() => {
@@ -1891,6 +1890,23 @@ const DynamicCarouselPreview = ({
   const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
 
   if (isMobile) {
+    // Determina o aspecto correto com base no shape selecionado para evitar distorção
+    let aspectClass = "aspect-[9/14]";
+    let sideAspectClass = "aspect-[9/16]";
+    let activeBorderRadius = borderRadius;
+
+    if (isCircle) {
+      aspectClass = "aspect-square";
+      sideAspectClass = "aspect-square";
+      activeBorderRadius = "50%";
+    } else if (shape === 'landscape') {
+      aspectClass = "aspect-[16/10]";
+      sideAspectClass = "aspect-[16/9]";
+    } else if (shape === 'square') {
+      aspectClass = "aspect-square";
+      sideAspectClass = "aspect-square";
+    }
+
     return (
       <div className="w-full py-2 flex flex-col space-y-3">
         {carousel.show_title && (
@@ -1898,19 +1914,22 @@ const DynamicCarouselPreview = ({
             {carousel.title_text || 'Tendências'}
           </h4>
         )}
-        
+
         <div className="flex items-center justify-between w-full overflow-hidden px-1 relative">
           {/* Esquerda */}
-          <div className="w-[15%] aspect-[9/16] shrink-0 bg-slate-100 rounded-lg opacity-35 scale-85 overflow-hidden">
+          <div 
+            className={`w-[15%] shrink-0 bg-slate-100 opacity-35 scale-85 overflow-hidden transition-all duration-300 ${sideAspectClass}`}
+            style={{ borderRadius: isCircle ? '50%' : borderRadius }}
+          >
             <div className="w-full h-full bg-gradient-to-b from-slate-200 to-slate-300" />
           </div>
 
           {/* Centro Dinâmico em Destaque */}
           <div className="w-[62%] shrink-0 flex flex-col space-y-2">
             <div
-              className="relative aspect-[9/14] bg-slate-950 overflow-hidden shadow-xl transition-all duration-500"
+              className={`relative bg-slate-950 overflow-hidden shadow-xl transition-all duration-500 ${aspectClass}`}
               style={{
-                borderRadius,
+                borderRadius: activeBorderRadius,
                 border: `${safeNumber(carousel.border_width, 2, 0)}px solid ${carousel.border_color || colors.primary}`,
                 boxShadow: `0 10px 15px -3px ${colors.primary}20`
               }}
@@ -1925,7 +1944,7 @@ const DynamicCarouselPreview = ({
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 pointer-events-none" />
-              
+
               {/* Overlay Dinâmico */}
               <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse">
                 <span className="w-1 h-1 bg-white rounded-full" />
@@ -1934,10 +1953,13 @@ const DynamicCarouselPreview = ({
             </div>
 
             {/* Card de Produto */}
-            {carousel.show_product_card && (
+            {carousel.show_product_card && !isCircle && (
               <div className="bg-white border border-slate-150 rounded-xl p-1.5 flex items-center gap-2 shadow-sm">
                 <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-50">
-                  <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" className="w-full h-full object-cover" />
+                  <img 
+                    src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" 
+                    className="w-full h-full object-cover" 
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[8px] font-extrabold text-slate-800 truncate">Calça Slim</p>
@@ -1948,7 +1970,10 @@ const DynamicCarouselPreview = ({
           </div>
 
           {/* Direita */}
-          <div className="w-[15%] aspect-[9/16] shrink-0 bg-slate-100 rounded-lg opacity-35 scale-85 overflow-hidden">
+          <div 
+            className={`w-[15%] shrink-0 bg-slate-100 opacity-35 scale-85 overflow-hidden transition-all duration-300 ${sideAspectClass}`}
+            style={{ borderRadius: isCircle ? '50%' : borderRadius }}
+          >
             <div className="w-full h-full bg-gradient-to-b from-slate-200 to-slate-300" />
           </div>
         </div>
@@ -1978,8 +2003,8 @@ const DynamicCarouselPreview = ({
                 width: isAct ? `${rawWidth * 1.15}px` : cardWidth,
                 height: isAct ? `${parseFloat(cardHeight) * 1.1}px` : cardHeight,
                 borderRadius,
-                border: isAct 
-                  ? `3px solid ${carousel.border_color || colors.primary}` 
+                border: isAct
+                  ? `3px solid ${carousel.border_color || colors.primary}`
                   : `${safeNumber(carousel.border_width, 1, 0)}px solid ${carousel.border_color || '#E2E8F0'}`,
                 opacity: isAct ? 1 : 0.7,
                 transform: isAct ? 'scale(1.03)' : 'scale(1)'
