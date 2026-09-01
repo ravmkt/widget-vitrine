@@ -2009,8 +2009,8 @@ const DynamicCarouselPreview = ({
       mobileActiveHeight = mobileActiveWidth * (9 / 16);
     }
 
-    const mobileSideWidth = mobileActiveWidth * 0.42;
-    const mobileSideHeight = mobileActiveHeight * 0.85;
+const mobileSideWidth = mobileActiveWidth * 0.85;
+const mobileSideHeight = mobileActiveHeight * 0.85;
 
 const unifiedDropShadow = applyShadow
   ? `drop-shadow(0 8px 12px rgba(0,0,0,0.35)) drop-shadow(0 4px 6px rgba(0,0,0,0.2))`
