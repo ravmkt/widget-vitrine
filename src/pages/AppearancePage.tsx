@@ -2185,6 +2185,7 @@ const DynamicCarouselPreview = ({
         </div>
       </div>
     );
+    }
 
   // ==================== LAYOUT DESKTOP ====================
   const cardWidth = `${rawWidth}px`;
