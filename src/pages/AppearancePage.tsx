@@ -1301,6 +1301,8 @@ const syncGlobalConfig = (
   prev: ExtendedAppearance,
 ): ExtendedAppearance => {
   if (checked) {
+    // Unificação profunda: espelha as propriedades do Desktop diretamente no Mobile,
+    // mas preserva as dimensões adaptativas do Mobile para evitar quebras visuais drásticas.
     return {
       ...prev,
       useGlobalAppearance: true,
@@ -1308,20 +1310,29 @@ const syncGlobalConfig = (
       floating_config: {
         same_for_all: true,
         desktop: prev.floating_config.desktop,
-        mobile: prev.floating_config.desktop,
+        mobile: {
+          ...prev.floating_config.desktop,
+          width: prev.floating_config.mobile.width || '64',
+          height: prev.floating_config.mobile.height || '114',
+        },
       },
       carousel_config: {
         same_for_all: true,
         desktop: prev.carousel_config.desktop,
-        mobile: prev.carousel_config.desktop,
+        mobile: {
+          ...prev.carousel_config.desktop,
+          visible_items: prev.carousel_config.mobile.visible_items || 2,
+          width: prev.carousel_config.mobile.width || '64',
+        },
       },
-      
       dynamic_carousel_config: {
         same_for_all: true,
         desktop: prev.dynamic_carousel_config.desktop,
-        mobile: prev.dynamic_carousel_config.desktop,
+        mobile: {
+          ...prev.dynamic_carousel_config.desktop,
+          width: prev.dynamic_carousel_config.mobile.width || '64',
+        },
       },
-
       grid_config: {
         same_for_all: true,
         desktop: {
@@ -1330,11 +1341,43 @@ const syncGlobalConfig = (
         },
         mobile: {
           ...prev.grid_config.desktop,
-          visible_items: limitNumber(prev.grid_config.desktop.visible_items, 10, 1, 10),
+          visible_items: limitNumber(prev.grid_config.mobile.visible_items || 2, 10, 1, 10),
+          rows: prev.grid_config.mobile.rows || 2,
         },
       },
     };
   }
+
+  return {
+    ...prev,
+    useGlobalAppearance: false,
+    use_global_appearance: false,
+    floating_config: {
+      ...prev.floating_config,
+      same_for_all: false,
+    },
+    carousel_config: {
+      ...prev.carousel_config,
+      same_for_all: false,
+    },
+    dynamic_carousel_config: {
+      ...prev.dynamic_carousel_config,
+      same_for_all: false,
+    },
+    grid_config: {
+      ...prev.grid_config,
+      same_for_all: false,
+      desktop: {
+        ...prev.grid_config.desktop,
+        visible_items: limitNumber(prev.grid_config.desktop.visible_items, 10, 1, 10),
+      },
+      mobile: {
+        ...prev.grid_config.mobile,
+        visible_items: limitNumber(prev.grid_config.mobile.visible_items, 2, 1, 10),
+      },
+    },
+  };
+};
 
   return {
     ...prev,
