@@ -1905,115 +1905,103 @@ const DynamicCarouselPreview = ({
   colors: any;
   isMobile?: boolean;
 }) => {
-  // --- FUNÇÕES UTILITÁRIAS INTERNAS (Seguras contra escopo) ---
-  const safeNumber = (val: any, fallback: number, min = 0): number => {
-    const num = Number(val);
-    if (isNaN(num)) return fallback;
-    return Math.max(min, num);
-  };
+  const [activeIndex, setActiveIndex] = useState(1);
+  const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
 
-  const cssSize = (val: any, fallback: string): string => {
-    if (!val) return fallback;
-    if (typeof val === 'number' || /^\d+$/.test(val)) return `${val}px`;
-    return String(val);
-  };
-
-  // --- ARRAYS DE FALLBACK INTERNOS ---
-  const DEMO_PREVIEW_VIDEOS_FALLBACK = [
+  // 1. FALLBACK SEGURO DE VÍDEOS (Evita tela preta)
+  const fallbackVideos = [
     "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-light-looking-at-camera-42284-large.mp4",
     "https://assets.mixkit.co/videos/preview/mixkit-woman-holding-a-smartphone-with-a-green-screen-42322-large.mp4",
     "https://assets.mixkit.co/videos/preview/mixkit-man-holding-a-smartphone-with-a-blue-screen-42323-large.mp4"
   ];
+  
+  const rawVideos = carousel?.demo_videos || carousel?.demoVideos;
+  const videoSources = (Array.isArray(rawVideos) && rawVideos.length >= 3 && rawVideos[0] !== "" && rawVideos[0] !== null) 
+    ? rawVideos 
+    : fallbackVideos;
 
-  const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
-  const [activeIndex, setActiveIndex] = useState(1);
-
-  // Fallback seguro de vídeos
-  const videoSources = carousel?.demo_videos || carousel?.demoVideos || DEMO_PREVIEW_VIDEOS_FALLBACK;
-
-  // 1. Efeito para girar o carrossel automaticamente
+  // 2. INTERVALO AUTOMÁTICO (Carrossel girando)
   useEffect(() => {
-    // Busca o delay em milissegundos (padrão 5000ms = 5 segundos)
-    const delay = carousel?.autoplay_delay || 5000;
+    const delay = Number(carousel?.autoplay_delay) || 5000;
+    if (delay <= 0) return;
     
-    // Se não tiver vídeos suficientes ou o delay for 0, não gira
-    if (delay <= 0 || videoSources.length <= 1) return;
-
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % videoSources.length);
     }, delay);
-
+    
     return () => clearInterval(interval);
   }, [carousel?.autoplay_delay, videoSources.length]);
 
-  // 2. Cálculo dos índices da Esquerda, Centro (Ativo) e Direita
+  // 3. ÍNDICES SEGUROS
   const safeActiveIndex = activeIndex % videoSources.length;
   const leftIndex = (safeActiveIndex - 1 + videoSources.length) % videoSources.length;
   const rightIndex = (safeActiveIndex + 1) % videoSources.length;
 
-  // Suporte universal a snake_case & camelCase
+  // 4. CONFIGURAÇÕES GERAIS
   const shape = carousel?.shape || carousel?.format || 'portrait';
   const isCircle = shape === 'circle';
-
-  // Configurações do Título
   const showTitle = carousel?.show_title ?? carousel?.showTitle ?? true;
   const titleText = carousel?.title_text ?? carousel?.titleText ?? 'Destaques';
   const titleAlign = carousel?.title_align ?? carousel?.titleAlign ?? 'center';
-  const titleSizeVal = carousel?.title_size ?? carousel?.titleSize ?? carousel?.title_font_size ?? carousel?.titleFontSize ?? '14px';
+  const titleSizeVal = carousel?.title_size ?? carousel?.titleFontSize ?? 14;
   const isBold = carousel?.title_bold ?? carousel?.titleBold ?? true;
   const isItalic = carousel?.title_italic ?? carousel?.titleItalic ?? false;
 
-  // Configurações de Layout e Estilo
-  const rawWidth = safeNumber(parseFloat(carousel?.width || carousel?.item_width || carousel?.itemWidth || '120'), 120, 40);
-  const borderWidth = safeNumber(carousel?.border_width ?? carousel?.borderWidth ?? carousel?.border, 2, 0);
-  const borderColor = carousel?.border_color ?? carousel?.borderColor ?? colors?.primary ?? '#0094EB';
-  const borderRadius = isCircle ? '50%' : cssSize(carousel?.border_radius ?? carousel?.borderRadius, '12px');
-  const spacingNum = safeNumber(carousel?.spacing ?? carousel?.gap ?? carousel?.item_spacing ?? carousel?.itemSpacing, 12, 0);
+  const spacingNum = Number(carousel?.spacing ?? 8);
+  const autoplayVideos = carousel?.autoplay_videos ?? true;
+  const playInactive = carousel?.play_inactive ?? false;
+  const showPlayIcon = carousel?.show_play_icon ?? true;
+  const desaturate = carousel?.desaturate_inactive ?? true;
+  const scaleHighlight = carousel?.scale_highlight ?? true;
+  const applyShadow = carousel?.highlight_shadow ?? true;
+  
+  // 5. CONFIGURAÇÕES DO CARD DE PRODUTO
+  // Conversão segura para garantir que o checkbox e as cores funcionem
+  const showProductCard = carousel?.show_product_card === true || carousel?.show_product_card === 'true';
+  const pCardBg = carousel?.product_card_bg || '#FFFFFF';
+  const pCardBorderColor = carousel?.product_card_border_color || '#E2E8F0';
+  const pCardBorderWidth = Number(carousel?.product_card_border_width ?? 1);
+  const pCardBorderRadius = Number(carousel?.product_card_border_radius ?? 12);
 
-  // Toggles de Layout
-  const showPlayIcon = carousel?.show_play_icon ?? carousel?.showPlayIcon ?? carousel?.play_icon ?? carousel?.playIcon ?? true;
-  const showProductCard = carousel?.show_product_card ?? carousel?.showProductCard ?? carousel?.show_card ?? carousel?.showCard ?? carousel?.product_card ?? carousel?.productCard ?? true;
-  const applyShadow = carousel?.apply_shadow ?? carousel?.applyShadow ?? carousel?.highlight_shadow ?? carousel?.highlightShadow ?? carousel?.shadow ?? true;
-  const scaleHighlight = carousel?.scale_highlight ?? carousel?.scaleHighlight ?? carousel?.zoom_highlight ?? carousel?.zoomHighlight ?? carousel?.scale ?? true;
-  const desaturate = carousel?.desaturate_inactive ?? carousel?.desaturateInactive ?? carousel?.grayscale_inactive ?? carousel?.grayscaleInactive ?? carousel?.desaturate ?? true;
-  const playInactive = carousel?.autoplay_inactive ?? carousel?.autoplayInactive ?? carousel?.play_inactive ?? carousel?.playInactive ?? false;
-  const autoplayVideos = carousel?.autoplay_videos ?? carousel?.autoplayVideos ?? carousel?.autoplay ?? true;
+  // 6. BORDAS DO VÍDEO PRINCIPAL
+  const borderWidth = Number(carousel?.border_width ?? 0);
+  const borderColor = carousel?.border_color || colors?.primary || '#0094EB';
+  const borderRadius = isCircle ? '50%' : `${Number(carousel?.border_radius ?? 12)}px`;
 
-  // Troca de slide (autoplay alternado)
+  // 7. CONTROLE INTELIGENTE DE REPRODUÇÃO (Ativos vs Inativos)
   useEffect(() => {
-    const delay = carousel?.autoplay_delay ?? carousel?.autoplayDelay ?? 4000;
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev === 2 ? 0 : prev + 1));
-    }, delay);
-    return () => clearInterval(interval);
-  }, [carousel?.autoplay_delay, carousel?.autoplayDelay]);
-
-  // Controle dinâmico do Play/Pause
-  useEffect(() => {
-    const activeVid = videoRefs.current.get(1);
-    if (activeVid) {
-      if (autoplayVideos) activeVid.play().catch(() => {});
-      else activeVid.pause();
-    }
-    [0, 2].forEach((idx) => {
-      const inactiveVid = videoRefs.current.get(idx);
-      if (inactiveVid) {
-        if (autoplayVideos && playInactive) inactiveVid.play().catch(() => {});
-        else inactiveVid.pause();
+    [0, 1, 2].forEach((pos) => {
+      const video = videoRefs.current.get(pos);
+      if (!video) return;
+      
+      const isAct = pos === 1; // Posição 1 sempre é o centro
+      
+      if (isAct) {
+        if (autoplayVideos) video.play().catch(() => {});
+        else video.pause();
+      } else {
+        if (autoplayVideos && playInactive) video.play().catch(() => {});
+        else video.pause();
       }
     });
-  }, [autoplayVideos, playInactive, activeIndex]);
+  }, [autoplayVideos, playInactive, activeIndex, isMobile]);
 
+  // Estilos Base
   const titleStyle: React.CSSProperties = {
-    fontSize: typeof titleSizeVal === 'number' ? `${titleSizeVal}px` : (String(titleSizeVal).match(/^\d+$/) ? `${titleSizeVal}px` : String(titleSizeVal)),
+    fontSize: `${titleSizeVal}px`,
     fontWeight: isBold ? 'bold' : 'normal',
     fontStyle: isItalic ? 'italic' : 'normal',
   };
-
+  
   const titleAlignClass = 
     titleAlign === 'left' ? 'text-left w-full px-4' :
     titleAlign === 'right' ? 'text-right w-full px-4' :
     'text-center w-full';
+
+  const rawWidth = Number(carousel?.width ?? 90);
+  
+  // Usando boxShadow em vez de filter para a sombra não sobrepor o card!
+  const shadowStyle = applyShadow ? '0 10px 25px -5px rgba(0,0,0,0.4), 0 8px 10px -6px rgba(0,0,0,0.1)' : 'none';
 
   // ==================== LAYOUT MOBILE ====================
   if (isMobile) {
@@ -2026,15 +2014,9 @@ const DynamicCarouselPreview = ({
       mobileActiveHeight = mobileActiveWidth * (9 / 16);
     }
 
-    // Lógica para "Ampliar o vídeo em destaque" (se falso, todos ficam do mesmo tamanho)
     const sideScale = scaleHighlight ? 0.85 : 1;
     const mobileSideWidth = mobileActiveWidth * sideScale;
     const mobileSideHeight = mobileActiveHeight * sideScale;
-
-    // Sombra SOMENTE no vídeo central
-    const activeVideoShadow = applyShadow
-      ? `drop-shadow(0 8px 12px rgba(0,0,0,0.35)) drop-shadow(0 4px 6px rgba(0,0,0,0.2))`
-      : 'none';
 
     return (
       <div className="w-full py-1 flex flex-col items-center space-y-3 select-none overflow-visible">
@@ -2056,72 +2038,53 @@ const DynamicCarouselPreview = ({
               style={{
                 width: `${mobileSideWidth}px`,
                 height: `${mobileSideHeight}px`,
-                borderRadius: isCircle ? '50%' : borderRadius,
+                borderRadius,
                 border: `${borderWidth}px solid ${borderColor}`,
-                boxSizing: 'content-box',
                 opacity: desaturate ? 0.4 : 1,
                 filter: desaturate ? 'grayscale(100%)' : 'none',
                 transition: 'all 0.5s ease',
               }}
-              className="bg-slate-900 overflow-hidden relative"
+              className="bg-slate-900 overflow-hidden relative box-border"
             >
               <video
                 key={`mobile-left-${leftIndex}`}
-                ref={el => el && videoRefs.current.set(0, el)}
-                src={videoSources[leftIndex] || "https://www.w3schools.com/html/mov_bbb.mp4"}
-                muted
-                playsInline
-                loop
-                autoPlay={autoplayVideos && playInactive}
+                ref={el => { if (el) videoRefs.current.set(0, el) }}
+                src={videoSources[leftIndex]}
+                muted playsInline loop
                 className="w-full h-full object-cover"
               />
             </div>
           </div>
 
           {/* CENTRO (ATIVO) */}
-          <div
-            className="shrink-0 flex flex-col items-center transition-all duration-500"
-            style={{
-              width: `${mobileActiveWidth}px`,
-              zIndex: 10,
-              gap: '8px'
-            }}
-          >
-            {/* CONTAINER DO VÍDEO ATIVO */}
+          <div className="shrink-0 flex flex-col items-center transition-all duration-500" style={{ width: `${mobileActiveWidth}px`, zIndex: 10, gap: '8px' }}>
+            {/* VÍDEO DESTAQUE */}
             <div
               style={{
                 width: `${mobileActiveWidth}px`,
                 height: `${mobileActiveHeight}px`,
-                borderRadius: isCircle ? '50%' : borderRadius,
+                borderRadius,
                 border: `${borderWidth}px solid ${borderColor}`,
-                boxSizing: 'content-box',
-                filter: activeVideoShadow,
+                boxShadow: shadowStyle,
                 transition: 'all 0.5s ease',
               }}
-              className="relative bg-slate-950 overflow-hidden w-full"
+              className="relative bg-slate-950 overflow-hidden w-full box-border"
             >
               <video
-                key={`mobile-active-${activeIndex}`}
-                ref={el => el && videoRefs.current.set(1, el)}
-                src={videoSources[activeIndex] || "https://www.w3schools.com/html/mov_bbb.mp4"}
-                autoPlay={autoplayVideos}
-                loop
-                muted
-                playsInline
+                key={`mobile-active-${safeActiveIndex}`}
+                ref={el => { if (el) videoRefs.current.set(1, el) }}
+                src={videoSources[safeActiveIndex]}
+                muted playsInline loop
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 pointer-events-none" />
 
-              <div
-                style={{ backgroundColor: borderColor }}
-                className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse"
-              >
-                <span className="w-1.5 h-1.5 bg-white rounded-full" />
-                Destaque
+              <div style={{ backgroundColor: borderColor }} className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse">
+                <span className="w-1.5 h-1.5 bg-white rounded-full" /> Destaque
               </div>
 
               {showPlayIcon && (
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center transition-transform hover:scale-110">
                     <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
                   </div>
@@ -2129,16 +2092,14 @@ const DynamicCarouselPreview = ({
               )}
             </div>
 
-            {/* Card do produto Dinâmico */}
+            {/* CARD DO PRODUTO MOBILE */}
             {showProductCard && !isCircle && (
               <div 
-                className="flex items-center gap-2 w-full transition-all duration-300 overflow-hidden"
+                className="flex items-center gap-2 w-full transition-all duration-300 overflow-hidden box-border"
                 style={{
-                  backgroundColor: carousel?.product_card_bg || '#FFFFFF',
-                  borderColor: carousel?.product_card_border_color || '#E2E8F0',
-                  borderWidth: `${carousel?.product_card_border_width ?? 1}px`,
-                  borderRadius: `${carousel?.product_card_border_radius ?? 12}px`,
-                  borderStyle: 'solid',
+                  backgroundColor: pCardBg,
+                  border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
+                  borderRadius: `${pCardBorderRadius}px`,
                   padding: '6px'
                 }}
               >
@@ -2159,23 +2120,19 @@ const DynamicCarouselPreview = ({
               style={{
                 width: `${mobileSideWidth}px`,
                 height: `${mobileSideHeight}px`,
-                borderRadius: isCircle ? '50%' : borderRadius,
+                borderRadius,
                 border: `${borderWidth}px solid ${borderColor}`,
-                boxSizing: 'content-box',
                 opacity: desaturate ? 0.4 : 1,
                 filter: desaturate ? 'grayscale(100%)' : 'none',
                 transition: 'all 0.5s ease',
               }}
-              className="bg-slate-900 overflow-hidden relative"
+              className="bg-slate-900 overflow-hidden relative box-border"
             >
               <video
                 key={`mobile-right-${rightIndex}`}
-                ref={el => el && videoRefs.current.set(2, el)}
-                src={videoSources[rightIndex] || "https://www.w3schools.com/html/mov_bbb.mp4"}
-                muted
-                playsInline
-                loop
-                autoPlay={autoplayVideos && playInactive}
+                ref={el => { if (el) videoRefs.current.set(2, el) }}
+                src={videoSources[rightIndex]}
+                muted playsInline loop
                 className="w-full h-full object-cover"
               />
             </div>
@@ -2204,17 +2161,10 @@ const DynamicCarouselPreview = ({
         </div>
       )}
       
-      <div 
-        className="flex items-center justify-center w-full py-4 overflow-visible"
-        style={{ gap: `${spacingNum}px` }}
-      >
+      <div className="flex items-center justify-center w-full py-4 overflow-visible" style={{ gap: `${spacingNum}px` }}>
         {[0, 1, 2].map((num) => {
           const isAct = num === 1;
-          const itemIndex = num === 0 ? leftIndex : num === 1 ? activeIndex : rightIndex;
-
-const unifiedDesktopShadow = isAct && applyShadow
-  ? `drop-shadow(0 8px 12px rgba(0,0,0,0.35)) drop-shadow(0 4px 6px rgba(0,0,0,0.2))`
-  : 'none';
+          const itemIndex = num === 0 ? leftIndex : num === 1 ? safeActiveIndex : rightIndex;
 
           return (
             <div
@@ -2223,34 +2173,32 @@ const unifiedDesktopShadow = isAct && applyShadow
               style={{
                 width: cardWidth,
                 transform: isAct && scaleHighlight ? 'scale(1.1)' : 'scale(0.95)',
-                filter: unifiedDesktopShadow,
                 zIndex: isAct ? 10 : 1
               }}
             >
+              {/* VÍDEO DESKTOP */}
               <div
                 style={{
                   width: cardWidth,
                   height: cardHeight,
-                  borderRadius: isCircle ? '50%' : borderRadius,
+                  borderRadius,
                   border: `${borderWidth}px solid ${borderColor}`,
+                  boxShadow: isAct ? shadowStyle : 'none',
                 }}
-                className="relative overflow-hidden bg-slate-950 w-full transition-all duration-300 shadow-md"
+                className="relative overflow-hidden bg-slate-950 w-full transition-all duration-300 box-border"
               >
                 <video
                   key={`desktop-slot-${num}`}
-                  ref={el => el && videoRefs.current.set(num, el)}
+                  ref={el => { if (el) videoRefs.current.set(num, el) }}
                   src={videoSources[itemIndex]}
-                  loop
-                  muted
-                  playsInline
-                  autoPlay={isAct ? autoplayVideos : (autoplayVideos && playInactive)}
+                  loop muted playsInline
                   style={{ filter: !isAct && desaturate ? 'grayscale(100%) opacity(0.55)' : 'none' }}
                   className="w-full h-full object-cover transition-all duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none" />
                 
                 {isAct && showPlayIcon && (
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
                       <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
                     </div>
@@ -2258,8 +2206,17 @@ const unifiedDesktopShadow = isAct && applyShadow
                 )}
               </div>
 
+              {/* CARD DO PRODUTO DESKTOP */}
               {isAct && showProductCard && !isCircle && (
-                <div className="bg-white border border-slate-100 rounded-xl p-2 flex items-center gap-2 shadow-sm w-full transition-all duration-300">
+                <div 
+                  className="flex items-center gap-2 w-full transition-all duration-300 overflow-hidden box-border"
+                  style={{
+                    backgroundColor: pCardBg,
+                    border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
+                    borderRadius: `${pCardBorderRadius}px`,
+                    padding: '6px'
+                  }}
+                >
                   <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
                     <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
                   </div>
