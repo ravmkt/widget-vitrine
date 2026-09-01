@@ -19,6 +19,15 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
 
+// 🎯 MATRIZ OFICIAL DE LIMITES DOS PLANOS VIDLYTICS
+const PLAN_LIMITS: Record<string, { views: number; pages: number; storage: number }> = {
+  'iniciante': { views: 5000, pages: 50, storage: 1073741824 }, // 1GB
+  'pro': { views: 20000, pages: 200, storage: 5368709120 }, // 5GB
+  'avançado': { views: 50000, pages: 500, storage: 21474836480 }, // 20GB
+  'avancado': { views: 50000, pages: 500, storage: 21474836480 },
+  'enterprise': { views: 100000, pages: 1000, storage: 107374182400 }, // 100GB
+};
+
 export function BillingPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -32,17 +41,15 @@ export function BillingPage() {
   const [plan, setPlan] = useState<any>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
 
-  // Consumo de Armazenamento Real
+  // Consumo Real vs Limites (Iniciam com os fallbacks do Iniciante)
   const [storageUsedBytes, setStorageUsedBytes] = useState<number>(0);
-  const [storageLimitBytes, setStorageLimitBytes] = useState<number>(1073741824); // 1 GB fallback
+  const [storageLimitBytes, setStorageLimitBytes] = useState<number>(1073741824); // 1 GB
 
-  // Consumo de Views Real
   const [viewsUsed, setViewsUsed] = useState<number>(0);
-  const [viewsLimit, setViewsLimit] = useState<number>(10000); // 10k fallback
+  const [viewsLimit, setViewsLimit] = useState<number>(5000); // 5k
 
-  // Consumo de Páginas Ativas Real
   const [pagesUsed, setPagesUsed] = useState<number>(0);
-  const [pagesLimit, setPagesLimit] = useState<number>(100); // 100 fallback
+  const [pagesLimit, setPagesLimit] = useState<number>(50); // 50
 
   // Formulário de Dados Fiscais
   const [fiscalData, setFiscalData] = useState({
@@ -78,7 +85,7 @@ export function BillingPage() {
           return;
         }
 
-        // 1. Resolve o store_id da loja ativa com amarração ao usuário autenticado
+        // 1. Resolve o store_id da loja ativa
         let activeStoreId =
           localStorage.getItem('vidlytics_current_store_id') ||
           localStorage.getItem('current_store_id') ||
@@ -109,7 +116,7 @@ export function BillingPage() {
 
         setStoreId(activeStoreId);
 
-        // 2. Busca dados da loja, plano, status de assinatura e limites de views/páginas
+        // 2. Busca dados da loja, plano associado e consumo registrado
         const { data: storeRow, error: storeErr } = await supabase
           .from('stores')
           .select('storage_used_bytes, storage_limit_bytes, plan_id, subscription_status, trial_ends_at, views_used, views_limit, pages_used, pages_limit, plans(*)')
@@ -120,52 +127,25 @@ export function BillingPage() {
           console.error('[Billing] Erro ao buscar loja:', storeErr);
         }
 
+        // Variável de controle para identificar o plano ativo
+        let resolvedPlan = null;
+
         if (storeRow) {
           setStorageUsedBytes(Number(storeRow.storage_used_bytes || 0));
-          if (storeRow.storage_limit_bytes) {
-            setStorageLimitBytes(Number(storeRow.storage_limit_bytes));
-          }
+          setViewsUsed(Number(storeRow.views_used || 0));
+          
           if (storeRow.subscription_status) {
             setSubscriptionStatus(storeRow.subscription_status);
           }
           setTrialEndsAt(storeRow.trial_ends_at || null);
 
-          // Configura limites de Views do Banco
-          setViewsUsed(Number(storeRow.views_used || 0));
-          if (storeRow.views_limit) {
-            setViewsLimit(Number(storeRow.views_limit));
-          }
-
-          // Consulta quantidade exata de páginas criadas se pages_used for nulo/vazio
-          let calculatedPages = Number(storeRow.pages_used || 0);
-          try {
-            const { count } = await supabase
-              .from('pages')
-              .select('*', { count: 'exact', head: true })
-              .eq('store_id', activeStoreId);
-            if (count !== null) calculatedPages = count;
-          } catch (_) {}
-          setPagesUsed(calculatedPages);
-
-          if (storeRow.pages_limit) {
-            setPagesLimit(Number(storeRow.pages_limit));
-          }
-
           if ((storeRow as any).plans) {
-            setPlan((storeRow as any).plans);
-            if ((storeRow as any).plans?.storage_limit_bytes) {
-              setStorageLimitBytes(Number((storeRow as any).plans.storage_limit_bytes));
-            }
-            if ((storeRow as any).plans?.views_limit) {
-              setViewsLimit(Number((storeRow as any).plans.views_limit));
-            }
-            if ((storeRow as any).plans?.pages_limit) {
-              setPagesLimit(Number((storeRow as any).plans.pages_limit));
-            }
+            resolvedPlan = (storeRow as any).plans;
+            setPlan(resolvedPlan);
           }
         }
 
-        // 3. Busca Assinatura Corrente mais recente
+        // 3. Busca Assinatura Corrente mais recente para garantir sincronização
         const { data: subData } = await supabase
           .from('subscriptions')
           .select('*, plans(*)')
@@ -177,17 +157,44 @@ export function BillingPage() {
         if (subData) {
           setSubscription(subData);
           if (subData.plans) {
-            setPlan(subData.plans);
-            if (subData.plans?.storage_limit_bytes) {
-              setStorageLimitBytes(Number(subData.plans.storage_limit_bytes));
-            }
-            if (subData.plans?.views_limit) {
-              setViewsLimit(Number(subData.plans.views_limit));
-            }
-            if (subData.plans?.pages_limit) {
-              setPagesLimit(Number(subData.plans.pages_limit));
-            }
+            resolvedPlan = subData.plans;
+            setPlan(resolvedPlan);
           }
+        }
+
+        // 🚀 RESOLUÇÃO DOS LIMITES REAIS E COMPATIBILIDADE COM A TABELA DE PREÇOS
+        let currentPlanName = 'iniciante';
+        if (resolvedPlan?.name) {
+          currentPlanName = resolvedPlan.name.toLowerCase().trim();
+        }
+
+        // Carrega os limites oficiais estipulados para o plano
+        const officialLimits = PLAN_LIMITS[currentPlanName] || PLAN_LIMITS['iniciante'];
+
+        // Se houver uma customização maior cadastrada diretamente na tabela 'stores', nós mantemos.
+        // Caso contrário, forçamos os limites oficiais do plano (ex: 5.000 views para o Iniciante)
+        const dbStorageLimit = Number(storeRow?.storage_limit_bytes || resolvedPlan?.storage_limit_bytes || 0);
+        const dbViewsLimit = Number(storeRow?.views_limit || resolvedPlan?.views_limit || 0);
+        const dbPagesLimit = Number(storeRow?.pages_limit || resolvedPlan?.pages_limit || 0);
+
+        setStorageLimitBytes(dbStorageLimit > officialLimits.storage ? dbStorageLimit : officialLimits.storage);
+        setViewsLimit(dbViewsLimit > officialLimits.views ? dbViewsLimit : officialLimits.views);
+        setPagesLimit(dbPagesLimit > officialLimits.pages ? dbPagesLimit : officialLimits.pages);
+
+        // 📊 CONTADOR DE PÁGINAS ATIVAS EM TEMPO REAL
+        try {
+          const { count, error: pageCountErr } = await supabase
+            .from('pages')
+            .select('*', { count: 'exact', head: true })
+            .eq('store_id', activeStoreId);
+          
+          if (!pageCountErr && count !== null) {
+            setPagesUsed(count);
+          } else if (storeRow?.pages_used !== undefined) {
+            setPagesUsed(Number(storeRow.pages_used || 0));
+          }
+        } catch (err) {
+          console.error('[Billing] Erro ao contar páginas ativas:', err);
         }
 
         // 4. Busca Histórico de Faturas
@@ -291,9 +298,9 @@ export function BillingPage() {
       };
     }
     return {
-      barBg: '!bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.3)]',
-      text: 'text-emerald-500 dark:text-emerald-400',
-      bgPill: 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-200/40'
+      barBg: '!bg-[#0094EB] dark:!bg-[#ff7a29] shadow-[0_0_10px_rgba(0,148,235,0.3)]',
+      text: 'text-[#0094EB] dark:text-[#ff7a29]',
+      bgPill: 'bg-blue-50 dark:bg-[#ff7a29]/10 text-[#0094EB] dark:text-[#ff7a29] border-blue-200/40'
     };
   };
 
@@ -491,7 +498,6 @@ export function BillingPage() {
                   {formatSize(storageUsedBytes)}
                   <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]"> / {formatSize(storageLimitBytes)}</span>
                 </span>
-                {/* 🚀 FONTE DA PORCENTAGEM AUMENTADA */}
                 <span className={cn("text-base font-black tracking-tight block", storageVisuals.text)}>
                   {storagePct}% utilizado
                 </span>
@@ -507,7 +513,7 @@ export function BillingPage() {
             </div>
           </div>
 
-          {/* 2 e 3. Cards de Métricas Secundárias Reestruturados (Barras Proporcionais e Views/Pages Reais) */}
+          {/* 2 e 3. Cards de Métricas Secundárias Reestruturados (Barras Proporcionais e Limites Sincronizados) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
             
             {/* Views Proporcionais */}
@@ -532,7 +538,6 @@ export function BillingPage() {
                     {viewsUsed.toLocaleString('pt-BR')}
                     <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]"> / {viewsLimit.toLocaleString('pt-BR')}</span>
                   </span>
-                  {/* 🚀 FONTE DA PORCENTAGEM AUMENTADA */}
                   <span className={cn("text-sm font-black tracking-tight block", viewsVisuals.text)}>
                     {viewsPct}% utilizado
                   </span>
@@ -570,7 +575,6 @@ export function BillingPage() {
                     {pagesUsed}
                     <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]"> / {pagesLimit}</span>
                   </span>
-                  {/* 🚀 FONTE DA PORCENTAGEM AUMENTADA */}
                   <span className={cn("text-sm font-black tracking-tight block", pagesVisuals.text)}>
                     {pagesPct}% utilizado
                   </span>
