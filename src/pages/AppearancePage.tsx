@@ -2758,7 +2758,7 @@ const AppearancePage = () => {
         if (supabase) {
           const { data: storiesData, error: storiesError } = await supabase
             .from('stories')
-            .select('id, is_active, status')
+.select('id, is_active, active')
             .eq('store_id', finalStoreId);
 
           if (!storiesError && storiesData) {
