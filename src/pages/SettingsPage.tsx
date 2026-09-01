@@ -23,7 +23,10 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { RefreshCw, Loader2, Copy, X, Image, Sun, Moon, Save, CheckCircle2 } from 'lucide-react';
+import { 
+  ShoppingBag, Sparkles, Cpu, Home, Activity, Trophy, 
+  Baby, PawPrint, Coffee, Gem, Palette, Globe 
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '@/context/TenantContext';
 
