@@ -2009,12 +2009,15 @@ const DynamicCarouselPreview = ({
       mobileActiveHeight = mobileActiveWidth * (9 / 16);
     }
 
-const mobileSideWidth = mobileActiveWidth * 0.85;
-const mobileSideHeight = mobileActiveHeight * 0.85;
+    // Lógica para "Ampliar o vídeo em destaque" (se falso, todos ficam do mesmo tamanho)
+    const sideScale = scaleHighlight ? 0.85 : 1;
+    const mobileSideWidth = mobileActiveWidth * sideScale;
+    const mobileSideHeight = mobileActiveHeight * sideScale;
 
-const unifiedDropShadow = applyShadow
-  ? `drop-shadow(0 8px 12px rgba(0,0,0,0.35)) drop-shadow(0 4px 6px rgba(0,0,0,0.2))`
-  : 'none';
+    // Sombra SOMENTE no vídeo central
+    const activeVideoShadow = applyShadow
+      ? `drop-shadow(0 8px 12px rgba(0,0,0,0.35)) drop-shadow(0 4px 6px rgba(0,0,0,0.2))`
+      : 'none';
 
     return (
       <div className="w-full py-1 flex flex-col items-center space-y-3 select-none overflow-visible">
@@ -2026,57 +2029,64 @@ const unifiedDropShadow = applyShadow
           </div>
         )}
 
-        <div 
-          className="flex items-center justify-center w-full overflow-visible py-4 px-1"
+        <div
+          className="flex items-center justify-center w-full overflow-visible py-4 px-1 transition-all duration-500"
           style={{ gap: `${spacingNum}px` }}
         >
           {/* LADO ESQUERDO */}
-          <div
-            style={{
-              width: `${mobileSideWidth}px`,
-              height: `${mobileSideHeight}px`,
-              borderRadius: isCircle ? '50%' : borderRadius,
-              border: `${borderWidth}px solid ${borderColor}`,
-              transform: 'scale(0.92)',
-            }}
-            className="shrink-0 bg-slate-900 overflow-hidden transition-all duration-500"
-          >
-            <video
-              key="mobile-left"
-              ref={el => el && videoRefs.current.set(0, el)}
-              src={videoSources[leftIndex]}
-              muted
-              playsInline
-              loop
-              autoPlay={autoplayVideos && playInactive}
-              style={{ filter: desaturate ? 'grayscale(100%) opacity(0.55)' : 'opacity(0.7)' }}
-              className="w-full h-full object-cover transition-all duration-500"
-            />
+          <div className="shrink-0 flex flex-col items-center justify-center">
+            <div
+              style={{
+                width: `${mobileSideWidth}px`,
+                height: `${mobileSideHeight}px`,
+                borderRadius: isCircle ? '50%' : borderRadius,
+                border: `${borderWidth}px solid ${borderColor}`,
+                boxSizing: 'content-box', // Garante que a borda cresça para fora
+                opacity: desaturate ? 0.4 : 1,
+                filter: desaturate ? 'grayscale(100%)' : 'none',
+                transition: 'all 0.5s ease',
+              }}
+              className="bg-slate-900 overflow-hidden relative"
+            >
+              <video
+                key={`mobile-left-${leftIndex}`}
+                ref={el => el && videoRefs.current.set(0, el)}
+                src={videoSources[leftIndex] || "https://www.w3schools.com/html/mov_bbb.mp4"}
+                muted
+                playsInline
+                loop
+                autoPlay={autoplayVideos && playInactive}
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
 
           {/* CENTRO (ATIVO) */}
-          <div 
-            className="shrink-0 flex flex-col items-center space-y-2 transition-all duration-500"
-            style={{ 
+          <div
+            className="shrink-0 flex flex-col items-center transition-all duration-500"
+            style={{
               width: `${mobileActiveWidth}px`,
-              transform: scaleHighlight ? 'scale(1.1)' : 'scale(1)',
-              filter: unifiedDropShadow,
-              zIndex: 10
+              zIndex: 10,
+              gap: '8px' // Separa o vídeo do card de produto
             }}
           >
+            {/* CONTAINER DO VÍDEO ATIVO */}
             <div
               style={{
                 width: `${mobileActiveWidth}px`,
                 height: `${mobileActiveHeight}px`,
                 borderRadius: isCircle ? '50%' : borderRadius,
                 border: `${borderWidth}px solid ${borderColor}`,
+                boxSizing: 'content-box', // Borda cresce para fora
+                filter: activeVideoShadow, // Sombra aplicada AQUI
+                transition: 'all 0.5s ease',
               }}
-              className="relative bg-slate-950 overflow-hidden w-full transition-all duration-500"
+              className="relative bg-slate-950 overflow-hidden w-full"
             >
               <video
-                key="mobile-active"
+                key={`mobile-active-${activeIndex}`}
                 ref={el => el && videoRefs.current.set(1, el)}
-                src={videoSources[activeIndex]}
+                src={videoSources[activeIndex] || "https://www.w3schools.com/html/mov_bbb.mp4"}
                 autoPlay={autoplayVideos}
                 loop
                 muted
@@ -2085,7 +2095,7 @@ const unifiedDropShadow = applyShadow
               />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 pointer-events-none" />
 
-              <div 
+              <div
                 style={{ backgroundColor: borderColor }}
                 className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse"
               >
@@ -2102,8 +2112,9 @@ const unifiedDropShadow = applyShadow
               )}
             </div>
 
+            {/* CARD PRODUTO (Sem sombra do vídeo) */}
             {showProductCard && !isCircle && (
-              <div className="bg-white border border-slate-100 rounded-xl p-1.5 flex items-center gap-2 shadow-sm w-full transition-all duration-300">
+              <div className="bg-white border border-slate-200 rounded-xl p-1.5 flex items-center gap-2 w-full transition-all duration-300">
                 <div className="w-7 h-7 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
                   <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
                 </div>
@@ -2116,32 +2127,35 @@ const unifiedDropShadow = applyShadow
           </div>
 
           {/* LADO DIREITO */}
-          <div
-            style={{
-              width: `${mobileSideWidth}px`,
-              height: `${mobileSideHeight}px`,
-              borderRadius: isCircle ? '50%' : borderRadius,
-              border: `${borderWidth}px solid ${borderColor}`,
-              transform: 'scale(0.92)',
-            }}
-            className="shrink-0 bg-slate-900 overflow-hidden transition-all duration-500"
-          >
-            <video
-              key="mobile-right"
-              ref={el => el && videoRefs.current.set(2, el)}
-              src={videoSources[rightIndex]}
-              muted
-              playsInline
-              loop
-              autoPlay={autoplayVideos && playInactive}
-              style={{ filter: desaturate ? 'grayscale(100%) opacity(0.55)' : 'opacity(0.7)' }}
-              className="w-full h-full object-cover transition-all duration-500"
-            />
+          <div className="shrink-0 flex flex-col items-center justify-center">
+            <div
+              style={{
+                width: `${mobileSideWidth}px`,
+                height: `${mobileSideHeight}px`,
+                borderRadius: isCircle ? '50%' : borderRadius,
+                border: `${borderWidth}px solid ${borderColor}`,
+                boxSizing: 'content-box',
+                opacity: desaturate ? 0.4 : 1,
+                filter: desaturate ? 'grayscale(100%)' : 'none',
+                transition: 'all 0.5s ease',
+              }}
+              className="bg-slate-900 overflow-hidden relative"
+            >
+              <video
+                key={`mobile-right-${rightIndex}`}
+                ref={el => el && videoRefs.current.set(2, el)}
+                src={videoSources[rightIndex] || "https://www.w3schools.com/html/mov_bbb.mp4"}
+                muted
+                playsInline
+                loop
+                autoPlay={autoplayVideos && playInactive}
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
         </div>
       </div>
     );
-  }
 
   // ==================== LAYOUT DESKTOP ====================
   const cardWidth = `${rawWidth}px`;
