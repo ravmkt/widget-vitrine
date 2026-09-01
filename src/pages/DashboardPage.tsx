@@ -361,28 +361,68 @@ const DashboardPage: React.FC = () => {
   };
 
   // Helper para renderizar badges dinâmicos baseados no tipo de ação logada
-  const getActionBadge = (action: string) => {
-    const act = action.toLowerCase();
-    if (act.includes('vídeo') || act.includes('video') || act.includes('import')) {
-      return { label: '🎬 Vídeo', style: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30' };
-    }
-    if (act.includes('config') || act.includes('loja') || act.includes('parâmetro') || act.includes('whatsapp')) {
-      return { label: '⚙️ Config', style: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30' };
-    }
-    if (act.includes('plan') || act.includes('assinatura') || act.includes('fatura') || act.includes('upgrade') || act.includes('pagamento')) {
-      return { label: '💎 Plano', style: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30' };
-    }
-    if (act.includes('storie') || act.includes('coleção') || act.includes('grupo') || act.includes('stories') || act.includes('layout')) {
-      return { label: '📱 Stories', style: 'bg-pink-50 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 border border-pink-100 dark:border-pink-900/30' };
-    }
-    if (act.includes('aparência') || act.includes('design') || act.includes('player') || act.includes('personaliz')) {
-      return { label: '🎨 Design', style: 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-900/30' };
-    }
-    if (act.includes('script') || act.includes('embed') || act.includes('integra') || act.includes('widget') || act.includes('local')) {
-      return { label: '🚀 Script', style: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30' };
-    }
-    return { label: '⚡ Ação', style: 'bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border border-slate-150 dark:border-slate-800/30' };
-  };
+    const getActionBadge = (action: string, details: string = '') => {
+      const act = action.toLowerCase();
+      const det = details.toLowerCase();
+
+      // Detecta ações semânticas de criação (Verde) ou exclusão (Vermelho)
+      const isDelete = act.includes('exclu') || act.includes('remov') || det.includes('exclui') || det.includes('remov');
+      const isInsert = act.includes('enviado') || act.includes('criado') || act.includes('import') || det.includes('adicionado') || det.includes('criado') || det.includes('enviado');
+
+      // 🎬 VÍDEOS
+      if (act.includes('vídeo') || act.includes('video') || act.includes('import')) {
+        if (isDelete) {
+          return { label: '🗑️ Vídeo', style: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30' };
+        }
+        if (isInsert) {
+          return { label: '🎬 Vídeo', style: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30' };
+        }
+        return { label: '🎬 Vídeo', style: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30' };
+      }
+
+      // ⚙️ CONFIGURAÇÕES
+      if (act.includes('config') || act.includes('loja') || act.includes('parâmetro') || act.includes('whatsapp')) {
+        return { label: '⚙️ Config', style: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30' };
+      }
+
+      // 💎 PLANOS / COBRANÇA
+      if (act.includes('plan') || act.includes('assinatura') || act.includes('fatura') || act.includes('upgrade') || act.includes('pagamento')) {
+        return { label: '💎 Plano', style: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30' };
+      }
+
+      // 📱 STORIES
+      if (act.includes('storie') || act.includes('coleção') || act.includes('grupo') || act.includes('stories') || act.includes('layout')) {
+        if (isDelete) {
+          return { label: '🗑️ Story', style: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30' };
+        }
+        if (isInsert) {
+          return { label: '📱 Story', style: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30' };
+        }
+        return { label: '📱 Stories', style: 'bg-pink-50 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 border border-pink-100 dark:border-pink-900/30' };
+      }
+
+      // 🎨 DESIGN / APARÊNCIA (Como a Clara, Escura, etc.)
+      if (act.includes('aparência') || act.includes('design') || act.includes('player') || act.includes('personaliz')) {
+        if (isDelete) {
+          return { label: '🗑️ Design', style: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30' };
+        }
+        if (isInsert) {
+          return { label: '🎨 Design', style: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30' };
+        }
+        return { label: '🎨 Design', style: 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-900/30' };
+      }
+
+      // 🚀 SCRIPT / EMBED / INTEGRAÇÃO
+      if (act.includes('script') || act.includes('embed') || act.includes('integra') || act.includes('widget') || act.includes('local')) {
+        return { label: '🚀 Script', style: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30' };
+      }
+
+      // FALLBACK SEGURO
+      if (isDelete) {
+        return { label: '🗑️ Excluído', style: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30' };
+      }
+      return { label: '⚡ Ação', style: 'bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border border-slate-150 dark:border-slate-800/30' };
+    };
 
   if (loading) {
     return (
