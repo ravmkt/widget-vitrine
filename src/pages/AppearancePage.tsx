@@ -2516,9 +2516,7 @@ const PreviewCard = ({
     activeTab === 'grid' ? gridDevice : 
     playerDevice;
 
-  // Função para mudar o dispositivo clicando nos botões acima do preview
   const handleDeviceChange = (device: 'desktop' | 'mobile') => {
-    // CORREÇÃO: Removida a trava global. Queremos poder alternar a VISUALIZAÇÃO mesmo que as configurações sejam iguais!
     if (activeTab === 'floating') setFloatingDevice(device);
     if (activeTab === 'carousel') setCarouselDevice(device);
     if (activeTab === 'dynamic_carousel') setDynamicCarouselDevice(device);
@@ -2540,14 +2538,13 @@ const PreviewCard = ({
     floatingBorder: floating.border_color || formData.primary_color,
   };
 
-  // Sempre força a capa do celular se o viewMode estiver no 'mobile', independente do global
   const isMobileFrame = activeDevice === 'mobile';
 
   return (
-    <aside className="relative flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+    <aside className="relative flex h-full min-h-[580px] max-h-[720px] flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
       
-      {/* CORREÇÃO: Toggles Flutuantes no Canto Superior Direito */}
-      <div className="absolute top-4 right-4 z-50 flex items-center bg-white/90 backdrop-blur-md border border-slate-200 p-1 rounded-xl shadow-sm">
+      {/* Toggles Flutuantes no Canto Superior Direito */}
+      <div className="absolute top-4 right-4 z-50 flex items-center bg-white/95 backdrop-blur-md border border-slate-200 p-1 rounded-xl shadow-sm">
         <button
           type="button"
           onClick={() => handleDeviceChange('desktop')}
@@ -2573,30 +2570,31 @@ const PreviewCard = ({
       </div>
 
       {/* ÁREA DO PREVIEW EM SI */}
-      <div className="relative flex-1 flex flex-col items-center p-4 bg-slate-50/50 overflow-y-auto">
-        {/* Adicionado py-10 e my-auto para respiro de rolagem */}
-        <div className="my-auto w-full flex justify-center py-10">
+      <div className="relative flex-1 flex flex-col items-center justify-center p-4 bg-slate-50/50 overflow-hidden">
+        <div className="w-full flex justify-center items-center">
           {isMobileFrame ? (
-            /* CORREÇÃO: min-h-[680px] e shrink-0 para não cortar o celular */
-            <div className="relative mx-auto w-[320px] min-h-[680px] bg-slate-800 rounded-[3rem] p-2.5 shadow-2xl flex shrink-0 ring-1 ring-slate-900/10">
+            /* Mockup de celular com travas de altura estritas (max-h-[620px]) */
+            <div className="relative mx-auto w-[290px] h-[580px] bg-slate-800 rounded-[3rem] p-2 flex shrink-0 ring-1 ring-slate-900/10 shadow-2xl transition-all duration-300">
               {/* Entalhe (Notch) e Câmera */}
-              <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-3xl z-50 flex justify-center items-center">
-                <div className="w-10 h-1.5 rounded-full bg-slate-700/50"></div>
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-5 bg-slate-800 rounded-b-2xl z-50 flex justify-center items-center">
+                <div className="w-8 h-1 rounded-full bg-slate-700/50"></div>
               </div>
               
-              {/* Tela do Celular */}
-              <div className="flex-1 w-full h-full bg-white rounded-[2.25rem] overflow-hidden relative overflow-y-auto hide-scrollbar">
-                {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} device={activeDevice} />}
-                {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
-                {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} />}
-                {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
-                {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
-                {activeTab === 'basic' && <VisualPreview formData={formData} colors={colors} />}
+              {/* Tela do Celular com scroll interno isolado */}
+              <div className="flex-1 w-full h-full bg-white rounded-[2.25rem] overflow-hidden relative overflow-y-auto scrollbar-none">
+                <div className="p-1 min-h-full flex flex-col justify-center">
+                  {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} device={activeDevice} />}
+                  {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
+                  {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} />}
+                  {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
+                  {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
+                  {activeTab === 'basic' && <VisualPreview formData={formData} colors={colors} />}
+                </div>
               </div>
             </div>
           ) : (
             /* FRAME DESKTOP LIVRE */
-            <div className="w-full transition-all duration-500 ease-in-out mt-8">
+            <div className="w-full transition-all duration-500 ease-in-out px-2 max-h-[580px] overflow-y-auto scrollbar-none">
               {activeTab === 'floating' && <FloatingPreview floating={floating} colors={colors} device={activeDevice} />}
               {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
               {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} />}
