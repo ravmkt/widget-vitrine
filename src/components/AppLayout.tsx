@@ -136,127 +136,134 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
         <SidebarInset className="flex flex-col flex-1 relative z-0 min-w-0">
           {/* Banner Global de Trial / Status (exceto na página de billing e plans) */}
-            <>
-              {subscriptionStatus === 'trialing' && (() => {
-                const days = trialDaysRemaining ?? 7;
-                
-                // Definição estrita das condições baseadas no que foi solicitado:
-                const isCritical = days <= 1;             // Vermelho se faltar 1 dia ou menos
-                const isWarning = days === 2 || days === 3; // Laranja se faltar 2 ou 3 dias
-                const isNormal = days > 3;                 // Cinza se for maior que 3 dias
+          {/* ═══════════════════════════════════════════════
+              BANNER GLOBAL DE STATUS DA ASSINATURA / TRIAL
+              ═══════════════════════════════════════════════ */}
+          <>
+            {subscriptionStatus === 'trialing' && (() => {
+              const days = trialDaysRemaining ?? 7;
 
-                // Cálculo preciso de horas restantes para quando faltar 1 dia ou menos
-                let hoursRemaining = 24;
-                if (trialEndsAt) {
-                  const diffMs = new Date(trialEndsAt).getTime() - Date.now();
-                  hoursRemaining = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60)));
-                }
+              // Definição estrita das condições baseadas no que foi solicitado:
+              const isCritical = days <= 1;             // Vermelho se faltar 1 dia ou menos
+              const isWarning = days > 1 && days <= 3;  // Laranja se faltar 2 ou 3 dias
+              const isNormal = days > 3;                 // Normal se for maior que 3 dias
 
-                // 1. Mensagem Dinâmica com Contagem
-                const message = isCritical
-                  ? hoursRemaining <= 1
-                    ? 'O seu período de teste expira em menos de 1 hora.'
-                    : `O seu período de teste expira em ${hoursRemaining} horas.`
-                  : isWarning
-                  ? `Seu período de teste expira em ${days} dias. Faça o upgrade para não perder o acesso!`
-                  : `Você está no período de teste gratuito: restam ${days} dias.`;
+              // Cálculo preciso de horas restantes para quando faltar 1 dia ou menos
+              let hoursRemaining = 24;
+              if (trialEndsAt) {
+                const diffMs = new Date(trialEndsAt).getTime() - Date.now();
+                hoursRemaining = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60)));
+              }
 
-                // 2. Estilo da Barra Blindada contra o Dark Mode
-                const bannerStyle = isCritical
-                  ? '!bg-[#ef4444] shadow-md border-transparent text-white animate-pulse' // Crítico: Vermelho Vivo
-                  : isWarning
-                  ? '!bg-[#f97316] border-b border-orange-600 shadow-sm text-white'       // Atenção: Laranja Vibrante
-                  : '!bg-slate-100 dark:!bg-[#1e293b] border-b border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100'; // Normal: Cinza Claro
+              // 1. Mensagem Dinâmica com Contagem Real
+              const message = isCritical
+                ? hoursRemaining <= 1
+                  ? 'O seu período de teste expira em menos de 1 hora.'
+                  : `O seu período de teste expira em ${hoursRemaining} horas.`
+                : isWarning
+                ? `Seu período de teste expira em ${days} dias. Faça o upgrade para não perder o acesso!`
+                : `Você está no período de teste gratuito: restam ${days} dias.`;
 
-                // 3. Estilo do Botão "Fazer Upgrade" (Forçado e Imutável)
-                const buttonStyle = isCritical
-                  ? '!bg-white hover:!bg-slate-100 !text-[#ef4444] border !border-white' // Botão Branco com texto Vermelho
-                  : isWarning
-                  ? '!bg-slate-900 hover:!bg-black !text-white border !border-slate-900'   // Botão Escuro
-                  : '!bg-[#22c55e] hover:!bg-[#16a34a] !text-white border !border-emerald-600'; // Botão Verde vibrante
+              // 2. Estilo da Barra Premium (Light/Dark Mode friendly)
+              const bannerStyle = isCritical
+                ? '!bg-red-50 dark:!bg-red-950/20 border-b border-red-200 dark:border-red-900/30'
+                : isWarning
+                ? '!bg-orange-50 dark:!bg-orange-950/10 border-b border-orange-200 dark:border-orange-900/20'
+                : '!bg-slate-100 dark:!bg-[#1e293b] border-b border-slate-200 dark:border-slate-800';
 
-                // 4. Cor do Texto e Ícone Forçados
-                const textAndIconClass = (isCritical || isWarning) ? '!text-white' : '!text-slate-900 dark:!text-slate-100';
+              // 3. Estilo Dinâmico do Botão "Fazer Upgrade" solicitado por você
+              const buttonStyle = isCritical
+                ? '!bg-[#ef4444] hover:!bg-[#dc2626] !text-white border-transparent animate-pulse shadow-md shadow-red-500/20' // 🔴 Vermelho Pulsante
+                : isWarning
+                ? '!bg-[#ff7a29] hover:!bg-[#e66c22] !text-white border-transparent shadow-md shadow-orange-500/25'       // 🟠 Laranja do Logotipo Vidlytics
+                : '!bg-[#0094EB] hover:!bg-[#0081cc] !text-white border-transparent shadow-sm';                            // 🔵 Azul padrão do sistema
 
-                return (
-                  <div
-                    className={cn(
-                      'px-4 py-2.5 sm:py-3 transition-colors duration-300',
-                      bannerStyle
-                    )}
-                  >
-                    <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2.5 sm:flex-row text-sm font-semibold">
-                      <div className="flex items-center gap-2.5">
-                        <Clock
-                          size={18}
-                          className={cn(
-                            'shrink-0',
-                            textAndIconClass,
-                            isCritical && 'animate-pulse'
-                          )}
-                        />
-                        <span className={cn('text-sm font-bold tracking-tight', textAndIconClass)}>
-                          {message}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => navigate('/plans')}
+              // 4. Cor do Texto e Ícones da Barra
+              const textAndIconClass = isCritical
+                ? 'text-red-900 dark:text-red-100'
+                : isWarning
+                ? 'text-orange-900 dark:text-orange-100'
+                : 'text-slate-900 dark:text-slate-100';
+
+              return (
+                <div
+                  className={cn(
+                    'px-4 py-2.5 sm:py-3 transition-colors duration-300',
+                    bannerStyle
+                  )}
+                >
+                  <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2.5 sm:flex-row text-sm font-semibold">
+                    <div className="flex items-center gap-2.5">
+                      <Clock
+                        size={18}
                         className={cn(
-                          'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black shadow-sm transition-all hover:scale-[1.02] cursor-pointer shrink-0',
-                          buttonStyle
+                          'shrink-0',
+                          textAndIconClass,
+                          isCritical && 'animate-pulse'
                         )}
-                      >
-                        <Sparkles
-                          size={14}
-                          className={isCritical ? '!text-[#ef4444]' : '!text-white'}
-                        />
-                        <span className={isCritical ? '!text-[#ef4444]' : '!text-white'}>
-                          Fazer Upgrade
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })()}
-                                                                      
-              {subscriptionStatus === 'canceled' && (
-                <div className="bg-red-600 px-4 py-2.5 text-white shadow-sm animate-fade-in">
-                  <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
-                    <div className="flex items-center gap-2">
-                      <XCircle size={16} className="shrink-0 text-red-100" />
-                      <span>Sua assinatura está cancelada e os widgets estão pausados na sua loja.</span>
+                      />
+                      <span className={cn('text-sm font-bold tracking-tight', textAndIconClass)}>
+                        {message}
+                      </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => navigate('/plans')}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1 text-xs font-bold text-red-600 shadow-sm transition hover:bg-red-50"
+                      className={cn(
+                        'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black shadow-sm transition-all hover:scale-[1.02] cursor-pointer shrink-0',
+                        buttonStyle
+                      )}
                     >
-                      <Sparkles size={13} />
-                      Reativar Assinatura
+                      <Sparkles
+                        size={14}
+                        className="text-white"
+                      />
+                      <span className="text-white">
+                        Fazer Upgrade
+                      </span>
                     </button>
                   </div>
                 </div>
-              )}
+              );
+            })()}
 
-              {subscriptionStatus === 'past_due' && (
-                <div className="bg-amber-500 px-4 py-2.5 text-white shadow-sm animate-fade-in">
-                  <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle size={16} className="shrink-0 text-amber-100" />
-                      <span>Identificamos uma fatura pendente. Regularize o pagamento para evitar o bloqueio dos vídeos.</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => navigate('/billing')}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1 text-xs font-bold text-amber-700 shadow-sm transition hover:bg-amber-50"
-                    >
-                      Ver Faturas
-                    </button>
+            {subscriptionStatus === 'canceled' && (
+              <div className="bg-red-600 px-4 py-2.5 text-white shadow-sm animate-fade-in">
+                <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
+                  <div className="flex items-center gap-2">
+                    <XCircle size={16} className="shrink-0 text-red-100" />
+                    <span>Sua assinatura está cancelada e os widgets estão pausados na sua loja.</span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/plans')}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1 text-xs font-bold text-red-600 shadow-sm transition hover:bg-red-50"
+                  >
+                    <Sparkles size={13} />
+                    Reativar Assinatura
+                  </button>
                 </div>
-              )}
-            </>
+              </div>
+            )}
+
+            {subscriptionStatus === 'past_due' && (
+              <div className="bg-amber-500 px-4 py-2.5 text-white shadow-sm animate-fade-in">
+                <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 sm:flex-row text-xs font-semibold">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle size={16} className="shrink-0 text-amber-100" />
+                    <span>Identificamos uma fatura pendente. Regularize o pagamento para evitar o bloqueio dos vídeos.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/billing')}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1 text-xs font-bold text-amber-700 shadow-sm transition hover:bg-amber-50"
+                  >
+                    Ver Faturas
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
 
           <main className="flex-1 p-4 md:p-8 animate-fade-in relative z-0 flex flex-col justify-between">
             <div className="mx-auto w-full max-w-7xl flex-1">
