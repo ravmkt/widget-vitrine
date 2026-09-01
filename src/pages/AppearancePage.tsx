@@ -2120,7 +2120,7 @@ const rightIndex = (safeActiveIndex + 1) % len;
         </div>
       )}
 
-      <div className="relative w-full py-4 overflow-hidden pb-14">
+<div className="relative w-full py-4 pb-20" style={{ overflowX: 'hidden', overflowY: 'visible' }}>
         <div
           className="flex items-center"
           style={{
