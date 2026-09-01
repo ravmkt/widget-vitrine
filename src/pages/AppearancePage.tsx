@@ -3890,7 +3890,7 @@ const AppearancePage = () => {
                 </button>
                 <div className="hidden md:flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50/80 px-3 py-1.5 rounded-lg border border-slate-100">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} className="text-[#0094EB]"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
-                  <span>Este painel é um <strong>preview meramente visual</strong>. Para testar cliques e interações, use a visualização direta da loja.</span>
+<span>Este painel é um <strong>preview meramente visual</strong>. Para testar cliques e interações, use o simulador na edição dos stories.</span>
                 </div>
               </div>
 
