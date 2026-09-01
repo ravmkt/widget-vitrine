@@ -1910,18 +1910,20 @@ const DynamicCarouselPreview = ({
   const isCircle = shape === 'circle';
   const [activeIndex, setActiveIndex] = useState(1);
 
+  // Troca automática dinâmica sincronizada com o delay da configuração
   useEffect(() => {
     const delay = carousel.autoplay_delay || 4000;
     const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev === 1 ? 2 : 1));
+      setActiveIndex((prev) => (prev === 2 ? 0 : prev + 1));
     }, delay);
     return () => clearInterval(interval);
   }, [carousel.autoplay_delay]);
 
   const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
 
+  // MOBILE: Destaque dinâmico centralizado com peeking real (Imagem 2)
   if (isMobile) {
-    // Determina o aspecto correto com base no shape selecionado para evitar distorção
+    // Definimos os aspectos corretos para evitar deformações
     let aspectClass = "aspect-[9/14]";
     let sideAspectClass = "aspect-[9/16]";
     let activeBorderRadius = borderRadius;
@@ -1938,6 +1940,10 @@ const DynamicCarouselPreview = ({
       sideAspectClass = "aspect-square";
     }
 
+    // Calcula de forma circular os índices anteriores e posteriores
+    const leftIndex = (activeIndex - 1 + 3) % 3;
+    const rightIndex = (activeIndex + 1) % 3;
+
     return (
       <div className="w-full py-2 flex flex-col space-y-3">
         {carousel.show_title && (
@@ -1947,52 +1953,63 @@ const DynamicCarouselPreview = ({
         )}
 
         <div className="flex items-center justify-between w-full overflow-hidden px-1 relative">
-          {/* Esquerda */}
+          {/* Card Esquerda - Cortado & Opacidade menor (Index Anterior) */}
           <div 
-            className={`w-[15%] shrink-0 bg-slate-100 opacity-35 scale-85 overflow-hidden transition-all duration-300 ${sideAspectClass}`}
+            className={`w-[15%] shrink-0 bg-slate-900 opacity-35 scale-85 overflow-hidden transition-all duration-500 shadow-sm ${sideAspectClass}`}
             style={{ borderRadius: isCircle ? '50%' : borderRadius }}
           >
-            <div className="w-full h-full bg-gradient-to-b from-slate-200 to-slate-300" />
+            <video
+              src={DEMO_PREVIEW_VIDEOS[leftIndex]}
+              muted
+              playsInline
+              loop
+              className="w-full h-full object-cover grayscale"
+            />
           </div>
 
-          {/* Centro Dinâmico em Destaque */}
-          <div className="w-[62%] shrink-0 flex flex-col space-y-2">
+          {/* Card Central Ativo - Destaque Principal */}
+          <div className="w-[62%] shrink-0 flex flex-col space-y-2 z-10">
             <div
-              className={`relative bg-slate-950 overflow-hidden shadow-xl transition-all duration-500 ${aspectClass}`}
+              className={`relative bg-slate-950 overflow-hidden shadow-xl transition-all duration-500 transform scale-100 ${aspectClass}`}
               style={{
                 borderRadius: activeBorderRadius,
                 border: `${safeNumber(carousel.border_width, 2, 0)}px solid ${carousel.border_color || colors.primary}`,
-                boxShadow: `0 10px 15px -3px ${colors.primary}20`
+                boxShadow: `0 10px 25px -5px ${carousel.border_color || colors.primary}40`
               }}
             >
               <video
+                key={activeIndex} // Força o react a re-renderizar para tocar o vídeo novo
                 ref={el => el && videoRefs.current.set(1, el)}
-                src={DEMO_PREVIEW_VIDEOS[0]}
+                src={DEMO_PREVIEW_VIDEOS[activeIndex]}
                 autoPlay
                 loop
                 muted
                 playsInline
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 pointer-events-none" />
 
-              {/* Overlay Dinâmico */}
-              <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse">
+              {/* Tag Destaque */}
+              <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-rose-500 text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse">
                 <span className="w-1 h-1 bg-white rounded-full" />
                 Destaque
               </div>
+
+              {/* Play Button */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
+                  <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
+                </div>
+              </div>
             </div>
 
-            {/* Card de Produto */}
+            {/* Card de Produto do Vídeo Focado */}
             {carousel.show_product_card && !isCircle && (
-              <div className="bg-white border border-slate-150 rounded-xl p-1.5 flex items-center gap-2 shadow-sm">
-                <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-50">
-                  <img 
-                    src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" 
-                    className="w-full h-full object-cover" 
-                  />
+              <div className="bg-white border border-slate-150 rounded-xl p-1.5 flex items-center gap-2 shadow-sm transition-all duration-300">
+                <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
+                  <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" className="w-full h-full object-cover" />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 text-left">
                   <p className="text-[8px] font-extrabold text-slate-800 truncate">Calça Slim</p>
                   <p className="text-[7.5px] font-black text-[#0094EB]">R$ 149,95</p>
                 </div>
@@ -2000,19 +2017,25 @@ const DynamicCarouselPreview = ({
             )}
           </div>
 
-          {/* Direita */}
+          {/* Card Direita - Cortado & Opacidade menor (Próximo Index) */}
           <div 
-            className={`w-[15%] shrink-0 bg-slate-100 opacity-35 scale-85 overflow-hidden transition-all duration-300 ${sideAspectClass}`}
+            className={`w-[15%] shrink-0 bg-slate-900 opacity-35 scale-85 overflow-hidden transition-all duration-500 shadow-sm ${sideAspectClass}`}
             style={{ borderRadius: isCircle ? '50%' : borderRadius }}
           >
-            <div className="w-full h-full bg-gradient-to-b from-slate-200 to-slate-300" />
+            <video
+              src={DEMO_PREVIEW_VIDEOS[rightIndex]}
+              muted
+              playsInline
+              loop
+              className="w-full h-full object-cover grayscale"
+            />
           </div>
         </div>
       </div>
     );
   }
 
-  // DESKTOP
+  // DESKTOP: Renderização original
   const rawWidth = safeNumber(parseFloat(carousel.width || '130'), 130, 40);
   const cardWidth = `${rawWidth}px`;
   const cardHeight = isCircle ? cardWidth : `${Math.round(shape === 'landscape' ? (rawWidth * 9 / 16) : (rawWidth * 16 / 9))}px`;
