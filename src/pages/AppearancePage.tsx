@@ -2170,9 +2170,9 @@ const unifiedDropShadow = applyShadow
           const isAct = num === 1;
           const itemIndex = num === 0 ? leftIndex : num === 1 ? activeIndex : rightIndex;
 
-          const unifiedDesktopShadow = isAct && applyShadow
-            ? `drop-shadow(0 15px 15px ${borderColor}45) drop-shadow(0 6px 6px rgba(0,0,0,0.18))`
-            : 'none';
+const unifiedDesktopShadow = isAct && applyShadow
+  ? `drop-shadow(0 8px 12px rgba(0,0,0,0.35)) drop-shadow(0 4px 6px rgba(0,0,0,0.2))`
+  : 'none';
 
           return (
             <div
