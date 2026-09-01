@@ -2015,9 +2015,6 @@ const DynamicCarouselPreview = ({
     titleAlign === 'right' ? 'text-right w-full px-4' :
     'text-center w-full';
 
-  const leftIndex = (activeIndex - 1 + 3) % 3;
-  const rightIndex = (activeIndex + 1) % 3;
-
   // ==================== LAYOUT MOBILE ====================
   if (isMobile) {
     const mobileActiveWidth = Math.min(rawWidth * 0.75, 115);
