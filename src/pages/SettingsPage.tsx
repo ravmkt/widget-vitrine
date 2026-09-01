@@ -25,7 +25,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { 
   ShoppingBag, Sparkles, Cpu, Home, Activity, Trophy, 
-  Baby, PawPrint, Coffee, Gem, Palette, Globe 
+  Baby, PawPrint, Coffee, Gem, Palette, Globe,
+  Loader2, Save, Sun, Moon, Copy, RefreshCw, CheckCircle2, Image, X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '@/context/TenantContext';
@@ -150,6 +151,25 @@ const appSettingsToGeneralSettings = (
   store_public_id: app.store_public_id || '',
   public_live_key: app.public_live_key || '',
 });
+
+// Helper para converter a string de ícone vinda do banco em Componente SVG
+const renderSectorIcon = (iconName: string) => {
+  const props = { className: "w-4 h-4 mr-2 text-slate-500 dark:text-slate-400 inline-block shrink-0" };
+  switch (iconName) {
+    case 'ShoppingBag': return <ShoppingBag {...props} />;
+    case 'Sparkles': return <Sparkles {...props} />;
+    case 'Cpu': return <Cpu {...props} />;
+    case 'Home': return <Home {...props} />;
+    case 'Activity': return <Activity {...props} />;
+    case 'Trophy': return <Trophy {...props} />;
+    case 'Baby': return <Baby {...props} />;
+    case 'PawPrint': return <PawPrint {...props} />;
+    case 'Coffee': return <Coffee {...props} />;
+    case 'Gem': return <Gem {...props} />;
+    case 'Palette': return <Palette {...props} />;
+    default: return <Globe {...props} />;
+  }
+};
 
 const SettingsPage = () => {
   const navigate = useNavigate();
@@ -366,6 +386,10 @@ const SettingsPage = () => {
         const sectorValue =
           selectedSectorId === 'none' ? null : selectedSectorId || null;
 
+        // Procura o setor selecionado na lista para extrair a slug textual limpa
+        const selectedSectorObj = sectors.find(s => s.id === selectedSectorId);
+        const sectorSlug = selectedSectorObj ? selectedSectorObj.slug : null;
+
         await supabase
           .from('stores')
           .update({
@@ -374,6 +398,7 @@ const SettingsPage = () => {
             logo_url: finalLogoUrl || null,
             contact_email: updatedSettings.contact_email || null,
             sector_id: sectorValue,
+            sector: sectorSlug, // Sincronização direta e transparente
             updated_at: now,
           })
           .eq('id', resolvedStoreId);
@@ -511,7 +536,7 @@ const SettingsPage = () => {
                 <button
                   type="button"
                   onClick={() => setIsDark(false)}
-                  className={`flex items-center gap-3 rounded-2xl border-2 p-3 transition-all text-left ${!isDark ? 'border-[#0094EB] bg-blue-50/50 dark:bg-[#0f1220]' : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220]/40 hover:border-slate-300 dark:hover:border-white/20'}`}
+                  className={`flex items-center gap-3 rounded-2xl border-2 p-3 transition-all text-left cursor-pointer ${!isDark ? 'border-[#0094EB] bg-blue-50/50 dark:bg-[#0f1220]' : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220]/40 hover:border-slate-300 dark:hover:border-white/20'}`}
                 >
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${!isDark ? 'bg-[#0094EB] text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400'}`}>
                     <Sun size={18} />
@@ -527,7 +552,7 @@ const SettingsPage = () => {
                 <button
                   type="button"
                   onClick={() => setIsDark(true)}
-                  className={`flex items-center gap-3 rounded-2xl border-2 p-3 transition-all text-left ${isDark ? 'border-[#ff7a29] bg-orange-50/10' : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220]/40 hover:border-slate-300 dark:hover:border-white/20'}`}
+                  className={`flex items-center gap-3 rounded-2xl border-2 p-3 transition-all text-left cursor-pointer ${isDark ? 'border-[#ff7a29] bg-orange-50/10' : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220]/40 hover:border-slate-300 dark:hover:border-white/20'}`}
                 >
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${isDark ? 'bg-[#ff7a29] text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400'}`}>
                     <Moon size={18} />
@@ -636,7 +661,10 @@ const SettingsPage = () => {
                   <SelectItem value="none">Nenhum setor selecionado</SelectItem>
                   {sectors.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
-                      {s.icon} {s.name}
+                      <span className="flex items-center gap-1.5">
+                        {renderSectorIcon(s.icon)}
+                        <span>{s.name}</span>
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -859,7 +887,7 @@ const SettingsPage = () => {
           </div>
         </div>
         
-        {/* ── BOTÃO SALVAR PRIMÁRIO NO RODAPÉ (AGORA TOTALMENTE PADRONIZADO COM O TOPO) ── */}
+        {/* ── BOTÃO SALVAR PRIMÁRIO NO RODAPÉ ── */}
         <div className="flex justify-end pt-4">
           <Button
             type="submit"
