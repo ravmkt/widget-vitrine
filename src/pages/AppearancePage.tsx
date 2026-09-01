@@ -1922,63 +1922,6 @@ const CarouselPreview = ({
   );
 };
 
-  // DESKTOP: Renderiza a lista padrão com o limite configurado
-  const visibleItems = safeNumber(carousel.visible_items, 4, 1);
-  const items = Array.from({ length: Math.max(1, visibleItems + 1) });
-  const rawWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
-  const cardWidth = `${rawWidth}px`;
-  const cardHeight = isCircle ? cardWidth : `${Math.round(shape === 'landscape' ? (rawWidth * 9 / 16) : (rawWidth * 16 / 9))}px`;
-
-  return (
-    <div className="w-full py-3 space-y-3">
-      {carousel.show_title && (
-        <h4 className="text-sm font-black text-slate-800 tracking-wider">
-          {carousel.title_text || 'Stories'}
-        </h4>
-      )}
-      <div className="flex items-start gap-3 overflow-x-auto scrollbar-none pb-2">
-        {items.map((_, i) => (
-          <div key={i} style={{ width: cardWidth }} className="flex flex-col space-y-1.5 shrink-0">
-            <div
-              style={{
-                width: cardWidth,
-                height: cardHeight,
-                borderRadius,
-                border: `${safeNumber(carousel.border_width, 1, 0)}px solid ${carousel.border_color || colors.primary}`
-              }}
-              className="relative overflow-hidden bg-slate-950 shadow-md flex items-center justify-center shrink-0"
-            >
-              <video
-                ref={el => el && videoRefs.current.set(i, el)}
-                src={DEMO_PREVIEW_VIDEOS[i % DEMO_PREVIEW_VIDEOS.length]}
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/55 pointer-events-none" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-6 h-6 rounded-full bg-white/95 shadow flex items-center justify-center">
-                  <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
-                </div>
-              </div>
-            </div>
-            {carousel.show_product_card && !isCircle && (
-              <div className="bg-slate-50 border border-slate-100 rounded-lg p-1 flex items-center gap-1">
-                <div className="w-5 h-5 rounded bg-slate-200 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[7px] font-bold text-slate-800 truncate">Produto {i + 1}</p>
-                  <p className="text-[6px] text-slate-400">R$ 99,90</p>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 const DynamicCarouselPreview = ({
   carousel,
   colors,
