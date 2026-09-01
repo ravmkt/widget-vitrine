@@ -2108,9 +2108,10 @@ const DynamicCarouselPreview = ({
           return (
             <div
               key={num}
-              className="shrink-0 flex flex-col items-center space-y-2 transition-all duration-300"
+              className="shrink-0 relative transition-all duration-300"
               style={{
                 width: cardWidth,
+                height: cardHeight,
                 transform: isAct && scaleHighlight ? 'scale(1.1)' : 'scale(0.95)',
                 zIndex: isAct ? 10 : 1,
               }}
@@ -2121,7 +2122,7 @@ const DynamicCarouselPreview = ({
                   borderRadius, border: `${borderWidth}px solid ${borderColor}`,
                   boxShadow: isAct ? shadowStyle : 'none',
                 }}
-                className="relative overflow-hidden bg-slate-950 w-full transition-all duration-300 box-border"
+                className="relative overflow-hidden bg-slate-950 transition-all duration-300 box-border"
               >
                 <video
                   key={`d-slot-${num}`}
@@ -2140,6 +2141,26 @@ const DynamicCarouselPreview = ({
                   </div>
                 )}
               </div>
+
+              {isAct && showProductCard && !isCircle && (
+                <div
+                  className="absolute left-0 w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border"
+                  style={{
+                    top: `calc(${cardHeight} + 8px)`,
+                    backgroundColor: pCardBg, border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
+                    borderRadius: `${pCardBorderRadius}px`, padding: '6px',
+                  }}
+                >
+                  <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
+                    <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-extrabold truncate">Calça Confort</p>
+                    <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 154,95</p>
+                  </div>
+                </div>
+              )}
+            </div>
 
               {isAct && showProductCard && !isCircle && (
                 <div
