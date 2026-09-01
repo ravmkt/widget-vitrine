@@ -1896,9 +1896,6 @@ const CarouselPreview = ({
   );
 };
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Play } from 'lucide-react';
-
 const DynamicCarouselPreview = ({
   carousel,
   colors,
@@ -1908,7 +1905,7 @@ const DynamicCarouselPreview = ({
   colors: any;
   isMobile?: boolean;
 }) => {
-  // --- FUNÇÕES UTILITÁRIAS INTERNAS (Evita erros de import/escopo) ---
+  // --- FUNÇÕES UTILITÁRIAS INTERNAS (Seguras contra escopo) ---
   const safeNumber = (val: any, fallback: number, min = 0): number => {
     const num = Number(val);
     if (isNaN(num)) return fallback;
@@ -2237,8 +2234,6 @@ const DynamicCarouselPreview = ({
     </div>
   );
 };
-
-export default DynamicCarouselPreview;
 
 const GridPreview = ({
   grid,
