@@ -2059,9 +2059,19 @@ const GridPreview = ({
 
   const borderRadius = isCircle ? '50%' : cssSize(grid.border_radius, '12px');
 
-  // No mobile: desenha um grid elegante de 3 colunas (1 linha de 3 itens) para ficar visível e proporcional
+  // Mobile: Grade flexível que respeita a proporção de tela correta sem esticar círculos
   if (isMobile) {
     const items = Array.from({ length: 3 });
+    
+    let aspectClass = "aspect-[9/15]";
+    if (isCircle) {
+      aspectClass = "aspect-square";
+    } else if (shape === 'landscape') {
+      aspectClass = "aspect-[16/9]";
+    } else if (shape === 'square') {
+      aspectClass = "aspect-square";
+    }
+
     return (
       <div className="w-full py-2 flex flex-col space-y-3">
         {grid.show_title && (
@@ -2069,14 +2079,14 @@ const GridPreview = ({
             {grid.title_text || 'Grade de Vídeos'}
           </h4>
         )}
-        
+
         <div className="grid grid-cols-3 gap-2 w-full">
           {items.map((_, i) => (
             <div key={i} className="flex flex-col space-y-1">
               <div
-                className="relative aspect-[9/15] bg-slate-950 overflow-hidden shadow-sm flex items-center justify-center"
+                className={`relative bg-slate-950 overflow-hidden shadow-sm flex items-center justify-center transition-all duration-300 ${aspectClass}`}
                 style={{
-                  borderRadius,
+                  borderRadius: isCircle ? '50%' : borderRadius,
                   border: `${safeNumber(grid.border_width, 1, 0)}px solid ${grid.border_color || colors.primary}`
                 }}
               >
@@ -2123,7 +2133,7 @@ const GridPreview = ({
           {grid.title_text || 'Grade de Vídeos'}
         </h4>
       )}
-      <div 
+      <div
         className="grid gap-3 overflow-y-auto max-h-[300px] scrollbar-none"
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
