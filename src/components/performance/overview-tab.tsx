@@ -21,6 +21,124 @@ interface ChartDataPoint {
 }
 
 export function OverviewTab({ timeRange, customFrom, customTo, benchmark }: OverviewTabProps) {
+    const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false);
+
+  // Dicas estratégicas personalizadas para cada um dos 12 setores
+  const getSectorStrategicPlaybook = (slug: string) => {
+    switch (slug) {
+      case 'moda_acessorios':
+        return {
+          audienceBehavior: "Clientes de moda compram por caimento, movimento e combinação visual direta. Stories que trazem corpos reais e mostram os tecidos de perto convertem até 3x mais.",
+          tips: [
+            "Provador Humano Real: Evite apenas fotos estáticas. Mostre o caimento das peças em movimento em pessoas de biotipos reais.",
+            "Visualização em 360°: Dedique os primeiros 3 segundos do story (Hook) para mostrar um close na textura, acabamento e costura.",
+            "Combinação de Looks (Mix & Match): Grave sequências rápidas de vídeo ensinando a combinar a peça principal com calçados e acessórios."
+          ]
+        };
+      case 'beleza_cosmeticos':
+        return {
+          audienceBehavior: "O público de cosméticos busca textura, aplicação prática e provas reais de eficácia. Vídeos no estilo 'Get Ready With Me' e reviews sinceros dominam o engajamento.",
+          tips: [
+            "Prova e Aplicação Real: Faça stories mostrando a textura do produto na pele e o resultado instantâneo sem filtros artificiais.",
+            "Uso de Micro-Influenciadores: Vídeos de pessoas comuns fazendo unboxing e primeiras impressões aumentam o CVR de beleza em até 32%.",
+            "Dicas de Rotina (Skincare/Make): Crie sequências curtas educacionais integrando o produto em um ritual de autocuidado diário."
+          ]
+        };
+      case 'artesanato':
+        return {
+          audienceBehavior: "O comprador de artesanato valoriza o processo criativo, a exclusividade e a história por trás de cada detalhe. O 'fazer manual' gera uma conexão afetiva poderosa.",
+          tips: [
+            "Storytelling do Processo ('Crafting'): Grave vídeos acelerados do produto sendo fabricado à mão. Esse formato gera um Hook Rate de até 75%.",
+            "Selo de Exclusividade: Enfatize na narração e nos textos flutuantes que cada lote do produto é único e limitado.",
+            "Vídeos de Embalagem: Stories mostrando o cuidado na hora de embalar e escrever cartinhas personalizadas para o cliente geram alto engajamento."
+          ]
+        };
+      case 'eletronicos':
+        return {
+          audienceBehavior: "Consumidores de tecnologia são extremamente racionais e técnicos. Eles buscam demonstrações de recursos específicos, unboxings detalhados e testes de durabilidade.",
+          tips: [
+            "Uso Funcional Imediato: Não mostre o eletrônico desligado. O vídeo deve começar com o aparelho executando sua principal função ou brilhando.",
+            "Resolvendo uma Dor Técnica: Mostre como o gadget economiza tempo ou resolve um gargalo técnico específico no dia a dia.",
+            "Unboxing Dinâmico: Stories ágeis de 15s revelando o que vem na caixa e o sentimento de novidade estimulam a conversão."
+          ]
+        };
+      case 'casa_decoracao':
+        return {
+          audienceBehavior: "Compradores de decoração buscam harmonização e transformação de ambientes. Eles precisam visualizar o objeto inserido em um contexto residencial completo.",
+          tips: [
+            "O Poder do Antes e Depois: Grave stories rápidos mostrando um cômodo sem graça sendo transformado instantaneamente com o seu produto.",
+            "Ambientação Realista: Evite fundo branco de estúdio. Filme o objeto sob iluminação natural em salas, quartos ou cozinhas reais.",
+            "Proporção e Dimensões: Pegue o objeto na mão ou coloque-o ao lado de itens comuns para que o cliente tenha noção exata do tamanho."
+          ]
+        };
+      case 'saude_suplementos':
+        return {
+          audienceBehavior: "Setor movido por confiança, autoridade científica e benefícios claros para a saúde. O cliente precisa compreender o impacto direto da fórmula na sua rotina.",
+          tips: [
+            "Explicação Simples dos Benefícios: Use legendas flutuantes coloridas listando as 3 principais melhorias físicas que o suplemento traz.",
+            "Rotina Matinal/Pré-Treino: Grave vídeos dinâmicos de preparo, mistura do produto e consumo diário, reforçando a consistência de uso.",
+            "Origem e Certificação: Destaque a pureza dos ingredientes, selos da Anvisa ou recomendações profissionais nos primeiros segundos."
+          ]
+        };
+      case 'pet_shop':
+        return {
+          audienceBehavior: "Tutores tratam seus animais de estimação como membros da família. O apelo emocional focado em fofura, alegria e bem-estar animal é imbatível.",
+          tips: [
+            "Pets Usando o Produto: Mostre o cachorro ou gato se divertindo com o brinquedo ou saboreando o petisco com entusiasmo.",
+            "Alívio de Stress/Dificuldade: Demonstre como o produto acalma o pet, melhora a higiene ou facilita a rotina de banho e alimentação.",
+            "Alta Carga de Fofura: Use áudios carinhosos ou divertidos e garanta closes bem nítidos na expressão de felicidade do pet."
+          ]
+        };
+      case 'esporte_lazer':
+        return {
+          audienceBehavior: "Público motivado por performance, superação física e pertencimento a uma tribo. O story deve transpirar energia, resistência e atividade física real.",
+          tips: [
+            "Produto Sob Esforço: Grave o tênis na corrida, a roupa suportando o agachamento ou o acessório sendo usado sob sol e chuva.",
+            "Gatilho de Inspiração: Crie histórias que incentivem o cliente a começar a praticar exercícios hoje mesmo usando a sua marca.",
+            "Destaque Tecnológico: Mostre a elasticidade do tecido, respirabilidade ou leveza através de testes dinâmicos de vídeo."
+          ]
+        };
+      case 'infantil_brinquedos':
+        return {
+          audienceBehavior: "A compra é feita pelos pais, mas motivada pela alegria e desenvolvimento dos filhos. Destaque segurança, estímulo cognitivo e momentos felizes em família.",
+          tips: [
+            "Crianças Brincando Livremente: Mostre a interação genuína e as risadas das crianças interagindo com o brinquedo de forma segura.",
+            "Benefício Educativo: Explique rapidamente quais habilidades motoras, criativas ou sociais o produto ajuda a desenvolver.",
+            "Fácil Limpeza e Durabilidade: Faça stories mostrando a resistência do material a quedas e como é prático de limpar no dia a dia."
+          ]
+        };
+      case 'alimentos_bebidas':
+        return {
+          audienceBehavior: "O apetite-appeal é a chave de ouro. O cliente precisa 'comer com os olhos'. O som da crocância, a fumaça quente ou o brilho do alimento vendem o produto na hora.",
+          tips: [
+            "Closes Sensoriais Extremas: O queijo derretendo, o corte macio de uma carne ou a calda de chocolate caindo bem devagar sobre o doce.",
+            "Efeitos de Áudio (ASMR): Capte o som real da embalagem abrindo, do gelo caindo no copo ou da crocância ao morder.",
+            "Segurança de Preparo: Mostre a higiene da cozinha, o carinho na montagem do prato e a velocidade de entrega rápida."
+          ]
+        };
+      case 'joias_semijoias':
+        return {
+          audienceBehavior: "Mercado de luxo, autoestima e presentes memoráveis. O foco deve ser o brilho sob iluminação correta, o refinamento da peça e a embalagem luxuosa.",
+          tips: [
+            "O Jogo da Luz: Filme as joias sob luz natural direta para capturar o reflexo e o brilho real de cada detalhe e pedra preciosa.",
+            "Modelos em Close: Mostre a peça sendo usada de forma harmoniosa no pescoço, orelha ou dedos, para dar noção de escala e sofisticação.",
+            "Experiência do Unboxing Premium: Grave o processo de abertura de caixas de veludo, sacolas de seda e certificados de garantia."
+          ]
+        };
+      default:
+        return {
+          audienceBehavior: "Comportamento geral de e-commerce e varejo digital baseado em vídeos rápidos, explicativos e com forte apelo visual imediato.",
+          tips: [
+            "Regra dos 3 Segundos: Coloque a maior transformação do seu produto logo no início para capturar a atenção do usuário.",
+            "Legendas Sempre Ativas: 80% do público assiste vídeos sem áudio. O uso de textos grandes na tela é obrigatório para não perder vendas.",
+            "CTA Claro: Mantenha um único botão direcionando o usuário para a ação que você deseja (Ex: Compre Agora)."
+          ]
+        };
+    }
+  };
+
+  const playbook = getSectorStrategicPlaybook(benchmark.sector_key);
+
   const { currentStore: tenant, loading: tenantLoading } = useTenant()
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState({
