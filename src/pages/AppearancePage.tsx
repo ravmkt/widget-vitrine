@@ -2190,7 +2190,7 @@ const DynamicCarouselPreview = ({
                   width: cardWidth,
                   height: cardHeight,
                   borderRadius: isCircle ? '50%' : borderRadius,
-                  border: `${isAct ? borderWidth + 1 : borderWidth}px solid ${borderColor}`,
+                  border: `${borderWidth}px solid ${borderColor}`,
                   filter: !isAct && desaturate ? 'grayscale(100%) opacity(0.55)' : 'none',
                 }}
                 className="relative overflow-hidden bg-slate-950 w-full transition-all duration-300 shadow-md"
