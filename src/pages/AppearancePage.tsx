@@ -1628,17 +1628,37 @@ const FloatingPreview = ({
   }, [floating.autoplay_videos]);
 
   const isCircle = floating.shape === 'circle';
-  const width = cssSize(floating.width, '80px');
-  const height = cssSize(floating.height, '142px');
-  const circleSize = cssSize(floating.border_radius || floating.width, '80px');
-  const finalWidth = isCircle ? circleSize : width;
-  const finalHeight = isCircle ? circleSize : height;
+  const isMobile = device === 'mobile';
+  
+  // No mobile, escalamos levemente os tamanhos para que caiba proporcionalmente
+  const scale = isMobile ? 0.85 : 1;
+  const baseWidth = safeNumber(parseFloat(floating.width || '80'), 80, 40) * scale;
+  
+  // Altura auto-calculada dependendo do formato escolhido
+  const baseHeight = isCircle 
+    ? baseWidth 
+    : floating.shape === 'landscape' 
+      ? Math.round(baseWidth * 9 / 16) 
+      : Math.round(baseWidth * 16 / 9);
 
-  const positionStyle: React.CSSProperties = {};
-  const gapBottom = cssSize(floating.bottom_spacing, '20px');
-  const gapTop = cssSize(floating.top_spacing, '20px');
-  const gapLeft = cssSize(floating.left_spacing, '20px');
-  const gapRight = cssSize(floating.right_spacing, '20px');
+  const cardWidth = `${baseWidth}px`;
+  const cardHeight = `${baseHeight}px`;
+  const borderRadius = isCircle ? '50%' : cssSize(floating.border_radius, '12px');
+
+  const positionStyle: React.CSSProperties = {
+    width: cardWidth,
+    height: cardHeight,
+    borderRadius: borderRadius,
+    borderColor: colors.floatingBorder,
+    borderWidth: `${safeNumber(floating.border_width, 2, 0)}px`,
+    borderStyle: 'solid',
+  };
+
+  // Tratamento de margens proporcionais no mobile para não estourar a tela do mockup
+  const gapBottom = isMobile ? '12px' : cssSize(floating.bottom_spacing, '20px');
+  const gapTop = isMobile ? '12px' : cssSize(floating.top_spacing, '20px');
+  const gapLeft = isMobile ? '12px' : cssSize(floating.left_spacing, '20px');
+  const gapRight = isMobile ? '12px' : cssSize(floating.right_spacing, '20px');
 
   if (floating.position === 'fixed_bottom_right' || floating.position === 'fixed_bottom_left') {
     positionStyle.bottom = gapBottom;
@@ -1653,84 +1673,30 @@ const FloatingPreview = ({
     positionStyle.right = gapRight;
   }
 
-  const isRightAligned = floating.position.includes('right') || floating.floating_position.includes('right');
-
   return (
-    <div 
-      className="relative w-full h-[440px] overflow-hidden rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50"
-      style={{
-        backgroundImage: 'radial-gradient(#e2e8f0 1.5px, transparent 1.5px)',
-        backgroundSize: '16px 16px',
-      }}
+    <div
+      style={positionStyle}
+      className={cn(
+        "absolute overflow-hidden shadow-xl bg-slate-950 transition-all duration-300 flex items-center justify-center cursor-pointer",
+        isCircle ? "aspect-square" : ""
+      )}
     >
-      {/* Wrapper dinâmico que carrega o Widget + CTA de forma sincronizada na UI de teste */}
-      <div
-        className="absolute transition-all duration-300 animate-fade-in flex items-center"
-        style={{
-          ...positionStyle,
-          zIndex: safeNumber(floating.z_index, 5, 1),
-        }}
-      >
-        {/* Pílula do CTA Lateral */}
-        {floating.show_cta && floating.cta_text && (
-          <div
-            className="absolute whitespace-nowrap shadow-md pointer-events-none transition-all duration-300"
-            style={{
-              backgroundColor: floating.cta_bg_color || '#0094EB',
-              color: floating.cta_text_color || '#FFFFFF',
-              fontSize: `${floating.cta_font_size || 14}px`,
-              fontWeight: floating.cta_is_bold ? 'bold' : 'normal',
-              padding: '6px 14px',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-              zIndex: -1, // Fica atrás do flutuante
-              ...(isRightAligned ? {
-                right: '100%',
-                marginRight: '-15px', // Sobreposição para efeito visual
-                paddingRight: '25px',
-                borderRadius: '30px 0 0 30px'
-              } : {
-                left: '100%',
-                marginLeft: '-15px',
-                paddingLeft: '25px',
-                borderRadius: '0 30px 30px 0'
-              })
-            }}
-          >
-            {floating.cta_text}
-          </div>
+      <video
+        ref={videoRef}
+        src={DEMO_PREVIEW_VIDEOS[0]}
+        loop
+        muted
+        playsInline
+        className={cn(
+          "w-full h-full object-cover",
+          floating.object_fit === 'contain' ? "object-contain" : 
+          floating.object_fit === 'fill' ? "object-fill" : "object-cover"
         )}
-
-        {/* Widget Flutuante em si */}
-        <div
-          className="relative flex items-center justify-center overflow-hidden bg-white shadow-xl shrink-0"
-          style={{
-            width: finalWidth,
-            height: finalHeight,
-            borderRadius: isCircle ? '999px' : cssSize(floating.border_radius, '12px'),
-            border: cssBorder(floating.border_style, colors.floatingBorder),
-          }}
-        >
-          <video
-            ref={videoRef}
-            src={DEMO_PREVIEW_VIDEOS[0]}
-            loop={floating.autoplay_videos ?? true}
-            muted
-            playsInline
-            preload="auto"
-            poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
-          />
-
-          {floating.show_play_icon && (
-            <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-              <PlaySquare size={16} />
-            </div>
-          )}
-          {floating.allow_close && (
-            <div className="absolute right-1 top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
-              <X size={12} />
-            </div>
-          )}
+      />
+      {/* Indicador de Stories / Play Icon */}
+      <div className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-all">
+        <div className="w-6 h-6 rounded-full bg-white/90 shadow-md flex items-center justify-center">
+          <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
         </div>
       </div>
     </div>
