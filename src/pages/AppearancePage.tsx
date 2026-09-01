@@ -2004,7 +2004,7 @@ const DynamicCarouselPreview = ({
           </div>
         )}
 
-        <div className="flex items-center justify-center w-full overflow-visible py-4 px-1 transition-all duration-500" style={{ gap: `${spacingNum}px` }}>
+<div className="flex items-center justify-center w-full overflow-visible py-4 px-1 pb-14 transition-all duration-500" style={{ gap: `${spacingNum}px` }}>
           <div className="shrink-0 flex flex-col items-center justify-center">
             <div
               style={{
