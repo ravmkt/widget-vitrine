@@ -1886,11 +1886,13 @@ const CarouselPreview = ({
                   className="w-full h-full object-cover pointer-events-none"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/55 pointer-events-none" />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-6 h-6 rounded-full bg-white/95 shadow flex items-center justify-center">
-                    <Play size={8} className="text-slate-900 fill-slate-900 ml-0.5" />
+                {showPlayIcon && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-6 h-6 rounded-full bg-white/95 shadow flex items-center justify-center">
+                      <Play size={8} className="text-slate-900 fill-slate-900 ml-0.5" />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {showProductCard && !isCircle && (
