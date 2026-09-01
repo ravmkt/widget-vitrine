@@ -2116,13 +2116,12 @@ const unifiedDropShadow = applyShadow
           </div>
 
           {/* LADO DIREITO */}
-          <div 
+          <div
             style={{
               width: `${mobileSideWidth}px`,
               height: `${mobileSideHeight}px`,
               borderRadius: isCircle ? '50%' : borderRadius,
               border: `${borderWidth}px solid ${borderColor}`,
-              filter: desaturate ? 'grayscale(100%) opacity(0.55)' : 'opacity(0.7)',
               transform: 'scale(0.92)',
             }}
             className="shrink-0 bg-slate-900 overflow-hidden transition-all duration-500"
@@ -2135,7 +2134,8 @@ const unifiedDropShadow = applyShadow
               playsInline
               loop
               autoPlay={autoplayVideos && playInactive}
-              className="w-full h-full object-cover"
+              style={{ filter: desaturate ? 'grayscale(100%) opacity(0.55)' : 'opacity(0.7)' }}
+              className="w-full h-full object-cover transition-all duration-500"
             />
           </div>
         </div>
