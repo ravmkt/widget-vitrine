@@ -35,10 +35,15 @@ interface ChartDataPoint {
   clicks: number
 }
 
-export function OverviewTab({ timeRange, customFrom, customTo, benchmark }: OverviewTabProps) {
-    const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false);
+export function OverviewTab({
+  timeRange,
+  customFrom,
+  customTo,
+  benchmark
+}: OverviewTabProps) {
+  // ── INÍCIO DA ADIÇÃO DO STATE E DO PLAYBOOK ──
+  const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false)
 
-  // Dicas estratégicas personalizadas para cada um dos 12 setores
   const getSectorStrategicPlaybook = (slug: string) => {
     switch (slug) {
       case 'moda_acessorios':
@@ -152,7 +157,8 @@ export function OverviewTab({ timeRange, customFrom, customTo, benchmark }: Over
     }
   };
 
-  const playbook = getSectorStrategicPlaybook(benchmark.sector_key);
+  const playbook = getSectorStrategicPlaybook(benchmark?.sector_key || 'default')
+  // ── FIM DA ADIÇÃO DO STATE E DO PLAYBOOK ──
 
   const { currentStore: tenant, loading: tenantLoading } = useTenant()
   const [loading, setLoading] = useState(true)
