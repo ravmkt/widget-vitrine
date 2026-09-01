@@ -136,7 +136,6 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
         <SidebarInset className="flex flex-col flex-1 relative z-0 min-w-0">
           {/* Banner Global de Trial / Status (exceto na página de billing e plans) */}
-          {location.pathname !== '/billing' && location.pathname !== '/plans' && (
             <>
               {subscriptionStatus === 'trialing' && (() => {
                 const days = trialDaysRemaining ?? 7;
@@ -258,7 +257,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </div>
               )}
             </>
-          )}
 
           <main className="flex-1 p-4 md:p-8 animate-fade-in relative z-0 flex flex-col justify-between">
             <div className="mx-auto w-full max-w-7xl flex-1">
