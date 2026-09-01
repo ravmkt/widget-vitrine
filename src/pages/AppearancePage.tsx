@@ -1906,6 +1906,7 @@ const DynamicCarouselPreview = ({
   isMobile?: boolean;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+  const trackIndexRef = useRef(0); // sempre em sincronia com o state, sem closures velhas
   const videoSources = DEMO_PREVIEW_VIDEOS;
   const len = videoSources.length;
   const delay = Number(carousel?.autoplay_delay) || 5000;
@@ -1949,24 +1950,26 @@ const DynamicCarouselPreview = ({
     'text-center w-full';
   const shadowStyle = applyShadow ? '0 10px 25px -5px rgba(0,0,0,0.4), 0 8px 10px -6px rgba(0,0,0,0.1)' : 'none';
 
-  // Item width: menor no mobile, real no desktop
   const itemWidth = isMobile ? Math.min(rawWidth * 0.75, 115) : rawWidth;
   let itemHeight = itemWidth * (16 / 9);
   if (isCircle || shape === 'square') itemHeight = itemWidth;
   else if (shape === 'landscape') itemHeight = itemWidth * (9 / 16);
 
   const scaleFactor = scaleHighlight ? 1.12 : 1;
-  const containerHeight = itemHeight * scaleFactor;
+  const cardMaxWidth = itemWidth * scaleFactor;
+  const cardBlockHeight = showProductCard && !isCircle ? 46 : 0; // espaço reservado pro card
+  const containerHeight = itemHeight * scaleFactor + cardBlockHeight;
   const step = itemWidth + spacingNum;
 
-  // Esteira: MUITAS repetições para nunca faltar vídeo nas bordas
-  const REPEAT_TILES = isMobile ? 12 : 25;
+  // Trilho: MUITAS repetições, garante nunca faltar vídeo nas bordas
+  const REPEAT_TILES = isMobile ? 14 : 31;
   const middleTile = Math.floor(REPEAT_TILES / 2);
   const baseIndex = middleTile * len;
   const trackVideos = Array.from({ length: REPEAT_TILES }, () => videoSources).flat();
 
   const [trackIndex, setTrackIndex] = useState(baseIndex);
   const [noTransition, setNoTransition] = useState(false);
+  trackIndexRef.current = trackIndex;
 
   useEffect(() => {
     if (delay <= 0) return;
@@ -1974,15 +1977,19 @@ const DynamicCarouselPreview = ({
     return () => clearInterval(interval);
   }, [delay]);
 
-  const handleTransitionEnd = () => {
-    if (trackIndex - baseIndex >= len) {
-      setNoTransition(true);
-      setTrackIndex((prev) => prev - len);
-      requestAnimationFrame(() => requestAnimationFrame(() => setNoTransition(false)));
-    }
+  // Reset de loop: só reage à transição do TRANSFORM, e sempre lê o valor mais atual via functional update
+  const handleTransitionEnd = (e: React.TransitionEvent) => {
+    if (e.propertyName !== 'transform') return;
+    setTrackIndex((prev) => {
+      if (prev - baseIndex >= len) {
+        setNoTransition(true);
+        requestAnimationFrame(() => requestAnimationFrame(() => setNoTransition(false)));
+        return prev - len;
+      }
+      return prev;
+    });
   };
 
-  // Cada posição do trilho tem um vídeo FIXO (nunca troca) -> zero flicker
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       const isAct = i === trackIndex;
@@ -1992,17 +1999,15 @@ const DynamicCarouselPreview = ({
     });
   }, [playInactive, trackIndex]);
 
-  const cardWidth = itemWidth * scaleFactor;
-
   return (
-    <div className="w-full py-3 space-y-0 overflow-visible">
+    <div className="w-full py-3 overflow-visible">
       {showTitle && (
         <div className={titleAlignClass}><h4 style={titleStyle} className="text-slate-800 tracking-wider mb-2">{titleText}</h4></div>
       )}
 
       <div className="relative w-full" style={{ height: `${containerHeight}px`, overflowX: 'hidden', overflowY: 'visible' }}>
         <div
-          className="flex items-center absolute top-0 left-0"
+          className="flex items-start absolute top-0 left-0"
           style={{
             height: `${containerHeight}px`,
             gap: `${spacingNum}px`,
@@ -2015,13 +2020,17 @@ const DynamicCarouselPreview = ({
             const isAct = i === trackIndex;
             const w = isAct ? itemWidth * scaleFactor : itemWidth;
             const h = isAct ? itemHeight * scaleFactor : itemHeight;
+
             return (
               <div
                 key={i}
-                className="shrink-0 relative"
-                style={{ width: `${w}px`, height: `${h}px`, transition: 'width 0.3s ease, height 0.3s ease', zIndex: isAct ? 10 : 1 }}
+                className="shrink-0 flex flex-col items-center"
+                style={{ width: `${Math.max(w, cardMaxWidth)}px`, zIndex: isAct ? 10 : 1 }}
               >
-                <div style={{ width: '100%', height: '100%', borderRadius, border: `${borderWidth}px solid ${borderColor}`, boxShadow: isAct ? shadowStyle : 'none' }} className="relative overflow-hidden bg-slate-950 box-border">
+                <div
+                  style={{ width: `${w}px`, height: `${h}px`, borderRadius, border: `${borderWidth}px solid ${borderColor}`, boxShadow: isAct ? shadowStyle : 'none', transition: 'width 0.3s ease, height 0.3s ease' }}
+                  className="relative overflow-hidden bg-slate-950 box-border"
+                >
                   <video
                     ref={el => { if (el) videoRefs.current.set(i, el) }}
                     src={videoSrc}
@@ -2041,26 +2050,31 @@ const DynamicCarouselPreview = ({
                     </div>
                   )}
                 </div>
+
+                {showProductCard && !isCircle && (
+                  <div
+                    className="flex items-center gap-2 overflow-hidden box-border transition-opacity duration-300 mt-2"
+                    style={{
+                      width: `${cardMaxWidth}px`,
+                      opacity: isAct ? 1 : 0,
+                      backgroundColor: pCardBg, border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
+                      borderRadius: `${pCardBorderRadius}px`, padding: '6px',
+                    }}
+                  >
+                    <div className="w-7 h-7 rounded bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
+                      <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-extrabold truncate">Calça Confort</p>
+                      <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 154,95</p>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       </div>
-
-      {showProductCard && !isCircle && (
-        <div
-          className="flex items-center gap-2 overflow-hidden box-border mx-auto transition-all duration-300"
-          style={{ width: `${cardWidth}px`, backgroundColor: pCardBg, border: `${pCardBorderWidth}px solid ${pCardBorderColor}`, borderRadius: `${pCardBorderRadius}px`, padding: '6px', marginTop: '10px' }}
-        >
-          <div className="w-7 h-7 rounded bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
-            <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
-          </div>
-          <div className="flex-1 min-w-0 text-left">
-            <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-extrabold truncate">Calça Confort</p>
-            <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 154,95</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
