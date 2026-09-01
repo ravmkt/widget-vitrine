@@ -1717,118 +1717,200 @@ const CarouselPreview = ({
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDown = useRef(false);
   const startX = useRef(0);
-  const scrollLeft = useRef(0);
+  const startScrollLeft = useRef(0);
+  const [centerOffset, setCenterOffset] = useState(0);
+
+  const videoSources = DEMO_PREVIEW_VIDEOS;
+  const len = videoSources.length;
+  const REPEAT_TILES = 14; // muitas cópias para permitir arrasto infinito nos dois sentidos
+  const trackVideos = Array.from({ length: REPEAT_TILES }, () => videoSources).flat();
 
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
   const isCircle = shape === 'circle';
 
+  const configuredWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
+  const rawWidth = isMobile ? Math.min(configuredWidth * 0.75, 130) : configuredWidth;
+  const spacingNum = safeNumber(carousel.spacing, 12, 0);
+  const step = rawWidth + spacingNum;
+
+  const cardHeight = isCircle || shape === 'square'
+    ? rawWidth
+    : shape === 'landscape'
+      ? Math.round(rawWidth * 9 / 16)
+      : Math.round(rawWidth * 16 / 9);
+
+  const borderWidth = safeNumber(carousel.border_style, 1, 0);
+  const borderColor = carousel.border_color || colors.primary;
+  const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
+
+  const showTitle = carousel.show_title ?? false;
+  const titleText = carousel.title_text || 'Stories';
+  const titleAlign = (carousel as any).title_align ?? 'left';
+  const titleFontSize = Number((carousel as any).title_font_size ?? 14);
+  const titleBold = (carousel as any).title_bold ?? true;
+  const titleAlignClass =
+    titleAlign === 'center' ? 'text-center' :
+    titleAlign === 'right' ? 'text-right' : 'text-left';
+
+  const showProductCard = (carousel as any).show_product ?? false;
+  const pCardBg = (carousel as any).product_card_bg || '#FFFFFF';
+  const pCardBorderColor = (carousel as any).product_card_border_color || '#E2E8F0';
+  const pCardBorderWidth = Number((carousel as any).product_card_border_width ?? 1);
+  const pCardBorderRadius = Number((carousel as any).product_card_border_radius ?? 12);
+  const pCardNameSize = Number((carousel as any).product_card_name_size ?? 9);
+  const pCardNameColor = (carousel as any).product_card_name_color || '#0F172A';
+  const pCardPriceSize = Number((carousel as any).product_card_price_size ?? 8);
+  const pCardPriceColor = (carousel as any).product_card_price_color || colors.primary;
+
+  const visibleItems = safeNumber(carousel.visible_items, 4, 1);
+  const containerWidthPx = isMobile ? null : visibleItems * step - spacingNum;
+
+  const loopWidth = len * step;
+  const middleStart = Math.floor(REPEAT_TILES / 2) * loopWidth;
+
+  // Mede o container para centralizar o item ativo no mobile (sem criar espaço vazio, só offset de scroll)
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !isMobile) return;
+    const measure = () => setCenterOffset((el.clientWidth - rawWidth) / 2);
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [isMobile, rawWidth]);
+
+  // Posiciona o scroll inicial no meio do trilho, já centralizando o primeiro item ativo no mobile
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollLeft = isMobile ? middleStart - centerOffset : middleStart;
+  }, [rawWidth, spacingNum, isMobile, centerOffset, middleStart]);
+
+  const teleportIfNeeded = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const totalWidth = loopWidth * REPEAT_TILES;
+    if (el.scrollLeft < loopWidth) {
+      el.scrollLeft += loopWidth * Math.floor(REPEAT_TILES / 2);
+    } else if (el.scrollLeft > totalWidth - loopWidth) {
+      el.scrollLeft -= loopWidth * Math.floor(REPEAT_TILES / 2);
+    }
+  };
+
   useEffect(() => {
     videoRefs.current.forEach((vid) => {
       if (!vid) return;
-      if (carousel.autoplay_videos ?? true) {
-        vid.play().catch(() => {});
-      } else {
-        vid.pause();
-      }
+      if (carousel.autoplay_videos ?? true) vid.play().catch(() => {});
+      else vid.pause();
     });
   }, [carousel.autoplay_videos]);
 
-  // Função para arrastar o carrossel com o mouse (Preview Premium)
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!scrollRef.current) return;
     isDown.current = true;
-    startX.current = e.pageX - scrollRef.current.offsetLeft;
-    scrollLeft.current = scrollRef.current.scrollLeft;
-  };
-
-  const handleMouseLeave = () => {
-    isDown.current = false;
-  };
-
-  const handleMouseUp = () => {
-    isDown.current = false;
+    startX.current = e.pageX;
+    startScrollLeft.current = scrollRef.current.scrollLeft;
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDown.current || !scrollRef.current) return;
     e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX.current) * 1.5; // Multiplicador de velocidade
-    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+    const delta = e.pageX - startX.current; // 1:1, sem multiplicador (elimina os "pulinhos")
+    scrollRef.current.scrollLeft = startScrollLeft.current - delta;
   };
 
-  const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
+  const snapToNearest = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const reference = isMobile ? el.scrollLeft + centerOffset : el.scrollLeft;
+    const target = Math.round(reference / step) * step;
+    el.scrollTo({ left: isMobile ? target - centerOffset : target, behavior: 'smooth' });
+  };
 
-  // MOBILE: Carrossel real rolável com peeking exato (Imagem 1)
-  if (isMobile) {
-    const items = Array.from({ length: 5 }); // 5 itens para o usuário poder rolar
+  const handleMouseUp = () => {
+    isDown.current = false;
+    teleportIfNeeded();
+    if (isMobile) snapToNearest();
+  };
 
-    // Respeita o formato para evitar distorção (Círculos perfeitos!)
-    let aspectClass = "aspect-[9/15]";
-    if (isCircle) {
-      aspectClass = "aspect-square";
-    } else if (shape === 'landscape') {
-      aspectClass = "aspect-[16/9]";
-    } else if (shape === 'square') {
-      aspectClass = "aspect-square";
-    }
+  const handleMouseLeave = () => {
+    if (isDown.current) handleMouseUp();
+  };
 
-    return (
-      <div className="w-full py-2 flex flex-col space-y-3 select-none">
-        {carousel.show_title && (
-          <h4 className="text-xs font-black text-center text-slate-800 uppercase tracking-wider">
-            {carousel.title_text || 'Stories'}
-          </h4>
-        )}
+  const handleScrollEnd = () => {
+    teleportIfNeeded();
+  };
 
-        {/* Container com scroll snapping: o item ativo centraliza e os outros vazam nas laterais */}
+  return (
+    <div className="w-full py-2 flex flex-col space-y-3 select-none">
+      {showTitle && (
+        <h4
+          style={{ fontSize: `${titleFontSize}px`, fontWeight: titleBold ? 'bold' : 'normal' }}
+          className={cn('text-slate-800 tracking-wider w-full', titleAlignClass)}
+        >
+          {titleText}
+        </h4>
+      )}
+
+      <div className="w-full flex justify-center overflow-hidden">
         <div
           ref={scrollRef}
+          onScroll={handleScrollEnd}
           onMouseDown={handleMouseDown}
           onMouseLeave={handleMouseLeave}
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
-          className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory px-[20%] py-1 pb-2 w-full cursor-grab active:cursor-grabbing active:scale-[0.99] transition-transform duration-150"
+          style={{
+            width: containerWidthPx ? `${containerWidthPx}px` : '100%',
+            gap: `${spacingNum}px`,
+          }}
+          className="flex items-start overflow-x-auto scrollbar-none cursor-grab active:cursor-grabbing"
         >
-          {items.map((_, i) => (
-            <div 
-              key={i} 
-              className="w-[60%] shrink-0 flex flex-col space-y-1.5 snap-center"
-            >
+          {trackVideos.map((videoSrc, i) => (
+            <div key={i} style={{ width: `${rawWidth}px` }} className="flex flex-col space-y-1.5 shrink-0">
               <div
                 style={{
-                  borderRadius: isCircle ? '50%' : borderRadius,
-                  border: `${safeNumber(carousel.border_width, 1, 0)}px solid ${carousel.border_color || colors.primary}`
+                  width: `${rawWidth}px`,
+                  height: `${cardHeight}px`,
+                  borderRadius,
+                  border: `${borderWidth}px solid ${borderColor}`,
                 }}
-                className={`relative overflow-hidden bg-slate-950 shadow-md flex items-center justify-center shrink-0 transition-all duration-300 ${aspectClass}`}
+                className="relative overflow-hidden bg-slate-950 shadow-md flex items-center justify-center shrink-0"
               >
                 <video
-                  ref={el => el && videoRefs.current.set(i, el)}
-                  src={DEMO_PREVIEW_VIDEOS[i % DEMO_PREVIEW_VIDEOS.length]}
+                  ref={el => { if (el) videoRefs.current.set(i, el); else videoRefs.current.delete(i); }}
+                  src={videoSrc}
                   loop
                   muted
                   playsInline
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover pointer-events-none"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/55 pointer-events-none" />
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-6 h-6 rounded-full bg-white/95 shadow flex items-center justify-center">
                     <Play size={8} className="text-slate-900 fill-slate-900 ml-0.5" />
                   </div>
                 </div>
               </div>
 
-              {carousel.show_product_card && !isCircle && (
-                <div className="bg-white border border-slate-100 rounded-xl p-1.5 flex items-center gap-2 shadow-sm">
+              {showProductCard && !isCircle && (
+                <div
+                  className="flex items-center gap-1.5 shadow-sm overflow-hidden"
+                  style={{
+                    backgroundColor: pCardBg,
+                    border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
+                    borderRadius: `${pCardBorderRadius}px`,
+                    padding: '6px',
+                  }}
+                >
                   <div className="w-7 h-7 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-50">
-                    <img 
-                      src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" 
-                      className="w-full h-full object-cover" 
+                    <img
+                      src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80"
+                      className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="flex-1 min-w-0 text-left">
-                    <p className="text-[8px] font-bold text-slate-800 truncate">Calça Confort</p>
-                    <p className="text-[7px] font-black text-[#0094EB]">R$ 149,95</p>
+                    <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-bold truncate">Calça Confort</p>
+                    <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 149,95</p>
                   </div>
                 </div>
               )}
@@ -1836,8 +1918,9 @@ const CarouselPreview = ({
           ))}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+};
 
   // DESKTOP: Renderiza a lista padrão com o limite configurado
   const visibleItems = safeNumber(carousel.visible_items, 4, 1);
