@@ -1931,6 +1931,26 @@ const DynamicCarouselPreview = ({
   // Fallback seguro de vídeos
   const videoSources = carousel?.demo_videos || carousel?.demoVideos || DEMO_PREVIEW_VIDEOS_FALLBACK;
 
+  // 1. Efeito para girar o carrossel automaticamente
+  useEffect(() => {
+    // Busca o delay em milissegundos (padrão 5000ms = 5 segundos)
+    const delay = carousel?.autoplay_delay || 5000;
+    
+    // Se não tiver vídeos suficientes ou o delay for 0, não gira
+    if (delay <= 0 || videoSources.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % videoSources.length);
+    }, delay);
+
+    return () => clearInterval(interval);
+  }, [carousel?.autoplay_delay, videoSources.length]);
+
+  // 2. Cálculo dos índices da Esquerda, Centro (Ativo) e Direita
+  const safeActiveIndex = activeIndex % videoSources.length;
+  const leftIndex = (safeActiveIndex - 1 + videoSources.length) % videoSources.length;
+  const rightIndex = (safeActiveIndex + 1) % videoSources.length;
+
   // Suporte universal a snake_case & camelCase
   const shape = carousel?.shape || carousel?.format || 'portrait';
   const isCircle = shape === 'circle';
