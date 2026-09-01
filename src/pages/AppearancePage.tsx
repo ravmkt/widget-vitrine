@@ -1906,20 +1906,17 @@ const DynamicCarouselPreview = ({
   isMobile?: boolean;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
-
   const videoSources = DEMO_PREVIEW_VIDEOS;
-
-const REPEAT_TILES = 9; // quantidade de "cópias" do array de vídeos no trilho
   const len = videoSources.length;
+
+  const REPEAT_TILES = 9;
   const middleTile = Math.floor(REPEAT_TILES / 2);
   const baseIndex = middleTile * len;
-
   const trackVideos = Array.from({ length: REPEAT_TILES }, () => videoSources).flat();
 
   const [trackIndex, setTrackIndex] = useState(baseIndex);
   const [noTransition, setNoTransition] = useState(false);
 
-  // Intervalo automático (Carrossel girando)
   useEffect(() => {
     const delay = Number(carousel?.autoplay_delay) || 5000;
     if (delay <= 0) return;
@@ -1929,7 +1926,6 @@ const REPEAT_TILES = 9; // quantidade de "cópias" do array de vídeos no trilho
     return () => clearInterval(interval);
   }, [carousel?.autoplay_delay]);
 
-  // Quando o trilho avança 1 ciclo completo, "teleporta" de volta sem transição (loop infinito)
   useEffect(() => {
     if (trackIndex - baseIndex >= len) {
       const t = setTimeout(() => {
@@ -1938,14 +1934,10 @@ const REPEAT_TILES = 9; // quantidade de "cópias" do array de vídeos no trilho
         requestAnimationFrame(() => {
           requestAnimationFrame(() => setNoTransition(false));
         });
-      }, 800); // espera a transição visual terminar antes de resetar
+      }, 800);
       return () => clearTimeout(t);
     }
   }, [trackIndex, baseIndex, len]);
-
-const safeActiveIndex = ((trackIndex % len) + len) % len;
-const leftIndex = ((safeActiveIndex - 1) + len) % len;
-const rightIndex = (safeActiveIndex + 1) % len;
 
   const shape = carousel?.shape || 'portrait';
   const isCircle = shape === 'circle';
@@ -1955,10 +1947,10 @@ const rightIndex = (safeActiveIndex + 1) % len;
   const titleSizeVal = Number(carousel?.title_font_size ?? 14);
   const isBold = carousel?.title_bold ?? true;
 
-  const rawWidth = Number(carousel?.width ?? 90);
+  const configuredWidth = Number(carousel?.width ?? 90);
+  const rawWidth = isMobile ? Math.min(configuredWidth * 0.75, 115) : configuredWidth;
   const spacingNum = Number(carousel?.spacing ?? 8);
 
-  // "Reproduzir vídeos inativos" -> autoplay_videos controla os laterais
   const playInactive = carousel?.autoplay_videos ?? true;
   const showPlayIcon = carousel?.show_play_icon ?? true;
   const scaleHighlight = carousel?.highlight_enlarge_active ?? false;
@@ -1975,18 +1967,15 @@ const rightIndex = (safeActiveIndex + 1) % len;
   const pCardPriceSize = Number(carousel?.product_card_price_size ?? 8);
   const pCardPriceColor = carousel?.product_card_price_color || colors?.primary || '#0094EB';
 
-  // "Largura Borda" -> campo salvo como border_style
   const borderWidth = Number(carousel?.border_style ?? 0);
   const borderColor = carousel?.border_color || colors?.primary || '#0094EB';
   const borderRadiusNum = Number(carousel?.border_radius ?? 12);
   const borderRadius = isCircle ? '50%' : `${borderRadiusNum}px`;
 
-  // Controle de reprodução real via ref
   useEffect(() => {
-    [0, 1, 2].forEach((pos) => {
-      const video = videoRefs.current.get(pos);
+    videoRefs.current.forEach((video, i) => {
       if (!video) return;
-      const isAct = pos === 1;
+      const isAct = i === trackIndex;
       if (isAct) {
         video.play().catch(() => {});
       } else {
@@ -1994,7 +1983,7 @@ const rightIndex = (safeActiveIndex + 1) % len;
         else video.pause();
       }
     });
-  }, [playInactive, trackIndex, isMobile]);
+  }, [playInactive, trackIndex]);
 
   const titleStyle: React.CSSProperties = {
     fontSize: `${titleSizeVal}px`,
@@ -2007,109 +1996,6 @@ const rightIndex = (safeActiveIndex + 1) % len;
     'text-center w-full';
 
   const shadowStyle = applyShadow ? '0 10px 25px -5px rgba(0,0,0,0.4), 0 8px 10px -6px rgba(0,0,0,0.1)' : 'none';
-
-  // ==================== LAYOUT MOBILE ====================
-  if (isMobile) {
-    const mobileActiveWidth = Math.min(rawWidth * 0.75, 115);
-    let mobileActiveHeight = mobileActiveWidth * (16 / 9);
-    if (isCircle || shape === 'square') mobileActiveHeight = mobileActiveWidth;
-    else if (shape === 'landscape') mobileActiveHeight = mobileActiveWidth * (9 / 16);
-
-    const sideScale = scaleHighlight ? 0.85 : 1;
-    const mobileSideWidth = mobileActiveWidth * sideScale;
-    const mobileSideHeight = mobileActiveHeight * sideScale;
-
-    return (
-      <div className="w-full py-1 flex flex-col items-center space-y-3 select-none overflow-visible">
-        {showTitle && (
-          <div className={titleAlignClass}>
-            <h4 style={titleStyle} className="text-slate-800 tracking-wider">{titleText}</h4>
-          </div>
-        )}
-
-<div className="flex items-center justify-center w-full overflow-visible py-4 px-1 pb-14 transition-all duration-500" style={{ gap: `${spacingNum}px` }}>
-          <div className="shrink-0 flex flex-col items-center justify-center">
-            <div
-              style={{
-                width: `${mobileSideWidth}px`, height: `${mobileSideHeight}px`,
-                borderRadius, border: `${borderWidth}px solid ${borderColor}`,
-                opacity: desaturate ? 0.4 : 1,
-                filter: desaturate ? 'grayscale(100%)' : 'none',
-                transition: 'all 0.5s ease',
-              }}
-              className="bg-slate-900 overflow-hidden relative box-border"
-            >
-              <video key={`m-left-${leftIndex}`} ref={el => { if (el) videoRefs.current.set(0, el) }} src={videoSources[leftIndex]} muted playsInline loop className="w-full h-full object-cover" />
-            </div>
-          </div>
-
-          {/* CENTRO (ATIVO) */}
-          <div
-            className="shrink-0 relative transition-all duration-500"
-            style={{ width: `${mobileActiveWidth}px`, height: `${mobileActiveHeight}px`, zIndex: 10 }}
-          >
-            <div
-              style={{
-                width: `${mobileActiveWidth}px`, height: `${mobileActiveHeight}px`,
-                borderRadius, border: `${borderWidth}px solid ${borderColor}`,
-                boxShadow: shadowStyle, transition: 'all 0.5s ease',
-              }}
-              className="relative bg-slate-950 overflow-hidden box-border"
-            >
-              <video key={`m-active-${safeActiveIndex}`} ref={el => { if (el) videoRefs.current.set(1, el) }} src={videoSources[safeActiveIndex]} muted playsInline loop className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 pointer-events-none" />
-              <div style={{ backgroundColor: borderColor }} className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse">
-                <span className="w-1.5 h-1.5 bg-white rounded-full" /> Destaque
-              </div>
-              {showPlayIcon && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
-                    <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {showProductCard && !isCircle && (
-              <div
-                className="absolute left-0 w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border"
-                style={{
-                  top: `${mobileActiveHeight + 8}px`,
-                  backgroundColor: pCardBg, border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
-                  borderRadius: `${pCardBorderRadius}px`, padding: '6px',
-                }}
-              >
-                <div className="w-7 h-7 rounded bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
-                  <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-extrabold truncate">Calça Confort</p>
-                  <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 154,95</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="shrink-0 flex flex-col items-center justify-center">
-            <div
-              style={{
-                width: `${mobileSideWidth}px`, height: `${mobileSideHeight}px`,
-                borderRadius, border: `${borderWidth}px solid ${borderColor}`,
-                opacity: desaturate ? 0.4 : 1,
-                filter: desaturate ? 'grayscale(100%)' : 'none',
-                transition: 'all 0.5s ease',
-              }}
-              className="bg-slate-900 overflow-hidden relative box-border"
-            >
-              <video key={`m-right-${rightIndex}`} ref={el => { if (el) videoRefs.current.set(2, el) }} src={videoSources[rightIndex]} muted playsInline loop className="w-full h-full object-cover" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ==================== LAYOUT DESKTOP ====================
   const step = rawWidth + spacingNum;
 
   return (
@@ -2120,7 +2006,7 @@ const rightIndex = (safeActiveIndex + 1) % len;
         </div>
       )}
 
-<div className="relative w-full py-4 pb-20" style={{ overflowX: 'hidden', overflowY: 'visible' }}>
+      <div className="relative w-full py-4 pb-20" style={{ overflowX: 'hidden', overflowY: 'visible' }}>
         <div
           className="flex items-center"
           style={{
@@ -2159,7 +2045,7 @@ const rightIndex = (safeActiveIndex + 1) % len;
                   className="relative overflow-hidden bg-slate-950 transition-all duration-300 box-border"
                 >
                   <video
-                    ref={el => { if (el && isAct) videoRefs.current.set(1, el) }}
+                    ref={el => { if (el) videoRefs.current.set(i, el); else videoRefs.current.delete(i); }}
                     src={videoSrc}
                     loop
                     muted
@@ -2178,7 +2064,7 @@ const rightIndex = (safeActiveIndex + 1) % len;
                   )}
                 </div>
 
-                {isAct && showProductCard && !isCircle && (
+                {showProductCard && !isCircle && (
                   <div
                     className="absolute left-0 w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border"
                     style={{
