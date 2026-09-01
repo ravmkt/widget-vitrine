@@ -1730,79 +1730,90 @@ const CarouselPreview = ({
 
   const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
 
-  // No mobile, montamos um esquema fixo harmônico de 3 cards (um central focado e dois cortados nas laterais)
+  // Cálculo de dimensões dinâmicas (Desktop e Mobile)
+  const scaleFactor = isMobile ? 0.75 : 1;
+  const rawWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
+  const constrainedWidth = isMobile ? Math.min(Math.max(rawWidth * scaleFactor, 65), 100) : rawWidth;
+  const cardWidth = `${constrainedWidth}px`;
+  
+  let cardHeight = cardWidth;
+  if (!isCircle) {
+    if (shape === 'landscape') {
+      cardHeight = `${Math.round(constrainedWidth * 9 / 16)}px`;
+    } else if (shape === 'portrait') {
+      cardHeight = `${Math.round(constrainedWidth * 16 / 9)}px`;
+    } else if (shape === 'square') {
+      cardHeight = cardWidth;
+    }
+  }
+
+  // Mobile: Carrossel real rolável com peeking que respeita o formato dinamicamente
   if (isMobile) {
+    const items = Array.from({ length: 5 }); // 5 itens para demonstrar o scroll
     return (
       <div className="w-full py-2 flex flex-col space-y-3">
-        {/* Título do Carrossel */}
         {carousel.show_title && (
           <h4 className="text-xs font-black text-center text-slate-800 uppercase tracking-wider">
             {carousel.title_text || 'Stories'}
           </h4>
         )}
-        
-        <div className="flex items-center justify-between w-full overflow-hidden relative px-1">
-          {/* Card Esquerda (Cortado/Translúcido) */}
-          <div className="w-[18%] aspect-[9/16] shrink-0 bg-slate-100 rounded-lg opacity-40 overflow-hidden transform -translate-x-2 scale-90">
-            <div className="w-full h-full bg-gradient-to-b from-slate-300 to-slate-400" />
-          </div>
 
-          {/* Card Central Ativo (Em Destaque com Vídeo e Card de Produto) */}
-          <div className="w-[58%] shrink-0 flex flex-col space-y-2">
+        <div className="flex items-start gap-3 overflow-x-auto scrollbar-none px-4 py-1 pb-2 w-full snap-x snap-mandatory">
+          {items.map((_, i) => (
             <div 
-              className="relative aspect-[9/15] bg-slate-950 overflow-hidden shadow-lg transition-all duration-300"
-              style={{
-                borderRadius,
-                border: `${safeNumber(carousel.border_width, 1, 0)}px solid ${carousel.border_color || colors.primary}`
-              }}
+              key={i} 
+              style={{ width: cardWidth }} 
+              className="flex flex-col space-y-1.5 shrink-0 snap-start"
             >
-              <video
-                ref={el => el && videoRefs.current.set(1, el)}
-                src={DEMO_PREVIEW_VIDEOS[0]}
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 pointer-events-none" />
+              <div
+                style={{
+                  width: cardWidth,
+                  height: cardHeight,
+                  borderRadius,
+                  border: `${safeNumber(carousel.border_width, 1, 0)}px solid ${carousel.border_color || colors.primary}`
+                }}
+                className="relative overflow-hidden bg-slate-950 shadow-md flex items-center justify-center shrink-0 transition-all duration-300"
+              >
+                <video
+                  ref={el => el && videoRefs.current.set(i, el)}
+                  src={DEMO_PREVIEW_VIDEOS[i % DEMO_PREVIEW_VIDEOS.length]}
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/55 pointer-events-none" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-full bg-white/95 shadow flex items-center justify-center">
+                    <Play size={8} className="text-slate-900 fill-slate-900 ml-0.5" />
+                  </div>
+                </div>
+              </div>
               
-              {/* Play no meio */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center">
-                  <Play size={12} className="text-slate-950 fill-slate-950 ml-0.5" />
+              {carousel.show_product_card && !isCircle && (
+                <div className="bg-slate-50 border border-slate-100 rounded-lg p-1 flex items-center gap-1 shadow-sm">
+                  <div className="w-4 h-4 rounded bg-slate-200 shrink-0 overflow-hidden">
+                    <img 
+                      src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=50&q=80" 
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[6.5px] font-bold text-slate-800 truncate">Calça</p>
+                    <p className="text-[6px] font-black text-[#0094EB]">R$ 149</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-
-            {/* Card do Produto integrado logo abaixo do card ativo */}
-            {carousel.show_product_card && (
-              <div className="bg-slate-50 border border-slate-100 rounded-xl p-1.5 flex items-center gap-1.5 shadow-sm">
-                <div className="w-7 h-7 rounded bg-slate-200 shrink-0 overflow-hidden">
-                  <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[8px] font-bold text-slate-800 truncate">Calça Confort</p>
-                  <p className="text-[7px] font-black text-[#0094EB]">R$ 149,95</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Card Direita (Cortado/Translúcido) */}
-          <div className="w-[18%] aspect-[9/16] shrink-0 bg-slate-100 rounded-lg opacity-40 overflow-hidden transform translate-x-2 scale-90">
-            <div className="w-full h-full bg-gradient-to-b from-slate-300 to-slate-400" />
-          </div>
+          ))}
         </div>
       </div>
     );
   }
 
-  // DESKTOP: Renderiza a lista normal com o limite configurado
+  // DESKTOP: Mantém renderização estável com limites baseados na config
   const visibleItems = safeNumber(carousel.visible_items, 4, 1);
   const items = Array.from({ length: Math.max(1, visibleItems + 1) });
-  const rawWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
-  const cardWidth = `${rawWidth}px`;
-  const cardHeight = isCircle ? cardWidth : `${Math.round(shape === 'landscape' ? (rawWidth * 9 / 16) : (rawWidth * 16 / 9))}px`;
 
   return (
     <div className="w-full py-3 space-y-3">
