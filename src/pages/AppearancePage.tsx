@@ -2061,7 +2061,7 @@ const DynamicCarouselPreview = ({
                 height: `${mobileSideHeight}px`,
                 borderRadius: isCircle ? '50%' : borderRadius,
                 border: `${borderWidth}px solid ${borderColor}`,
-                boxSizing: 'content-box', // Garante que a borda cresça para fora
+                boxSizing: 'content-box',
                 opacity: desaturate ? 0.4 : 1,
                 filter: desaturate ? 'grayscale(100%)' : 'none',
                 transition: 'all 0.5s ease',
@@ -2087,7 +2087,7 @@ const DynamicCarouselPreview = ({
             style={{
               width: `${mobileActiveWidth}px`,
               zIndex: 10,
-              gap: '8px' // Separa o vídeo do card de produto
+              gap: '8px'
             }}
           >
             {/* CONTAINER DO VÍDEO ATIVO */}
@@ -2097,8 +2097,8 @@ const DynamicCarouselPreview = ({
                 height: `${mobileActiveHeight}px`,
                 borderRadius: isCircle ? '50%' : borderRadius,
                 border: `${borderWidth}px solid ${borderColor}`,
-                boxSizing: 'content-box', // Borda cresce para fora
-                filter: activeVideoShadow, // Sombra aplicada AQUI
+                boxSizing: 'content-box',
+                filter: activeVideoShadow,
                 transition: 'all 0.5s ease',
               }}
               className="relative bg-slate-950 overflow-hidden w-full"
@@ -2132,28 +2132,29 @@ const DynamicCarouselPreview = ({
               )}
             </div>
 
-      {/* Card do produto Dinâmico */}
-      {showProductCard && !isCircle && (
-        <div 
-          className="flex items-center gap-2 w-full transition-all duration-300 overflow-hidden"
-          style={{
-            backgroundColor: carousel?.product_card_bg || '#FFFFFF',
-            borderColor: carousel?.product_card_border_color || '#E2E8F0',
-            borderWidth: `${carousel?.product_card_border_width ?? 1}px`,
-            borderRadius: `${carousel?.product_card_border_radius ?? 12}px`,
-            borderStyle: 'solid',
-            padding: '6px'
-          }}
-        >
-          <div className="w-7 h-7 rounded bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
-            <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
+            {/* Card do produto Dinâmico */}
+            {showProductCard && !isCircle && (
+              <div 
+                className="flex items-center gap-2 w-full transition-all duration-300 overflow-hidden"
+                style={{
+                  backgroundColor: carousel?.product_card_bg || '#FFFFFF',
+                  borderColor: carousel?.product_card_border_color || '#E2E8F0',
+                  borderWidth: `${carousel?.product_card_border_width ?? 1}px`,
+                  borderRadius: `${carousel?.product_card_border_radius ?? 12}px`,
+                  borderStyle: 'solid',
+                  padding: '6px'
+                }}
+              >
+                <div className="w-7 h-7 rounded bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
+                  <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-[8px] font-extrabold text-slate-800 truncate">Calça Confort</p>
+                  <p className="text-[7.5px] font-black text-[#0094EB]">R$ 154,95</p>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="flex-1 min-w-0 text-left">
-            <p className="text-[8px] font-extrabold text-slate-800 truncate">Calça Confort</p>
-            <p className="text-[7.5px] font-black text-[#0094EB]">R$ 154,95</p>
-          </div>
-        </div>
-      )}
 
           {/* LADO DIREITO */}
           <div className="shrink-0 flex flex-col items-center justify-center">
@@ -2185,7 +2186,7 @@ const DynamicCarouselPreview = ({
         </div>
       </div>
     );
-    }
+  }
 
   // ==================== LAYOUT DESKTOP ====================
   const cardWidth = `${rawWidth}px`;
