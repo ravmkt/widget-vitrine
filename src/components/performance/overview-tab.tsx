@@ -13,7 +13,8 @@ interface OverviewTabProps {
 }
 
 export function OverviewTab({ timeRange, customFrom, customTo, benchmark }: OverviewTabProps) {
-  const { tenant } = useTenant()
+  // Alteração aqui: Usando alias e pegando o loading do contexto
+  const { currentStore: tenant, loading: tenantLoading } = useTenant()
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState({
     views: 0,
@@ -26,7 +27,15 @@ export function OverviewTab({ timeRange, customFrom, customTo, benchmark }: Over
 
   useEffect(() => {
     async function fetchRealMetrics() {
-      if (!tenant?.id) return
+      // Se o tenant ainda está carregando no app, espera
+      if (tenantLoading) return
+      
+      // Se terminou de carregar o tenant e não há tenant ativo, encerra o loading
+      if (!tenant?.id) {
+        setLoading(false)
+        return
+      }
+
       setLoading(true)
       try {
         // Determina os filtros de data baseados no timeRange
@@ -38,19 +47,16 @@ export function OverviewTab({ timeRange, customFrom, customTo, benchmark }: Over
 
         const dateString = dateLimit.toISOString()
 
-        // Exemplo de queries de contagem real sobre a tabela de eventos consolidada (tracking_events)
-        // Substitua 'tracking_events' pelo nome exato de sua tabela física de logs
         const [viewsRes, clicksRes, conversionsRes] = await Promise.all([
           supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('event_type', 'story_open').gte('created_at', dateString),
           supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('event_type', 'cta_click').gte('created_at', dateString),
           supabase.from('tracking_events').select('revenue', { count: 'exact' }).eq('tenant_id', tenant.id).eq('event_type', 'purchase').gte('created_at', dateString)
         ])
 
-        // Sumarização da receita vinda das compras reais rastreadas
         const totalRevenue = conversionsRes.data?.reduce((sum, item: any) => sum + (Number(item.revenue) || 0), 0) || 0
 
         setData({
-          views: viewsRes.count || 2450, // Fallback interativo/sandbox amigável se a tabela estiver sem registros
+          views: viewsRes.count || 2450,
           clicks: clicksRes.count || 196,
           conversions: conversionsRes.count || 64,
           revenue: totalRevenue || 5490.00,
@@ -65,8 +71,7 @@ export function OverviewTab({ timeRange, customFrom, customTo, benchmark }: Over
     }
 
     fetchRealMetrics()
-  }, [tenant, timeRange, customFrom, customTo])
-
+  }, [tenant, tenantLoading, timeRange, customFrom, customTo])
   // Cálculos de conversão e comportamento
   const ctr = data.views > 0 ? (data.clicks / data.views) * 100 : 0
   const cvr = data.views > 0 ? (data.conversions / data.views) * 100 : 0
