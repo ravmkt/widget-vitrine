@@ -1910,6 +1910,16 @@ const DynamicCarouselPreview = ({
 
   const videoSources = DEMO_PREVIEW_VIDEOS;
 
+const REPEAT_TILES = 9; // quantidade de "cópias" do array de vídeos no trilho
+  const len = videoSources.length;
+  const middleTile = Math.floor(REPEAT_TILES / 2);
+  const baseIndex = middleTile * len;
+
+  const trackVideos = Array.from({ length: REPEAT_TILES }, () => videoSources).flat();
+
+  const [trackIndex, setTrackIndex] = useState(baseIndex);
+  const [noTransition, setNoTransition] = useState(false);
+  
   // Intervalo automático (Carrossel girando)
   useEffect(() => {
     const delay = Number(carousel?.autoplay_delay) || 5000;
