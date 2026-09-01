@@ -2191,7 +2191,6 @@ const unifiedDesktopShadow = isAct && applyShadow
                   height: cardHeight,
                   borderRadius: isCircle ? '50%' : borderRadius,
                   border: `${borderWidth}px solid ${borderColor}`,
-                  filter: !isAct && desaturate ? 'grayscale(100%) opacity(0.55)' : 'none',
                 }}
                 className="relative overflow-hidden bg-slate-950 w-full transition-all duration-300 shadow-md"
               >
@@ -2203,7 +2202,8 @@ const unifiedDesktopShadow = isAct && applyShadow
                   muted
                   playsInline
                   autoPlay={isAct ? autoplayVideos : (autoplayVideos && playInactive)}
-                  className="w-full h-full object-cover"
+                  style={{ filter: !isAct && desaturate ? 'grayscale(100%) opacity(0.55)' : 'none' }}
+                  className="w-full h-full object-cover transition-all duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none" />
                 
