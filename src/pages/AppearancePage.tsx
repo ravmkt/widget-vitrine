@@ -2121,7 +2121,7 @@ const REPEAT_TILES = 9; // quantidade de "cópias" do array de vídeos no trilho
         </div>
       )}
 
-      <div className="relative w-full py-4 overflow-hidden pb-14">
+<div className="relative w-full py-4 pb-14" style={{ overflowX: 'hidden', overflowY: 'visible' }}>
         <div
           className="flex items-center"
           style={{
