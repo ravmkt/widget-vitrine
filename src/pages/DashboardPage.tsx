@@ -814,7 +814,7 @@ const DashboardPage: React.FC = () => {
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-white/5 max-h-[360px] overflow-y-auto pr-1">
                 {activities.map((ev) => {
-                  const badge = getActionBadge(ev.action);
+const badge = getActionBadge(ev.action, ev.details || '');
 
                   return (
                     <div key={ev.id} className="py-3.5 flex items-start justify-between gap-4 text-xs animate-fade-in">
