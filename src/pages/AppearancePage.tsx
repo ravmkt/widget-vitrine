@@ -3667,6 +3667,11 @@ const AppearancePage = () => {
                             <FormField label="Colunas"><input type="number" min="1" max="10" value={activeGridConfig.visible_items} onChange={e => updateGridConfig({ visible_items: limitNumber(e.target.value, 1, 1, 10) })} className={inputClass} /></FormField>
                             <FormField label="Espaçamento (px)" className="col-span-2"><input type="number" min="0" value={activeGridConfig.spacing} onChange={e => updateGridConfig({ spacing: safeNumber(e.target.value, 0, 0) })} className={inputClass} /></FormField>
                           </div>
+                          <div className="mt-3 p-2 bg-sky-50 rounded-lg border border-sky-100">
+                            <p className="text-[11px] text-sky-700 font-medium leading-snug">
+                              💡 No mobile, a grade é otimizada para exibir no máximo 2 colunas.
+                            </p>
+                          </div>
                         </AccordionSection>
 
                         {/* 2. BORDAS */}
