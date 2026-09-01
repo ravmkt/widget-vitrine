@@ -3436,6 +3436,11 @@ const AppearancePage = () => {
                               <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_bottom)} onChange={e => updateCarouselConfig({ margin_bottom: e.target.value })} className={inputClass} />
                             </FormField>
                           </div>
+                          <div className="mt-3 p-2 bg-sky-50 rounded-lg border border-sky-100">
+                            <p className="text-[11px] text-sky-700 font-medium leading-snug">
+                              💡 No mobile, o carrossel exibe no máximo 3 itens (1 completo + 2 parciais nas laterais), independente do número configurado aqui.
+                            </p>
+                          </div>
                         </AccordionSection>
 
                         {/* 2. BORDAS */}
