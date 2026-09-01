@@ -1771,10 +1771,11 @@ const CarouselPreview = ({
   const middleStart = Math.floor(REPEAT_TILES / 2) * loopWidth;
 
   // Mede o container e posiciona o scroll ANTES do primeiro paint (evita "pulo" visual no mobile)
-  useLayoutEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
+useLayoutEffect(() => {
+  const el = scrollRef.current;
+  if (!el) return;
 
+  const positionScroll = () => {
     if (isMobile) {
       const offset = (el.clientWidth - rawWidth) / 2;
       setCenterOffset(offset);
@@ -1782,7 +1783,19 @@ const CarouselPreview = ({
     } else {
       el.scrollLeft = middleStart;
     }
-  }, [isMobile, rawWidth, middleStart]);
+  };
+
+  // Medição inicial (pode estar incorreta se a transição do mockup ainda não terminou)
+  positionScroll();
+
+  // Recalcula quando o container estabilizar de fato (após transições/resize)
+  const observer = new ResizeObserver(() => {
+    positionScroll();
+  });
+  observer.observe(el);
+
+  return () => observer.disconnect();
+}, [isMobile, rawWidth, middleStart]);
 
   const teleportIfNeeded = () => {
     const el = scrollRef.current;
