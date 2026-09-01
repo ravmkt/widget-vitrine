@@ -2100,7 +2100,7 @@ const DynamicCarouselPreview = ({
         </div>
       )}
 
-      <div className="flex items-center justify-center w-full py-4 overflow-visible" style={{ gap: `${spacingNum}px` }}>
+      <div className="flex items-center justify-center w-full py-4 pb-14 overflow-visible" style={{ gap: `${spacingNum}px` }}>
         {[0, 1, 2].map((num) => {
           const isAct = num === 1;
           const itemIndex = num === 0 ? leftIndex : num === 1 ? safeActiveIndex : rightIndex;
