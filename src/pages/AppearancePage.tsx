@@ -1906,11 +1906,35 @@ const DynamicCarouselPreview = ({
   isMobile?: boolean;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
-  const shape = normalizeWidgetShape(carousel.shape, 'portrait');
-  const isCircle = shape === 'circle';
   const [activeIndex, setActiveIndex] = useState(1);
 
-  // Troca automática dinâmica sincronizada com o delay da configuração
+  // Mapeamento e normalização robusta de todas as propriedades de configuração
+  const shape = normalizeWidgetShape(carousel.shape, 'portrait');
+  const isCircle = shape === 'circle';
+
+  // Configurações do Título
+  const titleText = carousel.title_text || 'Destaques';
+  const titleAlign = carousel.title_align || 'center';
+  const titleSizeVal = carousel.title_size || '14px';
+  const isBold = carousel.title_bold ?? true;
+  const isItalic = carousel.title_italic ?? false;
+
+  // Configurações de Layout, Bordas e Efeitos
+  const rawWidth = safeNumber(parseFloat(carousel.width || '130'), 130, 40);
+  const borderWidth = safeNumber(carousel.border_width, 2, 0);
+  const borderColor = carousel.border_color || colors.primary || '#0094EB';
+  const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
+  const spacingNum = safeNumber(carousel.spacing, 12, 0);
+
+  // Funcionalidades de Ativação/Desativação de recursos
+  const showPlayIcon = carousel.show_play_icon ?? true;
+  const showProductCard = carousel.show_product_card ?? true;
+  const applyShadow = carousel.apply_shadow ?? carousel.highlight_shadow ?? true;
+  const scaleHighlight = carousel.scale_highlight ?? carousel.zoom_highlight ?? true;
+  const desaturate = carousel.desaturate_inactive ?? carousel.desaturateInactive ?? carousel.grayscale_inactive ?? true;
+  const playInactive = carousel.autoplay_inactive ?? carousel.autoplayInactive ?? carousel.play_inactive ?? false;
+
+  // Troca automática de destaques com base no delay configurado
   useEffect(() => {
     const delay = carousel.autoplay_delay || 4000;
     const interval = setInterval(() => {
@@ -1919,66 +1943,129 @@ const DynamicCarouselPreview = ({
     return () => clearInterval(interval);
   }, [carousel.autoplay_delay]);
 
-  const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
-
-  // MOBILE: Destaque dinâmico centralizado com peeking real (Imagem 2)
-  if (isMobile) {
-    // Definimos os aspectos corretos para evitar deformações
-    let aspectClass = "aspect-[9/14]";
-    let sideAspectClass = "aspect-[9/16]";
-    let activeBorderRadius = borderRadius;
-
-    if (isCircle) {
-      aspectClass = "aspect-square";
-      sideAspectClass = "aspect-square";
-      activeBorderRadius = "50%";
-    } else if (shape === 'landscape') {
-      aspectClass = "aspect-[16/10]";
-      sideAspectClass = "aspect-[16/9]";
-    } else if (shape === 'square') {
-      aspectClass = "aspect-square";
-      sideAspectClass = "aspect-square";
+  // Controle inteligente de Play/Pause dinâmico para vídeos ativos e inativos
+  useEffect(() => {
+    // Vídeo Ativo (Sempre índice 1 no preview focado)
+    const activeVideo = videoRefs.current.get(1);
+    if (activeVideo) {
+      if (carousel.autoplay_videos ?? true) {
+        activeVideo.play().catch(() => {});
+      } else {
+        activeVideo.pause();
+      }
     }
 
-    // Calcula de forma circular os índices anteriores e posteriores
-    const leftIndex = (activeIndex - 1 + 3) % 3;
-    const rightIndex = (activeIndex + 1) % 3;
+    // Vídeos Inativos (Índices 0 e 2)
+    const shouldPlayInactive = (carousel.autoplay_videos ?? true) && playInactive;
+    [0, 2].forEach((idx) => {
+      const inactiveVideo = videoRefs.current.get(idx);
+      if (inactiveVideo) {
+        if (shouldPlayInactive) {
+          inactiveVideo.play().catch(() => {});
+        } else {
+          inactiveVideo.pause();
+        }
+      }
+    });
+  }, [carousel.autoplay_videos, playInactive, activeIndex]);
+
+  // Estilo de Título Dinâmico
+  const titleStyle: React.CSSProperties = {
+    fontSize: typeof titleSizeVal === 'number' ? `${titleSizeVal}px` : (titleSizeVal.match(/^\d+$/) ? `${titleSizeVal}px` : titleSizeVal),
+    fontWeight: isBold ? 'bold' : 'normal',
+    fontStyle: isItalic ? 'italic' : 'normal',
+  };
+
+  const titleAlignClass = 
+    titleAlign === 'left' ? 'text-left w-full px-4' :
+    titleAlign === 'right' ? 'text-right w-full px-4' :
+    'text-center w-full';
+
+  // Índices circulares dos vídeos de simulação
+  const leftIndex = (activeIndex - 1 + 3) % 3;
+  const rightIndex = (activeIndex + 1) % 3;
+
+  // ==================== RENDERIZAÇÃO MOBILE (CONFORME PRINTS) ====================
+  if (isMobile) {
+    // Calculamos a largura do celular mockup do preview para garantir que mude dinamicamente com o slider
+    // Escala proporcional para caber perfeitamente dentro do mockup físico de ~280px de largura
+    const mobileScale = 0.82;
+    const mobileActiveWidth = Math.min(rawWidth * mobileScale, 155); 
+    
+    // Altura calculada estritamente com base no Aspect Ratio real
+    let mobileActiveHeight = mobileActiveWidth * (16 / 9); // Portrait Padrão (9:16 real!)
+    if (isCircle || shape === 'square') {
+      mobileActiveHeight = mobileActiveWidth;
+    } else if (shape === 'landscape') {
+      mobileActiveHeight = mobileActiveWidth * (9 / 16);
+    }
+
+    // Tamanho das laterais cortadas (ligeiramente menores para o efeito de profundidade focado)
+    const mobileSideWidth = mobileActiveWidth * 0.35;
+    const mobileSideHeight = mobileActiveHeight * 0.85;
+
+    // Sombra projetada do player focado se estiver ativo nas configurações
+    const activeBoxShadow = applyShadow 
+      ? `0 10px 25px -4px ${borderColor}60, 0 4px 10px -3px rgba(0,0,0,0.3)`
+      : `none`;
 
     return (
-      <div className="w-full py-2 flex flex-col space-y-3">
+      <div className="w-full py-2 flex flex-col items-center space-y-4 select-none">
         {carousel.show_title && (
-          <h4 className="text-xs font-black text-center text-slate-800 uppercase tracking-wider">
-            {carousel.title_text || 'Tendências'}
-          </h4>
+          <div className={titleAlignClass}>
+            <h4 style={titleStyle} className="text-slate-800 tracking-wider">
+              {titleText}
+            </h4>
+          </div>
         )}
 
-        <div className="flex items-center justify-between w-full overflow-hidden px-1 relative">
-          {/* Card Esquerda - Cortado & Opacidade menor (Index Anterior) */}
+        {/* Container com espaçamento (gap) dinâmico via propriedade Spacing */}
+        <div 
+          className="flex items-center justify-center w-full overflow-hidden px-1 relative transition-all duration-300"
+          style={{ gap: `${spacingNum}px` }}
+        >
+          {/* LADO ESQUERDO (Vídeo Cortado / Inativo) */}
           <div 
-            className={`w-[15%] shrink-0 bg-slate-900 opacity-35 scale-85 overflow-hidden transition-all duration-500 shadow-sm ${sideAspectClass}`}
-            style={{ borderRadius: isCircle ? '50%' : borderRadius }}
+            style={{
+              width: `${mobileSideWidth}px`,
+              height: `${mobileSideHeight}px`,
+              borderRadius: isCircle ? '50%' : borderRadius,
+              border: `${borderWidth}px solid ${borderColor}`,
+              filter: desaturate ? 'grayscale(100%) opacity(0.35)' : 'opacity(0.5)',
+              transform: 'scale(0.9)',
+            }}
+            className="shrink-0 bg-slate-950 overflow-hidden transition-all duration-500 shadow-sm"
           >
             <video
+              ref={el => el && videoRefs.current.set(0, el)}
               src={DEMO_PREVIEW_VIDEOS[leftIndex]}
               muted
               playsInline
               loop
-              className="w-full h-full object-cover grayscale"
+              className="w-full h-full object-cover"
             />
           </div>
 
-          {/* Card Central Ativo - Destaque Principal */}
-          <div className="w-[62%] shrink-0 flex flex-col space-y-2 z-10">
+          {/* VÍDEO CENTRAL ATIVO (Destaque Principal) */}
+          <div 
+            className="shrink-0 flex flex-col items-center space-y-2 transition-all duration-500"
+            style={{ 
+              width: `${mobileActiveWidth}px`,
+              transform: scaleHighlight ? 'scale(1.08)' : 'scale(1)'
+            }}
+          >
             <div
-              className={`relative bg-slate-950 overflow-hidden shadow-xl transition-all duration-500 transform scale-100 ${aspectClass}`}
               style={{
-                borderRadius: activeBorderRadius,
-                border: `${safeNumber(carousel.border_width, 2, 0)}px solid ${carousel.border_color || colors.primary}`,
-                boxShadow: `0 10px 25px -5px ${carousel.border_color || colors.primary}40`
+                width: `${mobileActiveWidth}px`,
+                height: `${mobileActiveHeight}px`,
+                borderRadius: isCircle ? '50%' : borderRadius,
+                border: `${borderWidth}px solid ${borderColor}`,
+                boxShadow: activeBoxShadow,
               }}
+              className="relative bg-slate-950 overflow-hidden transition-all duration-500"
             >
               <video
-                key={activeIndex} // Força o react a re-renderizar para tocar o vídeo novo
+                key={activeIndex} // Força reload para manter sincronismo perfeito
                 ref={el => el && videoRefs.current.set(1, el)}
                 src={DEMO_PREVIEW_VIDEOS[activeIndex]}
                 autoPlay
@@ -1987,47 +2074,60 @@ const DynamicCarouselPreview = ({
                 playsInline
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50 pointer-events-none" />
 
-              {/* Tag Destaque */}
-              <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-rose-500 text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse">
-                <span className="w-1 h-1 bg-white rounded-full" />
+              {/* Tag Destaque com cor da borda/marca */}
+              <div 
+                style={{ backgroundColor: borderColor }}
+                className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 shadow-sm"
+              >
+                <span className="w-1 h-1 bg-white rounded-full animate-ping" />
                 Destaque
               </div>
 
-              {/* Play Button */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
-                  <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
+              {/* Play Button Opcional */}
+              {showPlayIcon && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center transition-transform hover:scale-110">
+                    <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Card de Produto do Vídeo Focado */}
-            {carousel.show_product_card && !isCircle && (
-              <div className="bg-white border border-slate-150 rounded-xl p-1.5 flex items-center gap-2 shadow-sm transition-all duration-300">
-                <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
-                  <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" className="w-full h-full object-cover" />
+            {/* Card de Produto Opcional e Dinâmico */}
+            {showProductCard && !isCircle && (
+              <div className="bg-white border border-slate-100 rounded-xl p-1.5 flex items-center gap-2 shadow-md transition-all duration-300 w-full">
+                <div className="w-7 h-7 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
+                  <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-[8px] font-extrabold text-slate-800 truncate">Calça Slim</p>
-                  <p className="text-[7.5px] font-black text-[#0094EB]">R$ 149,95</p>
+                  <p className="text-[8px] font-extrabold text-slate-800 truncate">Calça Confort</p>
+                  <p className="text-[7.5px] font-black text-[#0094EB]">R$ 154,95</p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Card Direita - Cortado & Opacidade menor (Próximo Index) */}
+          {/* LADO DIREITO (Vídeo Cortado / Inativo) */}
           <div 
-            className={`w-[15%] shrink-0 bg-slate-900 opacity-35 scale-85 overflow-hidden transition-all duration-500 shadow-sm ${sideAspectClass}`}
-            style={{ borderRadius: isCircle ? '50%' : borderRadius }}
+            style={{
+              width: `${mobileSideWidth}px`,
+              height: `${mobileSideHeight}px`,
+              borderRadius: isCircle ? '50%' : borderRadius,
+              border: `${borderWidth}px solid ${borderColor}`,
+              filter: desaturate ? 'grayscale(100%) opacity-0.35)' : 'opacity(0.5)',
+              transform: 'scale(0.9)',
+            }}
+            className="shrink-0 bg-slate-950 overflow-hidden transition-all duration-500 shadow-sm"
           >
             <video
+              ref={el => el && videoRefs.current.set(2, el)}
               src={DEMO_PREVIEW_VIDEOS[rightIndex]}
               muted
               playsInline
               loop
-              className="w-full h-full object-cover grayscale"
+              className="w-full h-full object-cover"
             />
           </div>
         </div>
@@ -2035,48 +2135,67 @@ const DynamicCarouselPreview = ({
     );
   }
 
-  // DESKTOP: Renderização original
-  const rawWidth = safeNumber(parseFloat(carousel.width || '130'), 130, 40);
+  // ==================== RENDERIZAÇÃO DESKTOP ====================
   const cardWidth = `${rawWidth}px`;
-  const cardHeight = isCircle ? cardWidth : `${Math.round(shape === 'landscape' ? (rawWidth * 9 / 16) : (rawWidth * 16 / 9))}px`;
+  let cardHeight = `${Math.round(rawWidth * (16 / 9))}px`;
+  if (isCircle || shape === 'square') {
+    cardHeight = cardWidth;
+  } else if (shape === 'landscape') {
+    cardHeight = `${Math.round(rawWidth * (9 / 16))}px`;
+  }
 
   return (
     <div className="w-full py-3 space-y-3">
       {carousel.show_title && (
-        <h4 className="text-sm font-black text-slate-800 tracking-wider">
-          {carousel.title_text || 'Destaques Dinâmicos'}
-        </h4>
+        <div className={titleAlignClass}>
+          <h4 style={titleStyle} className="text-slate-800 tracking-wider">
+            {titleText}
+          </h4>
+        </div>
       )}
-      <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-none">
-        {[1, 2, 3].map((num) => {
-          const isAct = num === activeIndex;
+      
+      <div 
+        className="flex items-center justify-center w-full overflow-hidden py-4"
+        style={{ gap: `${spacingNum}px` }}
+      >
+        {[0, 1, 2].map((num) => {
+          const isAct = num === 1; // O do meio é sempre o destaque ativo no preview
+          const itemIndex = num === 0 ? leftIndex : num === 1 ? activeIndex : rightIndex;
+
+          const shadowStyle = isAct && applyShadow
+            ? `0 10px 25px -4px ${borderColor}55, 0 4px 12px -2px rgba(0,0,0,0.25)`
+            : 'none';
+
           return (
             <div
               key={num}
               style={{
-                width: isAct ? `${rawWidth * 1.15}px` : cardWidth,
-                height: isAct ? `${parseFloat(cardHeight) * 1.1}px` : cardHeight,
-                borderRadius,
-                border: isAct
-                  ? `3px solid ${carousel.border_color || colors.primary}`
-                  : `${safeNumber(carousel.border_width, 1, 0)}px solid ${carousel.border_color || '#E2E8F0'}`,
-                opacity: isAct ? 1 : 0.7,
-                transform: isAct ? 'scale(1.03)' : 'scale(1)'
+                width: cardWidth,
+                height: cardHeight,
+                borderRadius: isCircle ? '50%' : borderRadius,
+                border: `${isAct ? borderWidth + 1 : borderWidth}px solid ${borderColor}`,
+                boxShadow: shadowStyle,
+                filter: !isAct && desaturate ? 'grayscale(100%) opacity(0.4)' : 'none',
+                transform: isAct && scaleHighlight ? 'scale(1.1)' : 'scale(0.95)',
+                zIndex: isAct ? 10 : 1
               }}
-              className="relative overflow-hidden bg-slate-950 transition-all duration-300 flex items-center justify-center shrink-0 cursor-pointer shadow-md"
+              className="relative overflow-hidden bg-slate-950 transition-all duration-300 flex items-center justify-center shrink-0 shadow-md"
             >
               <video
                 ref={el => el && videoRefs.current.set(num, el)}
-                src={DEMO_PREVIEW_VIDEOS[num % DEMO_PREVIEW_VIDEOS.length]}
+                src={DEMO_PREVIEW_VIDEOS[itemIndex]}
                 loop
                 muted
                 playsInline
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 pointer-events-none" />
-              {isAct && (
-                <div className="absolute top-2 right-2 bg-[#0094EB] text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">
-                  FOCADO
+              
+              {isAct && showPlayIcon && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
+                    <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
+                  </div>
                 </div>
               )}
             </div>
