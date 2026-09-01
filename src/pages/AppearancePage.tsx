@@ -1714,6 +1714,11 @@ const CarouselPreview = ({
   isMobile?: boolean;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isDown = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
   const isCircle = shape === 'circle';
 
@@ -1728,51 +1733,74 @@ const CarouselPreview = ({
     });
   }, [carousel.autoplay_videos]);
 
+  // Função para arrastar o carrossel com o mouse (Preview Premium)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    isDown.current = true;
+    startX.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current = scrollRef.current.scrollLeft;
+  };
+
+  const handleMouseLeave = () => {
+    isDown.current = false;
+  };
+
+  const handleMouseUp = () => {
+    isDown.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDown.current || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5; // Multiplicador de velocidade
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+  };
+
   const borderRadius = isCircle ? '50%' : cssSize(carousel.border_radius, '12px');
 
-  // Cálculo de dimensões dinâmicas (Desktop e Mobile)
-  const scaleFactor = isMobile ? 0.75 : 1;
-  const rawWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
-  const constrainedWidth = isMobile ? Math.min(Math.max(rawWidth * scaleFactor, 65), 100) : rawWidth;
-  const cardWidth = `${constrainedWidth}px`;
-  
-  let cardHeight = cardWidth;
-  if (!isCircle) {
-    if (shape === 'landscape') {
-      cardHeight = `${Math.round(constrainedWidth * 9 / 16)}px`;
-    } else if (shape === 'portrait') {
-      cardHeight = `${Math.round(constrainedWidth * 16 / 9)}px`;
-    } else if (shape === 'square') {
-      cardHeight = cardWidth;
-    }
-  }
-
-  // Mobile: Carrossel real rolável com peeking que respeita o formato dinamicamente
+  // MOBILE: Carrossel real rolável com peeking exato (Imagem 1)
   if (isMobile) {
-    const items = Array.from({ length: 5 }); // 5 itens para demonstrar o scroll
+    const items = Array.from({ length: 5 }); // 5 itens para o usuário poder rolar
+
+    // Respeita o formato para evitar distorção (Círculos perfeitos!)
+    let aspectClass = "aspect-[9/15]";
+    if (isCircle) {
+      aspectClass = "aspect-square";
+    } else if (shape === 'landscape') {
+      aspectClass = "aspect-[16/9]";
+    } else if (shape === 'square') {
+      aspectClass = "aspect-square";
+    }
+
     return (
-      <div className="w-full py-2 flex flex-col space-y-3">
+      <div className="w-full py-2 flex flex-col space-y-3 select-none">
         {carousel.show_title && (
           <h4 className="text-xs font-black text-center text-slate-800 uppercase tracking-wider">
             {carousel.title_text || 'Stories'}
           </h4>
         )}
 
-        <div className="flex items-start gap-3 overflow-x-auto scrollbar-none px-4 py-1 pb-2 w-full snap-x snap-mandatory">
+        {/* Container com scroll snapping: o item ativo centraliza e os outros vazam nas laterais */}
+        <div
+          ref={scrollRef}
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseLeave}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
+          className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory px-[20%] py-1 pb-2 w-full cursor-grab active:cursor-grabbing active:scale-[0.99] transition-transform duration-150"
+        >
           {items.map((_, i) => (
             <div 
               key={i} 
-              style={{ width: cardWidth }} 
-              className="flex flex-col space-y-1.5 shrink-0 snap-start"
+              className="w-[60%] shrink-0 flex flex-col space-y-1.5 snap-center"
             >
               <div
                 style={{
-                  width: cardWidth,
-                  height: cardHeight,
-                  borderRadius,
+                  borderRadius: isCircle ? '50%' : borderRadius,
                   border: `${safeNumber(carousel.border_width, 1, 0)}px solid ${carousel.border_color || colors.primary}`
                 }}
-                className="relative overflow-hidden bg-slate-950 shadow-md flex items-center justify-center shrink-0 transition-all duration-300"
+                className={`relative overflow-hidden bg-slate-950 shadow-md flex items-center justify-center shrink-0 transition-all duration-300 ${aspectClass}`}
               >
                 <video
                   ref={el => el && videoRefs.current.set(i, el)}
@@ -1784,23 +1812,23 @@ const CarouselPreview = ({
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/55 pointer-events-none" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-5 h-5 rounded-full bg-white/95 shadow flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-white/95 shadow flex items-center justify-center">
                     <Play size={8} className="text-slate-900 fill-slate-900 ml-0.5" />
                   </div>
                 </div>
               </div>
-              
+
               {carousel.show_product_card && !isCircle && (
-                <div className="bg-slate-50 border border-slate-100 rounded-lg p-1 flex items-center gap-1 shadow-sm">
-                  <div className="w-4 h-4 rounded bg-slate-200 shrink-0 overflow-hidden">
+                <div className="bg-white border border-slate-100 rounded-xl p-1.5 flex items-center gap-2 shadow-sm">
+                  <div className="w-7 h-7 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-50">
                     <img 
-                      src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=50&q=80" 
+                      src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" 
                       className="w-full h-full object-cover" 
                     />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[6.5px] font-bold text-slate-800 truncate">Calça</p>
-                    <p className="text-[6px] font-black text-[#0094EB]">R$ 149</p>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-[8px] font-bold text-slate-800 truncate">Calça Confort</p>
+                    <p className="text-[7px] font-black text-[#0094EB]">R$ 149,95</p>
                   </div>
                 </div>
               )}
@@ -1811,9 +1839,12 @@ const CarouselPreview = ({
     );
   }
 
-  // DESKTOP: Mantém renderização estável com limites baseados na config
+  // DESKTOP: Renderiza a lista padrão com o limite configurado
   const visibleItems = safeNumber(carousel.visible_items, 4, 1);
   const items = Array.from({ length: Math.max(1, visibleItems + 1) });
+  const rawWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
+  const cardWidth = `${rawWidth}px`;
+  const cardHeight = isCircle ? cardWidth : `${Math.round(shape === 'landscape' ? (rawWidth * 9 / 16) : (rawWidth * 16 / 9))}px`;
 
   return (
     <div className="w-full py-3 space-y-3">
