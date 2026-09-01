@@ -52,17 +52,16 @@ const { currentStore: tenant, loading: tenantLoading } = useTenant()
   })
 
   // Carrega o setor configurado na loja do tenant logado
-useEffect(() => {
+  useEffect(() => {
     async function loadSectorAndBenchmark() {
       if (tenantLoading) return;
       if (!tenant?.id) return;
-      
-try {
-        // 1. Busca o setor definido nas configurações da loja
+
+      try {
         const { data: store, error: storeError } = await supabase
           .from('stores')
           .select('sector')
-          .eq('tenant_id', tenant.id)
+          .eq('id', tenant.id)
           .single();
 
         const selectedSector = store?.sector || 'moda_acessorios';
