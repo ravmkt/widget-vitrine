@@ -2113,10 +2113,11 @@ const GridPreview = ({
 
   const borderRadius = isCircle ? '50%' : cssSize(grid.border_radius, '12px');
 
-  // Mobile: Grade flexível que respeita a proporção de tela correta sem esticar círculos
+  // MOBILE: Limitação de no máximo 2 colunas para mobile (Imagem 3)
   if (isMobile) {
-    const items = Array.from({ length: 3 });
+    const items = Array.from({ length: 4 }); // Mostra 4 itens em 2x2 perfeitamente
     
+    // Evita deformação de shapes no mobile
     let aspectClass = "aspect-[9/15]";
     if (isCircle) {
       aspectClass = "aspect-square";
@@ -2134,9 +2135,17 @@ const GridPreview = ({
           </h4>
         )}
 
-        <div className="grid grid-cols-3 gap-2 w-full">
+        {/* Alerta de Ajuste Automático Amigável para o Mobile */}
+        <div className="mx-2 p-1.5 bg-sky-50 rounded-lg border border-sky-100 text-center">
+          <p className="text-[8px] text-sky-700 font-medium">
+            💡 No mobile, a grade é otimizada para exibir no máximo 2 colunas.
+          </p>
+        </div>
+
+        {/* Forçado estritamente em grid-cols-2 */}
+        <div className="grid grid-cols-2 gap-3 w-full px-2">
           {items.map((_, i) => (
-            <div key={i} className="flex flex-col space-y-1">
+            <div key={i} className="flex flex-col space-y-1.5">
               <div
                 className={`relative bg-slate-950 overflow-hidden shadow-sm flex items-center justify-center transition-all duration-300 ${aspectClass}`}
                 style={{
@@ -2153,16 +2162,25 @@ const GridPreview = ({
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/45 pointer-events-none" />
-                <div className="absolute bottom-1 right-1">
-                  <div className="w-4 h-4 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
-                    <Play size={6} className="text-slate-900 fill-slate-900 ml-0.5" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
+                    <Play size={8} className="text-slate-900 fill-slate-900 ml-0.5" />
                   </div>
                 </div>
               </div>
 
               {grid.show_product_card && !isCircle && (
-                <div className="text-center p-0.5 bg-slate-50 border border-slate-100 rounded-lg">
-                  <p className="text-[7px] font-extrabold text-slate-800 truncate">R$ 149,95</p>
+                <div className="bg-white border border-slate-100 rounded-lg p-1 flex items-center gap-1 shadow-sm">
+                  <div className="w-5 h-5 rounded bg-slate-200 shrink-0 overflow-hidden">
+                    <img 
+                      src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=50&q=80" 
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-[7px] font-bold text-slate-800 truncate">Calça Bicolor</p>
+                    <p className="text-[6.5px] font-black text-[#0094EB]">R$ 154,95</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -2172,7 +2190,7 @@ const GridPreview = ({
     );
   }
 
-  // DESKTOP (Segue o número de colunas das configurações)
+  // DESKTOP: Segue o número de colunas das configurações normais
   const cols = limitNumber(grid.visible_items, 10, 1, 10);
   const totalItems = cols * 2; // Mostra duas linhas no desktop
   const items = Array.from({ length: totalItems });
