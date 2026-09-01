@@ -40,7 +40,7 @@ const { currentStore: tenant, loading: tenantLoading } = useTenant()
   const [timeRange, setTimeRange] = useState<TimeRange>('30d')
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({})
-    
+
   // Estado para armazenar o benchmark do setor da loja
   const [benchmark, setBenchmark] = useState<SectorBenchmark>({
     sector_key: 'moda_acessorios',
@@ -52,10 +52,12 @@ const { currentStore: tenant, loading: tenantLoading } = useTenant()
   })
 
   // Carrega o setor configurado na loja do tenant logado
-  useEffect(() => {
+useEffect(() => {
     async function loadSectorAndBenchmark() {
+      if (tenantLoading) return;
       if (!tenant?.id) return;
-      try {
+      
+            try {
         // 1. Busca o setor definido nas configurações da loja
         const { data: store, error: storeError } = await supabase
           .from('stores')
