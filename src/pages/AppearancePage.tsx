@@ -2593,6 +2593,55 @@ const AccordionSection = ({
   );
 };
 
+const ScaleToFit = ({ children }: { children: React.ReactNode }) => {
+  const outerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const calculate = () => {
+      const outer = outerRef.current;
+      const inner = innerRef.current;
+      if (!outer || !inner) return;
+
+      const outerRect = outer.getBoundingClientRect();
+      const innerHeight = inner.scrollHeight;
+      const innerWidth = inner.scrollWidth;
+
+      if (innerHeight === 0 || innerWidth === 0) return;
+
+      const scaleY = outerRect.height / innerHeight;
+      const scaleX = outerRect.width / innerWidth;
+      const nextScale = Math.min(scaleX, scaleY, 1);
+
+      setScale(nextScale > 0 ? nextScale : 1);
+    };
+
+    calculate();
+
+    const resizeObserver = new ResizeObserver(calculate);
+    if (outerRef.current) resizeObserver.observe(outerRef.current);
+    if (innerRef.current) resizeObserver.observe(innerRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, [children]);
+
+  return (
+    <div ref={outerRef} className="w-full h-full flex items-center justify-center overflow-hidden">
+      <div
+        ref={innerRef}
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: 'center center',
+          width: '100%',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const PreviewCard = ({
   formData,
   floatingDevice, setFloatingDevice,
