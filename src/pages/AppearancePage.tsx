@@ -1896,6 +1896,9 @@ const CarouselPreview = ({
   );
 };
 
+import React, { useState, useEffect, useRef } from 'react';
+import { Play } from 'lucide-react';
+
 const DynamicCarouselPreview = ({
   carousel,
   colors,
@@ -1905,13 +1908,33 @@ const DynamicCarouselPreview = ({
   colors: any;
   isMobile?: boolean;
 }) => {
+  // --- FUNÇÕES UTILITÁRIAS INTERNAS (Evita erros de import/escopo) ---
+  const safeNumber = (val: any, fallback: number, min = 0): number => {
+    const num = Number(val);
+    if (isNaN(num)) return fallback;
+    return Math.max(min, num);
+  };
+
+  const cssSize = (val: any, fallback: string): string => {
+    if (!val) return fallback;
+    if (typeof val === 'number' || /^\d+$/.test(val)) return `${val}px`;
+    return String(val);
+  };
+
+  // --- ARRAYS DE FALLBACK INTERNOS ---
+  const DEMO_PREVIEW_VIDEOS_FALLBACK = [
+    "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-light-looking-at-camera-42284-large.mp4",
+    "https://assets.mixkit.co/videos/preview/mixkit-woman-holding-a-smartphone-with-a-green-screen-42322-large.mp4",
+    "https://assets.mixkit.co/videos/preview/mixkit-man-holding-a-smartphone-with-a-blue-screen-42323-large.mp4"
+  ];
+
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
   const [activeIndex, setActiveIndex] = useState(1);
 
-  // Fallback de fontes de vídeo estáveis
-  const videoSources = (carousel?.demo_videos || carousel?.demoVideos || DEMO_PREVIEW_VIDEOS_FALLBACK);
+  // Fallback seguro de vídeos
+  const videoSources = carousel?.demo_videos || carousel?.demoVideos || DEMO_PREVIEW_VIDEOS_FALLBACK;
 
-  // 1. SUPORTE UNIVERSAL (SNAKE_CASE & CAMELCASE)
+  // Suporte universal a snake_case & camelCase
   const shape = carousel?.shape || carousel?.format || 'portrait';
   const isCircle = shape === 'circle';
 
@@ -1930,7 +1953,7 @@ const DynamicCarouselPreview = ({
   const borderRadius = isCircle ? '50%' : cssSize(carousel?.border_radius ?? carousel?.borderRadius, '12px');
   const spacingNum = safeNumber(carousel?.spacing ?? carousel?.gap ?? carousel?.item_spacing ?? carousel?.itemSpacing, 12, 0);
 
-  // Chaves de Funcionalidades/Toggles
+  // Toggles de Layout
   const showPlayIcon = carousel?.show_play_icon ?? carousel?.showPlayIcon ?? carousel?.play_icon ?? carousel?.playIcon ?? true;
   const showProductCard = carousel?.show_product_card ?? carousel?.showProductCard ?? carousel?.show_card ?? carousel?.showCard ?? carousel?.product_card ?? carousel?.productCard ?? true;
   const applyShadow = carousel?.apply_shadow ?? carousel?.applyShadow ?? carousel?.highlight_shadow ?? carousel?.highlightShadow ?? carousel?.shadow ?? true;
@@ -1939,7 +1962,7 @@ const DynamicCarouselPreview = ({
   const playInactive = carousel?.autoplay_inactive ?? carousel?.autoplayInactive ?? carousel?.play_inactive ?? carousel?.playInactive ?? false;
   const autoplayVideos = carousel?.autoplay_videos ?? carousel?.autoplayVideos ?? carousel?.autoplay ?? true;
 
-  // Troca de vídeo focado
+  // Troca de slide (autoplay alternado)
   useEffect(() => {
     const delay = carousel?.autoplay_delay ?? carousel?.autoplayDelay ?? 4000;
     const interval = setInterval(() => {
@@ -1948,7 +1971,7 @@ const DynamicCarouselPreview = ({
     return () => clearInterval(interval);
   }, [carousel?.autoplay_delay, carousel?.autoplayDelay]);
 
-  // Controle de Play/Pause robusto
+  // Controle dinâmico do Play/Pause
   useEffect(() => {
     const activeVid = videoRefs.current.get(1);
     if (activeVid) {
@@ -1964,7 +1987,6 @@ const DynamicCarouselPreview = ({
     });
   }, [autoplayVideos, playInactive, activeIndex]);
 
-  // Estilo de Título Inline
   const titleStyle: React.CSSProperties = {
     fontSize: typeof titleSizeVal === 'number' ? `${titleSizeVal}px` : (String(titleSizeVal).match(/^\d+$/) ? `${titleSizeVal}px` : String(titleSizeVal)),
     fontWeight: isBold ? 'bold' : 'normal',
@@ -1979,11 +2001,11 @@ const DynamicCarouselPreview = ({
   const leftIndex = (activeIndex - 1 + 3) % 3;
   const rightIndex = (activeIndex + 1) % 3;
 
-  // ==================== RENDERIZAÇÃO MOBILE ====================
+  // ==================== LAYOUT MOBILE ====================
   if (isMobile) {
     const mobileActiveWidth = Math.min(rawWidth * 0.75, 115);
-    
     let mobileActiveHeight = mobileActiveWidth * (16 / 9);
+    
     if (isCircle || shape === 'square') {
       mobileActiveHeight = mobileActiveWidth;
     } else if (shape === 'landscape') {
@@ -1993,7 +2015,6 @@ const DynamicCarouselPreview = ({
     const mobileSideWidth = mobileActiveWidth * 0.42;
     const mobileSideHeight = mobileActiveHeight * 0.85;
 
-    // Sombra unificada abaixo de todo o card de produto
     const unifiedDropShadow = applyShadow 
       ? `drop-shadow(0 15px 15px ${borderColor}45) drop-shadow(0 6px 6px rgba(0,0,0,0.18))`
       : 'none';
@@ -2009,10 +2030,10 @@ const DynamicCarouselPreview = ({
         )}
 
         <div 
-          className="flex items-center justify-center w-full overflow-visible py-4 px-1 transition-all duration-300"
+          className="flex items-center justify-center w-full overflow-visible py-4 px-1"
           style={{ gap: `${spacingNum}px` }}
         >
-          {/* LADO ESQUERDO (Inativo) */}
+          {/* LADO ESQUERDO */}
           <div 
             style={{
               width: `${mobileSideWidth}px`,
@@ -2036,7 +2057,7 @@ const DynamicCarouselPreview = ({
             />
           </div>
 
-          {/* CONTAINER CENTRAL ATIVO (Vídeo Destaque + Card) */}
+          {/* CENTRO (ATIVO) */}
           <div 
             className="shrink-0 flex flex-col items-center space-y-2 transition-all duration-500"
             style={{ 
@@ -2084,7 +2105,6 @@ const DynamicCarouselPreview = ({
               )}
             </div>
 
-            {/* Card de Produto Mobile */}
             {showProductCard && !isCircle && (
               <div className="bg-white border border-slate-100 rounded-xl p-1.5 flex items-center gap-2 shadow-sm w-full transition-all duration-300">
                 <div className="w-7 h-7 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
@@ -2098,7 +2118,7 @@ const DynamicCarouselPreview = ({
             )}
           </div>
 
-          {/* LADO DIREITO (Inativo) */}
+          {/* LADO DIREITO */}
           <div 
             style={{
               width: `${mobileSideWidth}px`,
@@ -2126,7 +2146,7 @@ const DynamicCarouselPreview = ({
     );
   }
 
-  // ==================== RENDERIZAÇÃO DESKTOP ====================
+  // ==================== LAYOUT DESKTOP ====================
   const cardWidth = `${rawWidth}px`;
   let cardHeight = `${Math.round(rawWidth * (16 / 9))}px`;
   if (isCircle || shape === 'square') {
@@ -2199,7 +2219,6 @@ const DynamicCarouselPreview = ({
                 )}
               </div>
 
-              {/* Card de produto desktop */}
               {isAct && showProductCard && !isCircle && (
                 <div className="bg-white border border-slate-100 rounded-xl p-2 flex items-center gap-2 shadow-sm w-full transition-all duration-300">
                   <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
@@ -2218,6 +2237,8 @@ const DynamicCarouselPreview = ({
     </div>
   );
 };
+
+export default DynamicCarouselPreview;
 
 const GridPreview = ({
   grid,
