@@ -2721,7 +2721,11 @@ const PreviewCard = ({
                 )}
                 {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} isMobile={false} />}
                 {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} isMobile={false} />}
-                {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} isMobile={false} />}
+{activeTab === 'grid' && (
+  <ScaleToFit>
+    <GridPreview grid={grid} colors={colors} isMobile={false} />
+  </ScaleToFit>
+)}
                 {activeTab === 'modal' && (
                   <div className="flex justify-center items-center py-4">
                     <ModalPreview formData={formData} colors={colors} isMobile={false} />
