@@ -2471,10 +2471,8 @@ const PreviewCard = ({
   gridDevice, setGridDevice,
   activeTab,
 }: any) => {
-  // Estado local apenas para o Player (Modal)
   const [playerDevice, setPlayerDevice] = useState<'desktop' | 'mobile'>('mobile');
 
-  // Descobre qual dispositivo está ativo baseado na aba
   const activeDevice = 
     activeTab === 'floating' ? floatingDevice :
     activeTab === 'carousel' ? carouselDevice :
@@ -2510,7 +2508,7 @@ const PreviewCard = ({
   return (
     <aside className="relative flex h-full min-h-[580px] max-h-[720px] flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
       
-      {/* Toggles de Dispositivo: Escondidos completamente na aba Básico */}
+      {/* Toggles de Dispositivo: Ocultados na aba Básico */}
       {!isBasicTab && (
         <div className="absolute top-4 right-4 z-50 flex items-center bg-white/95 backdrop-blur-md border border-slate-200 p-1 rounded-xl shadow-sm">
           <button
@@ -2542,8 +2540,8 @@ const PreviewCard = ({
       <div className="relative flex-1 flex flex-col items-center justify-center p-4 bg-slate-50/50 overflow-hidden">
         
         {isBasicTab ? (
-          /* 1. SE FOR ABA BÁSICA: Renderiza direto o preview de desktop, sem mockup de celular */
-          <div className="w-full max-w-[480px] p-6 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all duration-300">
+          /* 1. ABA BÁSICA: Sem mockup de celular, centralizado */
+          <div className="w-full max-w-[460px] p-6 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all duration-300">
             <VisualPreview formData={formData} colors={colors} />
           </div>
         ) : (
@@ -2552,7 +2550,7 @@ const PreviewCard = ({
             {isMobileFrame ? (
               /* Mockup do Celular */
               <div className="relative mx-auto w-[310px] h-[610px] bg-slate-800 rounded-[3rem] p-2.5 flex shrink-0 ring-1 ring-slate-900/10 shadow-2xl transition-all duration-300">
-                {/* Entalhe (Notch) e Câmera */}
+                {/* Notch / Câmera */}
                 <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-28 h-5 bg-slate-800 rounded-b-2xl z-50 flex justify-center items-center">
                   <div className="w-8 h-1 rounded-full bg-slate-700/50"></div>
                 </div>
@@ -2560,36 +2558,44 @@ const PreviewCard = ({
                 {/* Tela interna do Celular */}
                 <div className="flex-1 w-full h-full bg-white rounded-[2.1rem] overflow-hidden relative flex flex-col">
                   {activeTab === 'floating' ? (
-                    /* NA ABA FLUTUANTE: A área tracejada toma 100% do celular, sem paddings */
-                    <div className="relative w-full h-full p-2.5 flex flex-col justify-end">
-                      <div className="absolute inset-2 border-2 border-dashed border-slate-300/80 rounded-[1.6rem] pointer-events-none" />
+                    /* FLUTUANTE: Área tracejada toma 100% da tela interna */
+                    <div className="relative w-full h-full p-2 flex flex-col justify-end">
+                      <div className="absolute inset-1 border-2 border-dashed border-slate-300/70 rounded-[1.8rem] pointer-events-none" />
                       <div className="relative w-full h-full">
                         <FloatingPreview floating={floating} colors={colors} device={activeDevice} />
                       </div>
                     </div>
+                  ) : activeTab === 'modal' ? (
+                    /* PLAYER (MODAL): Imersivo de ponta a ponta (100% do celular) */
+                    <div className="w-full h-full">
+                      <ModalPreview formData={formData} colors={colors} isMobile={true} />
+                    </div>
                   ) : (
-                    /* OUTRAS ABAS COM SCROLL INTERNO CONTROLADO */
-                    <div className="flex-1 w-full h-full overflow-y-auto scrollbar-none p-3 flex flex-col justify-center">
-                      {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
-                      {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} />}
-                      {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
-                      {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
+                    /* WIDGETS COM SCROLL INTERNO CONTROLADO (Carrossel, Carrossel Dinâmico, Grade) */
+                    <div className="flex-1 w-full h-full overflow-hidden p-3 flex flex-col justify-center bg-white">
+                      {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} isMobile={true} />}
+                      {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} isMobile={true} />}
+                      {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} isMobile={true} />}
                     </div>
                   )}
                 </div>
               </div>
             ) : (
-              /* MOCKUP DESKTOP LIVRE */
+              /* MOCKUP DESKTOP */
               <div className="w-full max-w-full transition-all duration-300 px-4">
                 {activeTab === 'floating' && (
                   <div className="relative w-full min-h-[350px] border-2 border-dashed border-slate-300 rounded-2xl bg-white p-4">
                     <FloatingPreview floating={floating} colors={colors} device={activeDevice} />
                   </div>
                 )}
-                {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} />}
-                {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} />}
-                {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} />}
-                {activeTab === 'modal' && <ModalPreview formData={formData} colors={colors} />}
+                {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} isMobile={false} />}
+                {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} isMobile={false} />}
+                {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} isMobile={false} />}
+                {activeTab === 'modal' && (
+                  <div className="flex justify-center items-center py-4">
+                    <ModalPreview formData={formData} colors={colors} isMobile={false} />
+                  </div>
+                )}
               </div>
             )}
           </div>
