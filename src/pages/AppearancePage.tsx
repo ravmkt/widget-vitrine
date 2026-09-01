@@ -1769,22 +1769,19 @@ const CarouselPreview = ({
   const loopWidth = len * step;
   const middleStart = Math.floor(REPEAT_TILES / 2) * loopWidth;
 
-  // Mede o container para centralizar o item ativo no mobile (sem criar espaço vazio, só offset de scroll)
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el || !isMobile) return;
-    const measure = () => setCenterOffset((el.clientWidth - rawWidth) / 2);
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [isMobile, rawWidth]);
-
-  // Posiciona o scroll inicial no meio do trilho, já centralizando o primeiro item ativo no mobile
-  useEffect(() => {
+  // Mede o container e posiciona o scroll ANTES do primeiro paint (evita "pulo" visual no mobile)
+  useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollLeft = isMobile ? middleStart - centerOffset : middleStart;
-  }, [rawWidth, spacingNum, isMobile, centerOffset, middleStart]);
+
+    if (isMobile) {
+      const offset = (el.clientWidth - rawWidth) / 2;
+      setCenterOffset(offset);
+      el.scrollLeft = middleStart - offset;
+    } else {
+      el.scrollLeft = middleStart;
+    }
+  }, [isMobile, rawWidth, middleStart]);
 
   const teleportIfNeeded = () => {
     const el = scrollRef.current;
