@@ -2132,19 +2132,28 @@ const DynamicCarouselPreview = ({
               )}
             </div>
 
-            {/* CARD PRODUTO (Sem sombra do vídeo) */}
-            {showProductCard && !isCircle && (
-              <div className="bg-white border border-slate-200 rounded-xl p-1.5 flex items-center gap-2 w-full transition-all duration-300">
-                <div className="w-7 h-7 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
-                  <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-[8px] font-extrabold text-slate-800 truncate">Calça Confort</p>
-                  <p className="text-[7.5px] font-black text-[#0094EB]">R$ 154,95</p>
-                </div>
-              </div>
-            )}
+      {/* Card do produto Dinâmico */}
+      {showProductCard && !isCircle && (
+        <div 
+          className="flex items-center gap-2 w-full transition-all duration-300 overflow-hidden"
+          style={{
+            backgroundColor: carousel?.product_card_bg || '#FFFFFF',
+            borderColor: carousel?.product_card_border_color || '#E2E8F0',
+            borderWidth: `${carousel?.product_card_border_width ?? 1}px`,
+            borderRadius: `${carousel?.product_card_border_radius ?? 12}px`,
+            borderStyle: 'solid',
+            padding: '6px'
+          }}
+        >
+          <div className="w-7 h-7 rounded bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
+            <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
           </div>
+          <div className="flex-1 min-w-0 text-left">
+            <p className="text-[8px] font-extrabold text-slate-800 truncate">Calça Confort</p>
+            <p className="text-[7.5px] font-black text-[#0094EB]">R$ 154,95</p>
+          </div>
+        </div>
+      )}
 
           {/* LADO DIREITO */}
           <div className="shrink-0 flex flex-col items-center justify-center">
