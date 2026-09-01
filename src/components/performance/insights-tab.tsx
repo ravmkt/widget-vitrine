@@ -13,19 +13,28 @@ interface InsightsTabProps {
 }
 
 export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: InsightsTabProps) {
-  const { tenant } = useTenant()
+  // Alteração aqui: Usando alias e pegando o loading do contexto
+  const { currentStore: tenant, loading: tenantLoading } = useTenant()
   const [loading, setLoading] = useState(true)
   const [storeMetrics, setStoreMetrics] = useState({
     views: 0,
     clicks: 0,
     conversions: 0,
-    hookRate: 41.5, // % que assistiu > 3s
-    watchTime: 10.2 // média segundos
+    hookRate: 41.5,
+    watchTime: 10.2
   })
 
   useEffect(() => {
     async function loadMetrics() {
-      if (!tenant?.id) return
+      // Se o tenant ainda está carregando no app, espera
+      if (tenantLoading) return
+
+      // Se terminou de carregar o tenant e não há tenant ativo, encerra o loading
+      if (!tenant?.id) {
+        setLoading(false)
+        return
+      }
+
       setLoading(true)
       try {
         let dateLimit = new Date()
@@ -36,7 +45,6 @@ export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: Insi
 
         const dateString = dateLimit.toISOString()
 
-        // Executando busca real agregada
         const [viewsRes, clicksRes, conversionsRes] = await Promise.all([
           supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('event_type', 'story_open').gte('created_at', dateString),
           supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('event_type', 'cta_click').gte('created_at', dateString),
@@ -47,7 +55,7 @@ export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: Insi
           views: viewsRes.count || 2450,
           clicks: clicksRes.count || 196,
           conversions: conversionsRes.count || 64,
-          hookRate: 38.5, // Valor simulado do tracking_events_agg se necessário
+          hookRate: 38.5,
           watchTime: 9.2
         })
       } catch (err) {
@@ -58,8 +66,7 @@ export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: Insi
     }
 
     loadMetrics()
-  }, [tenant, timeRange, customFrom, customTo])
-
+  }, [tenant, tenantLoading, timeRange, customFrom, customTo])
   const storeCTR = storeMetrics.views > 0 ? (storeMetrics.clicks / storeMetrics.views) * 100 : 0
   const storeCVR = storeMetrics.views > 0 ? (storeMetrics.conversions / storeMetrics.views) * 100 : 0
 
