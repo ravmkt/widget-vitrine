@@ -2020,14 +2020,18 @@ const DynamicCarouselPreview = ({
             </div>
           </div>
 
-          <div className="shrink-0 flex flex-col items-center transition-all duration-500" style={{ width: `${mobileActiveWidth}px`, zIndex: 10, gap: '8px' }}>
+          {/* CENTRO (ATIVO) */}
+          <div
+            className="shrink-0 relative transition-all duration-500"
+            style={{ width: `${mobileActiveWidth}px`, height: `${mobileActiveHeight}px`, zIndex: 10 }}
+          >
             <div
               style={{
                 width: `${mobileActiveWidth}px`, height: `${mobileActiveHeight}px`,
                 borderRadius, border: `${borderWidth}px solid ${borderColor}`,
                 boxShadow: shadowStyle, transition: 'all 0.5s ease',
               }}
-              className="relative bg-slate-950 overflow-hidden w-full box-border"
+              className="relative bg-slate-950 overflow-hidden box-border"
             >
               <video key={`m-active-${safeActiveIndex}`} ref={el => { if (el) videoRefs.current.set(1, el) }} src={videoSources[safeActiveIndex]} muted playsInline loop className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 pointer-events-none" />
@@ -2045,8 +2049,12 @@ const DynamicCarouselPreview = ({
 
             {showProductCard && !isCircle && (
               <div
-                className="flex items-center gap-2 w-full transition-all duration-300 overflow-hidden box-border"
-                style={{ backgroundColor: pCardBg, border: `${pCardBorderWidth}px solid ${pCardBorderColor}`, borderRadius: `${pCardBorderRadius}px`, padding: '6px' }}
+                className="absolute left-0 w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border"
+                style={{
+                  top: `${mobileActiveHeight + 8}px`,
+                  backgroundColor: pCardBg, border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
+                  borderRadius: `${pCardBorderRadius}px`, padding: '6px',
+                }}
               >
                 <div className="w-7 h-7 rounded bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
                   <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
