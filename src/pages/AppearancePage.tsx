@@ -2111,10 +2111,7 @@ const REPEAT_TILES = 9; // quantidade de "cópias" do array de vídeos no trilho
   }
 
   // ==================== LAYOUT DESKTOP ====================
-  const cardWidth = `${rawWidth}px`;
-  let cardHeight = `${Math.round(rawWidth * (16 / 9))}px`;
-  if (isCircle || shape === 'square') cardHeight = cardWidth;
-  else if (shape === 'landscape') cardHeight = `${Math.round(rawWidth * (9 / 16))}px`;
+  const step = rawWidth + spacingNum;
 
   return (
     <div className="w-full py-3 space-y-3 overflow-visible">
@@ -2124,85 +2121,88 @@ const REPEAT_TILES = 9; // quantidade de "cópias" do array de vídeos no trilho
         </div>
       )}
 
-      <div className="flex items-center justify-center w-full py-4 pb-14 overflow-visible" style={{ gap: `${spacingNum}px` }}>
-        {[0, 1, 2].map((num) => {
-          const isAct = num === 1;
-          const itemIndex = num === 0 ? leftIndex : num === 1 ? safeActiveIndex : rightIndex;
+      <div className="relative w-full py-4 overflow-hidden pb-14">
+        <div
+          className="flex items-center"
+          style={{
+            gap: `${spacingNum}px`,
+            transform: `translateX(calc(50% - ${trackIndex * step + rawWidth / 2}px))`,
+            transition: noTransition ? 'none' : 'transform 0.8s cubic-bezier(0.65, 0, 0.35, 1)',
+          }}
+        >
+          {trackVideos.map((videoSrc, i) => {
+            const isAct = i === trackIndex;
+            const cardHeight = isCircle || shape === 'square'
+              ? `${rawWidth}px`
+              : shape === 'landscape'
+                ? `${Math.round(rawWidth * (9 / 16))}px`
+                : `${Math.round(rawWidth * (16 / 9))}px`;
 
-          return (
-            <div
-              key={num}
-              className="shrink-0 relative transition-all duration-300"
-              style={{
-                width: cardWidth,
-                height: cardHeight,
-                transform: isAct && scaleHighlight ? 'scale(1.1)' : 'scale(0.95)',
-                zIndex: isAct ? 10 : 1,
-              }}
-            >
+            return (
               <div
+                key={i}
+                className="shrink-0 relative transition-all duration-300"
                 style={{
-                  width: cardWidth, height: cardHeight,
-                  borderRadius, border: `${borderWidth}px solid ${borderColor}`,
-                  boxShadow: isAct ? shadowStyle : 'none',
+                  width: `${rawWidth}px`,
+                  height: cardHeight,
+                  transform: isAct && scaleHighlight ? 'scale(1.1)' : 'scale(0.95)',
+                  zIndex: isAct ? 10 : 1,
                 }}
-                className="relative overflow-hidden bg-slate-950 transition-all duration-300 box-border"
               >
-                <video
-                  key={`d-slot-${num}`}
-                  ref={el => { if (el) videoRefs.current.set(num, el) }}
-                  src={videoSources[itemIndex]}
-                  loop muted playsInline
-                  style={{ filter: !isAct && desaturate ? 'grayscale(100%) opacity(0.55)' : 'none' }}
-                  className="w-full h-full object-cover transition-all duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none" />
-                {isAct && showPlayIcon && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
-                      <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
+                <div
+                  style={{
+                    width: `${rawWidth}px`,
+                    height: cardHeight,
+                    borderRadius,
+                    border: `${borderWidth}px solid ${borderColor}`,
+                    boxShadow: isAct ? shadowStyle : 'none',
+                  }}
+                  className="relative overflow-hidden bg-slate-950 transition-all duration-300 box-border"
+                >
+                  <video
+                    ref={el => { if (el && isAct) videoRefs.current.set(1, el) }}
+                    src={videoSrc}
+                    loop
+                    muted
+                    playsInline
+                    autoPlay={isAct ? true : playInactive}
+                    style={{ filter: !isAct && desaturate ? 'grayscale(100%) opacity(0.55)' : 'none' }}
+                    className="w-full h-full object-cover transition-all duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none" />
+                  {isAct && showPlayIcon && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
+                        <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {isAct && showProductCard && !isCircle && (
+                  <div
+                    className="absolute left-0 w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border"
+                    style={{
+                      top: `calc(${cardHeight} + 8px)`,
+                      backgroundColor: pCardBg,
+                      border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
+                      borderRadius: `${pCardBorderRadius}px`,
+                      padding: '6px',
+                    }}
+                  >
+                    <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
+                      <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-extrabold truncate">Calça Confort</p>
+                      <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 154,95</p>
                     </div>
                   </div>
                 )}
               </div>
-
-              {isAct && showProductCard && !isCircle && (
-                <div
-                  className="absolute left-0 w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border"
-                  style={{
-                    top: `calc(${cardHeight} + 8px)`,
-                    backgroundColor: pCardBg, border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
-                    borderRadius: `${pCardBorderRadius}px`, padding: '6px',
-                  }}
-                >
-                  <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
-                    <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1 min-w-0 text-left">
-                    <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-extrabold truncate">Calça Confort</p>
-                    <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 154,95</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-              {isAct && showProductCard && !isCircle && (
-                <div
-                  className="flex items-center gap-2 w-full transition-all duration-300 overflow-hidden box-border"
-                  style={{ backgroundColor: pCardBg, border: `${pCardBorderWidth}px solid ${pCardBorderColor}`, borderRadius: `${pCardBorderRadius}px`, padding: '6px' }}
-                >
-                  <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
-                    <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1 min-w-0 text-left">
-                    <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-extrabold truncate">Calça Confort</p>
-                    <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 154,95</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
