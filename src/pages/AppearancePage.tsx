@@ -2763,7 +2763,7 @@ const AppearancePage = () => {
 
           if (!storiesError && storiesData) {
             const count = storiesData.filter((item: any) => 
-              !(item.is_active === false || item.active === false || item.status === 'inactive' || item.status === 'inativo')
+!(item.is_active === false || item.active === false)
             ).length;
             setActiveStoriesCount(count);
           }
