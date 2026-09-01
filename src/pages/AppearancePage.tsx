@@ -1301,8 +1301,6 @@ const syncGlobalConfig = (
   prev: ExtendedAppearance,
 ): ExtendedAppearance => {
   if (checked) {
-    // Unificação profunda: espelha as propriedades do Desktop diretamente no Mobile,
-    // mas preserva as dimensões adaptativas do Mobile para evitar quebras visuais drásticas.
     return {
       ...prev,
       useGlobalAppearance: true,
@@ -1364,38 +1362,6 @@ const syncGlobalConfig = (
       ...prev.dynamic_carousel_config,
       same_for_all: false,
     },
-    grid_config: {
-      ...prev.grid_config,
-      same_for_all: false,
-      desktop: {
-        ...prev.grid_config.desktop,
-        visible_items: limitNumber(prev.grid_config.desktop.visible_items, 10, 1, 10),
-      },
-      mobile: {
-        ...prev.grid_config.mobile,
-        visible_items: limitNumber(prev.grid_config.mobile.visible_items, 2, 1, 10),
-      },
-    },
-  };
-};
-
-  return {
-    ...prev,
-    useGlobalAppearance: false,
-    use_global_appearance: false,
-    floating_config: {
-      ...prev.floating_config,
-      same_for_all: false,
-    },
-    carousel_config: {
-      ...prev.carousel_config,
-      same_for_all: false,
-    },
-        dynamic_carousel_config: {
-      ...prev.dynamic_carousel_config,
-      same_for_all: false,
-    },
-
     grid_config: {
       ...prev.grid_config,
       same_for_all: false,
