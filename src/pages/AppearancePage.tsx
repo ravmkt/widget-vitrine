@@ -2126,13 +2126,110 @@ const GridPreview = ({
 const ModalPreview = ({
   formData,
   colors,
+  isMobile = false,
 }: {
   formData: ExtendedAppearance;
   colors: PreviewColors;
+  isMobile?: boolean;
 }) => {
   const { modal_config: m } = formData;
   const borderW = safeNumber(m.border_width, 0, 0);
 
+  if (isMobile) {
+    return (
+      <div 
+        className="relative w-full h-full overflow-hidden bg-slate-950 flex flex-col justify-between"
+        style={{
+          color: '#FFFFFF',
+          fontFamily: formData.font_family,
+        }}
+      >
+        {/* Vídeo de fundo em Tela Cheia */}
+        <video
+          src={DEMO_PREVIEW_VIDEOS[0]}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover pointer-events-none"
+        />
+        
+        {/* Sombra de leitura superior/inferior */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90 pointer-events-none z-10" />
+
+        {/* Header do Player (Notch Safe) */}
+        <div className="relative z-20 flex items-center justify-between p-3 pt-9">
+          {m.show_title && (
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm" />
+              <div>
+                <h4 className="text-xs font-bold text-white drop-shadow">Calça Confort</h4>
+                <p className="text-[9px] text-white/70">Vidlytics Store</p>
+              </div>
+            </div>
+          )}
+          <button
+            type="button"
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10"
+          >
+            <X size={14} />
+          </button>
+        </div>
+
+        {/* Botões de engajamento na Lateral (Simulado TikTok/Instagram) */}
+        <div className="absolute right-3 bottom-24 z-20 flex flex-col items-center gap-3.5">
+          <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+            <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
+              <Heart size={16} className="text-white fill-white" />
+            </div>
+            <span className="text-[8px] font-semibold mt-0.5 drop-shadow">1.2k</span>
+          </button>
+          <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+            <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
+              <MessageCircle size={16} className="text-white" />
+            </div>
+            <span className="text-[8px] font-semibold mt-0.5 drop-shadow">48</span>
+          </button>
+          <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+            <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
+              <Share2 size={16} className="text-white" />
+            </div>
+            <span className="text-[8px] font-semibold mt-0.5 drop-shadow">Enviar</span>
+          </button>
+        </div>
+
+        {/* Rodapé com o Card de Compras do Produto e Linha de Progresso */}
+        <div className="relative z-20 w-full p-3 space-y-2.5">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 flex items-center gap-2.5 shadow-2xl border border-white/20 text-slate-900 transition hover:scale-[1.01]">
+            <div className="h-11 w-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
+              <img
+                src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=150&q=80"
+                alt="Product"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h5 className="text-[11px] font-bold text-slate-900 truncate">Calça Confort Premium</h5>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="text-[11px] font-black text-[#0094EB]">R$ 149,95</span>
+                <span className="text-[9px] text-slate-400 line-through">R$ 199,90</span>
+              </div>
+            </div>
+            <button className="bg-[#0094EB] text-white text-[10px] font-black py-1.5 px-3 rounded-lg hover:bg-[#007cc7] transition shrink-0 shadow-sm shadow-[#0094EB]/10">
+              Comprar
+            </button>
+          </div>
+
+          {/* Barra de progresso do vídeo */}
+          <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+            <div className="h-full bg-[#0094EB] rounded-full w-2/3" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // DESKTOP (Caso de visualização reduzida)
   return (
     <div className="overflow-hidden rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center h-[440px] w-full">
       <div
@@ -2152,8 +2249,6 @@ const ModalPreview = ({
           loop
           muted
           playsInline
-          preload="auto"
-          poster="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
           className="absolute inset-0 h-full w-full object-cover pointer-events-none"
         />
 
@@ -2172,88 +2267,6 @@ const ModalPreview = ({
             <X size={12} />
           </button>
         </div>
-
-        {m.show_play_button && (
-          <div className="absolute left-1/2 top-[42%] z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur">
-              <PlaySquare size={18} />
-            </div>
-          </div>
-        )}
-
-        <div className="absolute bottom-24 right-2 z-20 flex flex-col gap-2">
-          {m.show_like_button && (
-            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-black/20 text-white backdrop-blur">
-              <Heart size={14} />
-            </div>
-          )}
-          {m.show_comment_button && (
-            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-black/20 text-white backdrop-blur">
-              <MessageCircle size={14} />
-            </div>
-          )}
-          {m.show_share_button && (
-            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-black/20 text-white backdrop-blur">
-              <Share2 size={14} />
-            </div>
-          )}
-        </div>
-
-        {m.show_product && (
-          <div
-            className="absolute bottom-2 left-2 right-2 z-30 p-2 text-slate-900 shadow-lg backdrop-blur"
-            style={{
-              backgroundColor: (m as any).product_card_bg || '#FFFFFF',
-              borderColor: (m as any).product_card_border_color || '#E2E8F0',
-              borderWidth: `${safeNumber((m as any).product_card_border_width, 1, 0)}px`,
-              borderStyle: 'solid',
-              borderRadius: `${safeNumber((m as any).product_card_border_radius, 12, 0)}px`,
-            }}
-          >
-            <div className="flex items-center gap-1.5">
-              <div
-                className="h-10 w-10 shrink-0 rounded"
-                style={{
-                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-                }}
-              />
-              <div className="min-w-0 flex-1">
-                <p
-                  className="truncate font-black"
-                  style={{
-                    fontSize: `${safeNumber((m as any).product_card_name_size, 11, 8)}px`,
-                    color: (m as any).product_card_name_color || '#0F172A',
-                  }}
-                >
-                  Calça Confort
-                </p>
-                <p
-                  className="font-black"
-                  style={{
-                    fontSize: `${safeNumber((m as any).product_card_price_size, 12, 8)}px`,
-                    color: (m as any).product_card_price_color || colors.primary,
-                  }}
-                >
-                  R$ 149,95
-                </p>
-                <div className="mt-1 flex gap-1">
-                  {m.show_product_button && (
-                    <button
-                      type="button"
-                      className="flex-1 rounded px-1.5 py-1 text-[8px] font-black"
-                      style={{
-                        backgroundColor: (m as any).product_card_button_bg || colors.button,
-                        color: (m as any).product_card_button_color || '#FFFFFF',
-                      }}
-                    >
-                      Ver produto
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
