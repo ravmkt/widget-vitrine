@@ -1905,10 +1905,34 @@ const DynamicCarouselPreview = ({
   colors: any;
   isMobile?: boolean;
 }) => {
+  const [activeIndex, setActiveIndex] = useState(1);
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+
   const videoSources = DEMO_PREVIEW_VIDEOS;
+
+const REPEAT_TILES = 9; // quantidade de "cópias" do array de vídeos no trilho
   const len = videoSources.length;
-  const delay = Number(carousel?.autoplay_delay) || 5000;
+  const middleTile = Math.floor(REPEAT_TILES / 2);
+  const baseIndex = middleTile * len;
+
+  const trackVideos = Array.from({ length: REPEAT_TILES }, () => videoSources).flat();
+
+  const [trackIndex, setTrackIndex] = useState(baseIndex);
+  const [noTransition, setNoTransition] = useState(false);
+  
+  // Intervalo automático (Carrossel girando)
+  useEffect(() => {
+    const delay = Number(carousel?.autoplay_delay) || 5000;
+    if (delay <= 0) return;
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % videoSources.length);
+    }, delay);
+    return () => clearInterval(interval);
+  }, [carousel?.autoplay_delay, videoSources.length]);
+
+  const safeActiveIndex = activeIndex % videoSources.length;
+  const leftIndex = (safeActiveIndex - 1 + videoSources.length) % videoSources.length;
+  const rightIndex = (safeActiveIndex + 1) % videoSources.length;
 
   const shape = carousel?.shape || 'portrait';
   const isCircle = shape === 'circle';
@@ -1921,6 +1945,7 @@ const DynamicCarouselPreview = ({
   const rawWidth = Number(carousel?.width ?? 90);
   const spacingNum = Number(carousel?.spacing ?? 8);
 
+  // "Reproduzir vídeos inativos" -> autoplay_videos controla os laterais
   const playInactive = carousel?.autoplay_videos ?? true;
   const showPlayIcon = carousel?.show_play_icon ?? true;
   const scaleHighlight = carousel?.highlight_enlarge_active ?? false;
@@ -1937,148 +1962,233 @@ const DynamicCarouselPreview = ({
   const pCardPriceSize = Number(carousel?.product_card_price_size ?? 8);
   const pCardPriceColor = carousel?.product_card_price_color || colors?.primary || '#0094EB';
 
+  // "Largura Borda" -> campo salvo como border_style
   const borderWidth = Number(carousel?.border_style ?? 0);
   const borderColor = carousel?.border_color || colors?.primary || '#0094EB';
   const borderRadiusNum = Number(carousel?.border_radius ?? 12);
   const borderRadius = isCircle ? '50%' : `${borderRadiusNum}px`;
 
-  const titleStyle: React.CSSProperties = { fontSize: `${titleSizeVal}px`, fontWeight: isBold ? 'bold' : 'normal' };
+  // Controle de reprodução real via ref
+  useEffect(() => {
+    [0, 1, 2].forEach((pos) => {
+      const video = videoRefs.current.get(pos);
+      if (!video) return;
+      const isAct = pos === 1;
+      if (isAct) {
+        video.play().catch(() => {});
+      } else {
+        if (playInactive) video.play().catch(() => {});
+        else video.pause();
+      }
+    });
+  }, [playInactive, activeIndex, isMobile]);
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: `${titleSizeVal}px`,
+    fontWeight: isBold ? 'bold' : 'normal',
+  };
+
   const titleAlignClass =
     titleAlign === 'left' ? 'text-left w-full px-4' :
     titleAlign === 'right' ? 'text-right w-full px-4' :
     'text-center w-full';
+
   const shadowStyle = applyShadow ? '0 10px 25px -5px rgba(0,0,0,0.4), 0 8px 10px -6px rgba(0,0,0,0.1)' : 'none';
 
-  const itemWidth = isMobile ? Math.min(rawWidth * 0.75, 115) : rawWidth;
-  let itemHeight = itemWidth * (16 / 9);
-  if (isCircle || shape === 'square') itemHeight = itemWidth;
-  else if (shape === 'landscape') itemHeight = itemWidth * (9 / 16);
+  // ==================== LAYOUT MOBILE ====================
+  if (isMobile) {
+    const mobileActiveWidth = Math.min(rawWidth * 0.75, 115);
+    let mobileActiveHeight = mobileActiveWidth * (16 / 9);
+    if (isCircle || shape === 'square') mobileActiveHeight = mobileActiveWidth;
+    else if (shape === 'landscape') mobileActiveHeight = mobileActiveWidth * (9 / 16);
 
-  const scaleFactor = scaleHighlight ? 1.12 : 1;
-  const cardMaxWidth = itemWidth * scaleFactor;
-  const cardBlockHeight = showProductCard && !isCircle ? 46 : 0;
-  const containerHeight = itemHeight * scaleFactor + cardBlockHeight;
-  const step = itemWidth + spacingNum;
+    const sideScale = scaleHighlight ? 0.85 : 1;
+    const mobileSideWidth = mobileActiveWidth * sideScale;
+    const mobileSideHeight = mobileActiveHeight * sideScale;
 
-  // Trilho posicional grande (garante nunca faltar espaço nas bordas),
-  // mas SÓ renderiza <video> real dentro de uma janela próxima ao ativo (performance).
-  const REPEAT_TILES = isMobile ? 14 : 21;
-  const RENDER_WINDOW = isMobile ? 3 : 6; // quantos itens de cada lado do ativo terão vídeo real
-  const middleTile = Math.floor(REPEAT_TILES / 2);
-  const baseIndex = middleTile * len;
-  const totalTiles = REPEAT_TILES * len;
+    return (
+      <div className="w-full py-1 flex flex-col items-center space-y-3 select-none overflow-visible">
+        {showTitle && (
+          <div className={titleAlignClass}>
+            <h4 style={titleStyle} className="text-slate-800 tracking-wider">{titleText}</h4>
+          </div>
+        )}
 
-  const [trackIndex, setTrackIndex] = useState(baseIndex);
-  const [noTransition, setNoTransition] = useState(false);
+<div className="flex items-center justify-center w-full overflow-visible py-4 px-1 pb-14 transition-all duration-500" style={{ gap: `${spacingNum}px` }}>
+          <div className="shrink-0 flex flex-col items-center justify-center">
+            <div
+              style={{
+                width: `${mobileSideWidth}px`, height: `${mobileSideHeight}px`,
+                borderRadius, border: `${borderWidth}px solid ${borderColor}`,
+                opacity: desaturate ? 0.4 : 1,
+                filter: desaturate ? 'grayscale(100%)' : 'none',
+                transition: 'all 0.5s ease',
+              }}
+              className="bg-slate-900 overflow-hidden relative box-border"
+            >
+              <video key={`m-left-${leftIndex}`} ref={el => { if (el) videoRefs.current.set(0, el) }} src={videoSources[leftIndex]} muted playsInline loop className="w-full h-full object-cover" />
+            </div>
+          </div>
 
-  useEffect(() => {
-    if (delay <= 0) return;
-    const interval = setInterval(() => setTrackIndex((prev) => prev + 1), delay);
-    return () => clearInterval(interval);
-  }, [delay]);
+          {/* CENTRO (ATIVO) */}
+          <div
+            className="shrink-0 relative transition-all duration-500"
+            style={{ width: `${mobileActiveWidth}px`, height: `${mobileActiveHeight}px`, zIndex: 10 }}
+          >
+            <div
+              style={{
+                width: `${mobileActiveWidth}px`, height: `${mobileActiveHeight}px`,
+                borderRadius, border: `${borderWidth}px solid ${borderColor}`,
+                boxShadow: shadowStyle, transition: 'all 0.5s ease',
+              }}
+              className="relative bg-slate-950 overflow-hidden box-border"
+            >
+              <video key={`m-active-${safeActiveIndex}`} ref={el => { if (el) videoRefs.current.set(1, el) }} src={videoSources[safeActiveIndex]} muted playsInline loop className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 pointer-events-none" />
+              <div style={{ backgroundColor: borderColor }} className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse">
+                <span className="w-1.5 h-1.5 bg-white rounded-full" /> Destaque
+              </div>
+              {showPlayIcon && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
+                    <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
+                  </div>
+                </div>
+              )}
+            </div>
 
-  const handleTransitionEnd = (e: React.TransitionEvent) => {
-    if (e.propertyName !== 'transform') return;
-    setTrackIndex((prev) => {
-      if (prev - baseIndex >= len) {
-        setNoTransition(true);
-        requestAnimationFrame(() => requestAnimationFrame(() => setNoTransition(false)));
-        return prev - len;
-      }
-      return prev;
-    });
-  };
+            {showProductCard && !isCircle && (
+              <div
+                className="absolute left-0 w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border"
+                style={{
+                  top: `${mobileActiveHeight + 8}px`,
+                  backgroundColor: pCardBg, border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
+                  borderRadius: `${pCardBorderRadius}px`, padding: '6px',
+                }}
+              >
+                <div className="w-7 h-7 rounded bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
+                  <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-extrabold truncate">Calça Confort</p>
+                  <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 154,95</p>
+                </div>
+              </div>
+            )}
+          </div>
 
-  useEffect(() => {
-    videoRefs.current.forEach((video, i) => {
-      const isAct = i === trackIndex;
-      if (isAct) video.play().catch(() => {});
-      else if (playInactive) video.play().catch(() => {});
-      else video.pause();
-    });
-  }, [playInactive, trackIndex]);
+          <div className="shrink-0 flex flex-col items-center justify-center">
+            <div
+              style={{
+                width: `${mobileSideWidth}px`, height: `${mobileSideHeight}px`,
+                borderRadius, border: `${borderWidth}px solid ${borderColor}`,
+                opacity: desaturate ? 0.4 : 1,
+                filter: desaturate ? 'grayscale(100%)' : 'none',
+                transition: 'all 0.5s ease',
+              }}
+              className="bg-slate-900 overflow-hidden relative box-border"
+            >
+              <video key={`m-right-${rightIndex}`} ref={el => { if (el) videoRefs.current.set(2, el) }} src={videoSources[rightIndex]} muted playsInline loop className="w-full h-full object-cover" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ==================== LAYOUT DESKTOP ====================
+  const cardWidth = `${rawWidth}px`;
+  let cardHeight = `${Math.round(rawWidth * (16 / 9))}px`;
+  if (isCircle || shape === 'square') cardHeight = cardWidth;
+  else if (shape === 'landscape') cardHeight = `${Math.round(rawWidth * (9 / 16))}px`;
 
   return (
-    <div className="w-full py-3 overflow-visible">
+    <div className="w-full py-3 space-y-3 overflow-visible">
       {showTitle && (
-        <div className={titleAlignClass}><h4 style={titleStyle} className="text-slate-800 tracking-wider mb-2">{titleText}</h4></div>
+        <div className={titleAlignClass}>
+          <h4 style={titleStyle} className="text-slate-800 tracking-wider">{titleText}</h4>
+        </div>
       )}
 
-      <div className="relative w-full" style={{ height: `${containerHeight}px`, overflowX: 'hidden', overflowY: 'visible' }}>
-        <div
-          className="flex items-start absolute top-0 left-0"
-          style={{
-            height: `${containerHeight}px`,
-            gap: `${spacingNum}px`,
-            transform: `translateX(calc(50% - ${trackIndex * step + itemWidth / 2}px))`,
-            transition: noTransition ? 'none' : 'transform 0.8s cubic-bezier(0.65, 0, 0.35, 1)',
-          }}
-          onTransitionEnd={handleTransitionEnd}
-        >
-          {Array.from({ length: totalTiles }).map((_, i) => {
-            const isAct = i === trackIndex;
-            const withinWindow = Math.abs(i - trackIndex) <= RENDER_WINDOW;
-            const w = isAct ? itemWidth * scaleFactor : itemWidth;
-            const h = isAct ? itemHeight * scaleFactor : itemHeight;
-            const videoSrc = videoSources[i % len];
+      <div className="flex items-center justify-center w-full py-4 pb-14 overflow-visible" style={{ gap: `${spacingNum}px` }}>
+        {[0, 1, 2].map((num) => {
+          const isAct = num === 1;
+          const itemIndex = num === 0 ? leftIndex : num === 1 ? safeActiveIndex : rightIndex;
 
-            return (
+          return (
+            <div
+              key={num}
+              className="shrink-0 relative transition-all duration-300"
+              style={{
+                width: cardWidth,
+                height: cardHeight,
+                transform: isAct && scaleHighlight ? 'scale(1.1)' : 'scale(0.95)',
+                zIndex: isAct ? 10 : 1,
+              }}
+            >
               <div
-                key={i}
-                className="shrink-0 flex flex-col items-center"
-                style={{ width: `${Math.max(w, cardMaxWidth)}px`, zIndex: isAct ? 10 : 1 }}
+                style={{
+                  width: cardWidth, height: cardHeight,
+                  borderRadius, border: `${borderWidth}px solid ${borderColor}`,
+                  boxShadow: isAct ? shadowStyle : 'none',
+                }}
+                className="relative overflow-hidden bg-slate-950 transition-all duration-300 box-border"
               >
-                <div
-                  style={{ width: `${w}px`, height: `${h}px`, borderRadius, border: `${borderWidth}px solid ${borderColor}`, boxShadow: isAct ? shadowStyle : 'none', transition: 'width 0.3s ease, height 0.3s ease' }}
-                  className="relative overflow-hidden bg-slate-800 box-border"
-                >
-                  {withinWindow ? (
-                    <video
-                      ref={el => { if (el) videoRefs.current.set(i, el); else videoRefs.current.delete(i); }}
-                      src={videoSrc}
-                      loop muted playsInline autoPlay preload="auto"
-                      style={{ filter: !isAct && desaturate ? 'grayscale(100%) opacity(0.55)' : 'none' }}
-                      className="w-full h-full object-cover transition-all duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-slate-800" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none" />
-                  {isAct && (
-                    <div style={{ backgroundColor: borderColor }} className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-white text-[7px] font-black uppercase tracking-wider flex items-center gap-0.5 animate-pulse">
-                      <span className="w-1.5 h-1.5 bg-white rounded-full" /> Destaque
-                    </div>
-                  )}
-                  {isAct && showPlayIcon && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center"><Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" /></div>
-                    </div>
-                  )}
-                </div>
-
-                {showProductCard && !isCircle && (
-                  <div
-                    className="flex items-center gap-2 overflow-hidden box-border transition-opacity duration-300 mt-2"
-                    style={{
-                      width: `${cardMaxWidth}px`,
-                      opacity: isAct ? 1 : 0,
-                      backgroundColor: pCardBg, border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
-                      borderRadius: `${pCardBorderRadius}px`, padding: '6px',
-                    }}
-                  >
-                    <div className="w-7 h-7 rounded bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
-                      <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-extrabold truncate">Calça Confort</p>
-                      <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 154,95</p>
+                <video
+                  key={`d-slot-${num}`}
+                  ref={el => { if (el) videoRefs.current.set(num, el) }}
+                  src={videoSources[itemIndex]}
+                  loop muted playsInline
+                  style={{ filter: !isAct && desaturate ? 'grayscale(100%) opacity(0.55)' : 'none' }}
+                  className="w-full h-full object-cover transition-all duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none" />
+                {isAct && showPlayIcon && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
+                      <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
                     </div>
                   </div>
                 )}
               </div>
-            );
-          })}
-        </div>
+
+              {isAct && showProductCard && !isCircle && (
+                <div
+                  className="absolute left-0 w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border"
+                  style={{
+                    top: `calc(${cardHeight} + 8px)`,
+                    backgroundColor: pCardBg, border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
+                    borderRadius: `${pCardBorderRadius}px`, padding: '6px',
+                  }}
+                >
+                  <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
+                    <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-extrabold truncate">Calça Confort</p>
+                    <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 154,95</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+              {isAct && showProductCard && !isCircle && (
+                <div
+                  className="flex items-center gap-2 w-full transition-all duration-300 overflow-hidden box-border"
+                  style={{ backgroundColor: pCardBg, border: `${pCardBorderWidth}px solid ${pCardBorderColor}`, borderRadius: `${pCardBorderRadius}px`, padding: '6px' }}
+                >
+                  <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
+                    <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-extrabold truncate">Calça Confort</p>
+                    <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 154,95</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
