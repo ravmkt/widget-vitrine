@@ -32,9 +32,17 @@ export function BillingPage() {
   const [plan, setPlan] = useState<any>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
 
-  // Consumo Real
+  // Consumo de Armazenamento Real
   const [storageUsedBytes, setStorageUsedBytes] = useState<number>(0);
   const [storageLimitBytes, setStorageLimitBytes] = useState<number>(1073741824); // 1 GB fallback
+
+  // Consumo de Views Real
+  const [viewsUsed, setViewsUsed] = useState<number>(0);
+  const [viewsLimit, setViewsLimit] = useState<number>(10000); // 10k fallback
+
+  // Consumo de Páginas Ativas Real
+  const [pagesUsed, setPagesUsed] = useState<number>(0);
+  const [pagesLimit, setPagesLimit] = useState<number>(100); // 100 fallback
 
   // Formulário de Dados Fiscais
   const [fiscalData, setFiscalData] = useState({
@@ -60,7 +68,7 @@ export function BillingPage() {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
-// Carrega todos os dados financeiros
+  // Carrega todos os dados financeiros e de recursos consumidos
   useEffect(() => {
     const loadBillingData = async () => {
       try {
@@ -101,10 +109,10 @@ export function BillingPage() {
 
         setStoreId(activeStoreId);
 
-        // 2. Busca dados da loja, plano e status oficial da assinatura via maybeSingle
+        // 2. Busca dados da loja, plano, status de assinatura e limites de views/páginas
         const { data: storeRow, error: storeErr } = await supabase
           .from('stores')
-          .select('storage_used_bytes, storage_limit_bytes, plan_id, subscription_status, trial_ends_at, plans(*)')
+          .select('storage_used_bytes, storage_limit_bytes, plan_id, subscription_status, trial_ends_at, views_used, views_limit, pages_used, pages_limit, plans(*)')
           .eq('id', activeStoreId)
           .maybeSingle();
 
@@ -122,10 +130,37 @@ export function BillingPage() {
           }
           setTrialEndsAt(storeRow.trial_ends_at || null);
 
+          // Configura limites de Views do Banco
+          setViewsUsed(Number(storeRow.views_used || 0));
+          if (storeRow.views_limit) {
+            setViewsLimit(Number(storeRow.views_limit));
+          }
+
+          // Consulta quantidade exata de páginas criadas se pages_used for nulo/vazio
+          let calculatedPages = Number(storeRow.pages_used || 0);
+          try {
+            const { count } = await supabase
+              .from('pages')
+              .select('*', { count: 'exact', head: true })
+              .eq('store_id', activeStoreId);
+            if (count !== null) calculatedPages = count;
+          } catch (_) {}
+          setPagesUsed(calculatedPages);
+
+          if (storeRow.pages_limit) {
+            setPagesLimit(Number(storeRow.pages_limit));
+          }
+
           if ((storeRow as any).plans) {
             setPlan((storeRow as any).plans);
             if ((storeRow as any).plans?.storage_limit_bytes) {
               setStorageLimitBytes(Number((storeRow as any).plans.storage_limit_bytes));
+            }
+            if ((storeRow as any).plans?.views_limit) {
+              setViewsLimit(Number((storeRow as any).plans.views_limit));
+            }
+            if ((storeRow as any).plans?.pages_limit) {
+              setPagesLimit(Number((storeRow as any).plans.pages_limit));
             }
           }
         }
@@ -145,6 +180,12 @@ export function BillingPage() {
             setPlan(subData.plans);
             if (subData.plans?.storage_limit_bytes) {
               setStorageLimitBytes(Number(subData.plans.storage_limit_bytes));
+            }
+            if (subData.plans?.views_limit) {
+              setViewsLimit(Number(subData.plans.views_limit));
+            }
+            if (subData.plans?.pages_limit) {
+              setPagesLimit(Number(subData.plans.pages_limit));
             }
           }
         }
@@ -217,10 +258,48 @@ export function BillingPage() {
     }
   };
 
+  // Cálculos de Percentual de Consumo Reais
   const storagePct = useMemo(() => {
     if (!storageLimitBytes || storageLimitBytes === 0) return 0;
     return Math.min(100, Number(((storageUsedBytes / storageLimitBytes) * 100).toFixed(1)));
   }, [storageUsedBytes, storageLimitBytes]);
+
+  const viewsPct = useMemo(() => {
+    if (!viewsLimit || viewsLimit === 0) return 0;
+    return Math.min(100, Number(((viewsUsed / viewsLimit) * 100).toFixed(1)));
+  }, [viewsUsed, viewsLimit]);
+
+  const pagesPct = useMemo(() => {
+    if (!pagesLimit || pagesLimit === 0) return 0;
+    return Math.min(100, Number(((pagesUsed / pagesLimit) * 100).toFixed(1)));
+  }, [pagesUsed, pagesLimit]);
+
+  // Utilitário de formatação visual condicional das cores com base na régua de uso
+  const getResourceVisuals = (pct: number) => {
+    if (pct >= 90) {
+      return {
+        barBg: '!bg-rose-500 shadow-[0_0_12px_rgba(239,68,68,0.45)]',
+        text: 'text-rose-500 dark:text-rose-400',
+        bgPill: 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border-rose-200/40'
+      };
+    }
+    if (pct >= 70) {
+      return {
+        barBg: '!bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.45)]',
+        text: 'text-amber-500 dark:text-amber-400',
+        bgPill: 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-200/40'
+      };
+    }
+    return {
+      barBg: '!bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.3)]',
+      text: 'text-emerald-500 dark:text-emerald-400',
+      bgPill: 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-200/40'
+    };
+  };
+
+  const storageVisuals = getResourceVisuals(storagePct);
+  const viewsVisuals = getResourceVisuals(viewsPct);
+  const pagesVisuals = getResourceVisuals(pagesPct);
 
   if (loading) {
     return (
@@ -232,7 +311,7 @@ export function BillingPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 p-6 pb-20">
-{/* Banner de Alerta para Assinaturas Canceladas ou Pendentes */}
+      {/* Banner de Alerta para Assinaturas Canceladas ou Pendentes */}
       {subscriptionStatus === 'canceled' && (
         <div className="flex flex-col gap-3 rounded-2xl border border-red-200 bg-red-50/80 p-5 dark:border-red-950/60 dark:bg-red-950/30 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
@@ -249,7 +328,7 @@ export function BillingPage() {
           <button
             type="button"
             onClick={() => navigate('/plans')}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-red-600/20 transition-all hover:bg-red-700"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-red-600/20 transition-all hover:bg-red-700 cursor-pointer"
           >
             <Sparkles size={15} />
             Reativar Assinatura
@@ -273,14 +352,14 @@ export function BillingPage() {
           <button
             type="button"
             onClick={() => navigate('/plans')}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-amber-600/20 transition-all hover:bg-amber-700"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-amber-600/20 transition-all hover:bg-amber-700 cursor-pointer"
           >
             Regularizar Pagamento
           </button>
         </div>
       )}
 
-{/* ── CABEÇALHO DA PÁGINA (DUAL-THEME: AZUL NO LIGHT / LARANJA NO DARK) ── */}
+      {/* ── CABEÇALHO DA PÁGINA ── */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -300,8 +379,9 @@ export function BillingPage() {
         </button>
       </div>
 
-      {/* ── MÓDULOS SUPERIORES: PLANO ATUAL & CONSUMO DE RECURSOS (DUAL-THEME) ── */}
+      {/* ── MÓDULOS SUPERIORES: PLANO ATUAL & CONSUMO DE RECURSOS ── */}
       <div className="grid gap-6 md:grid-cols-3 items-stretch">
+        
         {/* Card: Detalhes do Plano */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm md:col-span-1 flex flex-col justify-between">
           <div>
@@ -338,7 +418,7 @@ export function BillingPage() {
             </h2>
             <div className="mt-2 flex items-baseline gap-1">
               <span className="text-3xl font-black text-[#0094EB] dark:text-[#ff7a29] tracking-tight">
-                R$ {plan?.price_cents !== undefined ? (plan.price_cents / 100).toFixed(2).replace('.', ',') : '0,00'}
+                R$ {plan?.price_cents !== undefined ? (plan.price_cents / 100).toFixed(2).replace('.', ',') : '59,00'}
               </span>
               <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">/mês</span>
             </div>
@@ -350,7 +430,7 @@ export function BillingPage() {
                 <>
                   Período de teste até:{' '}
                   <strong className="text-slate-800 dark:text-white font-bold">
-                    {trialEndsAt ? new Date(trialEndsAt).toLocaleDateString('pt-BR') : '14 dias'}
+                    {trialEndsAt ? new Date(trialEndsAt).toLocaleDateString('pt-BR') : '7 dias'}
                   </strong>
                 </>
               ) : (
@@ -378,7 +458,7 @@ export function BillingPage() {
           </div>
         </div>
 
-        {/* Card: Consumo de Recursos */}
+        {/* Card: Consumo de Recursos (Destaque Proporcional) */}
         <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm md:col-span-2 flex flex-col justify-between space-y-5">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
             <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
@@ -389,11 +469,11 @@ export function BillingPage() {
             </span>
           </div>
 
-          {/* Destaque de Armazenamento com Barra Shimmer */}
+          {/* 1. Armazenamento com Barra e Fonte Ampliada */}
           <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_12px_rgba(255,122,41,0.35)] shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 shrink-0">
                   <HardDrive size={18} className="!text-white stroke-[2.5]" />
                 </div>
                 <div>
@@ -407,57 +487,139 @@ export function BillingPage() {
               </div>
 
               <div className="text-right">
-                <span className="text-base font-black text-slate-900 dark:text-white block">
+                <span className="text-sm font-black text-slate-900 dark:text-white block">
                   {formatSize(storageUsedBytes)}
                   <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]"> / {formatSize(storageLimitBytes)}</span>
                 </span>
-                <span className={cn(
-                  "text-[11px] font-black",
-                  storagePct >= 90 ? "text-rose-500" : storagePct >= 70 ? "text-[#ff7a29]" : "text-[#0094EB] dark:text-[#ff7a29]"
-                )}>
+                {/* 🚀 FONTE DA PORCENTAGEM AUMENTADA */}
+                <span className={cn("text-base font-black tracking-tight block", storageVisuals.text)}>
                   {storagePct}% utilizado
                 </span>
               </div>
             </div>
 
-            {/* Barra de Progresso no padrão do dashboard */}
+            {/* Barra de Progresso Condicional */}
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-[#1a1f35] p-0.5 border border-transparent dark:border-white/5">
               <div
-                className={cn(
-                  "h-full rounded-full transition-all duration-700 animate-shimmer",
-                  storagePct >= 90 ? "!bg-[#ef4444]" : storagePct >= 70 ? "!bg-[#ff7a29]" : "!bg-[#22c55e]"
-                )}
+                className={cn("h-full rounded-full transition-all duration-700 animate-shimmer", storageVisuals.barBg)}
                 style={{ width: `${Math.max(1, storagePct)}%` }}
               />
             </div>
           </div>
 
-          {/* Cards de Métricas Secundárias */}
-          <div className="grid grid-cols-2 gap-4 pt-1">
-            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-4">
-              <div className="flex items-center gap-2 text-slate-500 dark:text-[#8a90a0]">
-                <Eye size={16} className="text-[#0094EB] dark:text-[#ff7a29]" />
-                <span className="text-xs font-bold">Limite de Views</span>
+          {/* 2 e 3. Cards de Métricas Secundárias Reestruturados (Barras Proporcionais e Views/Pages Reais) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            
+            {/* Views Proporcionais */}
+            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 shrink-0">
+                    <Eye size={16} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-slate-900 dark:text-white block">
+                      Limite de Views
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0]">
+                      Visualizações exibidas
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-sm font-black text-slate-900 dark:text-white block">
+                    {viewsUsed.toLocaleString('pt-BR')}
+                    <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]"> / {viewsLimit.toLocaleString('pt-BR')}</span>
+                  </span>
+                  {/* 🚀 FONTE DA PORCENTAGEM AUMENTADA */}
+                  <span className={cn("text-sm font-black tracking-tight block", viewsVisuals.text)}>
+                    {viewsPct}% utilizado
+                  </span>
+                </div>
               </div>
-              <p className="mt-2 text-lg font-black text-slate-900 dark:text-white">
-                {plan?.views_limit ? `${(plan.views_limit / 1000).toFixed(0)}k views` : '10k views'}
-              </p>
+
+              {/* Barra de Progresso das Views */}
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-[#1a1f35] p-0.5 border border-transparent dark:border-white/5">
+                <div
+                  className={cn("h-full rounded-full transition-all duration-700", viewsVisuals.barBg)}
+                  style={{ width: `${Math.max(1, viewsPct)}%` }}
+                />
+              </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-4">
-              <div className="flex items-center gap-2 text-slate-500 dark:text-[#8a90a0]">
-                <FileCode size={16} className="text-[#0094EB] dark:text-[#ff7a29]" />
-                <span className="text-xs font-bold">Páginas Ativas</span>
+            {/* Páginas Ativas Proporcionais */}
+            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-pink-50 dark:bg-pink-950/40 text-pink-500 shrink-0">
+                    <FileCode size={16} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-slate-900 dark:text-white block">
+                      Páginas Ativas
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0]">
+                      Lojas e subpáginas configuradas
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-sm font-black text-slate-900 dark:text-white block">
+                    {pagesUsed}
+                    <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]"> / {pagesLimit}</span>
+                  </span>
+                  {/* 🚀 FONTE DA PORCENTAGEM AUMENTADA */}
+                  <span className={cn("text-sm font-black tracking-tight block", pagesVisuals.text)}>
+                    {pagesPct}% utilizado
+                  </span>
+                </div>
               </div>
-              <p className="mt-2 text-lg font-black text-slate-900 dark:text-white">
-                {plan?.pages_limit ? `${plan.pages_limit} páginas` : '100 páginas'}
-              </p>
+
+              {/* Barra de Progresso das Páginas */}
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-[#1a1f35] p-0.5 border border-transparent dark:border-white/5">
+                <div
+                  className={cn("h-full rounded-full transition-all duration-700", pagesVisuals.barBg)}
+                  style={{ width: `${Math.max(1, pagesPct)}%` }}
+                />
+              </div>
             </div>
+
           </div>
+
+          {/* ── BANNERS DE UPGRADE AUTOMÁTICOS (REGRAS DE CONVERSÃO/UPSYLL) ── */}
+          {(storagePct >= 70 || viewsPct >= 70 || pagesPct >= 70) && (
+            <div
+              className={cn(
+                'flex items-start gap-3 rounded-2xl p-4 text-xs font-bold leading-relaxed border animate-fade-in',
+                (storagePct >= 90 || viewsPct >= 90 || pagesPct >= 90)
+                  ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400 border-rose-500/20'
+                  : 'bg-orange-50 text-orange-600 dark:bg-orange-950/30 dark:text-orange-400 border-orange-500/20'
+              )}
+            >
+              <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p>
+                  {(storagePct >= 90 || viewsPct >= 90 || pagesPct >= 90)
+                    ? 'Limite Crítico Atingido! Você alcançou 90% ou mais de seus recursos disponíveis. Faça um upgrade agora para garantir a continuidade dos vídeos na sua loja.'
+                    : 'Atenção! Você atingiu 70% ou mais de seus limites em uso. Considere fazer um upgrade de plano para evitar bloqueios.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/plans')}
+                  className="text-xs font-black underline hover:opacity-80 block cursor-pointer text-left"
+                >
+                  Fazer Upgrade do Plano &rarr;
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
-{/* ── HISTÓRICO DE FATURAS (DUAL-THEME) ── */}
+      {/* ── HISTÓRICO DE FATURAS ── */}
       <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
           <div className="flex items-center gap-3">
@@ -534,7 +696,7 @@ export function BillingPage() {
         )}
       </div>
 
-      {/* ── DADOS DA NOTA FISCAL (DUAL-THEME) ── */}
+      {/* ── DADOS DA NOTA FISCAL ── */}
       <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         <div className="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-4">
           <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
@@ -641,6 +803,6 @@ export function BillingPage() {
           </div>
         </form>
       </div>
-                </div>
+    </div>
   );
 }
