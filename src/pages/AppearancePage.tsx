@@ -2012,10 +2012,10 @@ const DynamicCarouselPreview = ({
     const mobileSideWidth = mobileActiveWidth * 0.42;
     const mobileSideHeight = mobileActiveHeight * 0.85;
 
-    const unifiedDropShadow = applyShadow 
-      ? `drop-shadow(0 15px 15px ${borderColor}45) drop-shadow(0 6px 6px rgba(0,0,0,0.18))`
-      : 'none';
-
+const unifiedDropShadow = applyShadow
+  ? `drop-shadow(0 8px 12px rgba(0,0,0,0.35)) drop-shadow(0 4px 6px rgba(0,0,0,0.2))`
+  : 'none';
+  
     return (
       <div className="w-full py-1 flex flex-col items-center space-y-3 select-none overflow-visible">
         {showTitle && (
