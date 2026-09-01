@@ -1995,7 +1995,7 @@ const REPEAT_TILES = 9; // quantidade de "cópias" do array de vídeos no trilho
         else video.pause();
       }
     });
-  }, [playInactive, activeIndex, isMobile]);
+  }, [playInactive, trackIndex, isMobile]);
 
   const titleStyle: React.CSSProperties = {
     fontSize: `${titleSizeVal}px`,
