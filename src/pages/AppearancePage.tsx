@@ -1905,7 +1905,6 @@ const DynamicCarouselPreview = ({
   colors: any;
   isMobile?: boolean;
 }) => {
-  const [activeIndex, setActiveIndex] = useState(1);
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
 
   const videoSources = DEMO_PREVIEW_VIDEOS;
