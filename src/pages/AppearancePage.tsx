@@ -1999,99 +1999,123 @@ const DynamicCarouselPreview = ({
 const GridPreview = ({
   grid,
   colors,
+  isMobile = false,
 }: {
   grid: GridConfig;
   colors: PreviewColors;
+  isMobile?: boolean;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
-
-  const cols = limitNumber(grid.visible_items, 10, 1, 10);
-  const rows = 2; // Forçamos pelo menos 2 linhas para exibir o distanciamento vertical!
-  const totalItems = cols * rows;
-  const items = Array.from({ length: totalItems });
-
-  const [activeIndex, setActiveIndex] = useState(0);
+  const shape = normalizeWidgetShape(grid.shape, 'portrait');
+  const isCircle = shape === 'circle';
 
   useEffect(() => {
-    if (!grid.sequential_playback) return;
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % totalItems);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [grid.sequential_playback, totalItems]);
-
-  useEffect(() => {
-    videoRefs.current.forEach((vid, index) => {
+    videoRefs.current.forEach((vid) => {
       if (!vid) return;
-      if (grid.sequential_playback) {
-        if (index === activeIndex) {
-          vid.currentTime = 0;
-          vid.play().catch(() => {});
-        } else {
-          vid.pause();
-        }
-      } else if (grid.autoplay_videos ?? true) {
+      if (grid.autoplay_videos ?? true) {
         vid.play().catch(() => {});
       } else {
         vid.pause();
       }
     });
-  }, [grid.autoplay_videos, grid.sequential_playback, activeIndex, totalItems]);
+  }, [grid.autoplay_videos]);
 
-  const rawWidth = safeNumber(parseFloat(grid.width || '90'), 90, 40);
-  const cardWidth = `${rawWidth}px`;
-  const shape = normalizeWidgetShape(grid.shape, 'portrait');
-  const isCircle = shape === 'circle';
-  const isPortrait = shape === 'portrait';
-  const isLandscape = shape === 'landscape';
+  const borderRadius = isCircle ? '50%' : cssSize(grid.border_radius, '12px');
 
-  return (
-    <div className="flex h-[440px] w-full items-center justify-center rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 p-6 overflow-auto">
-      <div
-        className="grid justify-center mx-auto"
-        style={{
-          gridTemplateColumns: `repeat(${cols}, ${cardWidth})`,
-          gridTemplateRows: `repeat(${rows}, auto)`,
-          gap: `${safeNumber(grid.spacing, 8, 0)}px`,
-        }}
-      >
-        {items.map((_, index) => (
-          <div key={index} className="flex min-w-0 justify-center">
-            <div
-              className={cn(
-                'relative overflow-hidden shadow-sm flex items-center justify-center bg-slate-900',
-                isCircle ? 'rounded-full' : 'rounded-xl'
-              )}
-              style={{
-                width: cardWidth,
-                aspectRatio: isPortrait ? '9 / 16' : isLandscape ? '16 / 9' : '1 / 1',
-                borderColor: grid.border_color || colors.primary,
-                borderWidth: `${safeNumber(grid.border_style, 2, 0)}px`,
-                borderStyle: 'solid',
-                borderRadius: isCircle ? '999px' : cssSize(grid.border_radius, '12px'),
-                opacity: grid.sequential_playback && index !== activeIndex ? 0.4 : 1,
-                transition: 'opacity 0.3s ease',
-              }}
-            >
-              <video
-                ref={(el) => {
-                  if (el) videoRefs.current.set(index, el);
-                  else videoRefs.current.delete(index);
+  // No mobile: desenha um grid elegante de 3 colunas (1 linha de 3 itens) para ficar visível e proporcional
+  if (isMobile) {
+    const items = Array.from({ length: 3 });
+    return (
+      <div className="w-full py-2 flex flex-col space-y-3">
+        {grid.show_title && (
+          <h4 className="text-xs font-black text-center text-slate-800 uppercase tracking-wider">
+            {grid.title_text || 'Grade de Vídeos'}
+          </h4>
+        )}
+        
+        <div className="grid grid-cols-3 gap-2 w-full">
+          {items.map((_, i) => (
+            <div key={i} className="flex flex-col space-y-1">
+              <div
+                className="relative aspect-[9/15] bg-slate-950 overflow-hidden shadow-sm flex items-center justify-center"
+                style={{
+                  borderRadius,
+                  border: `${safeNumber(grid.border_width, 1, 0)}px solid ${grid.border_color || colors.primary}`
                 }}
-                src={DEMO_PREVIEW_VIDEOS[index % DEMO_PREVIEW_VIDEOS.length]}
-                loop={grid.autoplay_videos ?? true}
-                muted
-                playsInline
-                preload="auto"
-                poster="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"
-                className="h-full w-full object-cover pointer-events-none"
-              />
-              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[#0094EB] shadow-sm">
-                  <PlaySquare size={12} />
+              >
+                <video
+                  ref={el => el && videoRefs.current.set(i, el)}
+                  src={DEMO_PREVIEW_VIDEOS[i % DEMO_PREVIEW_VIDEOS.length]}
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/45 pointer-events-none" />
+                <div className="absolute bottom-1 right-1">
+                  <div className="w-4 h-4 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
+                    <Play size={6} className="text-slate-900 fill-slate-900 ml-0.5" />
+                  </div>
                 </div>
               </div>
+
+              {grid.show_product_card && !isCircle && (
+                <div className="text-center p-0.5 bg-slate-50 border border-slate-100 rounded-lg">
+                  <p className="text-[7px] font-extrabold text-slate-800 truncate">R$ 149,95</p>
+                </div>
+              )}
             </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // DESKTOP (Segue o número de colunas das configurações)
+  const cols = limitNumber(grid.visible_items, 10, 1, 10);
+  const totalItems = cols * 2; // Mostra duas linhas no desktop
+  const items = Array.from({ length: totalItems });
+  const rawWidth = safeNumber(parseFloat(grid.width || '90'), 90, 40);
+  const cardWidth = `${rawWidth}px`;
+  const cardHeight = isCircle ? cardWidth : `${Math.round(shape === 'landscape' ? (rawWidth * 9 / 16) : (rawWidth * 16 / 9))}px`;
+
+  return (
+    <div className="w-full py-3 space-y-3">
+      {grid.show_title && (
+        <h4 className="text-sm font-black text-slate-800 tracking-wider">
+          {grid.title_text || 'Grade de Vídeos'}
+        </h4>
+      )}
+      <div 
+        className="grid gap-3 overflow-y-auto max-h-[300px] scrollbar-none"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      >
+        {items.map((_, i) => (
+          <div key={i} style={{ width: cardWidth }} className="flex flex-col space-y-1">
+            <div
+              style={{
+                width: cardWidth,
+                height: cardHeight,
+                borderRadius,
+                border: `${safeNumber(grid.border_width, 1, 0)}px solid ${grid.border_color || colors.primary}`
+              }}
+              className="relative overflow-hidden bg-slate-950 shadow-sm flex items-center justify-center shrink-0"
+            >
+              <video
+                ref={el => el && videoRefs.current.set(i, el)}
+                src={DEMO_PREVIEW_VIDEOS[i % DEMO_PREVIEW_VIDEOS.length]}
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none" />
+            </div>
+            {grid.show_product_card && !isCircle && (
+              <div className="bg-slate-50 border border-slate-100 rounded p-0.5 text-center">
+                <p className="text-[7px] font-bold text-slate-800 truncate">Item {i + 1}</p>
+              </div>
+            )}
           </div>
         ))}
       </div>
