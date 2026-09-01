@@ -2128,7 +2128,7 @@ const unifiedDropShadow = applyShadow
             className="shrink-0 bg-slate-900 overflow-hidden transition-all duration-500"
           >
             <video
-              key={`right-${rightIndex}`}
+              key="mobile-right"
               ref={el => el && videoRefs.current.set(2, el)}
               src={videoSources[rightIndex]}
               muted
