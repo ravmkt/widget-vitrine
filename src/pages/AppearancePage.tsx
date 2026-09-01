@@ -2181,13 +2181,6 @@ const GridPreview = ({
           </h4>
         )}
 
-        {/* Alerta de Ajuste Automático Amigável para o Mobile */}
-        <div className="mx-2 p-1.5 bg-sky-50 rounded-lg border border-sky-100 text-center">
-          <p className="text-[8px] text-sky-700 font-medium">
-            💡 No mobile, a grade é otimizada para exibir no máximo 2 colunas.
-          </p>
-        </div>
-
         {/* Forçado estritamente em grid-cols-2 */}
         <div className="grid grid-cols-2 gap-3 w-full px-2">
           {items.map((_, i) => (
