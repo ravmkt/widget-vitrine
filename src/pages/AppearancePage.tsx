@@ -1753,6 +1753,7 @@ const CarouselPreview = ({
     titleAlign === 'right' ? 'text-right' : 'text-left';
 
   const showProductCard = (carousel as any).show_product ?? false;
+  const showPlayIcon = (carousel as any).show_play_icon ?? true;
   const pCardBg = (carousel as any).product_card_bg || '#FFFFFF';
   const pCardBorderColor = (carousel as any).product_card_border_color || '#E2E8F0';
   const pCardBorderWidth = Number((carousel as any).product_card_border_width ?? 1);
