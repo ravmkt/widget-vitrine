@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabase'
 import { useTenant } from '@/context/TenantContext'
 import { Eye, MousePointerClick, TrendingUp, TrendingDown, CircleDollarSign, Heart, Trophy, Percent, HelpCircle } from 'lucide-react'
 import type { SectorBenchmark } from '@/pages/PerformancePage'
+import { cn } from '@/lib/utils'
+
 
 interface OverviewTabProps {
   timeRange: string
