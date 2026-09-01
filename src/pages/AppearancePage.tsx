@@ -2015,7 +2015,7 @@ const DynamicCarouselPreview = ({
 const unifiedDropShadow = applyShadow
   ? `drop-shadow(0 8px 12px rgba(0,0,0,0.35)) drop-shadow(0 4px 6px rgba(0,0,0,0.2))`
   : 'none';
-  
+
     return (
       <div className="w-full py-1 flex flex-col items-center space-y-3 select-none overflow-visible">
         {showTitle && (
@@ -2043,7 +2043,7 @@ const unifiedDropShadow = applyShadow
             className="shrink-0 bg-slate-900 overflow-hidden transition-all duration-500"
           >
             <video
-              key={`left-${leftIndex}`}
+              key="mobile-left"
               ref={el => el && videoRefs.current.set(0, el)}
               src={videoSources[leftIndex]}
               muted
