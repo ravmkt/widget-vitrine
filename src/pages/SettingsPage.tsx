@@ -262,7 +262,7 @@ const SettingsPage = () => {
         const { data: sectorList } = await supabase
           .from('sectors')
           .select('id, name, slug, icon')
-.order('name', { ascending: true });
+          .order('name', { ascending: true });
 
         if (sectorList) setSectors(sectorList);
 
