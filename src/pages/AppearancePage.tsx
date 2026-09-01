@@ -3221,28 +3221,32 @@ const AppearancePage = () => {
 
                       <div className="space-y-3">
                         {/* 1. FORMATO & DIMENSÕES */}
-                        <AccordionSection title="1. Formato & Dimensões" isOpen={activeSection === 'float-1'} onToggle={() => setActiveSection(activeSection === 'float-1' ? null : 'float-1')}>
-                          <div className="grid grid-cols-2 gap-2.5">
-                            <FormField label="Formato">
-                              <select value={activeFloatingConfig.shape} onChange={e => updateFloatingConfig({ shape: e.target.value as WidgetShape })} className={selectClass}>
-                                <option value="circle">Circular</option>
-                                <option value="square">Quadrado</option>
-                                <option value="portrait">Retrato 9:16</option>
-                                <option value="landscape">Paisagem 16:9</option>
-                              </select>
-                            </FormField>
-                            <FormField label="Ajuste Imagem">
-                              <select value={activeFloatingConfig.object_fit || 'cover'} onChange={e => updateFloatingConfig({ object_fit: e.target.value })} className={selectClass}>
-                                <option value="cover">Cover (Preencher)</option>
-                                <option value="contain">Contain (Ajustar)</option>
-                                <option value="fill">Fill (Esticar)</option>
-                              </select>
-                            </FormField>
-                            <FormField label="Largura (px)">
-                              <input type="number" min="20" step="1" value={toNumberInputValue(activeFloatingConfig.width)} onChange={e => updateFloatingConfig({ width: e.target.value })} placeholder="Ex: 80" className={inputClass} />
-                            </FormField>
-                          </div>
-                        </AccordionSection>
+<AccordionSection title="1. Formato & Dimensões" isOpen={activeSection === 'float-1'} onToggle={() => setActiveSection(activeSection === 'float-1' ? null : 'float-1')}>
+  <div className="grid grid-cols-2 gap-2.5">
+    <FormField label="Formato">
+      <select value={activeFloatingConfig.shape} onChange={e => updateFloatingConfig({ shape: e.target.value as WidgetShape })} className={selectClass}>
+        <option value="circle">Circular</option>
+        <option value="square">Quadrado</option>
+        <option value="portrait">Retrato 9:16</option>
+        <option value="landscape">Paisagem 16:9</option>
+      </select>
+    </FormField>
+    <FormField label="Ajuste Imagem">
+      <select value={activeFloatingConfig.object_fit || 'cover'} onChange={e => updateFloatingConfig({ object_fit: e.target.value })} className={selectClass}>
+        <option value="cover">Cover (Preencher)</option>
+        <option value="contain">Contain (Ajustar)</option>
+        <option value="fill">Fill (Esticar)</option>
+      </select>
+    </FormField>
+    <FormField label="Largura (px)">
+      <input type="number" min="20" step="1" value={toNumberInputValue(activeFloatingConfig.width)} onChange={e => updateFloatingConfig({ width: e.target.value })} placeholder="Ex: 80" className={inputClass} />
+    </FormField>
+    {/* Campo dinâmico auto-calculado de Altura baseado no shape selecionado */}
+    <FormField label="Altura Calculada">
+      <input type="text" disabled value={`${activeFloatingConfig.height || activeFloatingConfig.width}px`} className={cn(inputClass, "opacity-70 bg-slate-100 cursor-not-allowed border-dashed")} />
+    </FormField>
+  </div>
+</AccordionSection>
 
                         {/* 2. POSIÇÃO & MARGENS */}
                         <AccordionSection title="2. Posição & Margens" isOpen={activeSection === 'float-2'} onToggle={() => setActiveSection(activeSection === 'float-2' ? null : 'float-2')}>
