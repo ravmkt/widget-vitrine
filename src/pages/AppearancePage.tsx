@@ -1919,16 +1919,30 @@ const REPEAT_TILES = 9; // quantidade de "cópias" do array de vídeos no trilho
 
   const [trackIndex, setTrackIndex] = useState(baseIndex);
   const [noTransition, setNoTransition] = useState(false);
-  
+
   // Intervalo automático (Carrossel girando)
   useEffect(() => {
     const delay = Number(carousel?.autoplay_delay) || 5000;
     if (delay <= 0) return;
     const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % videoSources.length);
+      setTrackIndex((prev) => prev + 1);
     }, delay);
     return () => clearInterval(interval);
-  }, [carousel?.autoplay_delay, videoSources.length]);
+  }, [carousel?.autoplay_delay]);
+
+  // Quando o trilho avança 1 ciclo completo, "teleporta" de volta sem transição (loop infinito)
+  useEffect(() => {
+    if (trackIndex - baseIndex >= len) {
+      const t = setTimeout(() => {
+        setNoTransition(true);
+        setTrackIndex((prev) => prev - len);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => setNoTransition(false));
+        });
+      }, 800); // espera a transição visual terminar antes de resetar
+      return () => clearTimeout(t);
+    }
+  }, [trackIndex, baseIndex, len]);
 
   const safeActiveIndex = activeIndex % videoSources.length;
   const leftIndex = (safeActiveIndex - 1 + videoSources.length) % videoSources.length;
