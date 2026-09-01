@@ -2561,7 +2561,6 @@ const VisualPreview = ({
   );
 };
 
-// ──────────────────── COMPONENTES FALTANTES (CAUSAVAM TELA BRANCA) ────────────────────
 const AccordionSection = ({
   title,
   isOpen,
