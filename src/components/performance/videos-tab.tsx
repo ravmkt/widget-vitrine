@@ -184,9 +184,9 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
     return sortDir === 'asc' ? (
-      <ChevronUp size={12} className="inline ml-1 shrink-0 text-[#0094EB]" />
+      <ChevronUp size={12} className="inline ml-1 shrink-0 text-[#ff7a29]" />
     ) : (
-      <ChevronDown size={12} className="inline ml-1 shrink-0 text-[#0094EB]" />
+      <ChevronDown size={12} className="inline ml-1 shrink-0 text-[#ff7a29]" />
     );
   };
 
@@ -203,7 +203,7 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
   }) => (
     <th
       className={cn(
-        'px-4 py-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-colors select-none',
+        'px-4 py-4 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest cursor-pointer hover:text-slate-300 transition-colors select-none',
         align === 'left' ? 'text-left' : align === 'center' ? 'text-center' : 'text-right',
         className,
       )}
@@ -222,34 +222,34 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0094EB]" />
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#ff7a29]" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in font-sans">
       {/* Barra de busca */}
       <div className="relative">
         <Search
           size={16}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
         />
         <input
           type="text"
           placeholder="Buscar por título do vídeo..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0094EB]/30 focus:border-[#0094EB] transition-all"
+          className="w-full pl-10 pr-4 py-3 rounded-2xl border border-white/5 bg-[#111524] text-sm font-bold text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#ff7a29]/30 focus:border-[#ff7a29] transition-all"
         />
       </div>
 
       {/* Tabela */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-[#111524] border border-white/5 rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800">
+              <tr className="border-b border-white/5">
                 <Th field="title" className="min-w-[220px]" align="left">
                   Vídeo
                 </Th>
@@ -265,12 +265,12 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
               {paginated.map((video) => (
                 <tr
                   key={video.id}
-                  className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                  className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors"
                 >
                   {/* Vídeo */}
                   <td className="px-4 py-4 text-left">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-16 rounded-lg bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
+                      <div className="h-10 w-16 rounded-lg bg-slate-800 overflow-hidden shrink-0 border border-white/5">
                         {video.thumbnail_url ? (
                           <img
                             src={video.thumbnail_url}
@@ -278,16 +278,16 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <div className="h-full w-full flex items-center justify-center text-slate-400">
+                          <div className="h-full w-full flex items-center justify-center text-slate-500">
                             <Eye size={14} />
                           </div>
                         )}
                       </div>
                       <div className="min-w-0 text-left">
-                        <p className="text-sm font-black text-slate-800 dark:text-white truncate max-w-[200px]">
+                        <p className="text-sm font-black text-white truncate max-w-[200px]">
                           {video.title}
                         </p>
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                        <p className="text-[10px] font-bold text-slate-500">
                           {video.status === 'active' ? 'Ativo' : 'Inativo'}
                         </p>
                       </div>
@@ -296,7 +296,7 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
 
                   {/* Visualizações */}
                   <td className="px-4 py-4 text-center">
-                    <p className="text-sm font-black text-slate-800 dark:text-white">
+                    <p className="text-sm font-black text-white">
                       {video.metrics.views.toLocaleString()}
                     </p>
                   </td>
@@ -305,12 +305,12 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
                   <td className="px-4 py-4 text-center">
                     <span
                       className={cn(
-                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black',
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-2xl text-xs font-black',
                         video.metrics.ctr >= 5
-                          ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                           : video.metrics.ctr >= 2
-                            ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
-                            : 'bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400',
+                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20',
                       )}
                     >
                       {video.metrics.ctr.toFixed(1).replace('.', ',')}%
@@ -319,14 +319,14 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
 
                   {/* Conversões */}
                   <td className="px-4 py-4 text-center">
-                    <p className="text-sm font-black text-slate-800 dark:text-white">
+                    <p className="text-sm font-black text-white">
                       {video.metrics.conversions.toLocaleString()}
                     </p>
                   </td>
 
                   {/* Receita */}
                   <td className="px-4 py-4 text-center">
-                    <p className="text-sm font-black text-slate-800 dark:text-white">
+                    <p className="text-sm font-black text-white">
                       {video.metrics.revenue > 0
                         ? `R$ ${video.metrics.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
                         : '—'}
@@ -337,21 +337,21 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
                   <td className="px-4 py-4 text-center">
                     <div className="flex items-center justify-center gap-3">
                       <span
-                        className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400"
+                        className="flex items-center gap-1 text-xs font-bold text-slate-400"
                         title="Curtidas"
                       >
                         <Heart size={12} className="text-rose-400" />
                         {video.metrics.likes}
                       </span>
                       <span
-                        className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400"
+                        className="flex items-center gap-1 text-xs font-bold text-slate-400"
                         title="Comentários"
                       >
                         <MessageCircle size={12} className="text-emerald-400" />
                         {video.metrics.comments}
                       </span>
                       <span
-                        className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400"
+                        className="flex items-center gap-1 text-xs font-bold text-slate-400"
                         title="Compartilhamentos"
                       >
                         <Share2 size={12} className="text-amber-400" />
@@ -362,7 +362,7 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
 
                   {/* Duração */}
                   <td className="px-4 py-4 text-center">
-                    <p className="text-sm font-bold text-slate-500 dark:text-slate-400 font-mono">
+                    <p className="text-sm font-bold text-slate-400 font-mono">
                       {formatDuration(video.duration)}
                     </p>
                   </td>
@@ -373,7 +373,7 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
                 <tr>
                   <td
                     colSpan={7}
-                    className="px-4 py-16 text-center text-slate-400 dark:text-slate-500 font-bold text-sm"
+                    className="px-4 py-16 text-center text-slate-500 font-bold text-sm"
                   >
                     {search.trim()
                       ? 'Nenhum vídeo encontrado para esta busca.'
@@ -387,8 +387,8 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
 
         {/* Paginação */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800">
-            <p className="text-xs font-bold text-slate-400 dark:text-slate-500">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-white/5">
+            <p className="text-xs font-bold text-slate-500">
               {filteredAndSorted.length} vídeos · Página {page + 1} de{' '}
               {totalPages}
             </p>
@@ -396,14 +396,14 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="p-2 rounded-2xl border border-white/5 text-slate-400 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
-                className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="p-2 rounded-2xl border border-white/5 text-slate-400 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronRight size={16} />
               </button>
