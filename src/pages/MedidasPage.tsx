@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db, SizingModel } from "@/lib/db";
 import { logPanelActivity } from "@/lib/activityLog";
-import { Plus, Trash2, Edit3, User, Package, X } from "lucide-react";
+import { Plus, Trash2, Edit3, User, Package, X, Ruler } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import CustomDialog from "@/components/CustomDialog";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
