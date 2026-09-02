@@ -229,27 +229,27 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
 
   return (
     <div className="space-y-6 animate-fade-in font-sans">
-      {/* Barra de busca */}
+      {/* Barra de busca com Borda Laranja */}
       <div className="relative">
         <Search
           size={16}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff7a29]"
         />
         <input
           type="text"
           placeholder="Buscar por título do vídeo..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 rounded-2xl border border-white/5 bg-[#111524] text-sm font-bold text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#ff7a29]/30 focus:border-[#ff7a29] transition-all"
+          className="w-full pl-10 pr-4 py-3 rounded-2xl border border-[#ff7a29]/30 bg-[#111524] text-sm font-bold text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#ff7a29]/30 focus:border-[#ff7a29] transition-all"
         />
       </div>
 
-      {/* Tabela */}
-      <div className="bg-[#111524] border border-white/5 rounded-2xl shadow-sm overflow-hidden">
+      {/* Tabela com Borda Laranja */}
+      <div className="bg-[#111524] border border-[#ff7a29]/30 rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/5">
+              <tr className="border-b border-[#ff7a29]/20">
                 <Th field="title" className="min-w-[220px]" align="left">
                   Vídeo
                 </Th>
@@ -265,12 +265,12 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
               {paginated.map((video) => (
                 <tr
                   key={video.id}
-                  className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors"
+                  className="border-b border-[#ff7a29]/10 last:border-0 hover:bg-white/[0.02] transition-colors"
                 >
                   {/* Vídeo */}
                   <td className="px-4 py-4 text-left">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-16 rounded-lg bg-slate-800 overflow-hidden shrink-0 border border-white/5">
+                      <div className="h-10 w-16 rounded-lg bg-slate-800 overflow-hidden shrink-0 border border-[#ff7a29]/20">
                         {video.thumbnail_url ? (
                           <img
                             src={video.thumbnail_url}
@@ -387,7 +387,7 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
 
         {/* Paginação */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-white/5">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-[#ff7a29]/20">
             <p className="text-xs font-bold text-slate-500">
               {filteredAndSorted.length} vídeos · Página {page + 1} de{' '}
               {totalPages}
@@ -396,14 +396,14 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="p-2 rounded-2xl border border-white/5 text-slate-400 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="p-2 rounded-2xl border border-[#ff7a29]/30 text-slate-400 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
-                className="p-2 rounded-2xl border border-white/5 text-slate-400 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="p-2 rounded-2xl border border-[#ff7a29]/30 text-slate-400 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronRight size={16} />
               </button>
