@@ -42,6 +42,18 @@ export function OverviewTab({
   benchmark
 }: OverviewTabProps) {
   const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false)
+  const [isDark, setIsDark] = useState(false)
+
+  // Observador dinâmico para garantir que o Recharts/Tooltip mude de cor perfeitamente com o tema global
+  useEffect(() => {
+    const checkTheme = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    const observer = new MutationObserver(checkTheme)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    checkTheme()
+    return () => observer.disconnect()
+  }, [])
 
   const getSectorStrategicPlaybook = (slug: string) => {
     switch (slug) {
@@ -275,10 +287,10 @@ export function OverviewTab({
       <span className={cn(
         "inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-2xl mt-1.5 border shadow-xs transition-colors",
         positive
-          ? "text-emerald-400 border-emerald-500/20 bg-emerald-500/5"
-          : "text-rose-400 border-rose-500/25 bg-rose-500/5"
+          ? "text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/5"
+          : "text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/25 bg-rose-50 dark:bg-rose-500/5"
       )}>
-        {positive ? <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-400" />}
+        {positive ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />}
         {positive ? '+' : ''}{delta.toFixed(1)}% vs Setor
       </span>
     )
@@ -289,139 +301,139 @@ export function OverviewTab({
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-36 bg-[#1a1f35] rounded-2xl border border-[#ff7a29]/30 animate-pulse" />
+            <div key={i} className="h-36 bg-[#f8fafc] dark:bg-[#1a1f35] rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 animate-pulse" />
           ))}
         </div>
-        <div className="h-80 bg-[#1a1f35] rounded-2xl border border-[#ff7a29]/30 animate-pulse" />
+        <div className="h-80 bg-[#f8fafc] dark:bg-[#1a1f35] rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 animate-pulse" />
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      {/* ── METRICAS DO FUNIL (Symmetry: Orange Borders + rounded-2xl) ── */}
+      {/* ── METRICAS DO FUNIL (Produtos Theme Integration) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* 1. VISUALIZAÇÕES */}
-        <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
+        <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[14px] font-black uppercase tracking-wider text-white">
+            <span className="text-[14px] font-black uppercase tracking-wider text-slate-800 dark:text-white">
               1. Visualizações
             </span>
-            <div className="w-[45px] h-[45px] rounded-2xl bg-[#ff7a29]/10 border border-[#ff7a29]/20 text-[#ff7a29] flex items-center justify-center shrink-0">
+            <div className="w-[45px] h-[45px] rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
               <Eye className="w-[22px] h-[22px]" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-white">
+            <div className="text-2xl font-black text-slate-900 dark:text-white">
               {data.views.toLocaleString('pt-BR')}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Interações no widget</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Interações no widget</p>
           </CardContent>
         </Card>
 
         {/* 2. CLIQUES */}
-        <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
+        <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[14px] font-black uppercase tracking-wider text-white">
+            <span className="text-[14px] font-black uppercase tracking-wider text-slate-800 dark:text-white">
               2. Cliques em CTA
             </span>
-            <div className="w-[45px] h-[45px] rounded-2xl bg-[#ff7a29]/10 border border-[#ff7a29]/20 text-[#ff7a29] flex items-center justify-center shrink-0">
+            <div className="w-[45px] h-[45px] rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
               <MousePointerClick className="w-[22px] h-[22px]" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-white">
+            <div className="text-2xl font-black text-slate-900 dark:text-white">
               {data.clicks.toLocaleString('pt-BR')}
             </div>
             <div className="flex flex-col mt-0.5">
-              <span className="text-[11px] font-bold text-slate-400">CTR: {ctr.toFixed(1)}%</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">CTR: {ctr.toFixed(1)}%</span>
               {renderSectorBadge(ctrDelta)}
             </div>
           </CardContent>
         </Card>
 
         {/* 3. VENDAS */}
-        <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
+        <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[14px] font-black uppercase tracking-wider text-white">
+            <span className="text-[14px] font-black uppercase tracking-wider text-slate-800 dark:text-white">
               3. Vendas Realizadas
             </span>
-            <div className="w-[45px] h-[45px] rounded-2xl bg-[#ff7a29]/10 border border-[#ff7a29]/20 text-[#ff7a29] flex items-center justify-center shrink-0">
+            <div className="w-[45px] h-[45px] rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
               <Trophy className="w-[22px] h-[22px]" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-white">
+            <div className="text-2xl font-black text-slate-900 dark:text-white">
               {data.conversions.toLocaleString('pt-BR')}
             </div>
             <div className="flex flex-col mt-0.5">
-              <span className="text-[11px] font-bold text-slate-400">Conversão: {cvr.toFixed(1)}%</span>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Conversão: {cvr.toFixed(1)}%</span>
               {renderSectorBadge(cvrDelta)}
             </div>
           </CardContent>
         </Card>
 
         {/* 4. RECEITA */}
-        <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
+        <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[14px] font-black uppercase tracking-wider text-white">
+            <span className="text-[14px] font-black uppercase tracking-wider text-slate-800 dark:text-white">
               4. Faturamento ROI
             </span>
-            <div className="w-[45px] h-[45px] rounded-2xl bg-[#ff7a29]/10 border border-[#ff7a29]/20 text-[#ff7a29] flex items-center justify-center shrink-0">
+            <div className="w-[45px] h-[45px] rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
               <CircleDollarSign className="w-[22px] h-[22px]" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-emerald-400">
+            <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
               R$ {data.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-[11px] text-emerald-400 mt-1 font-bold">Vendas Diretas dos Vídeos</p>
+            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-bold">Vendas Diretas dos Vídeos</p>
           </CardContent>
         </Card>
 
         {/* 5. ENGAJAMENTO SOCIAL */}
-        <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
+        <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[14px] font-black uppercase tracking-wider text-white">
+            <span className="text-[14px] font-black uppercase tracking-wider text-slate-800 dark:text-white">
               Engajamento Social
             </span>
-            <div className="w-[45px] h-[45px] rounded-2xl bg-[#ff7a29]/10 border border-[#ff7a29]/20 text-[#ff7a29] flex items-center justify-center shrink-0">
-              <Heart className="w-[22px] h-[22px] fill-[#ff7a29] text-[#ff7a29]" />
+            <div className="w-[45px] h-[45px] rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
+              <Heart className="w-[22px] h-[22px] fill-[#0091ff] dark:fill-[#ff7a29] text-[#0091ff] dark:text-[#ff7a29]" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="flex justify-between items-center mt-1">
               <div>
-                <span className="text-base font-black text-rose-500 flex items-center gap-1">
+                <span className="text-base font-black text-rose-600 dark:text-rose-500 flex items-center gap-1">
                   ❤️ {data.likes}
                 </span>
-                <span className="text-[11px] text-slate-400">Curtidas</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">Curtidas</span>
               </div>
-              <div className="border-l border-[#ff7a29]/20 pl-4">
-                <span className="text-base font-black text-sky-400 flex items-center gap-1">
+              <div className="border-l border-slate-200 dark:border-[#ff7a29]/20 pl-4">
+                <span className="text-base font-black text-sky-600 dark:text-sky-400 flex items-center gap-1">
                   💬 {data.comments}
                 </span>
-                <span className="text-[11px] text-slate-400">Comentários</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">Comentários</span>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* ── GRÁFICO DE EVOLUÇÃO TEMPORAL (Symmetry: Orange Borders + rounded-2xl) ── */}
-      <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] p-6 shadow-sm hover:border-[#ff7a29]/50 transition-all duration-300">
+      {/* ── GRÁFICO DE EVOLUÇÃO TEMPORAL ── */}
+      <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] p-6 shadow-xs">
         <CardHeader className="p-0 pb-6">
-          <CardTitle className="text-[18px] font-black text-white flex items-center gap-2">
+          <CardTitle className="text-[18px] font-black text-slate-800 dark:text-white flex items-center gap-2">
             📊 Evolução Diária de Conversões
           </CardTitle>
-          <p className="text-[14px] text-slate-400 mt-1">Comparativo de cliques em CTAs e exibições dos Stories ao longo do tempo</p>
+          <p className="text-[14px] text-slate-500 dark:text-slate-400 mt-1">Comparativo de cliques em CTAs e exibições dos Stories ao longo do tempo</p>
         </CardHeader>
         <CardContent className="p-0 h-80 w-full">
           {chartData.length === 0 || (data.views === 0 && data.clicks === 0) ? (
-            <div className="h-full flex flex-col items-center justify-center text-center border border-dashed border-[#ff7a29]/30 rounded-2xl p-6">
+            <div className="h-full flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl p-6">
               <span className="text-3xl">📈</span>
-              <h5 className="font-bold text-slate-300 mt-2">Sem dados históricos para exibir</h5>
-              <p className="text-[12px] text-slate-400 max-w-xs mt-1">Assim que seu widget receber as primeiras interações, o gráfico de evolução será desenhado automaticamente.</p>
+              <h5 className="font-bold text-slate-700 dark:text-slate-300 mt-2">Sem dados históricos para exibir</h5>
+              <p className="text-[12px] text-slate-500 dark:text-slate-400 max-w-xs mt-1">Assim que seu widget receber as primeiras interações, o gráfico de evolução será desenhado automaticamente.</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -436,25 +448,26 @@ export function OverviewTab({
                     <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.05)" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.08)" />
                 <XAxis
                   dataKey="date"
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
+                  tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }}
                 />
                 <YAxis
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
+                  tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#111524',
+                    backgroundColor: isDark ? '#111524' : '#ffffff',
                     borderRadius: '16px',
-                    border: '1px solid rgba(255, 122, 41, 0.3)',
-                    color: '#fff',
-                    fontSize: '12px'
+                    border: isDark ? '1px solid rgba(255, 122, 41, 0.3)' : '1px solid #e2e8f0',
+                    color: isDark ? '#fff' : '#0f172a',
+                    fontSize: '12px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
                   }}
                 />
                 <Area
@@ -482,12 +495,12 @@ export function OverviewTab({
       </Card>
 
       {/* ── CONTEXTO DO MERCADO ── */}
-      <div className="bg-[#111524] border border-[#ff7a29]/30 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
+      <div className="bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
         <div className="flex items-start gap-3.5">
-          <Compass className="w-7 h-7 text-[#ff7a29] shrink-0 mt-0.5 animate-spin" style={{ animationDuration: '8s' }} />
+          <Compass className="w-7 h-7 text-[#0091ff] dark:text-[#ff7a29] shrink-0 mt-0.5 animate-spin" style={{ animationDuration: '8s' }} />
           <div>
-            <h4 className="text-[14px] font-black text-slate-200">Como funciona o benchmark do setor?</h4>
-            <p className="text-[12px] text-slate-400 mt-1 leading-relaxed max-w-2xl">
+            <h4 className="text-[14px] font-black text-slate-800 dark:text-slate-200">Como funciona o benchmark do setor?</h4>
+            <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed max-w-2xl">
               As metas de comparação do setor de <strong>{benchmark?.sector_name || 'Geral'}</strong> são baseadas em pesquisas consolidadas de mercado e inteligência competitiva nacional de 2026 (cruzando relatórios oficiais da Ebit/Nielsen, Neotrust e Social Commerce global).
             </p>
           </div>
@@ -495,7 +508,7 @@ export function OverviewTab({
         <button
           type="button"
           onClick={() => setIsBenchmarkModalOpen(true)}
-          className="bg-[#ff7a29] border border-[#ff7a29]/30 hover:bg-[#e05e10] text-white font-black text-xs px-4 py-2.5 rounded-2xl transition-all cursor-pointer shadow-sm shrink-0 flex items-center gap-1.5 hover:scale-[1.02]"
+          className="bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] border border-transparent dark:border-[#ff7a29]/30 text-white font-black text-xs px-4 py-2.5 rounded-2xl transition-all cursor-pointer shadow-xs shrink-0 flex items-center gap-1.5 hover:scale-[1.02]"
         >
           <FileText size={14} className="text-white" />
           Ver Estudo de Mercado
@@ -504,64 +517,64 @@ export function OverviewTab({
 
       {/* ── MODAL PREMIUM: ESTUDO DE MERCADO E BENCHMARK 2026 ── */}
       {isBenchmarkModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in font-sans text-white">
-          <div className="relative w-full max-w-2xl bg-[#111524] border border-[#ff7a29]/30 rounded-2xl shadow-2xl p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl shadow-2xl p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto">
 
-            {/* Botão Fechar em Borda Laranja */}
+            {/* Botão Fechar */}
             <button
               onClick={() => setIsBenchmarkModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-2xl border border-[#ff7a29]/30 bg-[#111524] text-slate-400 hover:text-[#ff7a29] transition-all cursor-pointer"
+              className="absolute top-5 right-5 p-2 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] text-slate-500 dark:text-slate-400 hover:text-[#0091ff] dark:hover:text-[#ff7a29] transition-all cursor-pointer"
             >
               <X size={18} />
             </button>
 
             {/* Cabeçalho */}
-            <div className="space-y-1.5 border-b border-[#ff7a29]/20 pb-5">
-              <span className="inline-flex items-center gap-1 bg-[#ff7a29]/10 border border-[#ff7a29]/30 text-[#ff7a29] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+            <div className="space-y-1.5 border-b border-slate-100 dark:border-[#ff7a29]/20 pb-5">
+              <span className="inline-flex items-center gap-1 bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/30 text-[#0091ff] dark:text-[#ff7a29] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
                 <Sparkles className="w-3 h-3" /> Inteligência Setorial 2026
               </span>
-              <h3 className="text-xl sm:text-2xl font-black text-white leading-tight">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">
                 Estudo de Mercado: {benchmark?.sector_name || 'Geral'}
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Métricas e taxas ideais coletadas do ecossistema de Social Commerce do varejo brasileiro.
               </p>
             </div>
 
-            {/* Grid das Métricas do Benchmark com Borda Laranja */}
+            {/* Grid das Métricas do Benchmark */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
 
-              <div className="p-4 rounded-2xl bg-white/[0.01] border border-[#ff7a29]/30">
+              <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-white/[0.01] border border-slate-200 dark:border-[#ff7a29]/30">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CTR Médio (Cliques)</span>
-                <p className="text-2xl font-black text-[#ff7a29] mt-1">{benchmark?.avg_ctr || 0}%</p>
-                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                <p className="text-2xl font-black text-[#0091ff] dark:text-[#ff7a29] mt-1">{benchmark?.avg_ctr || 0}%</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   Taxa ideal de visualizadores que clicam em um product/CTA no story.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white/[0.01] border border-[#ff7a29]/30">
+              <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-white/[0.01] border border-slate-200 dark:border-[#ff7a29]/30">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CVR Médio (Conversão)</span>
-                <p className="text-2xl font-black text-emerald-400 mt-1">{benchmark?.avg_cvr || 0}%</p>
-                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{benchmark?.avg_cvr || 0}%</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   Taxa ideal de vendas geradas em relação às visualizações totais.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white/[0.01] border border-[#ff7a29]/30">
+              <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-white/[0.01] border border-slate-200 dark:border-[#ff7a29]/30">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Hook Rate (Fisgada 3s)</span>
-                <p className="text-2xl font-black text-amber-400 mt-1">{benchmark?.avg_hook_rate || 0}%</p>
-                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">{benchmark?.avg_hook_rate || 0}%</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   Média de retenção de usuários nos primeiros 3s críticos do vídeo.
                 </p>
               </div>
 
             </div>
 
-            {/* Playbook de Ação com Borda Laranja */}
-            <div className="mt-6 space-y-4 bg-[#171c30]/50 border border-[#ff7a29]/30 p-5 rounded-2xl">
+            {/* Playbook de Ação */}
+            <div className="mt-6 space-y-4 bg-slate-50/50 dark:bg-[#171c30]/50 border border-slate-200 dark:border-[#ff7a29]/30 p-5 rounded-2xl">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-[#ff7a29]" />
-                <h4 className="text-xs font-black text-white uppercase tracking-tight">
+                <TrendingUp className="w-5 h-5 text-[#0091ff] dark:text-[#ff7a29]" />
+                <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">
                   Playbook de Ação para Alcançar a Meta
                 </h4>
               </div>
@@ -569,17 +582,17 @@ export function OverviewTab({
               <div className="space-y-3.5">
                 <div>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Comportamento do Consumidor:</span>
-                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
                     {playbook.audienceBehavior}
                   </p>
                 </div>
 
-                <div className="border-t border-[#ff7a29]/20 pt-3.5">
+                <div className="border-t border-slate-100 dark:border-[#ff7a29]/20 pt-3.5">
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Recomendações Práticas (2026):</span>
                   <div className="space-y-2">
                     {playbook.tips.map((tip, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs text-slate-300">
-                        <div className="p-0.5 bg-emerald-500/10 text-emerald-400 rounded-md shrink-0 mt-0.5">
+                      <div key={idx} className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
+                        <div className="p-0.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md shrink-0 mt-0.5">
                           <Check size={12} className="stroke-[3]" />
                         </div>
                         <span className="leading-relaxed">{tip}</span>
@@ -591,7 +604,7 @@ export function OverviewTab({
             </div>
 
             {/* Metodologia de Fundo */}
-            <div className="mt-6 pt-4 border-t border-[#ff7a29]/20 text-[10px] text-slate-500 text-center leading-relaxed">
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-[#ff7a29]/20 text-[10px] text-slate-400 dark:text-slate-500 text-center leading-relaxed">
               * Estudo metodológico compilado em Janeiro/2026 a partir do cruzamento de pesquisas consolidadas de mercado nacional (Ebit, Nielsen, Neotrust) e taxas empíricas de Social Video Commerce do varejo digital brasileiro B2C.
             </div>
 
