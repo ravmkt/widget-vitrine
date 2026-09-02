@@ -202,7 +202,9 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu className="gap-1.5">
                 {group.items.map((item) => {
-                  const isItemActive = location.pathname === item.url;
+const isItemActive =
+  location.pathname === item.url ||
+  (item.url === "/produtos" && location.pathname === "/medidas");
                   return (
                     <SidebarMenuItem key={item.title} className="relative group">
                       <SidebarMenuButton 
