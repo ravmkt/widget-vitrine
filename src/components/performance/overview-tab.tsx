@@ -41,7 +41,6 @@ export function OverviewTab({
   customTo,
   benchmark
 }: OverviewTabProps) {
-  // ── INÍCIO DA ADIÇÃO DO STATE E DO PLAYBOOK ──
   const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false)
 
   const getSectorStrategicPlaybook = (slug: string) => {
@@ -115,7 +114,7 @@ export function OverviewTab({
           tips: [
             "Produto Sob Esforço: Grave o tênis na corrida, a roupa suportando o agachamento ou o acessório sendo usado sob sol e chuva.",
             "Gatilho de Inspiração: Crie histórias que incentivem o cliente a começar a praticar exercícios hoje mesmo usando a sua marca.",
-            "Destaque Tecnológico: Mostre a elasticidade do tecido, respirabilidade ou leveza através de testes dinâmicos de vídeo."
+            "Destaque Tecnológico: Mostre a elasticidade do tecido, respirabilidade ou leveza através de testes dinêmicos de vídeo."
           ]
         };
       case 'infantil_brinquedos':
@@ -158,7 +157,6 @@ export function OverviewTab({
   };
 
   const playbook = getSectorStrategicPlaybook(benchmark?.sector_key || 'default')
-  // ── FIM DA ADIÇÃO DO STATE E DO PLAYBOOK ──
 
   const { currentStore: tenant, loading: tenantLoading } = useTenant()
   const [loading, setLoading] = useState(true)
@@ -176,7 +174,6 @@ export function OverviewTab({
     async function fetchRealMetrics() {
       if (tenantLoading) return
 
-      // Evita disparar requisições para o id default nulo ou vazio
       if (!tenant?.id || tenant.id === '11111111-1111-4111-8111-111111111111') {
         setLoading(false)
         return
@@ -203,7 +200,6 @@ export function OverviewTab({
 
         const dateString = dateLimit.toISOString()
 
-        // 1. Busca dados agregados para os cards
         const [viewsRes, clicksRes, conversionsRes, socialRes] = await Promise.all([
           supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('event_type', 'story_open').gte('created_at', dateString),
           supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('event_type', 'cta_click').gte('created_at', dateString),
@@ -224,7 +220,6 @@ export function OverviewTab({
           comments: totalComments
         })
 
-        // 2. Busca e monta os dados do gráfico dinamicamente
         const { data: rawEvents } = await supabase
           .from('tracking_events')
           .select('created_at, event_type')
@@ -233,7 +228,6 @@ export function OverviewTab({
           .gte('created_at', dateString)
           .order('created_at', { ascending: true })
 
-        // Preencher o histórico com zeros para não quebrar a linha do gráfico
         const daysMap: { [key: string]: ChartDataPoint } = {}
         const tempDate = new Date(dateLimit)
         const today = new Date()
@@ -295,10 +289,10 @@ export function OverviewTab({
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 animate-pulse">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-32 bg-slate-100 dark:bg-[#1a1f35] rounded-3xl" />
+            <div key={i} className="h-32 bg-slate-100 dark:bg-[#1a1f35] rounded-2xl" />
           ))}
         </div>
-        <div className="h-80 bg-slate-100 dark:bg-[#1a1f35] rounded-3xl animate-pulse" />
+        <div className="h-80 bg-slate-100 dark:bg-[#1a1f35] rounded-2xl animate-pulse" />
       </div>
     )
   }
@@ -308,7 +302,7 @@ export function OverviewTab({
       {/* ── METRICAS DO FUNIL ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* 1. VISUALIZAÇÕES */}
-        <Card className="rounded-3xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
+        <Card className="rounded-2xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-white">
               1. Visualizações
@@ -326,7 +320,7 @@ export function OverviewTab({
         </Card>
 
         {/* 2. CLIQUES */}
-        <Card className="rounded-3xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
+        <Card className="rounded-2xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-white">
               2. Cliques em CTA
@@ -347,7 +341,7 @@ export function OverviewTab({
         </Card>
 
         {/* 3. VENDAS */}
-        <Card className="rounded-3xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
+        <Card className="rounded-2xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-white">
               3. Vendas Realizadas
@@ -368,7 +362,7 @@ export function OverviewTab({
         </Card>
 
         {/* 4. RECEITA */}
-        <Card className="rounded-3xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
+        <Card className="rounded-2xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-white">
               4. Faturamento ROI
@@ -386,7 +380,7 @@ export function OverviewTab({
         </Card>
 
         {/* 5. ENGAJAMENTO SOCIAL */}
-        <Card className="rounded-3xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
+        <Card className="rounded-2xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-white">
               Engajamento Social
@@ -414,8 +408,8 @@ export function OverviewTab({
         </Card>
       </div>
 
-      {/* ── NOVO GRÁFICO DE EVOLUÇÃO TEMPORAL (RECHARTS) ── */}
-      <Card className="rounded-3xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] p-6 shadow-sm">
+      {/* ── NOVO GRÁFICO DE EVOLUÇÃO TEMPORAL ── */}
+      <Card className="rounded-2xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] p-6 shadow-sm">
         <CardHeader className="p-0 pb-6">
           <CardTitle className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
             📊 Evolução Diária de Conversões
@@ -424,7 +418,7 @@ export function OverviewTab({
         </CardHeader>
         <CardContent className="p-0 h-80 w-full">
           {chartData.length === 0 || (data.views === 0 && data.clicks === 0) ? (
-            <div className="h-full flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-100 dark:border-white/5 rounded-3xl p-6">
+            <div className="h-full flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-100 dark:border-white/5 rounded-2xl p-6">
               <span className="text-3xl">📈</span>
               <h5 className="font-bold text-slate-700 dark:text-slate-300 mt-2">Sem dados históricos para exibir</h5>
               <p className="text-xs text-slate-400 max-w-xs mt-1">Assim que seu widget receber as primeiras interações, o gráfico de evolução será desenhado automaticamente.</p>
@@ -488,7 +482,7 @@ export function OverviewTab({
       </Card>
 
       {/* ── CONTEXTO DO MERCADO COM COPYS CORRIGIDAS E MODAL DE ESTUDO ── */}
-      <div className="bg-slate-50 dark:bg-[#0f1220] border border-slate-100 dark:border-white/5 p-5 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
+      <div className="bg-slate-50 dark:bg-[#0f1220] border border-slate-100 dark:border-white/5 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
         <div className="flex items-start gap-3">
           <Compass className="w-5 h-5 text-[#0094EB] dark:text-[#ff7a29] shrink-0 mt-0.5 animate-spin" style={{ animationDuration: '8s' }} />
           <div className="text-xs">
@@ -511,7 +505,7 @@ export function OverviewTab({
       {/* ── MODAL PREMIUM: ESTUDO DE MERCADO E BENCHMARK 2026 ── */}
       {isBenchmarkModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in font-sans">
-          <div className="relative w-full max-w-2xl bg-white dark:bg-[#121625] border border-slate-100 dark:border-white/5 rounded-[2.5rem] shadow-2xl p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-[#121625] border border-slate-100 dark:border-white/5 rounded-2xl shadow-2xl p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto">
 
             {/* Botão Fechar */}
             <button
@@ -564,7 +558,7 @@ export function OverviewTab({
             </div>
 
             {/* Playbook de Ação */}
-            <div className="mt-6 space-y-4 bg-slate-50 dark:bg-[#1a1f35]/50 border border-slate-100 dark:border-white/5 p-5 rounded-3xl">
+            <div className="mt-6 space-y-4 bg-slate-50 dark:bg-[#1a1f35]/50 border border-slate-100 dark:border-white/5 p-5 rounded-2xl">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-[#0094EB] dark:text-[#ff7a29]" />
                 <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">
