@@ -227,30 +227,37 @@ export function RetentionTab(_props: Props) {
                   tickFormatter={(v: number) => v.toLocaleString()}
                 />
                 <Tooltip
-                  contentStyle={{
-                    borderRadius: '16px',
-                    border: 'none',
-                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-                    padding: '12px',
-                    fontSize: '12px',
+                  cursor={{ fill: 'rgba(255, 255, 255, 0.04)', radius: 8 }}
+                  content={({ active, payload }: any) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-[#1a1f35] border border-white/10 p-3.5 rounded-2xl shadow-xl text-left min-w-[160px] backdrop-blur-md">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                            Ponto: {data.name}
+                          </p>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="text-xs text-slate-300 font-medium">Espectadores:</span>
+                              <span className="text-xs font-black text-white">
+                                {data.espectadores?.toLocaleString()}
+                              </span>
+                            </div>
+                            {data.taxa !== undefined && (
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-xs text-slate-300 font-medium">Retenção:</span>
+                                <span className="text-xs font-black text-[#0094EB]">
+                                  {data.taxa}%
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
                   }}
-                  formatter={(val: number, name: string) => [
-                    name === 'taxa'
-                      ? `${val}%`
-                      : val.toLocaleString(),
-                    name === 'taxa' ? 'Retenção (%)' : 'Espectadores',
-                  ]}
                 />
-                <Bar dataKey="espectadores" fill="url(#barGradient)" radius={[8, 8, 0, 0]} name="Espectadores" />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-full flex items-center justify-center text-slate-400 text-sm font-bold">
-              Sem dados de retenção
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* ── Tabela de retenção por vídeo ── */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2.5rem] p-8 shadow-sm">
