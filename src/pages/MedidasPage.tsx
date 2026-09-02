@@ -368,6 +368,26 @@ const MedidasPage = () => {
         </button>
       </div>
 
+      {/* ── ABAS: PRODUTOS / MEDIDAS ── */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-white/10">
+        <button
+          type="button"
+          onClick={() => navigate('/produtos')}
+          className="flex items-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 border-transparent text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+        >
+          <Package size={15} />
+          Produtos
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/medidas')}
+          className="flex items-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 border-[#0094EB] dark:border-[#ff7a29] text-[#0094EB] dark:text-[#ff7a29] transition-colors cursor-pointer"
+        >
+          <Ruler size={15} />
+          Medidas
+        </button>
+      </div>
+
       {/* ── GRID MODULAR DE MEDIDAS ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {models.map((model) => {
