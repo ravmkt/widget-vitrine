@@ -19,7 +19,7 @@ const FloatingHelpButton = () => {
           
           {/* Texto que surge suavemente ao expandir */}
           <span className="max-w-0 opacity-0 group-hover:max-w-xs group-hover:opacity-100 transition-all duration-300 ease-in-out overflow-hidden text-sm font-semibold tracking-wide whitespace-nowrap">
-            Suporte & Ajuda
+            Suporte
           </span>
         </div>
       </button>
