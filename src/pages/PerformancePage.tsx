@@ -93,14 +93,14 @@ export default function PerformancePage() {
             Resultados
           </h1>
           <p className="text-sm font-medium text-slate-500 dark:text-[#c0c5d4] mt-1">
-            Métricas reais de <span className="text-[#0094EB] dark:text-[#ff7a29] font-bold">{benchmark.sector_name}</span> comparadas aos benchmarks nacionais de 2026.
+            Métricas reais de <span className="text-[#0091ff] dark:text-[#ff7a29] font-bold">{benchmark.sector_name}</span> comparadas aos benchmarks nacionais de 2026.
           </p>
         </div>
 
         {/* ── FILTRO DE PERÍODO REFINADO ── */}
         <div className="flex items-center gap-2.5">
           <Select value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
-            <SelectTrigger className="w-36 h-10 rounded-2xl border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a1f35] text-xs font-black text-slate-800 dark:text-white shadow-sm focus:border-[#0094EB] dark:focus:border-[#ff7a29]">
+            <SelectTrigger className="w-36 h-10 rounded-2xl border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a1f35] text-xs font-black text-slate-800 dark:text-white shadow-sm focus:border-[#0091ff] dark:focus:border-[#ff7a29]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-xs font-bold text-slate-800 dark:text-white shadow-xl">
@@ -118,7 +118,7 @@ export default function PerformancePage() {
               className={cn(
                 'flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-xs font-black transition-all shadow-sm',
                 customRange.from
-                  ? 'border-[#0094EB]/40 bg-[#0094EB]/10 text-[#0094EB] dark:border-[#ff7a29]/40 dark:bg-[#ff7a29]/10 dark:text-[#ff7a29]'
+                  ? 'border-[#0091ff]/40 bg-[#0091ff]/10 text-[#0091ff] dark:border-[#ff7a29]/40 dark:bg-[#ff7a29]/10 dark:text-[#ff7a29]'
                   : 'border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
@@ -137,14 +137,14 @@ export default function PerformancePage() {
         onValueChange={(v) => setActiveTab(v as TabKey)}
         className="flex flex-col gap-6"
       >
-        <TabsList className="w-fit bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-2xl p-1.5 gap-1 shadow-inner h-auto">
+        <TabsList className="w-fit bg-slate-100 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-2xl p-1.5 gap-1 shadow-inner h-auto">
           <TabsTrigger
             value="overview"
             className="px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer 
               hover:text-slate-800 dark:hover:text-white
               data-[state=inactive]:!bg-slate-200 dark:data-[state=inactive]:!bg-slate-800 
               data-[state=inactive]:!text-slate-600 dark:data-[state=inactive]:!text-slate-400
-              data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] 
+              data-[state=active]:!bg-[#0091ff] dark:data-[state=active]:!bg-[#ff7a29] 
               data-[state=active]:!text-white data-[state=active]:shadow-md 
               data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30"
           >
@@ -156,7 +156,7 @@ export default function PerformancePage() {
               hover:text-slate-800 dark:hover:text-white
               data-[state=inactive]:!bg-slate-200 dark:data-[state=inactive]:!bg-slate-800 
               data-[state=inactive]:!text-slate-600 dark:data-[state=inactive]:!text-slate-400
-              data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] 
+              data-[state=active]:!bg-[#0091ff] dark:data-[state=active]:!bg-[#ff7a29] 
               data-[state=active]:!text-white data-[state=active]:shadow-md 
               data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30"
           >
@@ -168,7 +168,7 @@ export default function PerformancePage() {
               hover:text-slate-800 dark:hover:text-white
               data-[state=inactive]:!bg-slate-200 dark:data-[state=inactive]:!bg-slate-800 
               data-[state=inactive]:!text-slate-600 dark:data-[state=inactive]:!text-slate-400
-              data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] 
+              data-[state=active]:!bg-[#0091ff] dark:data-[state=active]:!bg-[#ff7a29] 
               data-[state=active]:!text-white data-[state=active]:shadow-md 
               data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30"
           >
@@ -180,7 +180,7 @@ export default function PerformancePage() {
               hover:text-slate-800 dark:hover:text-white
               data-[state=inactive]:!bg-slate-200 dark:data-[state=inactive]:!bg-slate-800 
               data-[state=inactive]:!text-slate-600 dark:data-[state=inactive]:!text-slate-400
-              data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] 
+              data-[state=active]:!bg-[#0091ff] dark:data-[state=active]:!bg-[#ff7a29] 
               data-[state=active]:!text-white data-[state=active]:shadow-md 
               data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30"
           >
@@ -242,7 +242,7 @@ export default function PerformancePage() {
             locale={ptBR}
             className="border-none"
             modifiersClassNames={{
-              selected: '!bg-[#0094EB] dark:!bg-[#ff7a29] !text-white',
+              selected: '!bg-[#0091ff] dark:!bg-[#ff7a29] !text-white',
             }}
           />
         </div>

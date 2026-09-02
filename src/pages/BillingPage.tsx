@@ -298,9 +298,9 @@ export function BillingPage() {
       };
     }
     return {
-      barBg: '!bg-[#0094EB] dark:!bg-[#ff7a29] shadow-[0_0_10px_rgba(0,148,235,0.3)]',
-      text: 'text-[#0094EB] dark:text-[#ff7a29]',
-      bgPill: 'bg-blue-50 dark:bg-[#ff7a29]/10 text-[#0094EB] dark:text-[#ff7a29] border-blue-200/40'
+      barBg: '!bg-[#0091ff] dark:!bg-[#ff7a29] shadow-[0_0_10px_rgba(0,145,255,0.3)]',
+      text: 'text-[#0091ff] dark:text-[#ff7a29]',
+      bgPill: 'bg-blue-50 dark:bg-[#ff7a29]/10 text-[#0091ff] dark:text-[#ff7a29] border-blue-200/40'
     };
   };
 
@@ -311,7 +311,7 @@ export function BillingPage() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0094EB]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#0091ff]" />
       </div>
     );
   }
@@ -379,7 +379,7 @@ export function BillingPage() {
         <button
           type="button"
           onClick={() => navigate('/plans')}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer shrink-0"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer shrink-0"
         >
           <Sparkles size={16} className="!text-white stroke-[2.5]" />
           Alterar / Fazer Upgrade
@@ -390,10 +390,10 @@ export function BillingPage() {
       <div className="grid gap-6 md:grid-cols-3 items-stretch">
         
         {/* Card: Detalhes do Plano */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm md:col-span-1 flex flex-col justify-between">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm md:col-span-1 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
-              <span className="rounded-full bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] border border-blue-100 dark:border-[#ff7a29]/20">
+              <span className="rounded-full bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#0091ff] dark:text-[#ff7a29] border border-blue-100 dark:border-[#ff7a29]/20">
                 Plano Atual
               </span>
 
@@ -414,7 +414,7 @@ export function BillingPage() {
                 </span>
               )}
               {subscriptionStatus === 'trialing' && (
-                <span className="flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-[#ff7a29]/15 border border-blue-100 dark:border-[#ff7a29]/25 px-2.5 py-0.5 text-xs font-black text-[#0094EB] dark:text-[#ff7a29]">
+                <span className="flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-[#ff7a29]/15 border border-blue-100 dark:border-[#ff7a29]/25 px-2.5 py-0.5 text-xs font-black text-[#0091ff] dark:text-[#ff7a29]">
                   <Clock size={13} /> Em Teste
                 </span>
               )}
@@ -424,7 +424,7 @@ export function BillingPage() {
               {plan?.name ? `Plano ${plan.name}` : 'Plano Iniciante'}
             </h2>
             <div className="mt-2 flex items-baseline gap-1">
-              <span className="text-3xl font-black text-[#0094EB] dark:text-[#ff7a29] tracking-tight">
+              <span className="text-3xl font-black text-[#0091ff] dark:text-[#ff7a29] tracking-tight">
                 R$ {plan?.price_cents !== undefined ? (plan.price_cents / 100).toFixed(2).replace('.', ',') : '59,00'}
               </span>
               <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">/mês</span>
@@ -457,7 +457,7 @@ export function BillingPage() {
             <button
               type="button"
               onClick={() => navigate('/plans')}
-              className="flex w-full items-center justify-between text-xs font-black text-[#0094EB] dark:text-[#ff7a29] hover:underline cursor-pointer"
+              className="flex w-full items-center justify-between text-xs font-black text-[#0091ff] dark:text-[#ff7a29] hover:underline cursor-pointer"
             >
               <span>Ver comparativo de planos</span>
               <ChevronRight size={15} />
@@ -466,7 +466,7 @@ export function BillingPage() {
         </div>
 
         {/* Card: Consumo de Recursos (Destaque Proporcional) */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm md:col-span-2 flex flex-col justify-between space-y-5">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm md:col-span-2 flex flex-col justify-between space-y-5">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
             <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
               Consumo de Recursos
@@ -477,10 +477,10 @@ export function BillingPage() {
           </div>
 
           {/* 1. Armazenamento com Barra e Fonte Ampliada */}
-          <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 space-y-3">
+          <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 shrink-0">
                   <HardDrive size={18} className="!text-white stroke-[2.5]" />
                 </div>
                 <div>
@@ -517,7 +517,7 @@ export function BillingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
             
             {/* Views Proporcionais */}
-            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 space-y-3">
+            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 shrink-0">
@@ -554,7 +554,7 @@ export function BillingPage() {
             </div>
 
             {/* Páginas Ativas Proporcionais */}
-            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 space-y-3">
+            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-pink-50 dark:bg-pink-950/40 text-pink-500 shrink-0">
@@ -624,10 +624,10 @@ export function BillingPage() {
       </div>
 
       {/* ── HISTÓRICO DE FATURAS ── */}
-      <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
               <Receipt size={18} className="!text-white stroke-[2.5]" />
             </div>
             <div>
@@ -640,7 +640,7 @@ export function BillingPage() {
             </div>
           </div>
 
-          <span className="text-xs font-black uppercase tracking-widest text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/20">
+          <span className="text-xs font-black uppercase tracking-widest text-[#0091ff] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/20">
             {invoices.length} {invoices.length === 1 ? 'Fatura' : 'Faturas'}
           </span>
         </div>
@@ -653,7 +653,7 @@ export function BillingPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#0f1220]/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#111524]/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                   <th className="px-6 py-4 rounded-l-2xl">Data</th>
                   <th className="px-6 py-4">Descrição</th>
                   <th className="px-6 py-4">Valor</th>
@@ -684,7 +684,7 @@ export function BillingPage() {
                           href={inv.invoice_pdf_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="font-black text-xs text-[#0094EB] dark:text-[#ff7a29] hover:underline"
+                          className="font-black text-xs text-[#0091ff] dark:text-[#ff7a29] hover:underline"
                         >
                           Visualizar PDF &rarr;
                         </a>
@@ -701,9 +701,9 @@ export function BillingPage() {
       </div>
 
       {/* ── DADOS DA NOTA FISCAL ── */}
-      <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+      <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         <div className="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-4">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
             <Building2 size={18} className="!text-white stroke-[2.5]" />
           </div>
           <div>
@@ -727,7 +727,7 @@ export function BillingPage() {
                 value={fiscalData.cnpj_cpf}
                 onChange={(e) => setFiscalData({ ...fiscalData, cnpj_cpf: e.target.value })}
                 placeholder="00.000.000/0000-00"
-                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
               />
             </div>
             <div>
@@ -739,7 +739,7 @@ export function BillingPage() {
                 value={fiscalData.legal_name}
                 onChange={(e) => setFiscalData({ ...fiscalData, legal_name: e.target.value })}
                 placeholder="Nome da sua empresa"
-                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
               />
             </div>
             <div>
@@ -751,7 +751,7 @@ export function BillingPage() {
                 value={fiscalData.email}
                 onChange={(e) => setFiscalData({ ...fiscalData, email: e.target.value })}
                 placeholder="financeiro@empresa.com"
-                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
               />
             </div>
           </div>
@@ -766,7 +766,7 @@ export function BillingPage() {
                 value={fiscalData.cep}
                 onChange={(e) => setFiscalData({ ...fiscalData, cep: e.target.value })}
                 placeholder="00000-000"
-                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
               />
             </div>
             <div className="md:col-span-2">
@@ -778,7 +778,7 @@ export function BillingPage() {
                 value={fiscalData.address}
                 onChange={(e) => setFiscalData({ ...fiscalData, address: e.target.value })}
                 placeholder="Rua, Avenida..."
-                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
               />
             </div>
             <div>
@@ -790,7 +790,7 @@ export function BillingPage() {
                 value={fiscalData.number}
                 onChange={(e) => setFiscalData({ ...fiscalData, number: e.target.value })}
                 placeholder="123"
-                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f1220] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
               />
             </div>
           </div>
@@ -799,7 +799,7 @@ export function BillingPage() {
             <button
               type="submit"
               disabled={savingFiscal}
-              className="inline-flex items-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#0f1220] dark:border dark:border-white/10 px-6 py-3 text-xs font-black uppercase tracking-wider text-white dark:text-white dark:hover:border-[#ff7a29]/60 transition-all shadow-md shadow-blue-500/20 dark:shadow-none disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#111524] dark:border dark:border-white/10 px-6 py-3 text-xs font-black uppercase tracking-wider text-white dark:text-white dark:hover:border-[#ff7a29]/60 transition-all shadow-md shadow-blue-500/20 dark:shadow-none disabled:opacity-50 cursor-pointer"
             >
               {savingFiscal ? <Loader2 size={14} className="animate-spin !text-white" /> : <Save size={14} className="!text-white" />}
               Atualizar Dados Fiscais

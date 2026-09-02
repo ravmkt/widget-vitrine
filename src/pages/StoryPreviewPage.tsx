@@ -857,16 +857,16 @@ Preview do Story • {storyFormat === 'floating_widget' ? 'Flutuante' : storyFor
         </div>
 
         {/* ── Banner de Orientação para Simulação Real (Padrão de Design Premium) ── */}
-        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
+        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-blue-100 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] p-5 shadow-xs transition-all duration-300 hover:shadow-md">
           <div className="text-center sm:text-left">
-            <h4 className="text-sm font-bold text-slate-800">Ambiente de Simulação do Widget</h4>
-            <p className="text-xs text-slate-500 mt-1">
+            <h4 className="text-sm font-bold text-slate-800 dark:text-white">Ambiente de Simulação do Widget</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Esta é uma visualização básica de posicionamento. Para simular e testar a experiência real integrada e completa, acesse o editor oficial.
             </p>
           </div>
           <button
             onClick={() => navigate(`/stories/${storyId}`)}
-            className="flex items-center gap-2 rounded-full bg-[#0091FF] px-6 py-3 text-sm font-bold text-white shadow-md shadow-blue-500/10 transition-all hover:bg-[#007EE6] hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 shrink-0"
+            className="flex items-center gap-2 rounded-full bg-[#0091ff] px-6 py-3 text-sm font-bold text-white shadow-md shadow-blue-500/10 transition-all hover:bg-[#007EE6] hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 shrink-0"
           >
             <Edit size={16} className="text-white" />
             Ir para o Editor de Stories

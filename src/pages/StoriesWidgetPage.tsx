@@ -695,7 +695,7 @@ const ProductInfoCard: FC<{
       className="absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-4 pt-10"
       style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
     >
-      <div className="flex items-start gap-3 rounded-3xl overflow-visible border border-white/20 bg-white/95 p-3 shadow-2xl" style={{ backgroundColor }}>
+      <div className="flex items-start gap-3 rounded-2xl overflow-visible border border-white/20 bg-white/95 p-3 shadow-2xl" style={{ backgroundColor }}>
         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-slate-200">
           {productImageUrl ? (
             <img src={productImageUrl} alt={product.name || 'Produto'} className="h-full w-full object-cover" />
@@ -755,7 +755,7 @@ const GridThumbnails: FC<{
         <button
           key={video.id}
           type="button"
-          className="relative aspect-[9/16] overflow-hidden rounded-3xl bg-slate-900"
+          className="relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900"
           onClick={() => onVideoClick(video)}
         >
           {thumb ? (
@@ -830,7 +830,7 @@ const CommentsPanel: FC<{
         {showEmoji && (
           <div className="grid grid-cols-6 gap-2 rounded-2xl bg-white/10 p-3 text-xl">
             {EMOJIS.map(emoji => (
-              <button key={emoji} type="button" onClick={() => onInsertEmoji(emoji)} className="rounded-lg p-1 transition hover:bg-white/10">
+              <button key={emoji} type="button" onClick={() => onInsertEmoji(emoji)} className="rounded-xl p-1 transition hover:bg-white/10">
                 {emoji}
               </button>
             ))}
@@ -1448,7 +1448,7 @@ isGridLayout ? 'max-w-[1080px] sm:max-h-screen' : isCarouselLayout ? 'max-w-[420
           />
         ) : isFloatingLayout ? (
           <div className="flex h-full items-center justify-center px-6 pt-20 text-center text-white/70">
-            <div className="max-w-[280px] rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+            <div className="max-w-[280px] rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
               <p className="text-sm font-semibold text-white">Visual flutuante</p>
               <p className="mt-2 text-xs text-white/65">{story.title || 'Story'}</p>
             </div>

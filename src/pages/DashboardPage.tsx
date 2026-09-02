@@ -378,7 +378,7 @@ const DashboardPage: React.FC = () => {
   const CHIP = {
     emerald: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30',
     rose: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30',
-    blue: 'bg-blue-50 dark:bg-blue-950/40 text-[#0094EB] dark:text-[#ff7a29] border border-blue-100 dark:border-orange-500/20',
+    blue: 'bg-blue-50 dark:bg-blue-950/40 text-[#0091ff] dark:text-[#ff7a29] border border-blue-100 dark:border-orange-500/20',
     amber: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30',
     cyan: 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-900/30',
     violet: 'bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border border-violet-100 dark:border-violet-900/30',
@@ -462,7 +462,7 @@ const DashboardPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="w-10 h-10 border-4 border-[#0094EB] dark:border-[#ff7a29] border-t-transparent rounded-full animate-spin mb-3" />
+        <div className="w-10 h-10 border-4 border-[#0091ff] dark:border-[#ff7a29] border-t-transparent rounded-full animate-spin mb-3" />
         <p className="text-sm font-semibold text-slate-500 dark:text-[#c0c5d4]">Atualizando visão geral...</p>
       </div>
     );
@@ -472,12 +472,12 @@ const DashboardPage: React.FC = () => {
     <div className="space-y-8 animate-fade-in font-sans text-slate-900 dark:text-[#e8ecf4] min-h-screen -m-6 p-6 sm:p-8 bg-transparent dark:bg-[radial-gradient(ellipse_at_top,_#1a1f3a_0%,_#0f1220_55%,_#0a0e1a_100%)]">
       
       {/* ── 1. HEADER (Grid de 2 Colunas: Boas Vindas + Card de Status do App) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 rounded-[2rem] border border-slate-200 dark:border-orange-500/15 shadow-sm dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-orange-500/15 shadow-sm dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
         
         {/* Coluna 1: Boas vindas e Plano */}
         <div className="lg:col-span-2 flex flex-col justify-center space-y-4">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
+            <span className="text-xs font-black uppercase tracking-wider text-[#0091ff] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
               Plano {usage.planName}
             </span>
             {usage.subscriptionStatus === 'trialing' && usage.trialDaysLeft !== null ? (
@@ -545,7 +545,7 @@ const DashboardPage: React.FC = () => {
           <div className="bg-white dark:bg-[#1a1f35]/70 dark:backdrop-blur-md p-5 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">Visualizações</span>
-              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0094EB] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
                 <Eye size={16} />
               </div>
             </div>
@@ -555,12 +555,12 @@ const DashboardPage: React.FC = () => {
               </span>
               <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">de {usage.viewsLimit.toLocaleString('pt-BR')}</span>
             </div>
-            <div className="w-full h-2.5 bg-slate-100 dark:bg-[#0f1220] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
+            <div className="w-full h-2.5 bg-slate-100 dark:bg-[#111524] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
               <div className={`h-full ${getBarColor(viewsPercent)} rounded-full transition-all duration-500 animate-shimmer`} style={{ width: `${viewsPercent}%` }} />
             </div>
             <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-[#c0c5d4]">
               <span>Quota do mês</span>
-              <span className={viewsPercent >= 90 ? 'text-rose-500 font-black' : 'text-[#0094EB] dark:text-[#ff7a29]'}>{viewsPercent}%</span>
+              <span className={viewsPercent >= 90 ? 'text-rose-500 font-black' : 'text-[#0091ff] dark:text-[#ff7a29]'}>{viewsPercent}%</span>
             </div>
           </div>
 
@@ -568,7 +568,7 @@ const DashboardPage: React.FC = () => {
           <div className="bg-white dark:bg-[#1a1f35]/70 dark:backdrop-blur-md p-5 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">Armazenamento</span>
-              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0094EB] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
                 <HardDrive size={16} />
               </div>
             </div>
@@ -578,12 +578,12 @@ const DashboardPage: React.FC = () => {
               </span>
               <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">de {(usage.storageLimitMB / 1024).toFixed(0)} GB</span>
             </div>
-            <div className="w-full h-2.5 bg-slate-100 dark:bg-[#0f1220] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
+            <div className="w-full h-2.5 bg-slate-100 dark:bg-[#111524] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
               <div className={`h-full ${getBarColor(storagePercent)} rounded-full transition-all duration-500 animate-shimmer`} style={{ width: `${storagePercent}%` }} />
             </div>
             <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-[#c0c5d4]">
               <span>Vídeos na nuvem</span>
-              <span className={storagePercent >= 90 ? 'text-rose-500 font-black' : 'text-[#0094EB] dark:text-[#ff7a29]'}>{storagePercent}%</span>
+              <span className={storagePercent >= 90 ? 'text-rose-500 font-black' : 'text-[#0091ff] dark:text-[#ff7a29]'}>{storagePercent}%</span>
             </div>
           </div>
 
@@ -591,7 +591,7 @@ const DashboardPage: React.FC = () => {
           <div className="bg-white dark:bg-[#1a1f35]/70 dark:backdrop-blur-md p-5 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">Páginas com Vídeos</span>
-              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0094EB] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
                 <FileText size={16} />
               </div>
             </div>
@@ -599,12 +599,12 @@ const DashboardPage: React.FC = () => {
               <span className="text-xl font-black text-slate-900 dark:text-white">{usage.pagesUsed}</span>
               <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">de {usage.pagesLimit} ativas</span>
             </div>
-            <div className="w-full h-2.5 bg-slate-100 dark:bg-[#0f1220] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
+            <div className="w-full h-2.5 bg-slate-100 dark:bg-[#111524] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
               <div className={`h-full ${getBarColor(pagesPercent)} rounded-full transition-all duration-500 animate-shimmer`} style={{ width: `${pagesPercent}%` }} />
             </div>
             <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-[#c0c5d4]">
               <span>Locais de exibição</span>
-              <span className={pagesPercent >= 90 ? 'text-rose-500 font-black' : 'text-[#0094EB] dark:text-[#ff7a29]'}>{pagesPercent}%</span>
+              <span className={pagesPercent >= 90 ? 'text-rose-500 font-black' : 'text-[#0091ff] dark:text-[#ff7a29]'}>{pagesPercent}%</span>
             </div>
           </div>
 
@@ -612,7 +612,7 @@ const DashboardPage: React.FC = () => {
           <div className="bg-white dark:bg-[#1a1f35]/70 dark:backdrop-blur-md p-5 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 space-y-3 flex flex-col justify-between">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">Ciclo da Conta</span>
-              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0094EB] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
                 <Clock size={16} />
               </div>
             </div>
@@ -633,7 +633,7 @@ const DashboardPage: React.FC = () => {
       {/* ── 3. DESEMPENHO DOS VÍDEOS ── */}
       <div
         className={cn(
-          'bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-6 transition-opacity duration-200 flex flex-col',
+          'bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6 transition-opacity duration-200 flex flex-col',
           metricsLoading && 'opacity-60 pointer-events-none'
         )}
       >
@@ -645,7 +645,7 @@ const DashboardPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex bg-slate-100 dark:bg-[#0f1220] p-1.5 rounded-2xl gap-1 shadow-inner border border-transparent dark:border-white/5">
+          <div className="flex bg-slate-100 dark:bg-[#111524] p-1.5 rounded-2xl gap-1 shadow-inner border border-transparent dark:border-white/5">
             {[
               { id: 'today', label: 'Hoje' },
               { id: '7', label: '7 dias' },
@@ -658,7 +658,7 @@ const DashboardPage: React.FC = () => {
                 className={cn(
                   'px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5',
                   selectedPeriod === p.id
-                    ? 'bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md dark:shadow-[0_0_12px_rgba(255,122,41,0.4)]'
+                    ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md dark:shadow-[0_0_12px_rgba(255,122,41,0.4)]'
                     : 'text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white'
                 )}
               >
@@ -694,7 +694,7 @@ const DashboardPage: React.FC = () => {
                   {topVideos.map((item, i) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-[#0f1220]/70 border border-slate-100 dark:border-white/5 hover:border-[#0094EB]/40 dark:hover:border-[#ff7a29]/40 transition-all"
+                      className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-[#111524]/70 border border-slate-100 dark:border-white/5 hover:border-[#0091ff]/40 dark:hover:border-[#ff7a29]/40 transition-all"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <span className="w-6 h-6 rounded-full bg-slate-200 dark:bg-[#1a1f35] text-slate-700 dark:text-[#c0c5d4] text-xs font-black flex items-center justify-center flex-shrink-0">
@@ -737,7 +737,7 @@ const DashboardPage: React.FC = () => {
         <div className="flex justify-end mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
           <button
             onClick={() => navigate('/videos/performance')}
-            className="bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] text-white font-black py-2.5 px-6 rounded-full text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 flex items-center gap-2 cursor-pointer"
+            className="bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white font-black py-2.5 px-6 rounded-full text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 flex items-center gap-2 cursor-pointer"
           >
             Ver Relatório Completo
             <ArrowRight size={14} className="stroke-[2.5]" />
@@ -747,7 +747,7 @@ const DashboardPage: React.FC = () => {
 
       {/* ── 4 & 5. CHECKLIST REORGANIZADO + LOG DE ATIVIDADES RECENTES ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-        <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/5 pb-5 mb-5">
               <div>
@@ -759,13 +759,13 @@ const DashboardPage: React.FC = () => {
                 </p>
               </div>
               <div className="flex items-center gap-2.5">
-                <div className="w-24 h-2.5 bg-slate-100 dark:bg-[#0f1220] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
+                <div className="w-24 h-2.5 bg-slate-100 dark:bg-[#111524] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
                   <div 
                     className={cn(
                       "h-full rounded-full transition-all duration-500 animate-shimmer",
                       checklistPercent === 100 
                         ? "!bg-[#22c55e]" 
-                        : "!bg-[#0094EB] dark:!bg-[#ff7a29]"
+                        : "!bg-[#0091ff] dark:!bg-[#ff7a29]"
                     )} 
                     style={{ width: `${checklistPercent}%` }} 
                   />
@@ -774,7 +774,7 @@ const DashboardPage: React.FC = () => {
                   "text-xs font-black",
                   checklistPercent === 100 
                     ? "text-[#22c55e]" 
-                    : "text-[#0094EB] dark:text-[#ff7a29]"
+                    : "text-[#0091ff] dark:text-[#ff7a29]"
                 )}>
                   {checklistPercent}%
                 </span>
@@ -790,7 +790,7 @@ const DashboardPage: React.FC = () => {
                     'flex items-start gap-3.5 p-3.5 rounded-2xl border transition-all cursor-pointer group',
                     item.completed
                       ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-800/30'
-                      : 'bg-slate-50/70 dark:bg-[#0f1220]/60 border-slate-200 dark:border-white/5 hover:bg-white dark:hover:bg-[#1a1f35] hover:border-[#0094EB] dark:hover:border-[#ff7a29] hover:shadow-md'
+                      : 'bg-slate-50/70 dark:bg-[#111524]/60 border-slate-200 dark:border-white/5 hover:bg-white dark:hover:bg-[#1a1f35] hover:border-[#0091ff] dark:hover:border-[#ff7a29] hover:shadow-md'
                   )}
                 >
                   <div
@@ -798,7 +798,7 @@ const DashboardPage: React.FC = () => {
                       'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-sm transition-all',
                       item.completed
                         ? 'bg-emerald-500 text-white shadow-sm font-black'
-                        : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0094EB] dark:group-hover:border-[#ff7a29]'
+                        : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0091ff] dark:group-hover:border-[#ff7a29]'
                     )}
                   >
                     {item.completed ? '✓' : index + 1}
@@ -811,12 +811,12 @@ const DashboardPage: React.FC = () => {
                           'text-xs font-black',
                           item.completed
                             ? 'text-emerald-950 dark:text-emerald-300 line-through opacity-80'
-                            : 'text-slate-900 dark:text-white group-hover:text-[#0094EB] dark:group-hover:text-[#ff7a29]'
+                            : 'text-slate-900 dark:text-white group-hover:text-[#0091ff] dark:group-hover:text-[#ff7a29]'
                         )}
                       >
                         {item.title}
                       </h3>
-                      <span className="text-[11px] font-bold text-[#0094EB] dark:text-[#ff7a29] opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[11px] font-bold text-[#0091ff] dark:text-[#ff7a29] opacity-0 group-hover:opacity-100 transition-opacity">
                         Configurar &rarr;
                       </span>
                     </div>
@@ -831,7 +831,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Atividade Recente (Transformada em Audit Log de Ações do Lojista) */}
-        <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
             <div className="border-b border-slate-100 dark:border-white/5 pb-5 mb-5">
               <h2 className="text-base font-black text-slate-800 dark:text-white">
@@ -885,7 +885,7 @@ const DashboardPage: React.FC = () => {
       {/* ── 6 & 7. SEÇÃO INFERIOR ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
         {/* Academy */}
-        <div className="lg:col-span-7 bg-white dark:bg-[#1a1f35]/75 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 p-6 sm:p-7 rounded-[2.5rem] shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_30px_rgba(255,122,41,0.1)] transition-all duration-300 flex flex-col md:flex-row items-center gap-5">
+        <div className="lg:col-span-7 bg-white dark:bg-[#1a1f35]/75 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 p-6 sm:p-7 rounded-2xl shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_30px_rgba(255,122,41,0.1)] transition-all duration-300 flex flex-col md:flex-row items-center gap-5">
           <div className="w-full md:w-44 h-28 bg-slate-900 rounded-2xl flex items-center justify-center relative overflow-hidden flex-shrink-0 group cursor-pointer border border-slate-800 dark:border-white/10">
             <img
               src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop"
@@ -894,13 +894,13 @@ const DashboardPage: React.FC = () => {
               loading="lazy"
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-11 h-11 rounded-full bg-[#0094EB] dark:bg-[#ff7a29] text-white flex items-center justify-center shadow-lg dark:shadow-[0_0_16px_rgba(255,122,41,0.6)] group-hover:scale-110 transition-transform">
+              <div className="w-11 h-11 rounded-full bg-[#0091ff] dark:bg-[#ff7a29] text-white flex items-center justify-center shadow-lg dark:shadow-[0_0_16px_rgba(255,122,41,0.6)] group-hover:scale-110 transition-transform">
                 <Play size={17} fill="white" className="ml-0.5" />
               </div>
             </div>
           </div>
           <div className="flex-1 space-y-1.5 text-center md:text-left">
-            <span className="text-[10px] font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 inline-block">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#0091ff] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 inline-block">
               🎓 Vidlytics Academy
             </span>
             <h4 className="text-sm font-black text-slate-800 dark:text-white">
@@ -913,11 +913,11 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Indique e Ganhe */}
-        <div className="lg:col-span-5 bg-white dark:bg-[#1a1f35]/90 dark:backdrop-blur-md p-6 sm:p-7 rounded-[2.5rem] shadow-sm hover:shadow-md dark:hover:shadow-[0_8px_20px_rgba(255,122,41,0.15)] flex flex-col justify-between border border-slate-200 dark:border-orange-500/15 hover:-translate-y-1 transition-all duration-300">
+        <div className="lg:col-span-5 bg-white dark:bg-[#1a1f35]/90 dark:backdrop-blur-md p-6 sm:p-7 rounded-2xl shadow-sm hover:shadow-md dark:hover:shadow-[0_8px_20px_rgba(255,122,41,0.15)] flex flex-col justify-between border border-slate-200 dark:border-orange-500/15 hover:-translate-y-1 transition-all duration-300">
           <div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-sm shadow-blue-500/30 dark:shadow-orange-500/30">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-sm shadow-blue-500/30 dark:shadow-orange-500/30">
                   <DollarSign size={18} className="!text-white stroke-[2.5]" />
                 </div>
                 <h4 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
@@ -937,7 +937,7 @@ const DashboardPage: React.FC = () => {
           <button
             type="button"
             onClick={() => alert('Link de indicação copiado para a área de transferência!')}
-            className="mt-5 w-full bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] text-white font-black py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
+            className="mt-5 w-full bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white font-black py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Share2 size={14} className="!text-white shrink-0" />
             <span className="!text-white font-black">Copiar Meu Link de Indicação</span>
@@ -986,7 +986,7 @@ interface MetricCardProps {
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon: Icon }) => (
   <div className="bg-white dark:bg-[#1a1f35]/90 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[1.8rem] p-5 shadow-sm hover:shadow-md dark:hover:shadow-[0_8px_20px_rgba(255,122,41,0.15)] hover:-translate-y-1 transition-all duration-300 group">
     <div className="flex items-start justify-between mb-3">
-      <div className="w-11 h-11 rounded-2xl transition-all duration-300 group-hover:scale-110 flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] shrink-0">
+      <div className="w-11 h-11 rounded-2xl transition-all duration-300 group-hover:scale-110 flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] shrink-0">
         <Icon size={20} className="!text-white stroke-[2.5]" />
       </div>
     </div>

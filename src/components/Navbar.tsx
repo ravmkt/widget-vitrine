@@ -22,15 +22,15 @@ const Navbar = () => {
   };
 
   return (
-    <header className="bg-white border-b border-[#E2E8F0] h-20 flex items-center px-4 md:px-8 sticky top-0 z-40">
+    <header className="bg-white dark:bg-[#111524] border-b border-slate-200 dark:border-[#ff7a29]/30 h-20 flex items-center px-4 md:px-8 sticky top-0 z-40 transition-colors duration-300">
       <div className="flex justify-between items-center w-full max-w-7xl mx-auto">
         
         <div className="flex items-center gap-4">
-           <SidebarTrigger className="lg:hidden p-2 hover:bg-[#F1F5F9] rounded-lg text-[#64748B]" />
-           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#94A3B8]">
+           <SidebarTrigger className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl text-slate-500 dark:text-slate-400 transition-colors" />
+           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
               <span className="hidden sm:inline">Vitrine Vídeo</span>
               <ChevronRight size={14} className="hidden sm:inline" />
-              <span className="text-[#0094EB]">{getBreadcrumb(location.pathname)}</span>
+              <span className="text-[#0091ff] dark:text-[#ff7a29]">{getBreadcrumb(location.pathname)}</span>
            </div>
         </div>
 

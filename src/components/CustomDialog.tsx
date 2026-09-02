@@ -35,7 +35,7 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
     success: <CheckCircle2 className="w-10 h-10 text-[#10B981]" />,
     error: <XCircle className="w-10 h-10 text-[#EF4444]" />,
     warning: <AlertTriangle className="w-10 h-10 text-[#F59E0B]" />,
-    confirm: <HelpCircle className="w-10 h-10 text-[#0094EB]" />,
+    confirm: <HelpCircle className="w-10 h-10 text-[#0091ff]" />,
     form: null
   };
 
@@ -49,39 +49,39 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
       
       {/* Card do Modal Compacto */}
       <div className={cn(
-        "relative w-full bg-white border border-slate-200 rounded-[1.5rem] shadow-2xl flex flex-col animate-fade-in overflow-hidden z-[100000]",
+        "relative w-full bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl shadow-2xl flex flex-col animate-fade-in overflow-hidden z-[100000] transition-colors duration-300",
         maxWidth
       )} style={{ maxHeight: '92vh' }}>
         
         {/* Header Fixo Menor */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
-          <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">{title}</h3>
-          <button 
-            onClick={onCancel} 
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-50 transition-all"
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#ff7a29]/20 shrink-0">
+          <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">{title}</h3>
+          <button
+            onClick={onCancel}
+            className="p-1.5 rounded-xl text-slate-400 dark:text-slate-500 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Conteúdo Otimizado */}
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-white">
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-white dark:bg-[#111524]">
           {type !== 'form' && (
             <div className="flex flex-col items-center text-center mb-4">
               <div className="mb-3">{icons[type]}</div>
-              {description && <p className="text-xs font-bold text-slate-500 leading-relaxed">{description}</p>}
+              {description && <p className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-relaxed">{description}</p>}
             </div>
           )}
           {children}
         </div>
 
         {/* Footer Otimizado */}
-        <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2 bg-slate-50/50 shrink-0">
+        <div className="px-6 py-4 border-t border-slate-100 dark:border-[#ff7a29]/20 flex flex-col sm:flex-row gap-2 bg-slate-50/50 dark:bg-[#1a1f35]/50 shrink-0">
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-white font-black text-xs transition-all"
+              className="flex-1 py-2.5 px-4 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-[#1a1f35] font-black text-xs transition-all"
             >
               {cancelText}
             </button>
@@ -91,9 +91,9 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
               type="button"
               onClick={onConfirm}
               className={cn(
-                "flex-1 py-2.5 px-4 rounded-xl font-black text-xs text-white shadow-md transition-all active:scale-95",
-                type === 'error' ? 'bg-[#EF4444]' : 
-                type === 'warning' ? 'bg-[#F59E0B]' : 'bg-[#0094EB]'
+                "flex-1 py-2.5 px-4 rounded-2xl font-black text-xs text-white shadow-md transition-all active:scale-95",
+                type === 'error' ? 'bg-[#EF4444]' :
+                type === 'warning' ? 'bg-[#F59E0B]' : 'bg-[#0091ff] dark:bg-[#ff7a29]'
               )}
             >
               {confirmText}

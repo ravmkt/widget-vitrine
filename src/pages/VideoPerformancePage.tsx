@@ -267,14 +267,14 @@ const VideoPerformancePage = () => {
       {/* Cabeçalho */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-[18px] font-black text-slate-900 dark:text-white tracking-tight">
             Performance de Vídeos
           </h1>
-          <p className="text-slate-500 font-medium mt-1">
+          <p className="text-[14px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
             Acompanhe as métricas de visualização e engajamento dos seus vídeos.
           </p>
         </div>
-        <div className="flex bg-white border border-slate-200 rounded-xl p-1 gap-1 shadow-sm">
+        <div className="flex bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl p-1 gap-1 shadow-xs transition-all duration-300 hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60">
           {(['today', '7', '30', 'custom'] as const).map((p) => (
             <button
               key={p}
@@ -284,10 +284,10 @@ const VideoPerformancePage = () => {
                   : setFilters((prev) => ({ ...prev, period: p }))
               }
               className={cn(
-                'px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all',
+                'px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all',
                 filters.period === p
-                  ? 'bg-[#0094EB] text-white'
-                  : 'text-slate-400 hover:text-slate-600'
+                  ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white'
+                  : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
               )}
             >
               {p === 'today'
@@ -340,7 +340,7 @@ const VideoPerformancePage = () => {
       </div>
 
       {/* Busca */}
-      <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 flex shadow-sm">
+      <div className="bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl p-4 flex shadow-xs transition-all duration-300 hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60">
         <div className="relative flex-1">
           <Search
             className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -353,17 +353,17 @@ const VideoPerformancePage = () => {
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, search: e.target.value }))
             }
-            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
+            className="w-full pl-12 pr-4 py-3 bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-[#0091ff]/30 focus:border-[#0091ff] dark:focus:ring-[#ff7a29]/30 dark:focus:border-[#ff7a29] transition-colors"
           />
         </div>
       </div>
 
       {/* Tabela de vídeos */}
-      <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl overflow-hidden shadow-xs transition-all duration-300 hover:shadow-md">
         <div className="overflow-x-auto">
           <table className="w-full table-fixed border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
+              <tr className="bg-slate-50 dark:bg-[#111524] border-b border-slate-200 dark:border-[#ff7a29]/20">
                 {(
                   [
                     ['nome', 'Nome', 'left', '38%'],
@@ -396,14 +396,14 @@ const VideoPerformancePage = () => {
                 return (
                   <tr
                     key={v.id}
-                    className="hover:bg-slate-50/50 transition-colors align-middle"
+                    className="hover:bg-slate-50/50 dark:hover:bg-[#111524]/60 transition-colors align-middle"
                   >
                     <td className="px-2 py-4">
                       <div className="flex items-center gap-3 min-w-0">
                         {thumb ? (
                           <img
                             src={thumb}
-                            className="h-14 w-14 rounded-xl object-cover shrink-0 bg-slate-200 border border-slate-200"
+                            className="h-14 w-14 rounded-xl object-cover shrink-0 bg-slate-200 dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30"
                             alt={v.title}
                             loading="lazy"
                             onError={(e) => {
@@ -411,12 +411,12 @@ const VideoPerformancePage = () => {
                             }}
                           />
                         ) : (
-                          <div className="h-14 w-14 rounded-xl shrink-0 bg-slate-100 border border-slate-200 flex items-center justify-center">
+                          <div className="h-14 w-14 rounded-xl shrink-0 bg-slate-100 dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 flex items-center justify-center">
                             <Film size={20} className="text-slate-300" />
                           </div>
                         )}
                         <div className="min-w-0">
-                          <h4 className="text-sm font-black text-slate-800 truncate">
+                          <h4 className="text-sm font-black text-slate-800 dark:text-white truncate">
                             {v.title}
                           </h4>
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
@@ -425,22 +425,22 @@ const VideoPerformancePage = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-2 py-4 text-center font-black text-slate-800">
+                    <td className="px-2 py-4 text-center font-black text-slate-800 dark:text-white">
                       {Number(m.views || 0).toLocaleString()}
                     </td>
-                    <td className="px-2 py-4 text-center font-black text-slate-800">
+                    <td className="px-2 py-4 text-center font-black text-slate-800 dark:text-white">
                       {Number(m.comments || 0).toLocaleString()}
                     </td>
-                    <td className="px-2 py-4 text-center font-black text-slate-800">
+                    <td className="px-2 py-4 text-center font-black text-slate-800 dark:text-white">
                       {Number(m.likes || 0).toLocaleString()}
                     </td>
-                    <td className="px-2 py-4 text-center font-black text-slate-800">
+                    <td className="px-2 py-4 text-center font-black text-slate-800 dark:text-white">
                       {Number(m.ctr || 0).toFixed(1).replace('.', ',')}%
                     </td>
-                    <td className="px-2 py-4 text-center font-black text-slate-800">
+                    <td className="px-2 py-4 text-center font-black text-slate-800 dark:text-white">
                       {Number(m.ctaClicks || 0).toLocaleString()}
                     </td>
-                    <td className="px-2 py-4 text-center font-black text-slate-800">
+                    <td className="px-2 py-4 text-center font-black text-slate-800 dark:text-white">
                       {Number(m.conversions || 0).toLocaleString()}
                     </td>
                     <td className="px-2 py-4 text-center font-black text-emerald-600">
@@ -453,14 +453,14 @@ const VideoPerformancePage = () => {
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           onClick={() => handleOpenPlayer(v)}
-                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors"
+                          className="p-2 text-slate-400 dark:text-slate-500 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors"
                           title="Ver"
                         >
                           <Eye size={16} />
                         </button>
                         <button
                           onClick={() => navigate(`/videos/${v.id}/edit`)}
-                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors"
+                          className="p-2 text-slate-400 dark:text-slate-500 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors"
                           title="Editar"
                         >
                           <Edit3 size={16} />
@@ -512,7 +512,7 @@ const VideoPerformancePage = () => {
             locale={ptBR}
             className="border-none"
             modifiersStyles={{
-              selected: { backgroundColor: '#0094EB', color: 'white' },
+              selected: { backgroundColor: '#0091ff', color: 'white' },
             }}
           />
         </div>
@@ -536,13 +536,13 @@ const SummaryCard = ({
   color: 'blue' | 'violet' | 'emerald' | 'amber' | 'green';
   trend?: string;
 }) => (
-  <div className="bg-white border border-slate-200 rounded-[1.5rem] p-5 shadow-sm">
+  <div className="bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60">
     <div className="flex items-start justify-between mb-4">
       <div
         className={cn(
           'p-3 rounded-2xl',
           color === 'blue'
-            ? 'bg-blue-50 text-[#0094EB]'
+            ? 'bg-blue-50 text-[#0091ff]'
             : color === 'violet'
             ? 'bg-violet-50 text-violet-600'
             : color === 'emerald' || color === 'green'
@@ -561,7 +561,7 @@ const SummaryCard = ({
     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
       {label}
     </p>
-    <h3 className="text-2xl font-black text-slate-900">{value}</h3>
+    <h3 className="text-2xl font-black text-slate-900 dark:text-white">{value}</h3>
   </div>
 );
 

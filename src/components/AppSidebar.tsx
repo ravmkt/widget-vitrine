@@ -127,11 +127,11 @@ export function AppSidebar() {
   return (
     <div
       className={cn(
-        "h-screen sticky top-0 border-r border-[#E2E8F0] dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 z-30 select-none",
+        "h-screen sticky top-0 border-r border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#111524] flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 z-30 select-none",
         isExpanded ? "w-64 overflow-x-hidden" : "w-20 overflow-visible"
       )}
     >
-      <SidebarHeader className="p-4 flex flex-col gap-3 shrink-0 border-b border-slate-100 dark:border-slate-800">
+      <SidebarHeader className="p-4 flex flex-col gap-3 shrink-0 border-b border-slate-100 dark:border-[#ff7a29]/20">
         <div className="flex items-center gap-2 min-w-0">
           {isExpanded ? (
             <img
@@ -151,7 +151,7 @@ export function AppSidebar() {
                 }}
                 className="h-8 w-8 object-contain shrink-0"
               />
-              <div className="hidden h-8 w-8 shrink-0 rounded-xl bg-[#0094EB] flex items-center justify-center font-black text-white shadow-md shadow-blue-500/20 text-xs">
+              <div className="hidden h-8 w-8 shrink-0 rounded-xl bg-[#0091ff] flex items-center justify-center font-black text-white shadow-md shadow-blue-500/20 text-xs">
                 V
               </div>
             </div>
@@ -166,15 +166,15 @@ export function AppSidebar() {
             className={cn(
               "flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition-all shadow-sm w-full",
               isExpanded
-                ? "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
-                : "bg-[#0094EB] dark:bg-[#fd8539] text-white hover:bg-[#0E4787] dark:hover:bg-[#e07128] shadow-blue-500/20"
+                ? "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#1a1f35] dark:text-slate-200"
+                : "bg-[#0091ff] dark:bg-[#ff7a29] text-white hover:bg-[#0070f3] dark:hover:bg-[#e05e10] shadow-blue-500/20"
             )}
           >
             {isCollapsed ? (
               <PanelLeftOpen size={16} className="shrink-0 text-white" />
             ) : (
               <>
-                <PanelLeftClose size={16} className="shrink-0 text-[#0094EB] dark:text-[#fd8539]" />
+                <PanelLeftClose size={16} className="shrink-0 text-[#0091ff] dark:text-[#ff7a29]" />
                 <span className="truncate">Recolher</span>
               </>
             )}
@@ -183,7 +183,7 @@ export function AppSidebar() {
           {/* Tooltip flutuante adaptável ao tema */}
           {!isExpanded && (
             <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-3">
-              <div className="bg-[#0094EB] dark:bg-[#fd8539] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+              <div className="bg-[#0091ff] dark:bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
                 Expandir menu
               </div>
             </div>
@@ -213,8 +213,8 @@ const isItemActive =
                         className={cn(
                           "h-11 rounded-xl px-3.5 transition-all duration-200 font-black overflow-hidden",
                           isItemActive 
-                            ? "!bg-[#0094EB] dark:!bg-[#ff7a29] !text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 hover:!bg-[#0094EB] dark:hover:!bg-[#ff7a29]" 
-                            : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white"
+                            ? "!bg-[#0091ff] dark:!bg-[#ff7a29] !text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 hover:!bg-[#0091ff] dark:hover:!bg-[#ff7a29]" 
+                            : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1a1f35]/80 hover:text-slate-900 dark:hover:text-white"
                         )}
                       >
                         <Link to={item.url} className="flex items-center gap-3 w-full">
@@ -239,7 +239,7 @@ const isItemActive =
                       {/* Tooltip flutuante no modo recolhido (Azul no Light / Laranja no Dark) */}
                       {!isExpanded && (
                         <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
-                          <div className="bg-[#0094EB] dark:bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/40 dark:shadow-orange-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+                          <div className="bg-[#0091ff] dark:bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/40 dark:shadow-orange-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
                             {item.title}
                           </div>
                         </div>
@@ -253,18 +253,18 @@ const isItemActive =
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-[#F1F5F9] dark:border-slate-800 overflow-hidden shrink-0">
+      <SidebarFooter className="p-4 border-t border-slate-100 dark:border-[#ff7a29]/20 overflow-hidden shrink-0">
         <div className="relative group mb-3">
           <Link
             to="/billing"
             className={cn(
               "flex items-center gap-3 min-w-0 p-1.5 -m-1.5 rounded-xl transition-all duration-200 cursor-pointer",
               location.pathname === "/billing"
-                ? "bg-[#EAF6FF] dark:bg-[#fd8539]/20"
-                : "hover:bg-[#F8FAFC] dark:hover:bg-slate-900"
+                ? "bg-[#0091ff]/10 dark:bg-[#ff7a29]/10"
+                : "hover:bg-slate-50 dark:hover:bg-[#1a1f35]"
             )}
           >
-            <div className="h-9 w-9 rounded-full bg-[#F1F5F9] dark:bg-slate-800 border border-[#E2E8F0] dark:border-slate-700 flex items-center justify-center text-[#64748B] dark:text-slate-400 overflow-hidden shrink-0">
+            <div className="h-9 w-9 rounded-full bg-slate-100 dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/25 flex items-center justify-center text-slate-500 dark:text-slate-400 overflow-hidden shrink-0">
               {storeLogoUrl ? (
                 <img src={storeLogoUrl} alt={storeName || 'Loja'} className="h-full w-full object-cover" />
               ) : (
@@ -277,10 +277,10 @@ const isItemActive =
                 isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
               )}
             >
-              <span className="text-xs font-bold text-[#0F172A] dark:text-white truncate group-hover:text-[#0094EB] dark:group-hover:text-[#fd8539] transition-colors">
+              <span className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-[#0091ff] dark:group-hover:text-[#ff7a29] transition-colors">
                 {storeName || 'Minha Loja'}
               </span>
-              <span className="text-[10px] font-black text-[#0094EB] dark:text-[#fd8539] uppercase tracking-wide">
+              <span className="text-[10px] font-black text-[#0091ff] dark:text-[#ff7a29] uppercase tracking-wide">
                 {planName}
               </span>
             </div>
@@ -289,7 +289,7 @@ const isItemActive =
           {/* Tooltip flutuante no modo recolhido */}
           {!isExpanded && (
             <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-4">
-              <div className="bg-[#0094EB] dark:bg-[#fd8539] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+              <div className="bg-[#0091ff] dark:bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
                 Minha Assinatura / Financeiro
               </div>
             </div>
@@ -312,7 +312,7 @@ const isItemActive =
               } catch (_) {}
               window.location.href = '/login';
             }}
-            className="flex w-full items-center gap-2.5 px-2.5 py-2 rounded-xl text-[#64748B] dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500 transition-colors text-sm font-bold overflow-hidden whitespace-nowrap"
+            className="flex w-full items-center gap-2.5 px-2.5 py-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-500 transition-colors text-sm font-bold overflow-hidden whitespace-nowrap"
           >
             <LogOut size={16} className="shrink-0" />
             <span
@@ -327,7 +327,7 @@ const isItemActive =
 
           {!isExpanded && (
             <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
-              <div className="bg-[#0094EB] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+              <div className="bg-[#0091ff] dark:bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 dark:shadow-orange-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
                 Sair do Painel
               </div>
             </div>

@@ -985,7 +985,7 @@ const ProductsPage = () => {
           <button
             type="button"
             onClick={openNewProduct}
-            className="flex items-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer"
+            className="flex items-center gap-2 rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer"
           >
             <Plus size={16} className="!text-white stroke-[2.5]" />
             Novo produto
@@ -994,18 +994,18 @@ const ProductsPage = () => {
           <button
             type="button"
             onClick={() => setShowCategoriesModal(true)}
-            className="flex items-center gap-2 rounded-2xl bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] shadow-sm hover:border-[#0094EB] dark:hover:border-[#ff7a29]/50 transition-all cursor-pointer"
+            className="flex items-center gap-2 rounded-2xl bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] shadow-sm hover:border-[#0091ff] dark:hover:border-[#ff7a29]/50 transition-all cursor-pointer"
           >
-            <Tag size={15} className="text-[#0094EB] dark:text-[#ff7a29]" />
+            <Tag size={15} className="text-[#0091ff] dark:text-[#ff7a29]" />
             Categorias
           </button>
 
           <button
             type="button"
             onClick={() => setShowImportModal(true)}
-            className="flex items-center gap-2 rounded-2xl bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] shadow-sm hover:border-[#0094EB] dark:hover:border-[#ff7a29]/50 transition-all cursor-pointer"
+            className="flex items-center gap-2 rounded-2xl bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] shadow-sm hover:border-[#0091ff] dark:hover:border-[#ff7a29]/50 transition-all cursor-pointer"
           >
-            <Upload size={15} className="text-[#0094EB] dark:text-[#ff7a29]" />
+            <Upload size={15} className="text-[#0091ff] dark:text-[#ff7a29]" />
             Importar produtos
           </button>
         </div>
@@ -1016,7 +1016,7 @@ const ProductsPage = () => {
         <button
           type="button"
           onClick={() => navigate('/produtos')}
-          className="flex items-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 border-[#0094EB] dark:border-[#ff7a29] text-[#0094EB] dark:text-[#ff7a29] transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 border-[#0091ff] dark:border-[#ff7a29] text-[#0091ff] dark:text-[#ff7a29] transition-colors cursor-pointer"
         >
           <Package size={15} />
           Produtos
@@ -1032,7 +1032,7 @@ const ProductsPage = () => {
       </div>
 
       {/* ── CARD PRINCIPAL UNIFICADO (Filtros, Busca e Tabela em um só bloco) ── */}
-      <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] overflow-hidden shadow-sm p-6 sm:p-8 space-y-6">
+      <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl overflow-hidden shadow-sm p-6 sm:p-8 space-y-6">
         
         {/* BARRA INTERNA DE FILTROS E BUSCA (Estilo unificado pílulas soltas) */}
         <div className="flex flex-col lg:flex-row gap-4 justify-between items-center border-b border-slate-100 dark:border-white/5 pb-5">
@@ -1045,7 +1045,7 @@ const ProductsPage = () => {
               placeholder="Buscar por nome do produto..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#0f1220] pl-12 pr-4 py-3.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus:bg-white dark:focus:bg-[#0f1220] transition-all"
+              className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#111524] pl-12 pr-4 py-3.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus:bg-white dark:focus:bg-[#111524] transition-all"
             />
           </div>
 
@@ -1054,7 +1054,7 @@ const ProductsPage = () => {
             <select
               value={filterCategory}
               onChange={e => setFilterCategory(e.target.value)}
-              className="bg-[#F8FAFC] dark:bg-[#0f1220] border border-transparent dark:border-white/5 rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0] outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] cursor-pointer w-full sm:w-auto hover:bg-slate-100 dark:hover:bg-white/5"
+              className="bg-[#F8FAFC] dark:bg-[#111524] border border-transparent dark:border-white/5 rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0] outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] cursor-pointer w-full sm:w-auto hover:bg-slate-100 dark:hover:bg-white/5"
             >
               <option value="all">Todas Categorias</option>
               {activeCategories.map(cat => (
@@ -1065,7 +1065,7 @@ const ProductsPage = () => {
             <select
               value={filterStatus}
               onChange={e => setFilterStatus(e.target.value)}
-              className="bg-[#F8FAFC] dark:bg-[#0f1220] border border-transparent dark:border-white/5 rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0] outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] cursor-pointer w-full sm:w-auto hover:bg-slate-100 dark:hover:bg-white/5"
+              className="bg-[#F8FAFC] dark:bg-[#111524] border border-transparent dark:border-white/5 rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0] outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] cursor-pointer w-full sm:w-auto hover:bg-slate-100 dark:hover:bg-white/5"
             >
               <option value="all">Todos Status</option>
               <option value="active">Ativos</option>
@@ -1075,7 +1075,7 @@ const ProductsPage = () => {
             <select
               value={filterOrigin}
               onChange={e => setFilterOrigin(e.target.value)}
-              className="bg-[#F8FAFC] dark:bg-[#0f1220] border border-transparent dark:border-white/5 rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0] outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] cursor-pointer w-full sm:w-auto hover:bg-slate-100 dark:hover:bg-white/5"
+              className="bg-[#F8FAFC] dark:bg-[#111524] border border-transparent dark:border-white/5 rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0] outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] cursor-pointer w-full sm:w-auto hover:bg-slate-100 dark:hover:bg-white/5"
             >
               <option value="all">Todas Origens</option>
               <option value="manual">Manual</option>
@@ -1102,13 +1102,13 @@ const ProductsPage = () => {
         )}
 
         {/* ── BARRA INTERNA DE SELEÇÃO, QUANTIDADE E CONTROLE DE PAGINAÇÃO ── */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#F8FAFC] dark:bg-[#0f1220]/40 rounded-2xl p-4 border border-slate-100 dark:border-white/5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#F8FAFC] dark:bg-[#111524]/40 rounded-2xl p-4 border border-slate-100 dark:border-white/5">
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0]">
               {filteredProducts.length} {filteredProducts.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
             </p>
             {selectedIds.size > 0 && (
-              <span className="rounded-full bg-[#0094EB]/10 dark:bg-[#ff7a29]/15 border border-[#0094EB]/30 dark:border-[#ff7a29]/30 px-3 py-0.5 text-xs font-black text-[#0094EB] dark:text-[#ff7a29]">
+              <span className="rounded-full bg-[#0091ff]/10 dark:bg-[#ff7a29]/15 border border-[#0091ff]/30 dark:border-[#ff7a29]/30 px-3 py-0.5 text-xs font-black text-[#0091ff] dark:text-[#ff7a29]">
                 {selectedIds.size} selecionados
               </span>
             )}
@@ -1116,7 +1116,7 @@ const ProductsPage = () => {
               <button
                 type="button"
                 onClick={selectAllFiltered}
-                className="text-xs font-black text-[#0094EB] dark:text-[#ff7a29] underline hover:opacity-80 transition-all cursor-pointer"
+                className="text-xs font-black text-[#0091ff] dark:text-[#ff7a29] underline hover:opacity-80 transition-all cursor-pointer"
               >
                 Selecionar todos os {filteredProducts.length}
               </button>
@@ -1143,7 +1143,7 @@ const ProductsPage = () => {
                   setPageSize(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-[#0f1220] px-3 py-1.5 text-xs font-black text-slate-700 dark:text-white outline-none focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
+                className="rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111524] px-3 py-1.5 text-xs font-black text-slate-700 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
               >
                 <option value={10}>10</option>
                 <option value={50}>50</option>
@@ -1157,7 +1157,7 @@ const ProductsPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full table-fixed text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#0f1220]/50 text-[10px] font-black uppercase text-slate-400 dark:text-[#8a90a0] tracking-widest">
+              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#111524]/50 text-[10px] font-black uppercase text-slate-400 dark:text-[#8a90a0] tracking-widest">
                 <th className="px-4 py-4 text-center w-[48px] rounded-l-2xl">
                   <input
                     type="checkbox"
@@ -1250,7 +1250,7 @@ const ProductsPage = () => {
                   className={cn(
                     'transition-colors',
                     selectedIds.has(product.id)
-                      ? 'bg-[#0094EB]/10 dark:bg-orange-500/15'
+                      ? 'bg-[#0091ff]/10 dark:bg-orange-500/15'
                       : 'hover:bg-slate-50/60 dark:hover:bg-white/[0.02]'
                   )}
                 >
@@ -1259,12 +1259,12 @@ const ProductsPage = () => {
                       type="checkbox"
                       checked={selectedIds.has(product.id)}
                       onChange={() => toggleSelectOne(product.id)}
-                      className="h-4 w-4 cursor-pointer rounded border-slate-300 dark:border-slate-600 text-[#0094EB] dark:text-[#ff7a29] focus:ring-[#0094EB]"
+                      className="h-4 w-4 cursor-pointer rounded border-slate-300 dark:border-slate-600 text-[#0091ff] dark:text-[#ff7a29] focus:ring-[#0091ff]"
                     />
                   </td>
 
                   <td className="px-4 py-3.5 align-middle">
-                    <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                    <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-[#111524] border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
                       {product.image_url ? (
                         <img
                           src={product.image_url}
@@ -1294,15 +1294,15 @@ const ProductsPage = () => {
                   </td>
 
                   <td className="px-4 py-3.5 text-center">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#0f1220] text-slate-700 dark:text-[#c0c5d4] text-[11px] font-bold border border-slate-200/60 dark:border-white/5 max-w-full truncate">
-                      <Tag size={11} className="text-[#0094EB] dark:text-[#ff7a29] shrink-0" />
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-[#111524] text-slate-700 dark:text-[#c0c5d4] text-[11px] font-bold border border-slate-200/60 dark:border-white/5 max-w-full truncate">
+                      <Tag size={11} className="text-[#0091ff] dark:text-[#ff7a29] shrink-0" />
                       <span className="truncate">{(product as any).category || 'Sem categoria'}</span>
                     </span>
                   </td>
                   
                   <td className="px-4 py-3.5 text-center">
                     {(product as any).video ? (
-                      <span className="inline-flex max-w-full items-center gap-1.5 text-[#0094EB] dark:text-[#ff7a29] text-xs font-bold truncate">
+                      <span className="inline-flex max-w-full items-center gap-1.5 text-[#0091ff] dark:text-[#ff7a29] text-xs font-bold truncate">
                         {(product as any).video}
                       </span>
                     ) : (
@@ -1342,7 +1342,7 @@ const ProductsPage = () => {
                         type="button"
                         onClick={() => handleToggleStatus(product)}
                         className={cn(
-                          'inline-flex h-7 w-[100px] items-center justify-center rounded-lg px-2.5 text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all',
+                          'inline-flex h-7 w-[100px] items-center justify-center rounded-xl px-2.5 text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all',
                           product.active
                             ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/40 hover:bg-emerald-100'
                             : 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/40 hover:bg-rose-100'
@@ -1358,7 +1358,7 @@ const ProductsPage = () => {
                       <button
                         type="button"
                         onClick={() => openEditProduct(product)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-[#0094EB] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+                        className="p-1.5 rounded-xl text-slate-400 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
                         title="Editar produto"
                       >
                         <Edit3 size={15} />
@@ -1367,7 +1367,7 @@ const ProductsPage = () => {
                       <button
                         type="button"
                         onClick={() => handleDeleteClick(product)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
+                        className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
                         title="Excluir produto"
                       >
                         <Trash2 size={15} />
@@ -1408,7 +1408,7 @@ const ProductsPage = () => {
                 type="button"
                 disabled={safePage <= 1}
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                className="rounded-xl bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 px-3 py-1.5 text-xs font-black text-slate-600 dark:text-slate-300 transition hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                className="rounded-xl bg-slate-100 dark:bg-[#111524] border border-slate-200 dark:border-white/5 px-3 py-1.5 text-xs font-black text-slate-600 dark:text-slate-300 transition hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               >
                 Anterior
               </button>
@@ -1421,8 +1421,8 @@ const ProductsPage = () => {
                   className={cn(
                     'rounded-xl px-3 py-1.5 text-xs font-black transition cursor-pointer',
                     page === safePage
-                      ? 'bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-sm'
-                      : 'bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10'
+                      ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-sm'
+                      : 'bg-slate-100 dark:bg-[#111524] border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10'
                   )}
                 >
                   {page}
@@ -1433,7 +1433,7 @@ const ProductsPage = () => {
                 type="button"
                 disabled={safePage >= totalPages}
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                className="rounded-xl bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 px-3 py-1.5 text-xs font-black text-slate-600 dark:text-slate-300 transition hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                className="rounded-xl bg-slate-100 dark:bg-[#111524] border border-slate-200 dark:border-white/5 px-3 py-1.5 text-xs font-black text-slate-600 dark:text-slate-300 transition hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               >
                 Próximo
               </button>
@@ -1445,15 +1445,15 @@ const ProductsPage = () => {
       {/* Modal de Produto (Novo/Editar) */}
       {showProductModal && (
         <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-[2rem] bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-200 p-6">
-              <h2 className="text-xl font-black text-slate-900">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#ff7a29]/20 p-6">
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">
                 {editingProduct ? 'Editar produto' : 'Novo produto'}
               </h2>
               <button
                 type="button"
                 onClick={() => setShowProductModal(false)}
-                className="rounded-xl bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200 cursor-pointer"
+                className="rounded-xl bg-slate-100 dark:bg-[#1a1f35] p-2 text-slate-500 dark:text-slate-400 transition hover:bg-slate-200 dark:hover:bg-white/5 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1462,9 +1462,9 @@ const ProductsPage = () => {
             <form onSubmit={handleSaveProduct} className="p-6 space-y-5">
               {/* Imagem */}
               <div>
-                <label className="text-sm font-black text-slate-700">Imagem do produto</label>
+                <label className="text-sm font-black text-slate-700 dark:text-slate-300">Imagem do produto</label>
                 <div className="mt-2 flex items-center gap-4">
-                  <div className="h-20 w-20 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                  <div className="h-20 w-20 rounded-xl bg-slate-100 dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 flex items-center justify-center overflow-hidden shrink-0">
                     {formData.image_url ? (
                       <img src={formData.image_url} alt="Preview" className="h-full w-full object-cover" />
                     ) : (
@@ -1476,7 +1476,7 @@ const ProductsPage = () => {
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
                       onChange={handleImageUpload}
-                      className="text-xs font-medium text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-[#0094EB] file:px-3 file:py-1.5 file:text-xs file:font-black file:text-white file:transition file:hover:bg-[#0E4787] file:cursor-pointer"
+                      className="text-xs font-medium text-slate-500 dark:text-slate-400 file:mr-3 file:rounded-xl file:border-0 file:bg-[#0091ff] file:px-3 file:py-1.5 file:text-xs file:font-black file:text-white file:transition file:hover:bg-[#0070f3] file:cursor-pointer"
                     />
                     <p className="mt-1 text-[10px] text-slate-400">JPG, PNG ou WEBP. Máx. 350 KB.</p>
                     {formData.image_error && (
@@ -1488,23 +1488,23 @@ const ProductsPage = () => {
 
               {/* Nome */}
               <div>
-                <label className="text-sm font-black text-slate-700">Nome do produto *</label>
+                <label className="text-sm font-black text-slate-700 dark:text-slate-300">Nome do produto *</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff]"
                   placeholder="Ex: Vestido Floral"
                 />
               </div>
 
               {/* Categoria */}
               <div>
-                <label className="text-sm font-black text-slate-700">Categoria *</label>
+                <label className="text-sm font-black text-slate-700 dark:text-slate-300">Categoria *</label>
                 <select
                   value={formData.category}
                   onChange={e => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB] cursor-pointer"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] cursor-pointer"
                 >
                   <option value="">Selecione uma categoria</option>
                   {activeCategories.map(cat => (
@@ -1515,33 +1515,33 @@ const ProductsPage = () => {
 
               {/* Preço */}
               <div>
-                <label className="text-sm font-black text-slate-700">Preço (R$) *</label>
+                <label className="text-sm font-black text-slate-700 dark:text-slate-300">Preço (R$) *</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   value={formData.price}
                   onChange={e => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff]"
                   placeholder="0,00"
                 />
               </div>
 
               {/* URL do produto */}
               <div>
-                <label className="text-sm font-black text-slate-700">Link do produto</label>
+                <label className="text-sm font-black text-slate-700 dark:text-slate-300">Link do produto</label>
                 <input
                   type="url"
                   value={formData.product_url}
                   onChange={e => setFormData(prev => ({ ...prev, product_url: e.target.value }))}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff]"
                   placeholder="https://sualoja.com/produto"
                 />
               </div>
 
               {/* Status */}
               <div className="flex items-center gap-3">
-                <label className="text-sm font-black text-slate-700">Produto ativo?</label>
+                <label className="text-sm font-black text-slate-700 dark:text-slate-300">Produto ativo?</label>
                 <button
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, active: !prev.active }))}
@@ -1557,24 +1557,24 @@ const ProductsPage = () => {
                     )}
                   />
                 </button>
-                <span className="text-xs font-bold text-slate-500">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
                   {formData.active ? 'Ativo' : 'Desativado'}
                 </span>
               </div>
 
               {/* Botões */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-[#ff7a29]/20">
                 <button
                   type="button"
                   onClick={() => setShowProductModal(false)}
-                  className="rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-600 transition hover:bg-slate-200 cursor-pointer"
+                  className="rounded-xl bg-slate-100 dark:bg-[#1a1f35] px-5 py-2.5 text-sm font-black text-slate-600 dark:text-slate-300 transition hover:bg-slate-200 cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#0094EB] px-5 py-2.5 text-sm font-black text-white transition hover:bg-[#0081cc] disabled:opacity-60 cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#0091ff] px-5 py-2.5 text-sm font-black text-white transition hover:bg-[#0070f3] disabled:opacity-60 cursor-pointer"
                 >
                   {isSaving ? (
                     <>
@@ -1597,13 +1597,13 @@ const ProductsPage = () => {
       {/* Modal de Categorias */}
       {showCategoriesModal && (
         <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[2rem] bg-white shadow-2xl max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-200 p-6">
-              <h2 className="text-xl font-black text-slate-900">Categorias</h2>
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#ff7a29]/20 p-6">
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">Categorias</h2>
               <button
                 type="button"
                 onClick={() => setShowCategoriesModal(false)}
-                className="rounded-xl bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200 cursor-pointer"
+                className="rounded-xl bg-slate-100 dark:bg-[#1a1f35] p-2 text-slate-500 dark:text-slate-400 transition hover:bg-slate-200 dark:hover:bg-white/5 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1618,12 +1618,12 @@ const ProductsPage = () => {
                   onChange={e => setCatNewName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleCatAdd()}
                   placeholder="Nova categoria..."
-                  className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+                  className="flex-1 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff]"
                 />
                 <button
                   type="button"
                   onClick={handleCatAdd}
-                  className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#0081cc] cursor-pointer"
+                  className="rounded-xl bg-[#0091ff] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#0070f3] cursor-pointer"
                 >
                   <Plus size={16} />
                 </button>
@@ -1634,7 +1634,7 @@ const ProductsPage = () => {
                 {categories.map(cat => (
                   <div
                     key={cat.id}
-                    className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+                    className="flex items-center justify-between rounded-xl border border-slate-100 dark:border-[#ff7a29]/20 bg-slate-50 dark:bg-[#111524] px-4 py-3"
                   >
                     {catEditingId === cat.id ? (
                       <input
@@ -1645,11 +1645,11 @@ const ProductsPage = () => {
                           if (e.key === 'Enter') handleCatEditSave(cat.id);
                           if (e.key === 'Escape') setCatEditingId(null);
                         }}
-                        className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-bold outline-none focus:border-[#0094EB]"
+                        className="flex-1 rounded-2xl border border-slate-200 px-3 py-1.5 text-sm font-bold outline-none focus:border-[#0091ff]"
                         autoFocus
                       />
                     ) : (
-                      <span className="text-sm font-bold text-slate-700">{cat.name}</span>
+                      <span className="text-sm font-bold text-slate-700 dark:text-white">{cat.name}</span>
                     )}
 
                     <div className="flex items-center gap-1">
@@ -1657,7 +1657,7 @@ const ProductsPage = () => {
                         <button
                           type="button"
                           onClick={() => handleCatEditSave(cat.id)}
-                          className="rounded-lg p-1.5 text-emerald-600 transition hover:bg-emerald-50 cursor-pointer"
+                          className="rounded-xl p-1.5 text-emerald-600 transition hover:bg-emerald-50 cursor-pointer"
                         >
                           <Save size={14} />
                         </button>
@@ -1665,7 +1665,7 @@ const ProductsPage = () => {
                         <button
                           type="button"
                           onClick={() => handleCatEditStart(cat)}
-                          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 cursor-pointer"
+                          className="rounded-xl p-1.5 text-slate-400 dark:text-slate-500 transition hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer"
                         >
                           <Edit3 size={14} />
                         </button>
@@ -1673,7 +1673,7 @@ const ProductsPage = () => {
                       <button
                         type="button"
                         onClick={() => handleCatDelete(cat.id)}
-                        className="rounded-lg p-1.5 text-rose-400 transition hover:bg-rose-50 cursor-pointer"
+                        className="rounded-xl p-1.5 text-rose-400 transition hover:bg-rose-50 cursor-pointer"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -1690,7 +1690,7 @@ const ProductsPage = () => {
                 <button
                   type="button"
                   onClick={handleCatSaveAll}
-                  className="rounded-xl bg-[#0094EB] px-5 py-2.5 text-sm font-black text-white transition hover:bg-[#0081cc] cursor-pointer"
+                  className="rounded-xl bg-[#0091ff] px-5 py-2.5 text-sm font-black text-white transition hover:bg-[#0070f3] cursor-pointer"
                 >
                   Concluído
                 </button>
@@ -1703,9 +1703,9 @@ const ProductsPage = () => {
       {/* Modal de Importação */}
       {showImportModal && (
         <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-5xl rounded-[2rem] bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-200 p-6">
-              <h2 className="text-xl font-black text-slate-900">Importar produtos</h2>
+          <div className="w-full max-w-5xl rounded-2xl bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#ff7a29]/20 p-6">
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">Importar produtos</h2>
               <button
                 type="button"
                 onClick={() => {
@@ -1713,22 +1713,22 @@ const ProductsPage = () => {
                   setImportedXmlProducts([]);
                   setSelectedXmlKeys(new Set());
                 }}
-                className="rounded-xl bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200 cursor-pointer"
+                className="rounded-xl bg-slate-100 dark:bg-[#1a1f35] p-2 text-slate-500 dark:text-slate-400 transition hover:bg-slate-200 dark:hover:bg-white/5 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-slate-200">
+            <div className="flex border-b border-slate-200 dark:border-[#ff7a29]/20">
               <button
                 type="button"
                 onClick={() => setImportTab('xml')}
                 className={cn(
                   'flex-1 py-3 text-sm font-black transition cursor-pointer',
                   importTab === 'xml'
-                    ? 'border-b-2 border-[#0094EB] text-[#0094EB]'
-                    : 'text-slate-400 hover:text-slate-600'
+                    ? 'border-b-2 border-[#0091ff] text-[#0091ff]'
+                    : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
                 )}
               >
                 <FileText size={14} className="inline mr-1.5" />
@@ -1740,8 +1740,8 @@ const ProductsPage = () => {
                 className={cn(
                   'flex-1 py-3 text-sm font-black transition cursor-pointer',
                   importTab === 'sheet'
-                    ? 'border-b-2 border-[#0094EB] text-[#0094EB]'
-                    : 'text-slate-400 hover:text-slate-600'
+                    ? 'border-b-2 border-[#0091ff] text-[#0091ff]'
+                    : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
                 )}
               >
                 <Upload size={14} className="inline mr-1.5" />
@@ -1756,7 +1756,7 @@ const ProductsPage = () => {
                   <>
                     {/* Input: URL */}
                     <div>
-                      <label className="text-sm font-black text-slate-700">URL do feed XML</label>
+                      <label className="text-sm font-black text-slate-700 dark:text-slate-300">URL do feed XML</label>
                       <div className="mt-2 flex gap-2">
                         <div className="relative flex-1">
                           <Link size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -1765,7 +1765,7 @@ const ProductsPage = () => {
                             value={xmlUrl}
                             onChange={e => setXmlUrl(e.target.value)}
                             placeholder="https://sualoja.com/feed.xml"
-                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-100 dark:border-[#ff7a29]/30 rounded-2xl text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff]"
                           />
                         </div>
                       </div>
@@ -1773,18 +1773,18 @@ const ProductsPage = () => {
 
                     {/* Ou arquivo */}
                     <div className="flex items-center gap-4">
-                      <div className="flex-1 border-t border-slate-200" />
+                      <div className="flex-1 border-t border-slate-200 dark:border-[#ff7a29]/20" />
                       <span className="text-xs font-black text-slate-400 uppercase">ou</span>
-                      <div className="flex-1 border-t border-slate-200" />
+                      <div className="flex-1 border-t border-slate-200 dark:border-[#ff7a29]/20" />
                     </div>
 
                     <div>
-                      <label className="text-sm font-black text-slate-700">Arquivo XML</label>
+                      <label className="text-sm font-black text-slate-700 dark:text-slate-300">Arquivo XML</label>
                       <input
                         type="file"
                         accept=".xml"
                         onChange={e => setXmlFile(e.target.files?.[0] || null)}
-                        className="mt-2 w-full text-xs font-medium text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-[#0094EB] file:px-3 file:py-1.5 file:text-xs file:font-black file:text-white file:transition file:hover:bg-[#0E4787] file:cursor-pointer"
+                        className="mt-2 w-full text-xs font-medium text-slate-500 dark:text-slate-400 file:mr-3 file:rounded-xl file:border-0 file:bg-[#0091ff] file:px-3 file:py-1.5 file:text-xs file:font-black file:text-white file:transition file:hover:bg-[#0070f3] file:cursor-pointer"
                       />
                     </div>
 
@@ -1793,7 +1793,7 @@ const ProductsPage = () => {
                       type="button"
                       onClick={readXmlFeed}
                       disabled={isImportingXml}
-                      className="w-full rounded-xl bg-[#0094EB] py-3 text-sm font-black text-white transition hover:bg-[#0E4787] disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full rounded-xl bg-[#0091ff] py-3 text-sm font-black text-white transition hover:bg-[#0070f3] disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       {isImportingXml ? (
                         <>
@@ -1811,11 +1811,11 @@ const ProductsPage = () => {
                     <div className="space-y-4">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                          <p className="text-sm font-black text-slate-900">
+                          <p className="text-sm font-black text-slate-900 dark:text-white">
                             {totalXmlProducts} produtos encontrados
                           </p>
                           {selectedXmlCount > 0 && (
-                            <p className="text-xs font-bold text-[#0094EB] mt-0.5">
+                            <p className="text-xs font-bold text-[#0091ff] mt-0.5">
                               {selectedXmlCount} selecionados
                             </p>
                           )}
@@ -1831,7 +1831,7 @@ const ProductsPage = () => {
                               setXmlPreviewSearch(e.target.value);
                               setXmlPreviewPage(1);
                             }}
-                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold outline-none focus:border-[#0094EB] w-40 dark:bg-[#0f1220] dark:border-white/5 dark:text-white"
+                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold outline-none focus:border-[#0091ff] w-40 dark:bg-[#111524] dark:border-white/5 dark:text-white"
                           />
                           <select
                             value={xmlPreviewCategory}
@@ -1839,7 +1839,7 @@ const ProductsPage = () => {
                               setXmlPreviewCategory(e.target.value);
                               setXmlPreviewPage(1);
                             }}
-                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold outline-none focus:border-[#0094EB] dark:bg-[#0f1220] dark:border-white/5 dark:text-[#e8ecf4] cursor-pointer"
+                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold outline-none focus:border-[#0091ff] dark:bg-[#111524] dark:border-white/5 dark:text-[#e8ecf4] cursor-pointer"
                           >
                             <option value="all">Todas categorias</option>
                             {xmlPreviewCategories.map(cat => (
@@ -1854,7 +1854,7 @@ const ProductsPage = () => {
                               setXmlPreviewPageSize(Number(e.target.value));
                               setXmlPreviewPage(1);
                             }}
-                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black outline-none focus:border-[#0094EB] dark:bg-[#0f1220] dark:border-white/5 dark:text-[#e8ecf4] cursor-pointer"
+                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black outline-none focus:border-[#0091ff] dark:bg-[#111524] dark:border-white/5 dark:text-[#e8ecf4] cursor-pointer"
                           >
                             <option value={10}>10 por pág.</option>
                             <option value={50}>50 por pág.</option>
@@ -1865,69 +1865,69 @@ const ProductsPage = () => {
 
                       {/* Selecionar todos */}
                       <div className="flex items-center gap-3">
-                        <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
+                        <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={allVisibleSelected}
                             onChange={e => toggleSelectAllVisibleXml(e.target.checked)}
-                            className="h-3.5 w-3.5 rounded border-slate-300 text-[#0094EB] focus:ring-[#0094EB]"
+                            className="h-3.5 w-3.5 rounded border-slate-300 text-[#0091ff] focus:ring-[#0091ff]"
                           />
                           Selecionar visíveis
                         </label>
                         <button
                           type="button"
                           onClick={() => toggleSelectAllXml(true)}
-                          className="text-xs font-bold text-[#0094EB] underline hover:text-[#0E4787] cursor-pointer"
+                          className="text-xs font-bold text-[#0091ff] underline hover:text-[#0070f3] cursor-pointer"
                         >
                           Selecionar todos ({totalXmlProducts})
                         </button>
                         <button
                           type="button"
                           onClick={() => toggleSelectAllXml(false)}
-                          className="text-xs font-bold text-slate-400 underline hover:text-slate-600 cursor-pointer"
+                          className="text-xs font-bold text-slate-400 dark:text-slate-500 underline hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
                         >
                           Limpar seleção
                         </button>
                       </div>
 
                       {/* Tabela preview */}
-                      <div className="border border-slate-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
+                      <div className="border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl overflow-hidden max-h-64 overflow-y-auto">
                         <table className="w-full text-left text-xs">
-                          <thead className="bg-slate-50 sticky top-0 z-10">
+                          <thead className="bg-slate-50 dark:bg-[#111524] sticky top-0 z-10">
                             <tr>
-                              <th className="px-3 py-2 w-8 bg-slate-50"></th>
-                              <th className="px-3 py-2 font-black text-slate-500 bg-slate-50">Produto</th>
-                              <th className="px-3 py-2 font-black text-slate-500 bg-slate-50">SKU</th>
-                              <th className="px-3 py-2 font-black text-slate-500 bg-slate-50">Preço</th>
-                              <th className="px-3 py-2 font-black text-slate-500 bg-slate-50">Categoria</th>
+                              <th className="px-3 py-2 w-8 bg-slate-50 dark:bg-[#111524]"></th>
+                              <th className="px-3 py-2 font-black text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#111524]">Produto</th>
+                              <th className="px-3 py-2 font-black text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#111524]">SKU</th>
+                              <th className="px-3 py-2 font-black text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#111524]">Preço</th>
+                              <th className="px-3 py-2 font-black text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#111524]">Categoria</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
                             {xmlPreviewPageItems.map((product, idx) => {
                               const key = getXmlProductKey(product);
                               return (
-                                <tr key={key} className="hover:bg-slate-50/50">
+                                <tr key={key} className="hover:bg-slate-50/50 dark:hover:bg-white/5">
                                   <td className="px-3 py-2">
                                     <input
                                       type="checkbox"
                                       checked={selectedXmlKeys.has(key)}
                                       onChange={e => setSelectedXmlProduct(product, e.target.checked)}
-                                      className="h-3.5 w-3.5 rounded border-slate-300 text-[#0094EB] focus:ring-[#0094EB]"
+                                      className="h-3.5 w-3.5 rounded border-slate-300 text-[#0091ff] focus:ring-[#0091ff]"
                                     />
                                   </td>
-                                  <td className="px-3 py-2 font-bold text-slate-700 truncate max-w-[200px]">
+                                  <td className="px-3 py-2 font-bold text-slate-700 dark:text-white truncate max-w-[200px]">
                                     {product.name}
                                   </td>
-                                  <td className="px-3 py-2 text-slate-500 font-medium">
+                                  <td className="px-3 py-2 text-slate-500 dark:text-slate-400 font-medium">
                                     {product.sku || '-'}
                                   </td>
-                                  <td className="px-3 py-2 font-bold text-slate-700">
+                                  <td className="px-3 py-2 font-bold text-slate-700 dark:text-slate-200">
                                     {Number(product.price || 0).toLocaleString('pt-BR', {
                                       style: 'currency',
                                       currency: 'BRL',
                                     })}
                                   </td>
-                                  <td className="px-3 py-2 text-slate-500">
+                                  <td className="px-3 py-2 text-slate-500 dark:text-slate-400">
                                     {formatXmlCategory(product.category || 'Sem categoria')}
                                   </td>
                                 </tr>
@@ -1944,7 +1944,7 @@ const ProductsPage = () => {
                             type="button"
                             disabled={xmlPreviewPage <= 1}
                             onClick={() => setXmlPreviewPage(p => p - 1)}
-                            className="text-xs font-bold text-[#0094EB] disabled:opacity-30 cursor-pointer"
+                            className="text-xs font-bold text-[#0091ff] disabled:opacity-30 cursor-pointer"
                           >
                             ← Anterior
                           </button>
@@ -1955,7 +1955,7 @@ const ProductsPage = () => {
                             type="button"
                             disabled={xmlPreviewPage >= totalXmlPages}
                             onClick={() => setXmlPreviewPage(p => p + 1)}
-                            className="text-xs font-bold text-[#0094EB] disabled:opacity-30 cursor-pointer"
+                            className="text-xs font-bold text-[#0091ff] disabled:opacity-30 cursor-pointer"
                           >
                             Próximo →
                           </button>
@@ -1963,14 +1963,14 @@ const ProductsPage = () => {
                       )}
 
                       {/* Botões de ação */}
-                      <div className="flex gap-3 pt-4 border-t border-slate-100">
+                      <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-[#ff7a29]/20">
                         <button
                           type="button"
                           onClick={() => {
                             setImportedXmlProducts([]);
                             setSelectedXmlKeys(new Set());
                           }}
-                          className="flex-1 rounded-xl bg-slate-100 py-2.5 text-sm font-black text-slate-600 transition hover:bg-slate-200 cursor-pointer"
+                          className="flex-1 rounded-xl bg-slate-100 dark:bg-[#1a1f35] py-2.5 text-sm font-black text-slate-600 dark:text-slate-300 transition hover:bg-slate-200 cursor-pointer"
                         >
                           Voltar
                         </button>
@@ -1978,7 +1978,7 @@ const ProductsPage = () => {
                           type="button"
                           onClick={handleXmlImportSelected}
                           disabled={isImportingXml || selectedXmlCount === 0}
-                          className="flex-1 rounded-xl bg-[#0094EB] py-2.5 text-sm font-black text-white transition hover:bg-[#0E4787] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                          className="flex-1 rounded-xl bg-[#0091ff] py-2.5 text-sm font-black text-white transition hover:bg-[#0070f3] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                         >
                           {isImportingXml ? (
                             <>
@@ -2000,24 +2000,24 @@ const ProductsPage = () => {
             {importTab === 'sheet' && (
               <div className="p-6 space-y-6">
                 <div>
-                  <label className="text-sm font-black text-slate-700">Arquivo CSV/Planilha</label>
+                  <label className="text-sm font-black text-slate-700 dark:text-slate-300">Arquivo CSV/Planilha</label>
                   <input
                     type="file"
                     accept=".csv,.xlsx,.xls"
                     onChange={e => setSpreadsheetFile(e.target.files?.[0] || null)}
-                    className="mt-2 w-full text-xs font-medium text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-[#0094EB] file:px-3 file:py-1.5 file:text-xs file:font-black file:text-white file:transition file:hover:bg-[#0E4787] file:cursor-pointer"
+                    className="mt-2 w-full text-xs font-medium text-slate-500 dark:text-slate-400 file:mr-3 file:rounded-xl file:border-0 file:bg-[#0091ff] file:px-3 file:py-1.5 file:text-xs file:font-black file:text-white file:transition file:hover:bg-[#0070f3] file:cursor-pointer"
                   />
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-black text-slate-700">Baixar modelo</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                <div className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/20 bg-slate-50 dark:bg-[#111524] p-4">
+                  <p className="text-sm font-black text-slate-700 dark:text-white">Baixar modelo</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     Use o modelo para preencher os dados corretamente.
                   </p>
                   <button
                     type="button"
                     onClick={downloadTemplate}
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-black text-[#0094EB] border border-slate-200 transition hover:bg-slate-100 cursor-pointer"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-white dark:bg-[#1a1f35] px-3 py-1.5 text-xs font-black text-[#0091ff] border border-slate-200 transition hover:bg-slate-100 cursor-pointer"
                   >
                     <Upload size={12} />
                     Baixar modelo CSV
@@ -2028,7 +2028,7 @@ const ProductsPage = () => {
                   type="button"
                   onClick={handleSpreadsheetImport}
                   disabled={!spreadsheetFile}
-                  className="w-full rounded-xl bg-[#0094EB] py-3 text-sm font-black text-white transition hover:bg-[#0081cc] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full rounded-xl bg-[#0091ff] py-3 text-sm font-black text-white transition hover:bg-[#0070f3] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Importar planilha
                 </button>

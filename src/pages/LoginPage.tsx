@@ -36,29 +36,29 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F7FAFC] p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-md rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200 space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#F7FAFC] dark:bg-[#111524] p-4 transition-colors duration-300">
+      <form onSubmit={handleSubmit} className="w-full max-w-md rounded-2xl bg-white dark:bg-[#1a1f35] p-8 shadow-xs border border-slate-200 dark:border-[#ff7a29]/30 space-y-4 transition-all duration-300 hover:shadow-md">
         <div className="flex justify-center pb-2">
           <img src="/assets/vidlytics-logo-mark.png" alt="Vidlytics" className="h-36 w-auto" />
 
         </div>
-        <h1 className="text-2xl font-black text-slate-900">Entrar</h1>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Entrar</h1>
 
-        <input className="w-full rounded-xl border border-slate-200 px-4 py-3" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input className="w-full rounded-xl border border-slate-200 px-4 py-3" placeholder="Senha" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        {error && <p className="text-sm font-bold text-rose-600">{error}</p>}
-        <button disabled={loading || googleLoading} className="w-full rounded-xl bg-[#0094EB] py-3 font-black text-white hover:brightness-95 transition-all disabled:opacity-50">{loading ? 'Entrando...' : 'Entrar'}</button>
+        <input className="w-full rounded-2xl border border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 focus:ring-[#0091ff]/30 focus:border-[#0091ff] dark:border-[#ff7a29]/30 dark:bg-[#111524] dark:text-white dark:placeholder:text-slate-500 dark:focus:ring-[#ff7a29]/30 dark:focus:border-[#ff7a29] px-4 py-3 outline-none transition-colors" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="w-full rounded-2xl border border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 focus:ring-[#0091ff]/30 focus:border-[#0091ff] dark:border-[#ff7a29]/30 dark:bg-[#111524] dark:text-white dark:placeholder:text-slate-500 dark:focus:ring-[#ff7a29]/30 dark:focus:border-[#ff7a29] px-4 py-3 outline-none transition-colors" placeholder="Senha" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        {error && <p className="text-sm font-bold text-rose-600 dark:text-rose-400">{error}</p>}
+        <button disabled={loading || googleLoading} className="w-full rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] py-3 font-black text-white transition-all disabled:opacity-50 shadow-xs hover:scale-[1.01]">{loading ? 'Entrando...' : 'Entrar'}</button>
 
         <div className="relative flex items-center justify-center py-2">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
-          <span className="relative bg-white px-3 text-xs font-bold text-slate-400 uppercase tracking-wider">ou</span>
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200 dark:border-[#ff7a29]/20"></div></div>
+          <span className="relative bg-white dark:bg-[#1a1f35] px-3 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ou</span>
         </div>
 
         <button
           type="button"
           disabled={loading || googleLoading}
           onClick={handleGoogleSignIn}
-          className="w-full rounded-xl border border-slate-200 bg-white py-3 font-bold text-slate-700 hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm disabled:opacity-50"
+          className="w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#111524] py-3 font-bold text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-[#1a1f35] hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all flex items-center justify-center gap-3 shadow-xs disabled:opacity-50"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -69,7 +69,7 @@ const LoginPage = () => {
           {googleLoading ? 'Conectando...' : 'Entrar com Google'}
         </button>
 
-        <button type="button" onClick={() => navigate('/register')} className="w-full text-sm font-bold text-[#0094EB] pt-2">Criar conta</button>
+        <button type="button" onClick={() => navigate('/register')} className="w-full text-sm font-black text-[#0091ff] dark:text-[#ff7a29] hover:underline transition-all pt-2">Criar conta</button>
       </form>
     </div>
   );

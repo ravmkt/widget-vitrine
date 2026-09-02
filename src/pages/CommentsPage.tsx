@@ -598,9 +598,9 @@ return (
 {/* ── MÓDULOS DE CONFIGURAÇÃO DE MODERAÇÃO E FILTROS ── */}
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         {/* Card: Moderação de Comentários (Dual-Theme) */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 shadow-sm flex flex-col justify-between space-y-4">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 shadow-sm flex flex-col justify-between space-y-4">
           <div className="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-3">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
               <ShieldCheck size={18} className="!text-white stroke-[2.5]" />
             </div>
             <div>
@@ -613,7 +613,7 @@ return (
             </div>
           </div>
 
-<div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/70 border border-slate-100 dark:border-white/5">
+<div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#111524]/70 border border-slate-100 dark:border-white/5">
             <div>
               <span className="text-xs font-black text-slate-800 dark:text-white block">
                 {autoApprove ? "Aprovação automática ativada" : "Aprovação automática desativada"}
@@ -632,7 +632,7 @@ return (
               className={cn(
                 "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-300 ease-in-out focus:outline-none disabled:opacity-50",
                 autoApprove 
-                  ? "bg-[#0094EB] dark:bg-[#ff7a29] shadow-sm shadow-blue-500/30 dark:shadow-orange-500/30" 
+                  ? "bg-[#0091ff] dark:bg-[#ff7a29] shadow-sm shadow-blue-500/30 dark:shadow-orange-500/30" 
                   : "bg-slate-300 dark:bg-slate-700"
               )}
             >
@@ -647,14 +647,14 @@ return (
         </div>
 
         {/* Card: Barra de Pesquisa e Filtros (Dual-Theme com Foco Azul/Laranja) */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 shadow-sm lg:col-span-2 flex flex-col justify-between space-y-4">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 shadow-sm lg:col-span-2 flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
             <div className="flex items-center gap-2.5">
               <span className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">
                 Filtros & Busca
               </span>
             </div>
-            <span className="text-xs font-black uppercase tracking-widest text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-0.5 rounded-full border border-blue-100 dark:border-[#ff7a29]/20">
+            <span className="text-xs font-black uppercase tracking-widest text-[#0091ff] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-0.5 rounded-full border border-blue-100 dark:border-[#ff7a29]/20">
               {filteredComments.length} {filteredComments.length === 1 ? 'Comentário' : 'Comentários'}
             </span>
           </div>
@@ -667,14 +667,14 @@ return (
                 placeholder="Pesquisar autor ou texto..."
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
+                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
               />
             </div>
 
             <select
               value={filterStatus}
               onChange={(event) => setFilterStatus(event.target.value)}
-              className="bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29]"
+              className="bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
             >
               <option value="all">Todos os Status</option>
               <option value="Pendente">Pendente</option>
@@ -685,7 +685,7 @@ return (
             <select
               value={filterVideo}
               onChange={(event) => setFilterVideo(event.target.value)}
-              className="bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] truncate"
+              className="bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#e8ecf4] outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] truncate"
             >
               <option value="all">Todos os Vídeos</option>
               {videos.map((video) => (
@@ -699,11 +699,11 @@ return (
       </div>
 
 {/* ── TABELA MODULAR DE COMENTÁRIOS (PADRÃO TOP VÍDEOS DASHBOARD) ── */}
-      <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#0f1220]/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#111524]/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                 <th className="w-48 px-6 py-4 rounded-l-2xl">
                   <button
                     type="button"
@@ -756,7 +756,7 @@ return (
 {/* Autor (Avatar Dual-Theme: Azul no Light / Laranja no Dark) */}
                     <td className="px-6 py-4 align-top">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 shrink-0 shadow-xs">
+                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 dark:bg-[#111524] border border-slate-200 dark:border-white/10 shrink-0 shadow-xs">
                           {mainAuthorLogo ? (
                             <img
                               src={mainAuthorLogo}
@@ -764,7 +764,7 @@ return (
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-xs font-black text-white shadow-xs">
+                            <div className="flex h-full w-full items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-xs font-black text-white shadow-xs">
                               {mainAuthorName?.charAt(0).toUpperCase() || "?"}
                             </div>
                           )}
@@ -788,16 +788,16 @@ return (
                       </p>
 
                       {row.reply_content && row.reply_status !== 'hidden' && (
-                        <div className="mt-3 rounded-2xl bg-slate-50 dark:bg-[#0f1220]/80 border border-slate-200/60 dark:border-white/5 p-3.5 space-y-1">
+                        <div className="mt-3 rounded-2xl bg-slate-50 dark:bg-[#111524]/80 border border-slate-200/60 dark:border-white/5 p-3.5 space-y-1">
                           <div className="flex items-center gap-2">
                             {storeLogoUrl ? (
                               <img
                                 src={storeLogoUrl}
                                 alt={storeName || 'Loja'}
-                                className="h-5 w-5 rounded-full object-cover border border-[#0094EB] dark:border-[#ff7a29]"
+                                className="h-5 w-5 rounded-full object-cover border border-[#0091ff] dark:border-[#ff7a29]"
                               />
                             ) : (
-                              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0094EB] dark:bg-[#ff7a29] text-[9px] font-black text-white">
+                              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0091ff] dark:bg-[#ff7a29] text-[9px] font-black text-white">
                                 {(storeName || 'L').charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -806,7 +806,7 @@ return (
                               {storeName || 'Loja'}
                             </span>
 
-                            <span className="text-[9px] font-black uppercase text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-2 py-0.5 rounded-full border border-blue-200/60 dark:border-[#ff7a29]/20">
+                            <span className="text-[9px] font-black uppercase text-[#0091ff] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-2 py-0.5 rounded-full border border-blue-200/60 dark:border-[#ff7a29]/20">
                               Resposta Oficial
                             </span>
                           </div>
@@ -826,7 +826,7 @@ return (
                               event.stopPropagation();
                               handleViewVideo(row);
                             }}
-                            className="text-[#0094EB] dark:text-[#ff7a29] hover:underline cursor-pointer font-black truncate max-w-xs"
+                            className="text-[#0091ff] dark:text-[#ff7a29] hover:underline cursor-pointer font-black truncate max-w-xs"
                           >
                             {video.title}
                           </button>
@@ -858,7 +858,7 @@ return (
                         <button
                           type="button"
                           onClick={(event) => handleReply(event, row)}
-                          className="p-2 rounded-xl text-slate-400 hover:text-[#0094EB] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+                          className="p-2 rounded-xl text-slate-400 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
                           title="Responder comentário"
                         >
                           <MessageSquare size={16} />
@@ -914,7 +914,7 @@ return (
             </p>
 
             {storeLogoUrl && (
-              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-[#0094EB]">
+              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-[#0091ff]">
                 <img
                   src={storeLogoUrl}
                   alt="Logo da loja"
@@ -923,7 +923,7 @@ return (
               </div>
             )}
 
-            <p className="text-sm font-medium italic text-slate-600">
+            <p className="text-sm font-medium italic text-slate-600 dark:text-slate-300">
               &quot;
               {
                 comments.find(
@@ -947,7 +947,7 @@ return (
                   setCommentText(event.target.value)
                 }
                 rows={3}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
+                className="w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-4 py-3 pr-12 text-sm font-bold text-slate-700 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
                 placeholder="Escreva aqui a resposta pública..."
               />
 
@@ -957,7 +957,7 @@ return (
                   event.stopPropagation();
                   setShowEmoji((previous) => !previous);
                 }}
-                className="absolute bottom-3 right-3 z-10 rounded-full bg-[#0094EB] p-2 text-white shadow-lg transition-colors hover:bg-[#0E4787]"
+                className="absolute bottom-3 right-3 z-10 rounded-full bg-[#0091ff] p-2 text-white shadow-lg transition-colors hover:bg-[#0070f3]"
                 aria-label="Inserir emoji"
               >
                 <span className="text-lg">😊</span>
@@ -965,7 +965,7 @@ return (
 
               {showEmoji && (
                 <div
-                  className="absolute bottom-full right-0 z-[99999] mb-2 grid w-64 grid-cols-7 gap-1 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl"
+                  className="absolute bottom-full right-0 z-[99999] mb-2 grid w-64 grid-cols-7 gap-1 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#111524] p-3 shadow-2xl"
                   onClick={(event) => event.stopPropagation()}
                 >
                   {EMOJIS.map((emoji) => (
@@ -976,7 +976,7 @@ return (
                         insertEmojiAtCursor(emoji);
                         setShowEmoji(false);
                       }}
-                      className="rounded-xl p-2 text-lg transition-colors hover:bg-slate-100"
+                      className="rounded-xl p-2 text-lg transition-colors hover:bg-slate-100 dark:hover:bg-white/10"
                     >
                       {emoji}
                     </button>
@@ -994,7 +994,7 @@ return (
           onClick={closeStatusDropdown}
         >
           <div
-            className="fixed min-w-[120px] rounded-xl border border-slate-200 bg-white p-2 shadow-2xl"
+            className="fixed min-w-[120px] rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#111524] p-2 shadow-2xl"
             style={{
               top: statusDropdownPosition.top,
               left: statusDropdownPosition.left,
@@ -1006,7 +1006,7 @@ return (
                 <button
                   key={option}
                   type="button"
-                  className="block w-full rounded-lg p-2 text-left hover:bg-slate-50"
+                  className="block w-full rounded-xl p-2 text-left hover:bg-slate-50 dark:hover:bg-white/5"
                   onClick={async () => {
                     const statusMap: Record<
                       string,
@@ -1025,7 +1025,7 @@ return (
                     closeStatusDropdown();
                   }}
                 >
-                  <span className="text-sm font-bold text-slate-800">
+                  <span className="text-sm font-bold text-slate-800 dark:text-white">
                     {option}
                   </span>
                 </button>
@@ -1048,7 +1048,7 @@ return (
         {viewingVideo && (
           <div className="flex flex-col gap-6 lg:flex-row">
             <div className="mx-auto w-[240px] shrink-0">
-              <div className="relative aspect-[9/16] max-h-[60vh] overflow-hidden rounded-[1.5rem] border-[4px] border-slate-900 bg-slate-950 shadow-lg">
+              <div className="relative aspect-[9/16] max-h-[60vh] overflow-hidden rounded-2xl border-[4px] border-slate-900 bg-slate-950 shadow-lg">
                 <video
                   src={viewingVideo.video_url}
                   className="h-full w-full object-contain"
@@ -1062,11 +1062,11 @@ return (
 
             <div className="flex flex-1 flex-col pt-1">
               <div className="mb-4">
-                <h3 className="mb-1 text-lg font-black text-slate-900">
+                <h3 className="mb-1 text-lg font-black text-slate-900 dark:text-white">
                   {viewingVideo.title}
                 </h3>
 
-                <span className="rounded-lg bg-blue-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-[#0094EB]">
+                <span className="rounded-2xl bg-blue-50 dark:bg-[#0091ff]/10 border border-blue-100 dark:border-[#0091ff]/20 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-[#0091ff]">
                   {viewingVideo.source_type === "upload"
                     ? "UPLOAD"
                     : "URL"}
@@ -1074,8 +1074,8 @@ return (
               </div>
 
               <div className="mb-6 grid grid-cols-2 gap-2">
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-center">
-                  <p className="text-[8px] font-black uppercase text-slate-400">
+                <div className="rounded-xl border border-slate-100 dark:border-[#ff7a29]/20 bg-slate-50 dark:bg-[#111524] p-3 text-center">
+                  <p className="text-[8px] font-black uppercase text-slate-400 dark:text-slate-500">
                     Status
                   </p>
 
@@ -1084,12 +1084,12 @@ return (
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-center">
-                  <p className="text-[8px] font-black uppercase text-slate-400">
+                <div className="rounded-xl border border-slate-100 dark:border-[#ff7a29]/20 bg-slate-50 dark:bg-[#111524] p-3 text-center">
+                  <p className="text-[8px] font-black uppercase text-slate-400 dark:text-slate-500">
                     Vídeo ID
                   </p>
 
-                  <p className="text-[10px] font-bold text-slate-500">
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
                     {viewingVideo.id?.substring(0, 8) || "---"}
                   </p>
                 </div>
@@ -1101,7 +1101,7 @@ return (
                   setIsViewingModalOpen(false);
                   setViewingVideo(null);
                 }}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0094EB] py-3 text-xs font-black text-white transition-all"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0091ff] py-3 text-xs font-black text-white transition-all"
               >
                 Fechar
               </button>

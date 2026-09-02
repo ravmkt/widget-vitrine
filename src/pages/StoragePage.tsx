@@ -1719,7 +1719,7 @@ export default function StoragePage() {
                           className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-[#171c30]/50 p-1.5 pr-3 shadow-xs"
                           title={file.productName}
                         >
-                          <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#111524]">
+                          <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#111524]">
                             {file.productImageUrl ? (
                               <img
                                 src={file.productImageUrl}
@@ -1751,7 +1751,7 @@ export default function StoragePage() {
                     <td className="px-6 py-3.5 text-center">
                       {file.storyTitle ? (
                         <span 
-                          className="inline-flex items-center gap-1 rounded-xl bg-[#0094eb]/10 border border-[#0094eb]/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#0094eb] shadow-xs"
+                          className="inline-flex items-center gap-1 rounded-xl bg-[#0091ff]/10 border border-[#0091ff]/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#0091ff] shadow-xs"
                         >
                           {file.storyTitle}
                         </span>
@@ -1975,7 +1975,7 @@ export default function StoragePage() {
                     <img
                       src={previewMedia.url}
                       alt={previewMedia.name}
-                      className="max-h-full max-w-full object-contain rounded-lg animate-fade-in"
+                      className="max-h-full max-w-full object-contain rounded-xl animate-fade-in"
                     />
                   );
                 }
@@ -1987,7 +1987,7 @@ export default function StoragePage() {
                       <iframe
                         src={embedUrl}
                         title={previewMedia.name}
-                        className="w-full h-full rounded-lg border-0"
+                        className="w-full h-full rounded-xl border-0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowFullScreen
                       />
@@ -2002,7 +2002,7 @@ export default function StoragePage() {
                       <iframe
                         src={embedUrl}
                         title={previewMedia.name}
-                        className="w-full h-full rounded-lg bg-white border-0"
+                        className="w-full h-full rounded-xl bg-white border-0"
                         allowTransparency
                         scrolling="yes"
                       />
@@ -2015,7 +2015,7 @@ export default function StoragePage() {
                     src={previewMedia.url}
                     controls
                     autoPlay
-                    className="max-h-full max-w-full rounded-lg object-contain"
+                    className="max-h-full max-w-full rounded-xl object-contain"
                   />
                 );
               })()}

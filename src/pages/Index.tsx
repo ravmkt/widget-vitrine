@@ -1,22 +1,43 @@
 import { Link } from 'react-router-dom';
-import { BarChart3, Link2, ShoppingBag } from 'lucide-react';
+import { BarChart3, Link2, ShoppingBag, Sparkles } from 'lucide-react';
 
 const Index = () => {
-  return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-8">
-        <header className="flex items-center justify-between border-b border-white/10 pb-6">
-          <div>
-            <p className="text-sm font-medium text-violet-400">Bem-vindo</p>
+  const modules = [
+    {
+      icon: BarChart3,
+      title: 'Medidas',
+      description:
+        'Área avançada de Analytics com funis completos e logs detalhados de eventos.',
+    },
+    {
+      icon: Link2,
+      title: 'Integração',
+      description:
+        'Instale o widget de stories em qualquer plataforma de e-commerce com script direto ou GTM.',
+    },
+    {
+      icon: ShoppingBag,
+      title: 'Produtos',
+      description:
+        'Gerencie os produtos da loja e vincule-os diretamente às chamadas de ação dos vídeos.',
+    },
+  ];
 
-            <h1 className="mt-1 text-2xl font-bold tracking-tight">
+  return (
+    <main className="min-h-screen bg-[#111524] text-white">
+      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-8">
+        <header className="flex items-center justify-between border-b border-[#ff7a29]/30 pb-6">
+          <div>
+            <p className="text-sm font-medium text-[#0091ff]">Bem-vindo</p>
+
+            <h1 className="mt-1 text-[18px] font-black tracking-tight text-white">
               Painel Principal
             </h1>
           </div>
 
           <Link
             to="/settings"
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+            className="rounded-2xl border border-[#ff7a29]/30 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition-all duration-300 hover:border-[#ff7a29]/60 hover:shadow-md"
           >
             Configurações
           </Link>
@@ -24,11 +45,11 @@ const Index = () => {
 
         <div className="grid flex-1 items-center gap-8 py-12 lg:grid-cols-2">
           <div>
-            <div className="mb-6 inline-flex rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-2 text-sm text-violet-300">
+            <div className="mb-6 inline-flex rounded-full border border-[#ff7a29]/30 bg-[#ff7a29]/10 px-4 py-2 text-sm text-[#ff7a29]">
               Seu app está funcionando
             </div>
 
-            <h2 className="max-w-2xl text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+            <h2 className="max-w-2xl text-4xl font-black leading-tight tracking-tight md:text-5xl text-white">
               Organize seus stories em um só lugar.
             </h2>
 
@@ -42,66 +63,49 @@ const Index = () => {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 to="/dashboard"
-                className="rounded-2xl bg-violet-600 px-6 py-3 text-center font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700"
+                className="rounded-2xl bg-[#0091ff] px-6 py-3 text-center font-black text-white shadow-lg shadow-[#0091ff]/20 transition-all duration-300 hover:bg-[#0070f3] hover:scale-[1.02]"
               >
                 Ver Dashboard
               </Link>
 
               <Link
                 to="/stories"
-                className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center font-bold text-white transition hover:bg-white/10"
+                className="rounded-2xl border border-[#ff7a29]/30 bg-white/5 px-6 py-3 text-center font-black text-white transition-all duration-300 hover:border-[#ff7a29]/60 hover:shadow-md"
               >
                 Gerenciar Stories
               </Link>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-2xl">
+          <div className="rounded-2xl border border-[#ff7a29]/30 bg-[#1a1f35] p-6 shadow-xs">
             <div className="grid gap-4">
-              <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
-                <p className="text-sm text-slate-400">Módulo</p>
+              {modules.map((mod) => (
+                <div
+                  key={mod.title}
+                  className="group rounded-2xl border border-[#ff7a29]/20 bg-[#111524] p-5 transition-all duration-300 hover:border-[#ff7a29]/60 hover:shadow-md"
+                >
+                  <p className="text-[14px] font-black uppercase tracking-wider text-slate-500">Módulo</p>
 
-                <h3 className="mt-2 flex items-center gap-2 text-xl font-bold">
-                  <BarChart3 className="h-5 w-5 text-violet-400" />
-                  Medidas
-                </h3>
+                  <h3 className="mt-2 flex items-center gap-3 text-xl font-black text-white">
+                    <span className="w-[45px] h-[45px] rounded-2xl flex items-center justify-center bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] shrink-0 transition-transform duration-300 group-hover:scale-105">
+                      <mod.icon className="w-[22px] h-[22px]" />
+                    </span>
+                    {mod.title}
+                  </h3>
 
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Área avançada de Analytics com funis completos e logs
-                  detalhados de eventos.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
-                <p className="text-sm text-slate-400">Módulo</p>
-
-                <h3 className="mt-2 flex items-center gap-2 text-xl font-bold">
-                  <Link2 className="h-5 w-5 text-violet-400" />
-                  Integração
-                </h3>
-
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Instale o widget de stories em qualquer plataforma de
-                  e-commerce com script direto ou GTM.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
-                <p className="text-sm text-slate-400">Módulo</p>
-
-                <h3 className="mt-2 flex items-center gap-2 text-xl font-bold">
-                  <ShoppingBag className="h-5 w-5 text-violet-400" />
-                  Produtos
-                </h3>
-
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Gerencie os produtos da loja e vincule-os diretamente às
-                  chamadas de ação dos vídeos.
-                </p>
-              </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">
+                    {mod.description}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+
+        <footer className="flex items-center justify-center gap-2 border-t border-[#ff7a29]/20 pt-6 text-xs text-slate-500">
+          <Sparkles className="h-3.5 w-3.5 text-[#ff7a29]" />
+          Vidlytics Stories — Social Video Commerce B2B2C
+        </footer>
       </section>
     </main>
   );

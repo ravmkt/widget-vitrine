@@ -267,7 +267,7 @@ type PreviewColors = {
 // ──────────────────── utilitários ────────────────────
 
 const inputClass =
-  'w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white disabled:cursor-not-allowed disabled:opacity-50';
+  'w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus:bg-white dark:focus:bg-[#111524] disabled:cursor-not-allowed disabled:opacity-50';
 const DEMO_PREVIEW_VIDEOS = [
   '/demo-videos/demo1.mp4',
   '/demo-videos/demo2.mp4',
@@ -1393,17 +1393,17 @@ const ToggleSwitch = ({
   description?: string;
 }) => {
   return (
-    <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white px-3 py-2 transition hover:border-blue-200 hover:bg-blue-50/20">
+    <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/80 dark:border-[#ff7a29]/30 bg-white dark:bg-[#111524] px-3 py-2 transition hover:border-blue-200 hover:bg-blue-50/20 dark:hover:border-[#ff7a29]/60 dark:hover:bg-[#ff7a29]/5">
       <input
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="h-4 w-4 rounded border-slate-300 text-[#0094EB] accent-[#0094EB] focus:ring-2 focus:ring-[#0094EB]"
+        className="h-4 w-4 rounded border-slate-300 text-[#0091ff] accent-[#0091ff] focus:ring-2 focus:ring-[#0091ff]"
       />
       <span className="min-w-0 flex-1">
-        <span className="block text-xs font-bold text-slate-800">{label}</span>
+        <span className="block text-xs font-bold text-slate-800 dark:text-white">{label}</span>
         {description && (
-          <span className="block text-[11px] font-medium text-slate-500">
+          <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400">
             {description}
           </span>
         )}
@@ -1425,7 +1425,7 @@ const ColorInput = ({
   return (
     <div className="flex items-center gap-1.5 w-full">
       <div
-        className="relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-200 shadow-sm overflow-hidden"
+        className="relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 shadow-xs overflow-hidden"
         style={{ backgroundColor: safeColor }}
       >
         <input
@@ -1440,7 +1440,7 @@ const ColorInput = ({
         type="text"
         value={value}
         onChange={onChange}
-        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 font-mono text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white"
+        className="w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-2 py-1.5 font-mono text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
       />
     </div>
   );
@@ -1454,15 +1454,15 @@ const DeviceTabs = ({
   onChange: (device: DeviceType) => void;
 }) => {
   return (
-    <div className="flex w-fit rounded-xl border border-slate-200 bg-slate-100 p-1">
+    <div className="flex w-fit rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-100 dark:bg-[#111524] p-1">
       <button
         type="button"
         onClick={() => onChange('desktop')}
         className={cn(
-          'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all',
+          'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all',
           activeDevice === 'desktop'
-            ? 'bg-[#0094EB] text-white shadow-sm'
-            : 'text-slate-500 hover:bg-white hover:text-slate-800',
+            ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-sm'
+            : 'text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-[#1a1f35] hover:text-slate-800 dark:hover:text-white',
         )}
       >
         <Monitor size={15} />
@@ -1472,10 +1472,10 @@ const DeviceTabs = ({
         type="button"
         onClick={() => onChange('mobile')}
         className={cn(
-          'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all',
+          'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all',
           activeDevice === 'mobile'
-            ? 'bg-[#0094EB] text-white shadow-sm'
-            : 'text-slate-500 hover:bg-white hover:text-slate-800',
+            ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-sm'
+            : 'text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-[#1a1f35] hover:text-slate-800 dark:hover:text-white',
         )}
       >
         <Smartphone size={15} />
@@ -1487,7 +1487,7 @@ const DeviceTabs = ({
 
 const GlobalDeviceNotice = () => {
   return (
-    <div className="w-fit rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-bold text-[#0094EB]">
+    <div className="w-fit rounded-xl border border-blue-200 dark:border-[#ff7a29]/30 bg-blue-50 dark:bg-[#ff7a29]/10 px-4 py-2 text-xs font-bold text-[#0091ff] dark:text-[#ff7a29]">
       Aplicando Desktop também no Mobile.
     </div>
   );
@@ -1510,22 +1510,22 @@ const SectionCard = ({
   return (
     <div
       className={cn(
-        'space-y-5 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm',
+        'space-y-5 rounded-2xl border border-slate-200/80 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] p-5 shadow-xs transition-all duration-300 hover:shadow-md',
         className,
       )}
     >
-      <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+      <div className="border-b border-slate-100 dark:border-[#ff7a29]/20 pb-3 flex items-center justify-between">
         <div>
-          <h3 className="text-base font-black text-slate-900">{title}</h3>
+          <h3 className="text-base font-black text-slate-900 dark:text-white">{title}</h3>
           {description && (
-            <p className="mt-0.5 text-xs font-medium text-slate-500">{description}</p>
+            <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">{description}</p>
           )}
         </div>
         {onReset && (
           <button
             type="button"
             onClick={onReset}
-            className="text-[10px] font-black uppercase tracking-wider text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100/80 px-2.5 py-1.5 rounded-lg border border-rose-100 transition-all cursor-pointer shrink-0"
+            className="text-[10px] font-black uppercase tracking-wider text-rose-500 dark:text-rose-400 hover:text-rose-600 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100/80 dark:hover:bg-rose-500/20 px-2.5 py-1.5 rounded-xl border border-rose-100 dark:border-rose-500/25 transition-all cursor-pointer shrink-0"
           >
             Resetar Aba
           </button>
@@ -1547,7 +1547,7 @@ const FormField = ({
 }) => {
   return (
     <div className={cn('space-y-1.5', className)}>
-      <label className="block text-xs font-bold text-slate-700">
+      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
         {label}
       </label>
       {children}
@@ -1573,8 +1573,8 @@ const ModalTabButton = ({
       className={cn(
         'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-black transition-all',
         active
-          ? 'bg-[#0094EB] text-white shadow-md shadow-blue-500/20'
-          : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800',
+          ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20'
+          : 'bg-slate-100 dark:bg-[#111524] text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1a1f35] hover:text-slate-800 dark:hover:text-white',
       )}
     >
       {icon}
@@ -1584,11 +1584,11 @@ const ModalTabButton = ({
 };
 
 const PreviewInfo = ({ label, value }: { label: string; value: string }) => (
-  <div className="rounded-xl bg-slate-50 p-3">
-    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+  <div className="rounded-xl bg-slate-50 dark:bg-[#111524] border border-slate-100 dark:border-[#ff7a29]/20 p-3">
+    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
       {label}
     </p>
-    <p className="mt-1 truncate font-black text-slate-700">{value}</p>
+    <p className="mt-1 truncate font-black text-slate-700 dark:text-white">{value}</p>
   </div>
 );
 
@@ -2434,18 +2434,18 @@ const ModalPreview = ({
             <div className="flex-1 min-w-0">
               <h5 className="text-[11px] font-bold text-slate-900 truncate">Calça Confort Premium</h5>
               <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-[11px] font-black text-[#0094EB]">R$ 149,95</span>
+                <span className="text-[11px] font-black text-[#0091ff]">R$ 149,95</span>
                 <span className="text-[9px] text-slate-400 line-through">R$ 199,90</span>
               </div>
             </div>
-            <button className="bg-[#0094EB] text-white text-[10px] font-black py-1.5 px-3 rounded-lg hover:bg-[#007cc7] transition shrink-0 shadow-sm shadow-[#0094EB]/10">
+            <button className="bg-[#0091ff] text-white text-[10px] font-black py-1.5 px-3 rounded-xl hover:bg-[#0070f3] transition shrink-0 shadow-sm shadow-[#0091ff]/10">
               Comprar
             </button>
           </div>
 
           {/* Barra de progresso do vídeo */}
           <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full bg-[#0094EB] rounded-full w-2/3" />
+            <div className="h-full bg-[#0091ff] rounded-full w-2/3" />
           </div>
         </div>
       </div>
@@ -2529,12 +2529,12 @@ const VisualPreview = ({
         <div className="flex-1 flex flex-col items-center justify-center px-4">
           {formData.useGlobalAppearance ? (
             <>
-              <div className="h-1 w-full bg-[#0094EB] rounded-full relative mb-3 flex items-center justify-center">
-                <span className="absolute bg-white px-3 py-1 border-2 border-[#0094EB] rounded-full shadow-md text-sm">
+              <div className="h-1 w-full bg-[#0091ff] rounded-full relative mb-3 flex items-center justify-center">
+                <span className="absolute bg-white px-3 py-1 border-2 border-[#0091ff] rounded-full shadow-md text-sm">
                   🔗
                 </span>
               </div>
-              <span className="text-[10px] font-black text-[#0094EB] uppercase tracking-widest">Unificados</span>
+              <span className="text-[10px] font-black text-[#0091ff] uppercase tracking-widest">Unificados</span>
             </>
           ) : (
             <>
@@ -2573,22 +2573,22 @@ const AccordionSection = ({
   children: React.ReactNode;
 }) => {
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs transition-all duration-300 hover:shadow-md">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between bg-slate-50/50 px-4 py-3 text-sm font-bold text-slate-800 hover:bg-slate-50 transition-colors"
+        className="flex w-full items-center justify-between bg-slate-50/50 dark:bg-[#111524]/60 px-4 py-3 text-sm font-bold text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-[#111524] transition-colors"
       >
         {title}
         <ChevronDown
           size={16}
           className={cn(
-            'text-slate-500 transition-transform duration-200',
+            'text-slate-500 dark:text-slate-400 transition-transform duration-200',
             isOpen ? 'rotate-180' : ''
           )}
         />
       </button>
-      {isOpen && <div className="border-t border-slate-100 p-4">{children}</div>}
+      {isOpen && <div className="border-t border-slate-100 dark:border-[#ff7a29]/20 p-4">{children}</div>}
     </div>
   );
 };
@@ -2685,17 +2685,17 @@ const PreviewCard = ({
   const isBasicTab = activeTab === 'basic';
 
   return (
-    <aside className="relative flex h-full min-h-[580px] max-h-[720px] flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+    <aside className="relative flex h-full min-h-[580px] max-h-[720px] flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs transition-all duration-300 hover:shadow-md">
       
       {/* Toggles de Dispositivo: Ocultados na aba Básico */}
       {!isBasicTab && (
-        <div className="absolute top-4 right-4 z-50 flex items-center bg-white/95 backdrop-blur-md border border-slate-200 p-1 rounded-xl shadow-sm">
+        <div className="absolute top-4 right-4 z-50 flex items-center bg-white/95 dark:bg-[#111524]/95 backdrop-blur-md border border-slate-200 dark:border-[#ff7a29]/30 p-1 rounded-xl shadow-xs">
           <button
             type="button"
             onClick={() => handleDeviceChange('desktop')}
             className={cn(
-              "flex items-center justify-center p-2 rounded-lg transition-all duration-200",
-              activeDevice === 'desktop' ? "bg-[#0094EB] text-white shadow-md" : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+              "flex items-center justify-center p-2 rounded-xl transition-all duration-200",
+              activeDevice === 'desktop' ? "bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
             )}
             title="Visualizar em Desktop"
           >
@@ -2705,8 +2705,8 @@ const PreviewCard = ({
             type="button"
             onClick={() => handleDeviceChange('mobile')}
             className={cn(
-              "flex items-center justify-center p-2 rounded-lg transition-all duration-200",
-              activeDevice === 'mobile' ? "bg-[#0094EB] text-white shadow-md" : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+              "flex items-center justify-center p-2 rounded-xl transition-all duration-200",
+              activeDevice === 'mobile' ? "bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
             )}
             title="Visualizar em Mobile"
           >
@@ -2716,7 +2716,7 @@ const PreviewCard = ({
       )}
 
       {/* ÁREA DO PREVIEW */}
-      <div className="relative flex-1 flex flex-col items-center justify-center p-4 bg-slate-50/50 overflow-hidden">
+      <div className="relative flex-1 flex flex-col items-center justify-center p-4 bg-slate-50/50 dark:bg-[#111524]/60 overflow-hidden">
         
         {isBasicTab ? (
           /* 1. ABA BÁSICA: Sem mockup de celular, centralizado */
@@ -3236,7 +3236,7 @@ const AppearancePage = () => {
   if (loading || tenantLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-[#0094EB]" />
+        <Loader2 className="h-6 w-6 animate-spin text-[#0091ff]" />
       </div>
     );
   }
@@ -3249,16 +3249,16 @@ const AppearancePage = () => {
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">Aparência</h1>
           <p className="mt-1 text-sm font-medium text-slate-500 dark:text-[#c0c5d4]">Customize a identidade visual, widgets, carrosséis, grades e player da sua loja.</p>
         </div>
-        <button type="button" onClick={handleNewStyle} className="flex items-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer">
+        <button type="button" onClick={handleNewStyle} className="flex items-center gap-2 rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer">
           <Plus size={16} className="!text-white stroke-[2.5]" /> Novo Estilo
         </button>
       </div>
 
       {/* Módulo de Estilos Cadastrados no Padrão Modular do Dashboard */}
-      <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white bg-[#0094EB] dark:bg-[#ff7a29] shadow-[0_0_15px_rgba(0,148,235,0.35)] dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white bg-[#0091ff] dark:bg-[#ff7a29] shadow-[0_0_15px_rgba(0,145,255,0.35)] dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
               <Palette size={18} className="!text-white stroke-[2.5]" />
             </div>
             <div>
@@ -3266,7 +3266,7 @@ const AppearancePage = () => {
               <p className="text-xs text-slate-500 dark:text-[#8a90a0] font-medium">Templates e temas ativos configurados para a sua vitrine.</p>
             </div>
           </div>
-          <span className="text-xs font-black uppercase tracking-widest text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/20">
+          <span className="text-xs font-black uppercase tracking-widest text-[#0091ff] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/20">
             {appearances.length} {appearances.length === 1 ? 'Tema' : 'Temas'}
           </span>
         </div>
@@ -3274,7 +3274,7 @@ const AppearancePage = () => {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#0f1220]/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#111524]/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
                 <th className="px-6 py-4 rounded-l-2xl">Template</th>
                 <th className="px-6 py-4 text-center">Cor Principal</th>
                 <th className="px-6 py-4 text-center">Status</th>
@@ -3301,25 +3301,25 @@ const AppearancePage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-slate-600 dark:text-[#c0c5d4] bg-slate-100 dark:bg-[#0f1220] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-white/5">
+                      <span className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-slate-600 dark:text-[#c0c5d4] bg-slate-100 dark:bg-[#111524] px-2.5 py-1 rounded-xl border border-slate-200/60 dark:border-white/5">
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: app.primary_color || '#0094EB' }} />
                         {app.primary_color || '#0094EB'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
                       {app.is_default ? (
-                        <span className="mx-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-blue-50 dark:bg-[#ff7a29]/15 border border-blue-200 dark:border-[#ff7a29]/30 px-3.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] shadow-xs">
-                          <Star size={11} className="fill-[#0094EB] text-[#0094EB] dark:fill-[#ff7a29] dark:text-[#ff7a29]" /> Padrão
+                        <span className="mx-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-blue-50 dark:bg-[#ff7a29]/15 border border-blue-200 dark:border-[#ff7a29]/30 px-3.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#0091ff] dark:text-[#ff7a29] shadow-xs">
+                          <Star size={11} className="fill-[#0091ff] text-[#0091ff] dark:fill-[#ff7a29] dark:text-[#ff7a29]" /> Padrão
                         </span>
                       ) : (
-                        <button type="button" onClick={() => handleSetDefault(app.id)} className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-[#8a90a0] hover:text-[#0094EB] dark:hover:text-[#ff7a29] transition-colors cursor-pointer">
+                        <button type="button" onClick={() => handleSetDefault(app.id)} className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-[#8a90a0] hover:text-[#0091ff] dark:hover:text-[#ff7a29] transition-colors cursor-pointer">
                           Definir Padrão
                         </button>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button type="button" onClick={() => handleEditStyle(app)} className="p-2 rounded-xl text-slate-400 hover:text-[#0094EB] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all" aria-label="Editar estilo"><Edit3 size={15} /></button>
+                        <button type="button" onClick={() => handleEditStyle(app)} className="p-2 rounded-xl text-slate-400 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all" aria-label="Editar estilo"><Edit3 size={15} /></button>
                         <button type="button" onClick={() => handleDeleteClick(app)} className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all" aria-label="Excluir estilo"><Trash2 size={15} /></button>
                       </div>
                     </td>
@@ -3334,17 +3334,17 @@ const AppearancePage = () => {
       {/* Modal de edição */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 sm:p-6 md:p-8 backdrop-blur-sm">
-          <div className="flex h-[90vh] w-full max-w-7xl flex-col overflow-hidden rounded-[1.5rem] bg-white shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-3 shrink-0">
+          <div className="flex h-[90vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 shadow-2xl transition-all duration-300">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#ff7a29]/20 bg-white dark:bg-[#111524] px-6 py-3 shrink-0">
               <div>
-                <h2 className="text-xl font-black text-slate-900">{editingStyle ? 'Editar Estilo' : 'Criar Novo Estilo'}</h2>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">{editingStyle ? 'Editar Estilo' : 'Criar Novo Estilo'}</h2>
                 
               </div>
-              <button type="button" onClick={handleCancel} disabled={saving} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-60"><X size={20} /></button>
+              <button type="button" onClick={handleCancel} disabled={saving} className="rounded-xl p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-600 dark:hover:text-white disabled:cursor-not-allowed disabled:opacity-60"><X size={20} /></button>
             </div>
 
             {/* ABAS (Menu Básico, Flutuante, etc) */}
-            <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-2.5 shrink-0">
+            <div className="border-b border-slate-100 dark:border-[#ff7a29]/20 bg-slate-50/70 dark:bg-[#1a1f35]/60 px-6 py-2.5 shrink-0">
               <div className="flex flex-wrap gap-2">
                 <ModalTabButton active={activeTab === 'basic'} icon={<Settings2 size={16} />} label="Básico" onClick={() => setActiveTab('basic')} />
                 <ModalTabButton active={activeTab === 'floating'} icon={<PlaySquare size={16} />} label="Flutuante" onClick={() => setActiveTab('floating')} />
@@ -3356,7 +3356,7 @@ const AppearancePage = () => {
             </div>
 
             {/* CORPO DO MODAL */}
-            <div className="flex-1 overflow-hidden bg-slate-50/60 p-4 xl:p-5">
+            <div className="flex-1 overflow-hidden bg-slate-50/60 dark:bg-[#0d1120] p-4 xl:p-5">
               <div className="grid h-full grid-cols-1 gap-4 items-start xl:grid-cols-[380px_minmax(0,1fr)]">
                 
                 {/* LADO ESQUERDO: BARRA DE CONFIGURAÇÕES */}
@@ -3385,15 +3385,15 @@ const AppearancePage = () => {
                   {activeTab === 'floating' && (
                     <SectionCard title="Configurações do Flutuante">
                       {/* Seletor Dispositivo */}
-                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
-                        <span className="text-xs font-bold text-slate-700">Dispositivo</span>
+                      <div className="flex items-center justify-between bg-slate-50 dark:bg-[#111524] px-3.5 py-2.5 rounded-xl border border-slate-200/60 dark:border-[#ff7a29]/20 mb-4">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Dispositivo</span>
                         {formData.useGlobalAppearance ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0094EB]" /><Smartphone size={14} /></div>
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-[#0091ff]/10 border border-blue-200/60 dark:border-[#0091ff]/20 text-[#0091ff] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0091ff]" /><Smartphone size={14} /></div>
                         ) : (
-                          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-                            <button type="button" onClick={() => setFloatingDevice('desktop')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', floatingDevice === 'desktop' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Monitor size={13} />Desktop</button>
+                          <div className="flex items-center gap-1 bg-white dark:bg-[#1a1f35] p-1 rounded-xl border border-slate-200 dark:border-[#ff7a29]/20 shadow-xs">
+                            <button type="button" onClick={() => setFloatingDevice('desktop')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', floatingDevice === 'desktop' ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white')}><Monitor size={13} />Desktop</button>
                             <Link2Off size={12} className="text-slate-300 mx-0.5" />
-                            <button type="button" onClick={() => setFloatingDevice('mobile')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', floatingDevice === 'mobile' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Smartphone size={13} />Mobile</button>
+                            <button type="button" onClick={() => setFloatingDevice('mobile')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', floatingDevice === 'mobile' ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white')}><Smartphone size={13} />Mobile</button>
                           </div>
                         )}
                       </div>
@@ -3467,7 +3467,7 @@ const AppearancePage = () => {
                         {/* 4. ELEMENTOS VISÍVEIS */}
                         <AccordionSection title="4. Elementos Visíveis" isOpen={activeSection === 'float-4'} onToggle={() => setActiveSection(activeSection === 'float-4' ? null : 'float-4')}>
                           <div className="space-y-4">
-                            <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-4">
+                            <div className="rounded-xl border border-blue-200/80 dark:border-[#0091ff]/20 bg-blue-50/30 dark:bg-[#0091ff]/5 p-3.5 space-y-4">
                               <ToggleSwitch label="Exibir CTA (Pílula)" checked={activeFloatingConfig.show_cta ?? false} onChange={e => updateFloatingConfig({ show_cta: e.target.checked })} />
                               {activeFloatingConfig.show_cta && (
                                 <div className="space-y-3 pt-2 border-t border-blue-100/50">
@@ -3505,15 +3505,15 @@ const AppearancePage = () => {
                   {/* CARROSSEL */}
                   {activeTab === 'carousel' && (
                     <SectionCard title="Configurações do Carrossel">
-                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
-                        <span className="text-xs font-bold text-slate-700">Dispositivo</span>
+                      <div className="flex items-center justify-between bg-slate-50 dark:bg-[#111524] px-3.5 py-2.5 rounded-xl border border-slate-200/60 dark:border-[#ff7a29]/20 mb-4">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Dispositivo</span>
                         {formData.useGlobalAppearance ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0094EB]" /><Smartphone size={14} /></div>
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-[#0091ff]/10 border border-blue-200/60 dark:border-[#0091ff]/20 text-[#0091ff] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0091ff]" /><Smartphone size={14} /></div>
                         ) : (
-                          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-                            <button type="button" onClick={() => setCarouselDevice('desktop')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', carouselDevice === 'desktop' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Monitor size={13} />Desktop</button>
+                          <div className="flex items-center gap-1 bg-white dark:bg-[#1a1f35] p-1 rounded-xl border border-slate-200 dark:border-[#ff7a29]/20 shadow-xs">
+                            <button type="button" onClick={() => setCarouselDevice('desktop')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', carouselDevice === 'desktop' ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white')}><Monitor size={13} />Desktop</button>
                             <Link2Off size={12} className="text-slate-300 mx-0.5" />
-                            <button type="button" onClick={() => setCarouselDevice('mobile')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', carouselDevice === 'mobile' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Smartphone size={13} />Mobile</button>
+                            <button type="button" onClick={() => setCarouselDevice('mobile')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', carouselDevice === 'mobile' ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white')}><Smartphone size={13} />Mobile</button>
                           </div>
                         )}
                       </div>
@@ -3553,7 +3553,7 @@ const AppearancePage = () => {
                               <input type="number" min="0" step="1" value={toNumberInputValue(activeCarouselConfig.margin_bottom)} onChange={e => updateCarouselConfig({ margin_bottom: e.target.value })} className={inputClass} />
                             </FormField>
                           </div>
-                          <div className="mt-3 p-2 bg-sky-50 rounded-lg border border-sky-100">
+                          <div className="mt-3 p-2 bg-sky-50 dark:bg-sky-500/5 rounded-xl border border-sky-100 dark:border-sky-500/20">
                             <p className="text-[12px] text-sky-700 font-medium leading-snug">
                               💡 No mobile, o carrossel exibe no máximo 3 itens (1 completo + 2 parciais nas laterais), independente do número configurado aqui.
                             </p>
@@ -3578,7 +3578,7 @@ const AppearancePage = () => {
                         {/* 3. ELEMENTOS VISÍVEIS */}
                         <AccordionSection title="3. Elementos Visíveis" isOpen={activeSection === 'car-3'} onToggle={() => setActiveSection(activeSection === 'car-3' ? null : 'car-3')}>
                           <div className="space-y-4">
-                            <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-2.5">
+                            <div className="rounded-xl border border-blue-200/80 dark:border-[#0091ff]/20 bg-blue-50/30 dark:bg-[#0091ff]/5 p-3.5 space-y-2.5">
                               <ToggleSwitch label="Exibir título da vitrine" checked={activeCarouselConfig.show_title ?? false} onChange={e => updateCarouselConfig({ show_title: e.target.checked })} />
                               {activeCarouselConfig.show_title && (
                                 <>
@@ -3625,7 +3625,7 @@ const AppearancePage = () => {
                         <AccordionSection title="4. Card de Produto" isOpen={activeSection === 'car-4'} onToggle={() => setActiveSection(activeSection === 'car-4' ? null : 'car-4')}>
                           <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeCarouselConfig.show_product} onChange={e => updateCarouselConfig({ show_product: e.target.checked })} />
                           {activeCarouselConfig.show_product && (
-                            <div className="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-slate-100 pt-3.5">
+                            <div className="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-slate-100 dark:border-[#ff7a29]/20 pt-3.5">
                               <FormField label="Cor do fundo"><ColorInput label="Cor" value={(activeCarouselConfig as any).product_card_bg || '#FFFFFF'} onChange={e => updateCarouselConfig({ product_card_bg: e.target.value } as any)} /></FormField>
                               <FormField label="Cor da Borda"><ColorInput label="Borda" value={(activeCarouselConfig as any).product_card_border_color || '#E2E8F0'} onChange={e => updateCarouselConfig({ product_card_border_color: e.target.value } as any)} /></FormField>
                               <FormField label="Largura Borda (px)"><input type="number" min="0" value={toNumberInputValue((activeCarouselConfig as any).product_card_border_width)} onChange={e => updateCarouselConfig({ product_card_border_width: e.target.value } as any)} className={inputClass} /></FormField>
@@ -3644,15 +3644,15 @@ const AppearancePage = () => {
                   {/* CARROSSEL DINÂMICO */}
                   {activeTab === 'dynamic_carousel' && (
                     <SectionCard title="Configurações do Carrossel Dinâmico">
-                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
-                        <span className="text-xs font-bold text-slate-700">Dispositivo</span>
+                      <div className="flex items-center justify-between bg-slate-50 dark:bg-[#111524] px-3.5 py-2.5 rounded-xl border border-slate-200/60 dark:border-[#ff7a29]/20 mb-4">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Dispositivo</span>
                         {formData.useGlobalAppearance ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0094EB]" /><Smartphone size={14} /></div>
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-[#0091ff]/10 border border-blue-200/60 dark:border-[#0091ff]/20 text-[#0091ff] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0091ff]" /><Smartphone size={14} /></div>
                         ) : (
-                          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-                            <button type="button" onClick={() => setDynamicCarouselDevice('desktop')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', dynamicCarouselDevice === 'desktop' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Monitor size={13} />Desktop</button>
+                          <div className="flex items-center gap-1 bg-white dark:bg-[#1a1f35] p-1 rounded-xl border border-slate-200 dark:border-[#ff7a29]/20 shadow-xs">
+                            <button type="button" onClick={() => setDynamicCarouselDevice('desktop')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', dynamicCarouselDevice === 'desktop' ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white')}><Monitor size={13} />Desktop</button>
                             <Link2Off size={12} className="text-slate-300 mx-0.5" />
-                            <button type="button" onClick={() => setDynamicCarouselDevice('mobile')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', dynamicCarouselDevice === 'mobile' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Smartphone size={13} />Mobile</button>
+                            <button type="button" onClick={() => setDynamicCarouselDevice('mobile')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', dynamicCarouselDevice === 'mobile' ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white')}><Smartphone size={13} />Mobile</button>
                           </div>
                         )}
                       </div>
@@ -3692,7 +3692,7 @@ const AppearancePage = () => {
                         {/* 3. ELEMENTOS VISÍVEIS */}
                         <AccordionSection title="3. Elementos Visíveis" isOpen={activeSection === 'dyn-3'} onToggle={() => setActiveSection(activeSection === 'dyn-3' ? null : 'dyn-3')}>
                           <div className="space-y-4">
-                            <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-2.5">
+                            <div className="rounded-xl border border-blue-200/80 dark:border-[#0091ff]/20 bg-blue-50/30 dark:bg-[#0091ff]/5 p-3.5 space-y-2.5">
                               <ToggleSwitch label="Exibir título da vitrine" checked={activeDynamicCarouselConfig.show_title ?? false} onChange={e => updateDynamicCarouselConfig({ show_title: e.target.checked })} />
                               {activeDynamicCarouselConfig.show_title && (
                                 <>
@@ -3743,7 +3743,7 @@ const AppearancePage = () => {
                         <AccordionSection title="5. Card de Produto" isOpen={activeSection === 'dyn-5'} onToggle={() => setActiveSection(activeSection === 'dyn-5' ? null : 'dyn-5')}>
                           <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={activeDynamicCarouselConfig.show_product} onChange={e => updateDynamicCarouselConfig({ show_product: e.target.checked })} />
                           {activeDynamicCarouselConfig.show_product && (
-                            <div className="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-slate-100 pt-3.5">
+                            <div className="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-slate-100 dark:border-[#ff7a29]/20 pt-3.5">
                               <FormField label="Cor do fundo"><ColorInput label="Cor" value={activeDynamicCarouselConfig.product_card_bg || '#FFFFFF'} onChange={e => updateDynamicCarouselConfig({ product_card_bg: e.target.value })} /></FormField>
                               <FormField label="Cor da Borda"><ColorInput label="Borda" value={activeDynamicCarouselConfig.product_card_border_color || '#E2E8F0'} onChange={e => updateDynamicCarouselConfig({ product_card_border_color: e.target.value })} /></FormField>
                               <FormField label="Largura Borda (px)"><input type="number" min="0" value={toNumberInputValue(activeDynamicCarouselConfig.product_card_border_width)} onChange={e => updateDynamicCarouselConfig({ product_card_border_width: e.target.value })} className={inputClass} /></FormField>
@@ -3762,15 +3762,15 @@ const AppearancePage = () => {
                   {/* GRADE */}
                   {activeTab === 'grid' && (
                     <SectionCard title="Configurações da Grade">
-                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
-                        <span className="text-xs font-bold text-slate-700">Dispositivo</span>
+                      <div className="flex items-center justify-between bg-slate-50 dark:bg-[#111524] px-3.5 py-2.5 rounded-xl border border-slate-200/60 dark:border-[#ff7a29]/20 mb-4">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Dispositivo</span>
                         {formData.useGlobalAppearance ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0094EB]" /><Smartphone size={14} /></div>
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-[#0091ff]/10 border border-blue-200/60 dark:border-[#0091ff]/20 text-[#0091ff] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0091ff]" /><Smartphone size={14} /></div>
                         ) : (
-                          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-                            <button type="button" onClick={() => setGridDevice('desktop')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', gridDevice === 'desktop' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Monitor size={13} />Desktop</button>
+                          <div className="flex items-center gap-1 bg-white dark:bg-[#1a1f35] p-1 rounded-xl border border-slate-200 dark:border-[#ff7a29]/20 shadow-xs">
+                            <button type="button" onClick={() => setGridDevice('desktop')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', gridDevice === 'desktop' ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white')}><Monitor size={13} />Desktop</button>
                             <Link2Off size={12} className="text-slate-300 mx-0.5" />
-                            <button type="button" onClick={() => setGridDevice('mobile')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', gridDevice === 'mobile' ? 'bg-[#0094EB] text-white' : 'text-slate-500 hover:text-slate-800')}><Smartphone size={13} />Mobile</button>
+                            <button type="button" onClick={() => setGridDevice('mobile')} className={cn('flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all', gridDevice === 'mobile' ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white')}><Smartphone size={13} />Mobile</button>
                           </div>
                         )}
                       </div>
@@ -3789,7 +3789,7 @@ const AppearancePage = () => {
                             <FormField label="Colunas"><input type="number" min="1" max="10" value={activeGridConfig.visible_items} onChange={e => updateGridConfig({ visible_items: limitNumber(e.target.value, 1, 1, 10) })} className={inputClass} /></FormField>
                             <FormField label="Espaçamento (px)" className="col-span-2"><input type="number" min="0" value={activeGridConfig.spacing} onChange={e => updateGridConfig({ spacing: safeNumber(e.target.value, 0, 0) })} className={inputClass} /></FormField>
                           </div>
-                          <div className="mt-3 p-2 bg-sky-50 rounded-lg border border-sky-100">
+                          <div className="mt-3 p-2 bg-sky-50 dark:bg-sky-500/5 rounded-xl border border-sky-100 dark:border-sky-500/20">
                             <p className="text-[12px] text-sky-700 font-medium leading-snug">
                               💡 No mobile, a grade é otimizada para exibir no máximo 2 colunas.
                             </p>
@@ -3808,7 +3808,7 @@ const AppearancePage = () => {
                         {/* 3. ELEMENTOS VISÍVEIS */}
                         <AccordionSection title="3. Elementos Visíveis" isOpen={activeSection === 'grid-3'} onToggle={() => setActiveSection(activeSection === 'grid-3' ? null : 'grid-3')}>
                           <div className="space-y-4">
-                            <div className="rounded-xl border border-blue-200/80 bg-blue-50/30 p-3.5 space-y-2.5">
+                            <div className="rounded-xl border border-blue-200/80 dark:border-[#0091ff]/20 bg-blue-50/30 dark:bg-[#0091ff]/5 p-3.5 space-y-2.5">
                               <ToggleSwitch label="Exibir título da vitrine" checked={activeGridConfig.show_title ?? false} onChange={e => updateGridConfig({ show_title: e.target.checked })} />
                               {activeGridConfig.show_title && (
                                 <>
@@ -3848,7 +3848,7 @@ const AppearancePage = () => {
                         <AccordionSection title="4. Card de Produto" isOpen={activeSection === 'grid-4'} onToggle={() => setActiveSection(activeSection === 'grid-4' ? null : 'grid-4')}>
                           <ToggleSwitch label="Exibir card de produto abaixo de cada vídeo" checked={(activeGridConfig as any).show_product} onChange={e => updateGridConfig({ show_product: e.target.checked } as any)} />
                           {(activeGridConfig as any).show_product && (
-                            <div className="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-slate-100 pt-3.5">
+                            <div className="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-slate-100 dark:border-[#ff7a29]/20 pt-3.5">
                               <FormField label="Cor do fundo"><ColorInput label="Cor" value={(activeGridConfig as any).product_card_bg || '#FFFFFF'} onChange={e => updateGridConfig({ product_card_bg: e.target.value } as any)} /></FormField>
                               <FormField label="Cor da Borda"><ColorInput label="Borda" value={(activeGridConfig as any).product_card_border_color || '#E2E8F0'} onChange={e => updateGridConfig({ product_card_border_color: e.target.value } as any)} /></FormField>
                               <FormField label="Largura Borda (px)"><input type="number" min="0" value={toNumberInputValue((activeGridConfig as any).product_card_border_width)} onChange={e => updateGridConfig({ product_card_border_width: e.target.value } as any)} className={inputClass} /></FormField>
@@ -3867,9 +3867,9 @@ const AppearancePage = () => {
                   {/* PLAYER */}
                   {activeTab === 'modal' && (
                     <SectionCard title="Configurações do Player">
-                      <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200/60 mb-4">
-                        <span className="text-xs font-bold text-slate-700">Dispositivo</span>
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#0094EB] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0094EB]" /><Smartphone size={14} /></div>
+                      <div className="flex items-center justify-between bg-slate-50 dark:bg-[#111524] px-3.5 py-2.5 rounded-xl border border-slate-200/60 dark:border-[#ff7a29]/20 mb-4">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Dispositivo</span>
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-[#0091ff]/10 border border-blue-200/60 dark:border-[#0091ff]/20 text-[#0091ff] text-xs font-bold"><Monitor size={14} /><Link size={12} className="text-[#0091ff]" /><Smartphone size={14} /></div>
                       </div>
 
                       <div className="space-y-3">
@@ -3896,7 +3896,7 @@ const AppearancePage = () => {
                         <AccordionSection title="4. Card de Produto" isOpen={activeSection === 'mod-4'} onToggle={() => setActiveSection(activeSection === 'mod-4' ? null : 'mod-4')}>
                           <ToggleSwitch label="Exibir card de produto" checked={formData.modal_config.show_product} onChange={e => updateModalConfig({ show_product: e.target.checked })} />
                           {formData.modal_config.show_product && (
-                            <div className="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-slate-100 pt-3.5">
+                            <div className="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-slate-100 dark:border-[#ff7a29]/20 pt-3.5">
                               <FormField label="Cor do fundo"><ColorInput label="Cor" value={(formData.modal_config as any).product_card_bg || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_bg: e.target.value } as any)} /></FormField>
                               <FormField label="Cor da Borda"><ColorInput label="Borda" value={(formData.modal_config as any).product_card_border_color || '#E2E8F0'} onChange={e => updateModalConfig({ product_card_border_color: e.target.value } as any)} /></FormField>
                               <FormField label="Largura Borda (px)"><input type="number" min="0" value={toNumberInputValue((formData.modal_config as any).product_card_border_width)} onChange={e => updateModalConfig({ product_card_border_width: e.target.value } as any)} className={inputClass} /></FormField>
@@ -3931,29 +3931,29 @@ const AppearancePage = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between border-t border-slate-100 bg-white px-6 py-3 shrink-0">
+            <div className="flex items-center justify-between border-t border-slate-100 dark:border-[#ff7a29]/20 bg-white dark:bg-[#111524] px-6 py-3 shrink-0">
               <div className="flex items-center gap-4">
                 <button
                   type="button"
                   onClick={handleResetTab}
-                  className="text-[11px] font-black uppercase tracking-wider text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100/80 px-3.5 py-2 rounded-xl border border-rose-100 transition-all cursor-pointer shrink-0 shadow-sm"
+                  className="text-[11px] font-black uppercase tracking-wider text-rose-500 dark:text-rose-400 hover:text-rose-600 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100/80 dark:hover:bg-rose-500/20 px-3.5 py-2 rounded-xl border border-rose-100 dark:border-rose-500/25 transition-all cursor-pointer shrink-0 shadow-xs"
                 >
                   Resetar
                 </button>
-                <div className="hidden md:flex items-center gap-2 text-[13px] text-slate-500 bg-slate-50/80 px-3 py-1.5 rounded-lg border border-slate-100">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} className="text-[#0094EB]"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+                <div className="hidden md:flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 bg-slate-50/80 dark:bg-[#1a1f35] px-3 py-1.5 rounded-xl border border-slate-100 dark:border-[#ff7a29]/20">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} className="text-[#0091ff]"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
 <span>Este painel é um <strong>preview meramente visual</strong>. Para testar cliques e interações, use o simulador na edição dos stories.</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <button type="button" onClick={handleCancel} disabled={saving} className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 transition-colors">
+                <button type="button" onClick={handleCancel} disabled={saving} className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1a1f35] disabled:cursor-not-allowed disabled:opacity-60 transition-colors">
                   <X size={14} /> Cancelar
                 </button>
                 
 
                 
-                <button type="button" onClick={handleSaveStyle} disabled={saving} className="flex items-center gap-1.5 rounded-xl bg-[#0094EB] px-5 py-2 text-xs font-bold text-white shadow-md hover:bg-[#0E4787] disabled:cursor-not-allowed disabled:opacity-60 transition-colors">
+                <button type="button" onClick={handleSaveStyle} disabled={saving} className="flex items-center gap-1.5 rounded-xl bg-[#0091ff] dark:bg-[#ff7a29] px-5 py-2 text-xs font-bold text-white shadow-md hover:bg-[#0070f3] dark:hover:bg-[#e05e10] disabled:cursor-not-allowed disabled:opacity-60 transition-colors">
                   {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} {saving ? 'Salvando...' : 'Salvar'}
                 </button>
               </div>

@@ -46,7 +46,7 @@ export default function HelpArticlesPage() {
           <p>
             Vá até a página de <strong>Instalação</strong> no menu lateral do seu painel do Vidlytics e copie o código script gerado exclusivamente para a sua loja. Ele se parece com isso:
           </p>
-          <pre className="bg-slate-50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800 p-4 rounded-2xl overflow-x-auto text-xs font-mono">
+          <pre className="bg-slate-50 dark:bg-[#111524] border border-slate-150 dark:border-[#ff7a29]/20 p-4 rounded-2xl overflow-x-auto text-xs font-mono">
             {`<script src="https://cdn.vidlytics.com.br/widget.js" data-store-id="SEU_ID_AQUI" defer></script>`}
           </pre>
 
@@ -157,7 +157,7 @@ export default function HelpArticlesPage() {
                 placeholder="Ex: Como instalar widget, importar Reels..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-slate-800 focus:border-[#0094EB] focus:ring-1 focus:ring-[#0094EB] rounded-2xl pl-12 pr-4 py-3.5 text-sm font-semibold shadow-sm outline-none transition-all placeholder:text-slate-400"
+                className="w-full bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-[#ff7a29]/20 focus:border-[#0091ff] focus:ring-1 focus:ring-[#0091ff] rounded-2xl pl-12 pr-4 py-3.5 text-sm font-semibold shadow-sm outline-none transition-all placeholder:text-slate-400"
               />
             </div>
           </div>
@@ -169,31 +169,31 @@ export default function HelpArticlesPage() {
                 <div 
                   key={article.id}
                   onClick={() => setSelectedArticle(article)}
-                  className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-slate-800 hover:border-[#0094EB] dark:hover:border-[#ff7a29]/30 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group"
+                  className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-[#ff7a29]/20 hover:border-[#0091ff] dark:hover:border-[#ff7a29]/30 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group"
                 >
                   <div className="space-y-2 max-w-2xl">
                     <div className="flex flex-wrap items-center gap-2.5">
-                      <span className="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg">
+                      <span className="bg-slate-100 dark:bg-[#111524] text-slate-600 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl">
                         {article.category}
                       </span>
                       <span className="inline-flex items-center gap-1 text-slate-400 text-[11px] font-medium">
                         <Clock size={12} /> {article.readTime}
                       </span>
                     </div>
-                    <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-[#0094EB] dark:group-hover:text-[#ff7a29] transition-colors">
+                    <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-[#0091ff] dark:group-hover:text-[#ff7a29] transition-colors">
                       {article.title}
                     </h3>
                     <p className="text-xs font-semibold text-slate-400 dark:text-[#8a90a0] line-clamp-2">
                       {article.summary}
                     </p>
                   </div>
-                  <div className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-[#0f1220] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
+                  <div className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-[#111524] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
                     <ChevronRight size={18} className="stroke-[2.5]" />
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-center py-12 bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
+              <div className="text-center py-12 bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-[#ff7a29]/20 rounded-2xl">
                 <HelpCircle size={40} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
                 <h3 className="text-sm font-black text-slate-900 dark:text-white">Nenhum artigo encontrado</h3>
                 <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-1">
@@ -205,9 +205,9 @@ export default function HelpArticlesPage() {
         </>
       ) : (
         /* Renderizador do Artigo Selecionado */
-        <article className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 sm:p-10 shadow-sm animate-fade-in">
+        <article className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-[#ff7a29]/20 rounded-2xl p-8 sm:p-10 shadow-sm animate-fade-in">
           <div className="space-y-4 border-b border-slate-100 dark:border-slate-800/80 pb-6 mb-6">
-            <span className="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-xl">
+            <span className="bg-slate-100 dark:bg-[#111524] text-slate-600 dark:text-slate-400 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-xl">
               {selectedArticle.category}
             </span>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white tracking-tight leading-tight">
@@ -239,7 +239,7 @@ export default function HelpArticlesPage() {
               </Button>
               <Button 
                 size="sm" 
-                className="bg-[#0094EB] hover:bg-[#0094EB]/90 text-white rounded-xl font-bold text-xs px-4"
+                className="bg-[#0091ff] hover:bg-[#0091ff]/90 text-white rounded-xl font-bold text-xs px-4"
                 onClick={() => {
                   alert("Obrigado pelo feedback!");
                   setSelectedArticle(null);

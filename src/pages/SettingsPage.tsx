@@ -458,7 +458,7 @@ const SettingsPage = () => {
           <Button
             type="submit"
             disabled={saving}
-            className="bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 self-start sm:self-auto shrink-0"
+            className="bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 self-start sm:self-auto shrink-0"
           >
             {saving ? (
               <>
@@ -478,7 +478,7 @@ const SettingsPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* CARD DE STATUS GERAL DO VIDLYTICS */}
-          <div className={`rounded-[2.5rem] border-2 transition-all p-6 sm:p-8 shadow-xs flex flex-col justify-between ${settings.widget_enabled ? 'border-emerald-500/20 bg-emerald-500/[0.02] dark:bg-emerald-500/[0.01]' : 'border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a1f35]/80'}`}>
+          <div className={`rounded-2xl border-2 transition-all p-6 sm:p-8 shadow-xs flex flex-col justify-between ${settings.widget_enabled ? 'border-emerald-500/20 bg-emerald-500/[0.02] dark:bg-emerald-500/[0.01]' : 'border-slate-200 dark:border-white/5 bg-white dark:bg-[#1a1f35]/80'}`}>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
@@ -493,7 +493,7 @@ const SettingsPage = () => {
                     onCheckedChange={c =>
                       setSettings(prev => ({ ...prev, widget_enabled: c }))
                     }
-                    className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
+                    className="data-[state=checked]:bg-[#0091ff] dark:data-[state=checked]:!bg-[#ff7a29]"
                   />
                 </div>
               </div>
@@ -525,11 +525,11 @@ const SettingsPage = () => {
           </div>
 
           {/* CARD DO TEMA DA INTERFACE */}
-          <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 flex flex-col justify-between">
+          <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="border-b border-slate-100 dark:border-white/5 pb-2">
                 <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-                  <Sun size={18} className="text-[#0094EB] dark:text-[#ff7a29]" /> Tema da Interface
+                  <Sun size={18} className="text-[#0091ff] dark:text-[#ff7a29]" /> Tema da Interface
                 </h2>
                 <p className="text-[11px] font-medium text-slate-500 dark:text-[#8a90a0]">
                   Escolha entre o modo claro ou escuro para o painel administrativo.
@@ -540,23 +540,23 @@ const SettingsPage = () => {
                 <button
                   type="button"
                   onClick={() => setIsDark(false)}
-                  className={`flex items-center gap-3 rounded-2xl border-2 p-3 transition-all text-left cursor-pointer ${!isDark ? 'border-[#0094EB] bg-blue-50/50 dark:bg-[#0f1220]' : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220]/40 hover:border-slate-300 dark:hover:border-white/20'}`}
+                  className={`flex items-center gap-3 rounded-2xl border-2 p-3 transition-all text-left cursor-pointer ${!isDark ? 'border-[#0091ff] bg-blue-50/50 dark:bg-[#111524]' : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#111524]/40 hover:border-slate-300 dark:hover:border-white/20'}`}
                 >
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${!isDark ? 'bg-[#0094EB] text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400'}`}>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${!isDark ? 'bg-[#0091ff] text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400'}`}>
                     <Sun size={18} />
                   </div>
                   <div className="min-w-0">
-                    <span className={`block text-xs font-black truncate ${!isDark ? 'text-[#0094EB] dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
+                    <span className={`block text-xs font-black truncate ${!isDark ? 'text-[#0091ff] dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
                       Tema Claro
                     </span>
                   </div>
-                  {!isDark && <CheckCircle2 size={16} className="ml-auto text-[#0094EB] shrink-0" />}
+                  {!isDark && <CheckCircle2 size={16} className="ml-auto text-[#0091ff] shrink-0" />}
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setIsDark(true)}
-                  className={`flex items-center gap-3 rounded-2xl border-2 p-3 transition-all text-left cursor-pointer ${isDark ? 'border-[#ff7a29] bg-orange-50/10' : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220]/40 hover:border-slate-300 dark:hover:border-white/20'}`}
+                  className={`flex items-center gap-3 rounded-2xl border-2 p-3 transition-all text-left cursor-pointer ${isDark ? 'border-[#ff7a29] bg-orange-50/10' : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#111524]/40 hover:border-slate-300 dark:hover:border-white/20'}`}
                 >
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${isDark ? 'bg-[#ff7a29] text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400'}`}>
                     <Moon size={18} />
@@ -575,7 +575,7 @@ const SettingsPage = () => {
         </div>
 
         {/* ── 1. DADOS DA LOJA ── */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
              1. Dados da Loja
@@ -597,7 +597,7 @@ const SettingsPage = () => {
                 onChange={e =>
                   setSettings(prev => ({ ...prev, store_name: e.target.value }))
                 }
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0091ff] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
                 required
               />
             </div>
@@ -617,7 +617,7 @@ const SettingsPage = () => {
                   const formatted = formatStoreUrl(e.target.value);
                   setSettings(prev => ({ ...prev, store_url: formatted }));
                 }}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0091ff] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
                 required
               />
             </div>
@@ -632,7 +632,7 @@ const SettingsPage = () => {
                   setSettings(prev => ({ ...prev, platform: value || null }))
                 }
               >
-                <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0">
+                <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0091ff] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0">
                   <SelectValue placeholder="Selecione uma plataforma..." />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-xs font-bold text-slate-800 dark:text-white shadow-xl">
@@ -658,7 +658,7 @@ const SettingsPage = () => {
                 onValueChange={setSelectedSectorId}
                 disabled={loadingSectors}
               >
-                <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0">
+                <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0091ff] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0">
                   <SelectValue placeholder="Selecione um setor..." />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-xs font-bold text-slate-800 dark:text-white shadow-xl">
@@ -683,7 +683,7 @@ const SettingsPage = () => {
                 Logo da Loja
               </Label>
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 shadow-xs">
+                <div className="h-16 w-16 rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#111524] border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 shadow-xs">
                   {logoPreview ? (
                     <img
                       src={logoPreview}
@@ -700,7 +700,7 @@ const SettingsPage = () => {
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
                       onChange={handleLogoChange}
-                      className="flex-1 h-11 p-1 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-600 dark:text-[#c0c5d4] flex items-center file:inline-flex file:items-center file:justify-center file:h-9 file:px-4 file:mr-3 file:rounded-lg file:border-0 file:bg-[#0094EB] dark:file:bg-[#ff7a29] file:text-white file:font-black file:text-xs file:cursor-pointer hover:file:bg-[#0081cc] dark:hover:file:bg-[#e66c22] transition-all cursor-pointer"
+                      className="flex-1 h-11 p-1 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-600 dark:text-[#c0c5d4] flex items-center file:inline-flex file:items-center file:justify-center file:h-9 file:px-4 file:mr-3 file:rounded-xl file:border-0 file:bg-[#0091ff] dark:file:bg-[#ff7a29] file:text-white file:font-black file:text-xs file:cursor-pointer hover:file:bg-[#0070f3] dark:hover:file:bg-[#e05e10] transition-all cursor-pointer"
                     />
                     {logoPreview && (
                       <Button 
@@ -708,7 +708,7 @@ const SettingsPage = () => {
                         variant="outline" 
                         size="icon" 
                         onClick={handleRemoveLogo} 
-                        className="h-11 w-11 rounded-xl border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220] hover:bg-rose-50 dark:hover:bg-rose-950/40 shrink-0"
+                        className="h-11 w-11 rounded-xl border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#111524] hover:bg-rose-50 dark:hover:bg-rose-950/40 shrink-0"
                         title="Remover logo"
                       >
                         <X size={16} className="text-rose-500" />
@@ -733,14 +733,14 @@ const SettingsPage = () => {
                 onChange={e =>
                   setSettings(prev => ({ ...prev, contact_email: e.target.value }))
                 }
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0091ff] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
               />
             </div>
           </div>
         </div>
 
         {/* ── 2. INTEGRAÇÃO WHATSAPP ── */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-4">
             <div>
               <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
@@ -751,7 +751,7 @@ const SettingsPage = () => {
               </p>
             </div>
             
-            <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-[#0f1220]/60 px-3.5 py-1.5 rounded-xl border border-slate-100 dark:border-white/5">
+            <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-[#111524]/60 px-3.5 py-1.5 rounded-xl border border-slate-100 dark:border-white/5">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">
                 {settings.whatsapp_enabled ? 'Ativo' : 'Inativo'}
               </span>
@@ -760,7 +760,7 @@ const SettingsPage = () => {
                 onCheckedChange={c =>
                   setSettings(prev => ({ ...prev, whatsapp_enabled: c }))
                 }
-                className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
+                className="data-[state=checked]:bg-[#0091ff] dark:data-[state=checked]:!bg-[#ff7a29]"
               />
             </div>
           </div>
@@ -778,7 +778,7 @@ const SettingsPage = () => {
                   const v = e.target.value.replace(/[^\d+\-\(\) ]/g, '');
                   setSettings(prev => ({ ...prev, whatsapp_number: v }));
                 }}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0091ff] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
                 disabled={!settings.whatsapp_enabled}
               />
               <p className="text-[11px] text-slate-500 dark:text-[#8a90a0]">
@@ -799,7 +799,7 @@ const SettingsPage = () => {
                   }))
                 }
                 rows={3}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0094EB] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0091ff] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
                 disabled={!settings.whatsapp_enabled}
               />
             </div>
@@ -807,7 +807,7 @@ const SettingsPage = () => {
         </div>
 
         {/* ── 3. MÉTRICAS ── */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
               3. Métricas
@@ -818,7 +818,7 @@ const SettingsPage = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-start justify-between gap-4 p-5 rounded-2xl bg-slate-50/70 dark:bg-[#0f1220]/60 border border-slate-100 dark:border-white/5">
+            <div className="flex items-start justify-between gap-4 p-5 rounded-2xl bg-slate-50/70 dark:bg-[#111524]/60 border border-slate-100 dark:border-white/5">
               <div className="space-y-0.5">
                 <Label className="text-xs font-black text-slate-800 dark:text-white block">
                   {settings?.stories_enabled ? 'Ativar métricas e analytics' : 'Desativar métricas e analytics'}
@@ -832,14 +832,14 @@ const SettingsPage = () => {
                 onCheckedChange={c =>
                   setSettings(prev => ({ ...prev, stories_enabled: c }))
                 }
-                className="data-[state=checked]:bg-[#0094EB] dark:data-[state=checked]:!bg-[#ff7a29]"
+                className="data-[state=checked]:bg-[#0091ff] dark:data-[state=checked]:!bg-[#ff7a29]"
               />
             </div>
           </div>
         </div>
 
         {/* ── 4. SEGURANÇA & API KEYS ── */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
           <div className="border-b border-slate-100 dark:border-white/5 pb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
               4. Segurança & API
@@ -858,7 +858,7 @@ const SettingsPage = () => {
                 type="text"
                 value={settings?.public_live_key ?? ''}
                 readOnly
-                className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-mono text-slate-600 dark:text-slate-300 break-all"
+                className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-mono text-slate-600 dark:text-slate-300 break-all"
               />
               <Button
                 type="button"
@@ -868,7 +868,7 @@ const SettingsPage = () => {
                   navigator.clipboard.writeText(settings?.public_live_key ?? '');
                   toast.success('Token copiado');
                 }}
-                className="rounded-xl border-slate-200 dark:border-white/10 hover:border-[#0094EB] dark:hover:border-[#ff7a29] text-slate-600 dark:text-slate-300 hover:text-[#0094EB] dark:hover:text-[#ff7a29]"
+                className="rounded-xl border-slate-200 dark:border-white/10 hover:border-[#0091ff] dark:hover:border-[#ff7a29] text-slate-600 dark:text-slate-300 hover:text-[#0091ff] dark:hover:text-[#ff7a29]"
                 title="Copiar token"
               >
                 <Copy size={16} />
@@ -882,7 +882,7 @@ const SettingsPage = () => {
                   setSettings(prev => ({ ...prev, public_live_key: k }));
                   toast.success('Token regenerado');
                 }}
-                className="rounded-xl border-slate-200 dark:border-white/10 hover:border-[#0094EB] dark:hover:border-amber-500 text-[#0094EB] dark:text-amber-500"
+                className="rounded-xl border-slate-200 dark:border-white/10 hover:border-[#0091ff] dark:hover:border-amber-500 text-[#0091ff] dark:text-amber-500"
                 title="Regenerar token"
               >
                 <RefreshCw size={16} />
@@ -896,7 +896,7 @@ const SettingsPage = () => {
           <Button
             type="submit"
             disabled={saving}
-            className="bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className="bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {saving ? (
               <>

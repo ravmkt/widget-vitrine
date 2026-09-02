@@ -150,9 +150,9 @@ export default function SupportPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         {/* Artigos */}
-        <div className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col justify-between group">
+        <div className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-[#ff7a29]/20 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col justify-between group">
           <div className="space-y-5">
-            <div className="h-14 w-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-[#0094EB]">
+            <div className="h-14 w-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-[#0091ff]">
               <BookOpen size={28} className="stroke-[2.5]" />
             </div>
             <div className="space-y-2">
@@ -165,15 +165,15 @@ export default function SupportPage() {
           <div className="pt-6">
             <button
               onClick={() => navigate('/suporte/artigos')}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-50 dark:bg-[#0f1220] border border-slate-100 dark:border-slate-800 hover:border-[#0094EB] px-5 py-3.5 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] hover:scale-105 transition-all cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-50 dark:bg-[#111524] border border-slate-100 dark:border-[#ff7a29]/20 hover:border-[#0091ff] px-5 py-3.5 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] hover:scale-105 transition-all cursor-pointer"
             >
-              Acessar Artigos <ArrowRight size={13} className="text-[#0094EB] dark:text-[#ff7a29]" />
+              Acessar Artigos <ArrowRight size={13} className="text-[#0091ff] dark:text-[#ff7a29]" />
             </button>
           </div>
         </div>
 
         {/* Playlist */}
-        <div className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col justify-between group">
+        <div className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-[#ff7a29]/20 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col justify-between group">
           <div className="space-y-5">
             <div className="h-14 w-14 rounded-2xl bg-violet-50 dark:bg-violet-950/40 flex items-center justify-center text-violet-500">
               <Play size={28} className="stroke-[2.5]" />
@@ -190,7 +190,7 @@ export default function SupportPage() {
               href={PLAYLIST_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-50 dark:bg-[#0f1220] border border-slate-100 dark:border-slate-800 hover:border-violet-500 px-5 py-3.5 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] hover:scale-105 transition-all cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-50 dark:bg-[#111524] border border-slate-100 dark:border-[#ff7a29]/20 hover:border-violet-500 px-5 py-3.5 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] hover:scale-105 transition-all cursor-pointer"
             >
               Ver Playlist <ExternalLink size={13} className="text-violet-500" />
             </a>
@@ -198,7 +198,7 @@ export default function SupportPage() {
         </div>
 
         {/* Chamada WhatsApp */}
-        <div className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col justify-between group">
+        <div className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-[#ff7a29]/20 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col justify-between group">
           <div className="space-y-5">
             <div className="h-14 w-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center text-emerald-500">
               <MessageCircle size={28} className="stroke-[2.5]" />
@@ -225,7 +225,7 @@ export default function SupportPage() {
       </div>
 
       {/* Checklist de Ativação Incorporado */}
-      <div className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-sm space-y-6">
+      <div className="bg-white dark:bg-[#1a1f35]/80 border border-slate-200 dark:border-[#ff7a29]/20 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/30 flex items-center justify-center text-[#ff7a29]">
             <Sparkles size={20} className="stroke-[2.5]" />
@@ -248,7 +248,7 @@ export default function SupportPage() {
               <div 
                 key={step.id} 
                 onClick={() => navigate(step.link)}
-                className="flex items-start gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0f1220]/50 hover:bg-slate-50 dark:hover:bg-[#0f1220] hover:border-slate-200 transition-all cursor-pointer group"
+                className="flex items-start gap-4 p-4 rounded-2xl border border-slate-100 dark:border-[#ff7a29]/20 bg-slate-50/50 dark:bg-[#111524]/50 hover:bg-slate-50 dark:hover:bg-[#111524] hover:border-slate-200 transition-all cursor-pointer group"
               >
                 <div className="mt-0.5 shrink-0">
                   {step.completed ? (
@@ -258,7 +258,7 @@ export default function SupportPage() {
                   )}
                 </div>
                 <div className="space-y-0.5">
-                  <h4 className="text-xs font-black text-slate-900 dark:text-white group-hover:text-[#0094EB] dark:group-hover:text-[#ff7a29] transition-colors flex items-center gap-1">
+                  <h4 className="text-xs font-black text-slate-900 dark:text-white group-hover:text-[#0091ff] dark:group-hover:text-[#ff7a29] transition-colors flex items-center gap-1">
                     {step.title}
                     <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                   </h4>

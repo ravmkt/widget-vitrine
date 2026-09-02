@@ -199,7 +199,7 @@ export function PlansPage() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0094EB]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#0091ff]" />
       </div>
     );
   }
@@ -211,14 +211,14 @@ export function PlansPage() {
         <button
           type="button"
           onClick={() => navigate('/billing')}
-          className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0] transition-colors hover:text-[#0094EB] dark:hover:text-[#ff7a29] mb-4 group cursor-pointer"
+          className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0] transition-colors hover:text-[#0091ff] dark:hover:text-[#ff7a29] mb-4 group cursor-pointer"
         >
           <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" />
           Voltar para Minha Assinatura
         </button>
 
         <div className="text-center max-w-2xl mx-auto space-y-4">
-          <span className="inline-block text-[10px] font-black uppercase tracking-widest text-[#0094EB] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3.5 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
+          <span className="inline-block text-[10px] font-black uppercase tracking-widest text-[#0091ff] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3.5 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
             Planos & Assinaturas
           </span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -237,7 +237,7 @@ export function PlansPage() {
                 className={cn(
                   "px-4 py-2 text-xs font-black rounded-xl cursor-pointer transition-all duration-200",
                   billingCycle === 'monthly'
-                    ? "bg-white dark:bg-[#1c2237] text-[#0094EB] dark:text-[#ff7a29] shadow-sm"
+                    ? "bg-white dark:bg-[#1a1f35] text-[#0091ff] dark:text-[#ff7a29] shadow-sm"
                     : "text-slate-400 hover:text-slate-600 dark:text-[#8a90a0] dark:hover:text-white"
                 )}
               >
@@ -250,7 +250,7 @@ export function PlansPage() {
                 className={cn(
                   "px-4 py-2 text-xs font-black rounded-xl cursor-pointer transition-all duration-200 flex items-center gap-1.5",
                   billingCycle === 'semiannual'
-                    ? "bg-white dark:bg-[#1c2237] text-[#0094EB] dark:text-[#ff7a29] shadow-sm"
+                    ? "bg-white dark:bg-[#1a1f35] text-[#0091ff] dark:text-[#ff7a29] shadow-sm"
                     : "text-slate-400 hover:text-slate-600 dark:text-[#8a90a0] dark:hover:text-white"
                 )}
               >
@@ -266,7 +266,7 @@ export function PlansPage() {
                 className={cn(
                   "px-4 py-2 text-xs font-black rounded-xl cursor-pointer transition-all duration-200 flex items-center gap-1.5",
                   billingCycle === 'annual'
-                    ? "bg-white dark:bg-[#1c2237] text-[#0094EB] dark:text-[#ff7a29] shadow-sm"
+                    ? "bg-white dark:bg-[#1a1f35] text-[#0091ff] dark:text-[#ff7a29] shadow-sm"
                     : "text-slate-400 hover:text-slate-600 dark:text-[#8a90a0] dark:hover:text-white"
                 )}
               >
@@ -294,16 +294,16 @@ export function PlansPage() {
             <div
               key={p.id}
               className={cn(
-                "relative flex flex-col justify-between rounded-[2.5rem] border bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1.5 shadow-sm",
+                "relative flex flex-col justify-between rounded-2xl border bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1.5 shadow-sm",
                 isPopular
-                  ? "border-[#0094EB] dark:border-[#ff7a29]/70 shadow-lg shadow-blue-500/10 dark:shadow-[0_12px_35px_rgba(255,122,41,0.22)] ring-1 ring-[#0094EB]/30 dark:ring-[#ff7a29]/30"
+                  ? "border-[#0091ff] dark:border-[#ff7a29]/70 shadow-lg shadow-blue-500/10 dark:shadow-[0_12px_35px_rgba(255,122,41,0.22)] ring-1 ring-[#0091ff]/30 dark:ring-[#ff7a29]/30"
                   : "border-slate-200 dark:border-orange-500/15 dark:hover:border-orange-500/35 dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.1)]",
                 isCurrent && "bg-slate-50/70 dark:bg-[#1a1f35]/95"
               )}
             >
               {/* Badge Arredondado "Mais Popular" Dual-Theme */}
               {isPopular && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#0094EB] dark:bg-[#ff7a29] px-3.5 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md shadow-blue-500/30 dark:shadow-orange-500/40">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#0091ff] dark:bg-[#ff7a29] px-3.5 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md shadow-blue-500/30 dark:shadow-orange-500/40">
                   Mais Popular
                 </div>
               )}
@@ -343,21 +343,21 @@ export function PlansPage() {
                 {/* Lista de Recursos com Checkmark Dual-Theme */}
                 <div className="mt-6 space-y-3.5 border-t border-slate-100 dark:border-white/5 pt-5">
                   <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shrink-0 shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shrink-0 shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                       <Check size={11} className="text-white stroke-[3]" />
                     </div>
                     <span><strong className="text-slate-900 dark:text-white">{(p.views_limit / 1000).toFixed(0)}k</strong> visualizações/mês</span>
                   </div>
 
                   <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shrink-0 shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shrink-0 shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                       <Check size={11} className="text-white stroke-[3]" />
                     </div>
                     <span><strong className="text-slate-900 dark:text-white">{p.pages_limit}</strong> páginas ativas</span>
                   </div>
 
                   <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shrink-0 shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shrink-0 shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                       <Check size={11} className="text-white stroke-[3]" />
                     </div>
                     <span><strong className="text-slate-900 dark:text-white">{formatSize(p.storage_limit_bytes)}</strong> armazenamento</span>
@@ -374,10 +374,10 @@ export function PlansPage() {
                   className={cn(
                     "w-full rounded-2xl py-3 px-4 text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer",
                     isCurrent
-                      ? "bg-slate-100 dark:bg-[#0f1220] text-slate-400 dark:text-slate-500 border border-transparent dark:border-white/5 cursor-default shadow-none"
+                      ? "bg-slate-100 dark:bg-[#111524] text-slate-400 dark:text-slate-500 border border-transparent dark:border-white/5 cursor-default shadow-none"
                       : isPopular
-                      ? "bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02]"
-                      : "bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white hover:border-[#0094EB] dark:hover:border-[#ff7a29]/60 hover:bg-slate-200 dark:hover:bg-white/5 shadow-xs"
+                      ? "bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02]"
+                      : "bg-slate-100 dark:bg-[#111524] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white hover:border-[#0091ff] dark:hover:border-[#ff7a29]/60 hover:bg-slate-200 dark:hover:bg-white/5 shadow-xs"
                   )}
                 >
                   {isUpdating ? (

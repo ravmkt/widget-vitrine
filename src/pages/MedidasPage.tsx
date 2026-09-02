@@ -361,7 +361,7 @@ const MedidasPage = () => {
           type="button"
           onClick={handleOpenSelection}
           disabled={!storeId || tenantLoading}
-          className="flex items-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="flex items-center gap-2 rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           <Plus size={16} className="!text-white stroke-[2.5]" />
           Novo
@@ -381,7 +381,7 @@ const MedidasPage = () => {
         <button
           type="button"
           onClick={() => navigate('/medidas')}
-          className="flex items-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 border-[#0094EB] dark:border-[#ff7a29] text-[#0094EB] dark:text-[#ff7a29] transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 border-[#0091ff] dark:border-[#ff7a29] text-[#0091ff] dark:text-[#ff7a29] transition-colors cursor-pointer"
         >
           <Ruler size={15} />
           Medidas
@@ -398,14 +398,14 @@ const MedidasPage = () => {
           return (
             <div
               key={model.id}
-              className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+              className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
             >
               <div>
                 {/* Cabeçalho do Cartão */}
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-5">
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Ícones de Categoria no Card */}
-                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)] shrink-0">
                       {isObject ? (
                         <Package size={18} className="!text-white stroke-[2.5]" />
                       ) : (
@@ -426,7 +426,7 @@ const MedidasPage = () => {
                     <button
                       type="button"
                       onClick={() => openEditModel(model)}
-                      className="p-2 rounded-xl text-slate-400 hover:text-[#0094EB] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+                      className="p-2 rounded-xl text-slate-400 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
                       title="Editar medidas"
                     >
                       <Edit3 size={16} />
@@ -451,17 +451,17 @@ const MedidasPage = () => {
                     return (
                       <div
                         key={`${model.id}-${measure.name}-${index}`}
-                        className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-[#0f1220]/70 rounded-2xl border border-slate-100 dark:border-white/5 transition-all"
+                        className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-[#111524]/70 rounded-2xl border border-slate-100 dark:border-white/5 transition-all"
                       >
                         <div className="flex items-center gap-2.5">
                           {/* Sem régua na frente de altura, marcador padronizado */}
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#0094EB] dark:bg-[#ff7a29]" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#0091ff] dark:bg-[#ff7a29]" />
                           <span className="text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
                             {measure.name}
                           </span>
                         </div>
 
-                        <span className="font-mono text-xs font-black text-slate-900 dark:text-white bg-white dark:bg-[#1a1f35] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-white/5 shadow-xs">
+                        <span className="font-mono text-xs font-black text-slate-900 dark:text-white bg-white dark:bg-[#1a1f35] px-2.5 py-1 rounded-xl border border-slate-200/60 dark:border-white/5 shadow-xs">
                           {measure.value} {isBaseMeasure ? "cm" : ""}
                         </span>
                       </div>
@@ -508,9 +508,9 @@ const MedidasPage = () => {
           <button
             type="button"
             onClick={() => handleSelectType("humano")}
-            className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 dark:border-white/5 hover:border-[#0094EB] dark:hover:border-[#ff7a29] bg-slate-50/50 dark:bg-[#0f1220]/40 hover:bg-blue-50/20 dark:hover:bg-orange-500/5 text-left transition-all cursor-pointer group"
+            className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 dark:border-white/5 hover:border-[#0091ff] dark:hover:border-[#ff7a29] bg-slate-50/50 dark:bg-[#111524]/40 hover:bg-blue-50/20 dark:hover:bg-orange-500/5 text-left transition-all cursor-pointer group"
           >
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-100 text-[#0094EB] dark:bg-orange-500/10 dark:text-[#ff7a29] group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-100 text-[#0091ff] dark:bg-orange-500/10 dark:text-[#ff7a29] group-hover:scale-110 transition-transform">
               <User size={24} className="stroke-[2]" />
             </div>
             <div>
@@ -527,9 +527,9 @@ const MedidasPage = () => {
           <button
             type="button"
             onClick={() => handleSelectType("objeto")}
-            className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 dark:border-white/5 hover:border-[#0094EB] dark:hover:border-[#ff7a29] bg-slate-50/50 dark:bg-[#0f1220]/40 hover:bg-blue-50/20 dark:hover:bg-orange-500/5 text-left transition-all cursor-pointer group"
+            className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 dark:border-white/5 hover:border-[#0091ff] dark:hover:border-[#ff7a29] bg-slate-50/50 dark:bg-[#111524]/40 hover:bg-blue-50/20 dark:hover:bg-orange-500/5 text-left transition-all cursor-pointer group"
           >
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-100 text-[#0094EB] dark:bg-orange-500/10 dark:text-[#ff7a29] group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-100 text-[#0091ff] dark:bg-orange-500/10 dark:text-[#ff7a29] group-hover:scale-110 transition-transform">
               <Package size={24} className="stroke-[2]" />
             </div>
             <div>
@@ -575,7 +575,7 @@ const MedidasPage = () => {
                   name: event.target.value,
                 })
               }
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] dark:bg-[#0f1220] dark:border-white/5 dark:text-white"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0091ff] dark:bg-[#111524] dark:border-white/5 dark:text-white"
             />
           </div>
 
@@ -600,7 +600,7 @@ const MedidasPage = () => {
                         height: event.target.value,
                       })
                     }
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0094EB] pr-8 dark:bg-[#0f1220] dark:border-white/5 dark:text-white"
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0091ff] pr-8 dark:bg-[#111524] dark:border-white/5 dark:text-white"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold">
                     cm
@@ -626,7 +626,7 @@ const MedidasPage = () => {
                         width: event.target.value,
                       })
                     }
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0094EB] pr-8 dark:bg-[#0f1220] dark:border-white/5 dark:text-white"
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0091ff] pr-8 dark:bg-[#111524] dark:border-white/5 dark:text-white"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold">
                     cm
@@ -652,7 +652,7 @@ const MedidasPage = () => {
                         length: event.target.value,
                       })
                     }
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0094EB] pr-8 dark:bg-[#0f1220] dark:border-white/5 dark:text-white"
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0091ff] pr-8 dark:bg-[#111524] dark:border-white/5 dark:text-white"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold">
                     cm
@@ -679,7 +679,7 @@ const MedidasPage = () => {
                       height: event.target.value,
                     })
                   }
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB] pr-12 dark:bg-[#0f1220] dark:border-white/5 dark:text-white"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0091ff] pr-12 dark:bg-[#111524] dark:border-white/5 dark:text-white"
                 />
 
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">
@@ -699,7 +699,7 @@ const MedidasPage = () => {
               <button
                 type="button"
                 onClick={addMeasure}
-                className="px-3 py-1.5 bg-[#EAF6FF] text-[#0094EB] rounded-lg text-xs font-black flex items-center gap-1 hover:bg-[#0094EB] hover:text-white transition-all cursor-pointer"
+                className="px-3 py-1.5 bg-[#0091ff]/10 text-[#0091ff] dark:text-[#ff7a29] dark:bg-[#ff7a29]/10 rounded-xl text-xs font-black flex items-center gap-1 hover:bg-[#0091ff] dark:hover:bg-[#ff7a29] hover:text-white transition-all cursor-pointer"
               >
                 <Plus size={14} />
                 Adicionar
@@ -707,7 +707,7 @@ const MedidasPage = () => {
             </div>
 
             {formData.measures.length === 0 ? (
-              <p className="text-center text-slate-400 text-sm py-4 bg-slate-50 dark:bg-[#0f1220] rounded-xl border border-dashed border-slate-200 dark:border-white/5">
+              <p className="text-center text-slate-400 text-sm py-4 bg-slate-50 dark:bg-[#111524] rounded-xl border border-dashed border-slate-200 dark:border-white/5">
                 Nenhum campo adicional. Clique em "Adicionar" para incluir.
               </p>
             ) : (
@@ -715,7 +715,7 @@ const MedidasPage = () => {
                 {formData.measures.map((measure, index) => (
                   <div
                     key={measure.id}
-                    className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-[#0f1220] rounded-xl border border-slate-100 dark:border-white/5"
+                    className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-[#111524] rounded-xl border border-slate-100 dark:border-white/5"
                   >
                     <span className="text-xs font-bold text-slate-400 w-6 text-center">
                       {index + 1}
@@ -729,7 +729,7 @@ const MedidasPage = () => {
                         onChange={(event) =>
                           updateMeasure(measure.id, "name", event.target.value)
                         }
-                        className="w-full px-3 py-2 bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
+                        className="w-full px-3 py-2 bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 rounded-2xl text-sm font-bold outline-none focus:border-[#0091ff] dark:text-white"
                       />
 
                       <div className="flex items-center gap-2">
@@ -744,7 +744,7 @@ const MedidasPage = () => {
                               event.target.value
                             )
                           }
-                          className="flex-1 px-3 py-2 bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 rounded-lg text-sm font-bold outline-none focus:border-[#0094EB] dark:text-white"
+                          className="flex-1 px-3 py-2 bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 rounded-2xl text-sm font-bold outline-none focus:border-[#0091ff] dark:text-white"
                         />
                       </div>
                     </div>
@@ -752,7 +752,7 @@ const MedidasPage = () => {
                     <button
                       type="button"
                       onClick={() => removeMeasure(measure.id)}
-                      className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
                       title="Remover campo"
                     >
                       <Trash2 size={16} />

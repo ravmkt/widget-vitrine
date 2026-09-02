@@ -9,7 +9,7 @@ const FloatingHelpButton = () => {
     <div className="fixed bottom-6 right-6 z-[9999]">
       <button
         onClick={() => navigate('/suporte')}
-        className="group flex h-14 w-14 hover:w-44 items-center justify-start rounded-full bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] text-white shadow-xl shadow-blue-500/20 dark:shadow-orange-500/10 transition-all duration-300 ease-in-out active:scale-95 overflow-hidden border border-white/10"
+        className="group flex h-14 w-14 hover:w-44 items-center justify-start rounded-full bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white shadow-xl shadow-blue-500/20 dark:shadow-orange-500/10 transition-all duration-300 ease-in-out active:scale-95 overflow-hidden border border-white/10"
         aria-label="Central de Suporte"
         title="Suporte & Ajuda"
       >

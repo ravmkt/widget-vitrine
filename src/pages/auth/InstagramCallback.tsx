@@ -48,12 +48,12 @@ export default function InstagramCallback() {
   }, [searchParams, navigate]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-900 p-4">
-      <div className="w-full max-w-md rounded-3xl bg-slate-950 p-8 text-center shadow-2xl border border-slate-800 space-y-4">
+    <div className="flex min-h-screen items-center justify-center bg-slate-900 dark:bg-[#111524] p-4">
+      <div className="w-full max-w-md rounded-2xl bg-slate-950 dark:bg-[#1a1f35] p-8 text-center shadow-2xl border border-[#ff7a29]/30 space-y-4">
         {status === 'loading' && (
           <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-10 w-10 animate-spin text-purple-500" />
-            <h2 className="text-lg font-bold text-white">Conectando sua conta do Instagram...</h2>
+            <Loader2 className="h-10 w-10 animate-spin text-[#0091ff] dark:text-[#ff7a29]" />
+            <h2 className="text-lg font-black text-white">Conectando sua conta do Instagram...</h2>
             <p className="text-xs text-slate-400">Aguarde enquanto validamos suas credenciais na Meta.</p>
           </div>
         )}
@@ -61,7 +61,7 @@ export default function InstagramCallback() {
         {status === 'success' && (
           <div className="flex flex-col items-center gap-3">
             <CheckCircle2 className="h-12 w-12 text-emerald-500 animate-bounce" />
-            <h2 className="text-lg font-bold text-white">Instagram Conectado!</h2>
+            <h2 className="text-lg font-black text-white">Instagram Conectado!</h2>
             <p className="text-xs text-slate-400">Redirecionando você de volta ao seu painel...</p>
           </div>
         )}
@@ -69,11 +69,11 @@ export default function InstagramCallback() {
         {status === 'error' && (
           <div className="flex flex-col items-center gap-3">
             <AlertCircle className="h-12 w-12 text-rose-500" />
-            <h2 className="text-lg font-bold text-white">Falha na Conexão</h2>
+            <h2 className="text-lg font-black text-white">Falha na Conexão</h2>
             <p className="text-xs text-rose-400">{errorMessage}</p>
             <button
               onClick={() => navigate('/armazenamento')}
-              className="mt-4 rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-white hover:bg-slate-700"
+              className="mt-4 rounded-2xl bg-[#0091ff] dark:bg-[#ff7a29] px-4 py-2 text-xs font-black text-white hover:bg-[#0070f3] dark:hover:bg-[#e05e10] transition-all"
             >
               Voltar ao Armazenamento
             </button>

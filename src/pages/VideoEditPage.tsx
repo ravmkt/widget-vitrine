@@ -713,12 +713,12 @@ const VideoEditPage = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/storage')}
-            className="p-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
+            className="p-2 bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/30 rounded-xl shadow-xs hover:bg-slate-50 dark:hover:bg-[#111524] transition-all cursor-pointer"
           >
             <ArrowLeft size={18} />
           </button>
 
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-[18px] font-black text-slate-900 dark:text-white tracking-tight">
             {isCreate ? 'Novo Vídeo' : 'Editar Vídeo'}
           </h1>
         </div>
@@ -726,7 +726,7 @@ const VideoEditPage = () => {
         <button
           onClick={handleSave}
           disabled={isSaving || tenantLoading}
-          className="bg-[#0094EB] hover:bg-[#0081cc] disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer"
+          className="bg-[#0091ff] hover:bg-[#0070f3] disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer"
         >
           {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
           {isSaving ? 'Salvando...' : 'Salvar Alterações'}
@@ -734,7 +734,7 @@ const VideoEditPage = () => {
       </div>
 
       {/* ── CARD PRINCIPAL COM CAMPOS DE CONFIGURAÇÃO ── */}
-      <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
+      <div className="bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl p-8 shadow-xs transition-all duration-300 hover:shadow-md">
         <form onSubmit={handleSave} className="space-y-6">
           
           {/* Título do Vídeo */}
@@ -747,7 +747,7 @@ const VideoEditPage = () => {
               type="text"
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
+              className="w-full px-5 py-3.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl text-sm font-bold text-slate-700 dark:text-white outline-none focus:border-[#0091ff]"
             />
           </div>
 
@@ -760,7 +760,7 @@ const VideoEditPage = () => {
             <select
               value={formData.origin}
               onChange={handleOriginChange}
-              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+              className="w-full px-5 py-3.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
             >
               <option value="external_url">URL do vídeo</option>
               <option value="upload">Upload de vídeo</option>
@@ -779,7 +779,7 @@ const VideoEditPage = () => {
                 value={formData.video_url}
                 onChange={e => setFormData({ ...formData, video_url: e.target.value })}
                 placeholder="Cole o link do YouTube Shorts, Instagram, TikTok ou arquivo MP4"
-                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]"
+                className="w-full px-5 py-3.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl text-sm font-bold text-slate-700 dark:text-white outline-none focus:border-[#0091ff]"
               />
             </div>
           )}
@@ -800,20 +800,20 @@ const VideoEditPage = () => {
                 type="file"
                 accept="video/mp4,video/quicktime,video/webm"
                 onChange={handleFileUpload}
-                className="block w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-black file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
+                className="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0091ff] file:font-black file:cursor-pointer hover:file:bg-[#0091ff] hover:file:text-white transition-all"
               />
 
               {formData.video_url && (
                 <video
                   src={formData.video_url}
-                  className="w-32 rounded-xl border border-slate-200 animate-fade-in"
+                  className="w-32 rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 animate-fade-in"
                   muted
                   controls
                 />
               )}
 
               {formData.video_file && (
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
+                <div className="rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] p-3 text-sm text-slate-700 dark:text-slate-300">
                   <div className="font-medium text-gray-700">
                     Arquivo selecionado:
                   </div>
@@ -863,7 +863,7 @@ const VideoEditPage = () => {
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={handleThumbnailUpload}
-                  className="block w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0094EB] file:font-black file:cursor-pointer hover:file:bg-[#0094EB] hover:file:text-white transition-all"
+                  className="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-[#EAF6FF] file:text-[#0091ff] file:font-black file:cursor-pointer hover:file:bg-[#0091ff] hover:file:text-white transition-all"
                 />
 
                 <input
@@ -875,7 +875,7 @@ const VideoEditPage = () => {
                     thumbnail_file: null,
                   })}
                   placeholder="Ou cole a URL da capa"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0094EB]"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff]"
                 />
               </div>
             </div>
@@ -894,7 +894,7 @@ const VideoEditPage = () => {
             <select
               value={formData.product_id}
               onChange={e => setFormData({ ...formData, product_id: e.target.value })}
-              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+              className="w-full px-5 py-3.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
             >
               <option value="">Nenhum produto vinculado</option>
 
@@ -935,7 +935,7 @@ const VideoEditPage = () => {
             <select
               value={formData.model_id}
               onChange={e => setFormData({ ...formData, model_id: e.target.value })}
-              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+              className="w-full px-5 py-3.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
             >
               <option value="">Nenhum</option>
 
@@ -959,7 +959,7 @@ const VideoEditPage = () => {
                 ...formData,
                 active: e.target.value === 'true',
               })}
-              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none"
+              className="w-full px-5 py-3.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
             >
               <option value="true">Ativo</option>
               <option value="false">Inativo</option>
@@ -968,18 +968,18 @@ const VideoEditPage = () => {
 
           {/* Usado em Stories */}
           {usedInStories.length > 0 && (
-            <div className="space-y-4 pt-4 border-t border-slate-200">
+            <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-[#ff7a29]/20">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 Usado em Stories
               </label>
 
-              <span className="font-bold text-slate-800">Sim</span>
+              <span className="font-bold text-slate-800 dark:text-white">Sim</span>
 
-              <p className="text-sm font-bold text-slate-600">
+              <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
                 Stories vinculados:
               </p>
 
-              <ul className="list-disc list-inside text-slate-500">
+              <ul className="list-disc list-inside text-slate-500 dark:text-slate-400">
                 {usedInStories.map(story => (
                   <li key={story.id}>
                     {story.title}
@@ -990,12 +990,12 @@ const VideoEditPage = () => {
           )}
 
           {!isCreate && usedInStories.length === 0 && (
-            <div className="space-y-4 pt-4 border-t border-slate-200">
+            <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-[#ff7a29]/20">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 Usado em Stories
               </label>
 
-              <p className="text-sm font-bold text-slate-600">
+              <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
                 Não
               </p>
             </div>
@@ -1009,7 +1009,7 @@ const VideoEditPage = () => {
           type="button"
           onClick={handleSave}
           disabled={isSaving || tenantLoading}
-          className="bg-[#0094EB] hover:bg-[#0081cc] disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer"
+          className="bg-[#0091ff] hover:bg-[#0070f3] disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer"
         >
           {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
           {isSaving ? 'Salvando...' : 'Salvar Alterações'}

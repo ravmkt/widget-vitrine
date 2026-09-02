@@ -331,7 +331,7 @@ window.VIDLYTICS_CONFIG = {
       {/* ── CABEÇALHO DA PÁGINA ── */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 bg-blue-50 dark:bg-[#ff7a29]/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-[#0094EB] dark:text-[#ff7a29] shadow-xs">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 bg-blue-50 dark:bg-[#ff7a29]/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-[#0091ff] dark:text-[#ff7a29] shadow-xs">
             <Store className="h-3.5 w-3.5" />
             Integração
           </div>
@@ -348,7 +348,7 @@ window.VIDLYTICS_CONFIG = {
 
       {/* ── ALERTAS DE AMBIENTE ── */}
       {!hasStoreId && (
-        <div className="flex items-start gap-3 rounded-[2rem] border border-rose-500/30 bg-rose-50 dark:bg-rose-950/30 p-5">
+        <div className="flex items-start gap-3 rounded-2xl border border-rose-500/30 bg-rose-50 dark:bg-rose-950/30 p-5">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
           <div className="text-xs text-rose-800 dark:text-rose-300">
             <p className="font-black text-sm uppercase tracking-tight">Loja não identificada</p>
@@ -360,7 +360,7 @@ window.VIDLYTICS_CONFIG = {
       )}
 
       {!hasSupabaseConfig && (
-        <div className="flex items-start gap-3 rounded-[2rem] border border-rose-500/30 bg-rose-50 dark:bg-rose-950/30 p-5">
+        <div className="flex items-start gap-3 rounded-2xl border border-rose-500/30 bg-rose-50 dark:bg-rose-950/30 p-5">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
           <div className="text-xs text-rose-800 dark:text-rose-300">
             <p className="font-black text-sm uppercase tracking-tight">Configuração do Supabase ausente</p>
@@ -372,7 +372,7 @@ window.VIDLYTICS_CONFIG = {
       )}
 
       {isLocal && (
-        <div className="flex items-start gap-3 rounded-[2rem] border border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 p-5">
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 p-5">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
           <div className="text-xs text-amber-800 dark:text-amber-300">
             <p className="font-black text-sm uppercase tracking-tight">URL pública ausente</p>
@@ -386,9 +386,9 @@ window.VIDLYTICS_CONFIG = {
       {/* ── MÓDULOS SUPERIORES: FORMATOS DE VÍDEO (DUAL-THEME) ── */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {/* Card: Flutuante */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
-            <div className="h-11 w-11 overflow-hidden rounded-2xl shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4 text-[#0094EB] dark:text-[#ff7a29]">
+            <div className="h-11 w-11 overflow-hidden rounded-2xl shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4 text-[#0091ff] dark:text-[#ff7a29]">
               <FlutuanteIcon className="h-full w-full" />
             </div>
 
@@ -403,9 +403,9 @@ window.VIDLYTICS_CONFIG = {
         </div>
 
         {/* Card: Carrossel */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
-            <div className="h-11 w-11 overflow-hidden rounded-2xl shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4 text-[#0094EB] dark:text-[#ff7a29]">
+            <div className="h-11 w-11 overflow-hidden rounded-2xl shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4 text-[#0091ff] dark:text-[#ff7a29]">
               <CarrosselIcon className="h-full w-full" />
             </div>
 
@@ -420,9 +420,9 @@ window.VIDLYTICS_CONFIG = {
         </div>
 
         {/* Card: Carrossel Dinâmico */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
-            <div className="h-11 w-11 overflow-hidden rounded-2xl shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4 text-[#0094EB] dark:text-[#ff7a29]">
+            <div className="h-11 w-11 overflow-hidden rounded-2xl shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4 text-[#0091ff] dark:text-[#ff7a29]">
               <CarrosselDinamicoIcon className="h-full w-full" />
             </div>
 
@@ -437,9 +437,9 @@ window.VIDLYTICS_CONFIG = {
         </div>
 
         {/* Card: Galeria */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
-            <div className="h-11 w-11 overflow-hidden rounded-2xl shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4 text-[#0094EB] dark:text-[#ff7a29]">
+            <div className="h-11 w-11 overflow-hidden rounded-2xl shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] mb-4 text-[#0091ff] dark:text-[#ff7a29]">
               <GradeIcon className="h-full w-full" />
             </div>
 
@@ -456,13 +456,13 @@ window.VIDLYTICS_CONFIG = {
 
       {/* ── BOTÕES / TABS DE SELEÇÃO DE INSTALAÇÃO ── */}
       <div className="flex justify-center pt-2">
-        <div className="inline-flex rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1220] p-1.5 shadow-sm">
+        <div className="inline-flex rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#111524] p-1.5 shadow-sm">
           <button
             type="button"
             onClick={() => setInstallTab('platform')}
             className={`rounded-xl px-6 py-3 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
               installTab === 'platform'
-                ? 'bg-white dark:bg-[#1a1f35] text-[#0094EB] dark:text-[#ff7a29] shadow-md border border-slate-100 dark:border-orange-500/10'
+                ? 'bg-white dark:bg-[#1a1f35] text-[#0091ff] dark:text-[#ff7a29] shadow-md border border-slate-100 dark:border-orange-500/10'
                 : 'text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white'
             }`}
           >
@@ -473,7 +473,7 @@ window.VIDLYTICS_CONFIG = {
             onClick={() => setInstallTab('gtm')}
             className={`rounded-xl px-6 py-3 text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
               installTab === 'gtm'
-                ? 'bg-white dark:bg-[#1a1f35] text-[#0094EB] dark:text-[#ff7a29] shadow-md border border-slate-100 dark:border-orange-500/10'
+                ? 'bg-white dark:bg-[#1a1f35] text-[#0091ff] dark:text-[#ff7a29] shadow-md border border-slate-100 dark:border-orange-500/10'
                 : 'text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white'
             }`}
           >
@@ -483,7 +483,7 @@ window.VIDLYTICS_CONFIG = {
       </div>
 
       {/* ── SEÇÃO: COMO INSTALAR NA SUA LOJA (FOCADO EXCLUSIVAMENTE NO SCRIPT PRINCIPAL) ── */}
-      <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
+      <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
         <div className="border-b border-slate-100 dark:border-white/5 pb-4">
           <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
             Como instalar na sua loja
@@ -497,9 +497,9 @@ window.VIDLYTICS_CONFIG = {
           {installTab === 'platform' ? (
             <>
               {/* Passo 1 - Plataforma */}
-              <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+              <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-6 flex flex-col justify-between">
                 <div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0091ff] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                     1
                   </div>
                   <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
@@ -512,9 +512,9 @@ window.VIDLYTICS_CONFIG = {
               </div>
 
               {/* Passo 2 - Plataforma */}
-              <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+              <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-6 flex flex-col justify-between">
                 <div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0091ff] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                     2
                   </div>
                   <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
@@ -529,9 +529,9 @@ window.VIDLYTICS_CONFIG = {
           ) : (
             <>
               {/* Passo 1 - GTM */}
-              <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+              <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-6 flex flex-col justify-between">
                 <div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0091ff] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                     1
                   </div>
                   <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
@@ -544,9 +544,9 @@ window.VIDLYTICS_CONFIG = {
               </div>
 
               {/* Passo 2 - GTM */}
-              <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+              <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-6 flex flex-col justify-between">
                 <div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0091ff] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                     2
                   </div>
                   <h3 className="mt-4 text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
@@ -561,9 +561,9 @@ window.VIDLYTICS_CONFIG = {
           )}
 
           {/* Passo 3 - Comum a ambos */}
-          <div className="rounded-3xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-6 flex flex-col justify-between">
+          <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-6 flex flex-col justify-between">
             <div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0091ff] dark:bg-[#ff7a29] text-white font-black text-xs shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
                 3
               </div>
 
@@ -579,7 +579,7 @@ window.VIDLYTICS_CONFIG = {
         </div>
 
         {/* Banner de Direcionamento CSS atualizado conforme solicitado */}
-        <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#0f1220]/70 p-5 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-5 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
               Precisa customizar o posicionamento ou local de exibição?
@@ -593,10 +593,10 @@ window.VIDLYTICS_CONFIG = {
 
       <div className="space-y-6">
         {/* ── PASSO 1: SCRIPT PRINCIPAL ── */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-sm shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0091ff] dark:bg-[#ff7a29] text-white font-black text-sm shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
                 1
               </div>
               <div>
@@ -613,7 +613,7 @@ window.VIDLYTICS_CONFIG = {
               type="button"
               onClick={handleCopyScript}
               disabled={!canInstall}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
             >
               {copied ? (
                 <>
@@ -629,7 +629,7 @@ window.VIDLYTICS_CONFIG = {
             </button>
           </div>
 
-          <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-[#0f1220] shadow-2xl">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-[#111524] shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/5 bg-[#14182b] px-5 py-3">
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-rose-500/80" />
@@ -645,10 +645,10 @@ window.VIDLYTICS_CONFIG = {
         </div>
 
         {/* ── PASSO 2: SCRIPT DE RASTREAMENTO DE VENDAS ── */}
-        <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
+        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 lg:p-10 shadow-sm space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white font-black text-sm shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0091ff] dark:bg-[#ff7a29] text-white font-black text-sm shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.4)]">
                 2
               </div>
               <div>
@@ -683,7 +683,7 @@ window.VIDLYTICS_CONFIG = {
               type="button"
               onClick={handleCopyTrackingScript}
               disabled={!trackingReady}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
             >
               {copiedTracking ? (
                 <>
@@ -699,7 +699,7 @@ window.VIDLYTICS_CONFIG = {
             </button>
           </div>
 
-          <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-[#0f1220] shadow-2xl">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-[#111524] shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/5 bg-[#14182b] px-5 py-3">
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-rose-500/80" />

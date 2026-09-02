@@ -559,10 +559,10 @@ const polling = setInterval(async () => {
   // ──────────────── GALLERY MODAL ────────────────
   const GalleryModal = () => (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-5xl rounded-[28px] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-5xl rounded-2xl bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-black text-slate-900">Selecionar Vídeos</h3>
-          <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-full p-2 text-slate-500 hover:bg-slate-100"><X size={18} /></button>
+          <h3 className="text-lg font-black text-slate-900 dark:text-white">Selecionar Vídeos</h3>
+          <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-full p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10"><X size={18} /></button>
         </div>
         <div className="max-h-[70vh] overflow-y-auto pr-1">
 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -580,7 +580,7 @@ const polling = setInterval(async () => {
                   onClick={() => handleToggleVideo(video.id)}
                   className={cn(
                     'group relative aspect-[9/16] overflow-hidden rounded-2xl border-2 bg-slate-900 transition-all text-left',
-                    selected ? 'border-[#0094EB] shadow-lg shadow-blue-100 ring-2 ring-[#0094EB]/30' : 'border-slate-200 hover:border-slate-300'
+                    selected ? 'border-[#0091ff] dark:border-[#ff7a29] shadow-lg shadow-blue-100 dark:shadow-orange-500/20 ring-2 ring-[#0091ff]/30 dark:ring-[#ff7a29]/30' : 'border-slate-200 dark:border-[#ff7a29]/20 hover:border-slate-300 dark:hover:border-[#ff7a29]/50'
                   )}
                 >
                   {isPosterVideo ? (
@@ -605,7 +605,7 @@ const polling = setInterval(async () => {
                       }}
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
+                    <div className="flex h-full w-full items-center justify-center bg-slate-100 dark:bg-[#1a1f35] text-slate-400">
                       <Film size={24} />
                     </div>
                   )}
@@ -622,8 +622,8 @@ const polling = setInterval(async () => {
                     />
                   )}
 
-                  <div className={cn('absolute inset-0 flex items-center justify-center transition-all pointer-events-none', selected ? 'bg-[#0094EB]/25' : 'bg-black/10 group-hover:bg-black/20')}>
-                    {selected && <div className="rounded-full bg-[#0094EB] p-1.5 text-white shadow-md"><CheckCircle2 size={16} /></div>}
+                  <div className={cn('absolute inset-0 flex items-center justify-center transition-all pointer-events-none', selected ? 'bg-[#0091ff]/25' : 'bg-black/10 group-hover:bg-black/20')}>
+                    {selected && <div className="rounded-full bg-[#0091ff] p-1.5 text-white shadow-md"><CheckCircle2 size={16} /></div>}
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2.5 pointer-events-none">
                     <p className="truncate text-[10px] font-black text-white">{video.title || 'Sem título'}</p>
@@ -634,8 +634,8 @@ const polling = setInterval(async () => {
           </div>
         </div>
         <div className="mt-5 flex items-center justify-end gap-3">
-          <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">Criar novo vídeo</button>
-          <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
+          <button type="button" onClick={() => navigate('/videos/new')} className="rounded-xl bg-[#0091ff] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0070f3]">Criar novo vídeo</button>
+          <button type="button" onClick={() => setIsGalleryOpen(false)} className="rounded-xl bg-[#0091ff] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0070f3]">
             Adicionar {selectedVideoIds.length} vídeo(s) ao Story
           </button>
         </div>
@@ -649,7 +649,7 @@ const SelectorModal = () => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-[28px] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-black text-slate-900">
             Selecionar elemento na loja
@@ -672,9 +672,9 @@ const SelectorModal = () => {
             value={selectorUrl}
             onChange={(e) => setSelectorUrl(e.target.value)}
             placeholder="https://www.sualoja.com.br/pagina-exemplo"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]"
+            className="w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-4 py-3 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
           />
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Uma nova aba abrirá. Clique no elemento onde o widget deve aparecer
             e pressione <b>Enter</b>.
           </p>
@@ -684,7 +684,7 @@ const SelectorModal = () => {
           <button
             type="button"
             onClick={() => setSelectorModalOpen(false)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50"
+            className="rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#111524]"
           >
             Cancelar
           </button>
@@ -692,7 +692,7 @@ const SelectorModal = () => {
             type="button"
             onClick={handleOpenSelector}
             disabled={!selectorUrl.trim()}
-            className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787] disabled:opacity-50"
+            className="rounded-xl bg-[#0091ff] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0070f3] disabled:opacity-50"
           >
             Abrir seletor
           </button>
@@ -702,9 +702,9 @@ const SelectorModal = () => {
   );
 };
 
-  if (loading || tenantLoading) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-[#0094EB]" /></div>;
+  if (loading || tenantLoading) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-[#0091ff]" /></div>;
 
-  if (!isCreate && !story) return <div className="space-y-6 animate-fade-in"><button type="button" onClick={() => navigate('/stories')} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition-all hover:bg-slate-50"><ArrowLeft size={18} />Voltar</button><div className="rounded-[2rem] border border-slate-200 bg-white p-10 text-center shadow-sm"><h1 className="text-xl font-black text-slate-900">Story não encontrado</h1><p className="mt-2 text-sm font-bold text-slate-500">Não foi possível localizar esse Story para a loja atual.</p></div></div>;
+  if (!isCreate && !story) return <div className="space-y-6 animate-fade-in"><button type="button" onClick={() => navigate('/stories')} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] px-4 py-3 text-sm font-black text-slate-700 dark:text-white transition-all hover:bg-slate-50 dark:hover:bg-[#111524]"><ArrowLeft size={18} />Voltar</button><div className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] p-10 text-center shadow-xs"><h1 className="text-xl font-black text-slate-900 dark:text-white">Story não encontrado</h1><p className="mt-2 text-sm font-bold text-slate-500 dark:text-slate-400">Não foi possível localizar esse Story para a loja atual.</p></div></div>;
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
@@ -713,21 +713,21 @@ const SelectorModal = () => {
           <button type="button" onClick={() => navigate('/stories')} className="rounded-xl border border-slate-200 bg-white p-2.5 transition-all hover:bg-slate-50"><ArrowLeft size={20} /></button>
           <div>
             <h1 className="text-2xl font-black tracking-tight text-slate-900">{isCreate ? 'Novo Story' : 'Editar Story'}</h1>
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">{isCreate ? 'Criar novo story' : formData.title}</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">{isCreate ? 'Criar novo story' : formData.title}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="mr-4 hidden items-center gap-2 sm:flex">
             <span className={cn('text-[10px] font-black uppercase tracking-widest', formData.active ? 'text-emerald-500' : 'text-slate-400')}>{formData.active ? 'Status: Ativo' : 'Status: Inativo'}</span>
-            <button type="button" onClick={() => setFormData((prev) => ({ ...prev, active: !prev.active }))} className={cn('h-6 w-12 rounded-full p-1 transition-all duration-300', formData.active ? 'bg-emerald-500' : 'bg-slate-300')}><div className={cn('h-4 w-4 rounded-full bg-white transition-all duration-300', formData.active ? 'translate-x-6' : 'translate-x-0')} /></button>
+            <button type="button" onClick={() => setFormData((prev) => ({ ...prev, active: !prev.active }))} className={cn('h-6 w-12 rounded-full p-1 transition-all duration-300', formData.active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-white/20')}><div className={cn('h-4 w-4 rounded-full bg-white transition-all duration-300', formData.active ? 'translate-x-6' : 'translate-x-0')} /></button>
           </div>
 {isCreate && (
-  <div className="hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 md:block">
+  <div className="hidden rounded-2xl border border-dashed border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50/50 dark:bg-[#111524]/50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 md:block">
     💾 Salve para habilitar o preview
   </div>
 )}
 
-<button type="button" onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 transition-all hover:bg-[#0E4787] disabled:opacity-60">{isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}{isSaving ? 'Salvando...' : 'Salvar Alterações'}</button>
+<button type="button" onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 rounded-2xl bg-[#0091ff] dark:bg-[#ff7a29] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 dark:shadow-orange-500/20 transition-all hover:bg-[#0070f3] dark:hover:bg-[#e05e10] disabled:opacity-60">{isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}{isSaving ? 'Salvando...' : 'Salvar Alterações'}</button>
         </div>
       </div>
 
@@ -736,16 +736,16 @@ const SelectorModal = () => {
           <div className="space-y-8">
 {/* ── SIMULAR PREVIEW ── */}
 {!isCreate && (
-  <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+  <div className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] p-6 shadow-xs transition-all duration-300 hover:shadow-md">
     <div className="mb-4 flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-[#0094EB]">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 dark:bg-[#0091ff]/10 text-[#0091ff] dark:text-[#ff7a29]">
         <Rocket size={20} />
       </div>
       <div>
-        <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">
+        <h3 className="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-white">
           Simular Preview
         </h3>
-        <p className="text-xs font-bold text-slate-400">
+        <p className="text-xs font-bold text-slate-400 dark:text-slate-500">
           Veja como ficará na sua loja sem publicar
         </p>
       </div>
@@ -756,7 +756,7 @@ const SelectorModal = () => {
         placeholder={storeRealUrl || currentStore?.url ? `Ex: ${storeRealUrl || currentStore?.url}` : "Cole a URL de teste (ex: link de um produto)..."}
         value={previewUrl}
         onChange={(e) => setPreviewUrl(e.target.value)}
-        className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB] placeholder:text-slate-400"
+        className="flex-1 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-5 py-3.5 text-sm font-bold text-slate-700 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29] placeholder:text-slate-400 dark:placeholder:text-slate-500"
       />
       <button
         type="button"
@@ -773,7 +773,7 @@ const SelectorModal = () => {
           const finalPreviewUrl = targetUrl + connector + "vidlytics_preview_story_id=" + stableStoryId;
           window.open(finalPreviewUrl, "_blank", "noopener,noreferrer");
         }}
-        className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3.5 text-sm font-black text-white shadow-xl transition-all hover:bg-slate-800 shrink-0"
+        className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 dark:bg-[#0091ff] dark:hover:bg-[#0070f3] px-6 py-3.5 text-sm font-black text-white shadow-xl transition-all hover:bg-slate-800 shrink-0"
       >
         🚀 Simular Preview
       </button>
@@ -785,12 +785,12 @@ const SelectorModal = () => {
 
 
 {/* ── DESIGN E FORMATO ── */}
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-              <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-6"><Layout className="text-[#0094EB]" size={20} /><h3 className="text-lg font-black uppercase tracking-tight text-slate-800">Design e Formato</h3></div>
+            <div className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] p-8 shadow-xs transition-all duration-300 hover:shadow-md">
+              <div className="mb-6 flex items-center gap-3 border-b border-slate-100 dark:border-[#ff7a29]/20 pb-6"><Layout className="text-[#0091ff] dark:text-[#ff7a29]" size={20} /><h3 className="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-white">Design e Formato</h3></div>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome do Story</label>
-                  <input type="text" value={formData.title} onChange={(event) => setFormData((prev) => ({ ...prev, title: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none focus:border-[#0094EB]" placeholder="Ex: Lançamentos" />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Nome do Story</label>
+                  <input type="text" value={formData.title} onChange={(event) => setFormData((prev) => ({ ...prev, title: event.target.value }))} className="w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-5 py-3.5 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]" placeholder="Ex: Lançamentos" />
                 </div>
 
                 {/* Bloco de Formatos Corrigido e Responsivo */}
@@ -814,12 +814,12 @@ const SelectorModal = () => {
                           disabled={isDisabled}
                           onClick={() => !isDisabled && setFormData((prev) => ({ ...prev, format: format.id as StoryFormat }))}
                           className={cn(
-                            'flex flex-col items-center justify-center gap-3 rounded-3xl border-2 p-6 transition-all min-h-[140px]',
+                            'flex flex-col items-center justify-center gap-3 rounded-2xl border-2 p-6 transition-all min-h-[140px]',
                             isDisabled
-                              ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 opacity-60'
+                              ? 'cursor-not-allowed border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-[#111524] text-slate-300 dark:text-slate-600 opacity-60'
                               : formData.format === format.id
-                                ? 'border-[#0094EB] bg-blue-50 text-[#0094EB]'
-                                : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'
+                                ? 'border-[#0091ff] dark:border-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 text-[#0091ff] dark:text-[#ff7a29]'
+                                : 'border-slate-100 dark:border-[#ff7a29]/20 bg-white dark:bg-[#111524] text-slate-400 dark:text-slate-500 hover:border-slate-200 dark:hover:border-[#ff7a29]/50'
                           )}
                         >
                           <Icon size={24} strokeWidth={1.7} />
@@ -836,7 +836,7 @@ const SelectorModal = () => {
 
                   {/* Alerta informativo do Carrossel Dinâmico */}
                   {formData.format === 'dynamic_carousel' && (
-                    <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-4 text-xs font-semibold text-slate-600 transition-all flex flex-col gap-2">
+                    <div className="rounded-2xl border border-amber-100 dark:border-amber-500/25 bg-amber-50/40 dark:bg-amber-500/10 p-4 text-xs font-semibold text-slate-600 dark:text-slate-300 transition-all flex flex-col gap-2">
                       <div>
                         ⚠️ <strong className="text-amber-700">Carrossel Dinâmico:</strong> Este formato requer no mínimo <strong>3 vídeos ativos</strong> selecionados abaixo para funcionar corretamente na sua loja.
                       </div>
@@ -847,23 +847,23 @@ const SelectorModal = () => {
                   )}
                 </div>
                 </div>
-                <div className="space-y-2 pt-4"><label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Direção de Rolagem</label><select value={formData.scroll_direction} onChange={(event) => setFormData((prev) => ({ ...prev, scroll_direction: event.target.value as ScrollDirection }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none"><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
-                <div className="space-y-2 pt-4"><label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Estilo Visual / Aparência</label><select value={formData.appearance_id} onChange={(event) => setFormData((prev) => ({ ...prev, appearance_id: event.target.value }))} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm font-bold outline-none"><option value="">Seguir Padrão do App</option>{appearances.filter((app) => app.id && isValidUuid(app.id)).map((app) => (<option key={app.id} value={app.id}>{app.name} {app.is_default ? '(Padrão)' : ''}</option>))}</select></div>
+                <div className="space-y-2 pt-4"><label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Direção de Rolagem</label><select value={formData.scroll_direction} onChange={(event) => setFormData((prev) => ({ ...prev, scroll_direction: event.target.value as ScrollDirection }))} className="w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-5 py-3.5 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
+                <div className="space-y-2 pt-4"><label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Estilo Visual / Aparência</label><select value={formData.appearance_id} onChange={(event) => setFormData((prev) => ({ ...prev, appearance_id: event.target.value }))} className="w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-5 py-3.5 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"><option value="">Seguir Padrão do App</option>{appearances.filter((app) => app.id && isValidUuid(app.id)).map((app) => (<option key={app.id} value={app.id}>{app.name} {app.is_default ? '(Padrão)' : ''}</option>))}</select></div>
               </div>
 
             {/* ── CONTEÚDO SELECIONADO (COM DRAG-AND-DROP) ── */}
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-              <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-6">
+            <div className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] p-8 shadow-xs transition-all duration-300 hover:shadow-md">
+              <div className="mb-6 flex items-center justify-between border-b border-slate-100 dark:border-[#ff7a29]/20 pb-6">
                 <div className="flex items-center gap-3">
-                  <Film className="text-[#0094EB]" size={20} />
+                  <Film className="text-[#0091ff]" size={20} />
                   <div>
-                    <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">Conteúdo selecionado</h3>
+                    <h3 className="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-white">Conteúdo selecionado</h3>
                     {selectedVideoIds.length > 0 && (
                       <p className="text-[10px] font-bold text-slate-400">Arraste para reordenar os vídeos</p>
                     )}
                   </div>
                 </div>
-                <button type="button" onClick={() => setIsGalleryOpen(true)} className="rounded-xl bg-[#0094EB] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]">
+                <button type="button" onClick={() => setIsGalleryOpen(true)} className="rounded-xl bg-[#0091ff] px-4 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0070f3]">
                   + Adicionar Vídeos
                 </button>
               </div>
@@ -885,7 +885,7 @@ const SelectorModal = () => {
                         onDragEnd={handleDragEnd}
                         className={cn(
                           'group relative aspect-[9/16] cursor-grab overflow-hidden rounded-2xl border-2 transition-all active:cursor-grabbing',
-                          isDragging ? 'scale-105 border-[#0094EB] opacity-70 shadow-2xl' : 'border-[#0094EB] shadow-lg shadow-blue-100',
+                          isDragging ? 'scale-105 border-[#0091ff] opacity-70 shadow-2xl' : 'border-[#0091ff] shadow-lg shadow-blue-100',
                         )}
                       >
 {/* Poster / Fallback de Streaming */}
@@ -912,7 +912,7 @@ const SelectorModal = () => {
                             }}
                           />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
+                          <div className="flex h-full w-full items-center justify-center bg-slate-100 dark:bg-[#1a1f35] text-slate-400">
                             <div className="flex flex-col items-center gap-2">
                               <Film size={24} />
                               <span className="text-[10px] font-black uppercase tracking-widest">Sem capa</span>
@@ -932,7 +932,7 @@ const SelectorModal = () => {
                         )}
 
                         {/* Indicador de ordem (badge numerado) */}
-                        <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[#0094EB] px-2 py-0.5 text-[10px] font-black text-white shadow-md">
+                        <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[#0091ff] px-2 py-0.5 text-[10px] font-black text-white shadow-md">
                           <GripVertical size={10} />
                           {index + 1}
                         </div>
@@ -956,13 +956,13 @@ const SelectorModal = () => {
                   })}
                 </div>
               ) : (
-                <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center">
-                  <Film size={28} className="mx-auto text-slate-300" />
-                  <p className="mt-2 text-sm font-bold text-slate-400">Nenhum vídeo selecionado</p>
+                <div className="rounded-2xl border-2 border-dashed border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] p-10 text-center">
+                  <Film size={28} className="mx-auto text-slate-300 dark:text-slate-600" />
+                  <p className="mt-2 text-sm font-bold text-slate-400 dark:text-slate-500">Nenhum vídeo selecionado</p>
                   <button
                     type="button"
                     onClick={() => setIsGalleryOpen(true)}
-                    className="mt-3 rounded-xl bg-[#0094EB] px-5 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0E4787]"
+                    className="mt-3 rounded-xl bg-[#0091ff] px-5 py-2 text-xs font-black uppercase tracking-widest text-white hover:bg-[#0070f3]"
                   >
                     + Adicionar Vídeos
                   </button>
@@ -971,8 +971,8 @@ const SelectorModal = () => {
             </div>
 
             {/* ── LOCAL DE EXIBIÃ‡ÃƒO ── */}
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2"><MapPin className="text-[#0094EB]" size={18} /><h4 className="text-sm font-black uppercase text-slate-800">Local de exibição</h4></div></div>
+            <div className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] p-6 shadow-xs transition-all duration-300 hover:shadow-md">
+              <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2"><MapPin className="text-[#0091ff]" size={18} /><h4 className="text-sm font-black uppercase text-slate-800 dark:text-white">Local de exibição</h4></div></div>
               <div className="grid gap-4 md:grid-cols-[1fr_220px] md:items-end">
 <div className="space-y-2">
   <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
@@ -997,13 +997,13 @@ const SelectorModal = () => {
           },
         ])
       }
-      className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+      className="flex-1 rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#111524] px-3 py-2 text-xs font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
       placeholder=".breadcrumbs"
     />
         <button
       type="button"
       onClick={() => setSelectorModalOpen(true)}
-      className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-black text-[#0094EB] hover:bg-blue-50 transition-colors"
+      className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#111524] px-3.5 py-2 text-xs font-black text-[#0091ff] dark:text-[#ff7a29] hover:bg-blue-50 dark:hover:bg-[#ff7a29]/10 transition-colors"
     >
       🎯 Selecionar
     </button>
@@ -1030,7 +1030,7 @@ const SelectorModal = () => {
                         },
                       ])
                     }
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none"
+                    className="w-full rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#111524] px-3 py-2 text-xs font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
                   >
                     {POSITION_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -1043,19 +1043,19 @@ const SelectorModal = () => {
             </div>
 
             {/* ──── REGRAS DE PÁGINA ──── */}
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2"><Globe className="text-[#0094EB]" size={18} /><h4 className="text-sm font-black uppercase text-slate-800">Qual página irá aparecer?</h4></div></div>
+            <div className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] p-6 shadow-xs transition-all duration-300 hover:shadow-md">
+              <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2"><Globe className="text-[#0091ff]" size={18} /><h4 className="text-sm font-black uppercase text-slate-800 dark:text-white">Qual página irá aparecer?</h4></div></div>
               <div className="space-y-4">
                 {pageRules.map((rule) => (
-                  <div key={rule.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <div key={rule.id} className="rounded-2xl border border-slate-100 dark:border-[#ff7a29]/20 bg-slate-50 dark:bg-[#111524] p-4">
                     <div className="grid gap-4 md:grid-cols-[220px_1fr_auto] md:items-end">
-                      <div className="space-y-2"><label className="text-[9px] font-black uppercase tracking-widest text-slate-400">REGRA</label><select value={rule.condition_type} onChange={(event) => handleUpdatePageRule(rule.id, { condition_type: event.target.value as PageRuleCondition })} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none">{PAGE_RULE_OPTIONS.map((ruleOption) => (<option key={ruleOption.value} value={ruleOption.value}>{ruleOption.label}</option>))}</select></div>
-                      <div className="space-y-2"><label className="text-[9px] font-black uppercase tracking-widest text-slate-400">VALOR</label>{CONDITION_TYPES_WITH_VALUE.includes(rule.condition_type) ? <div className="flex items-center gap-2"><input type="text" value={rule.value} onChange={(event) => handleUpdatePageRule(rule.id, { value: event.target.value })} className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none" placeholder="/colecao, /produto/nome-do-produto ou trecho da URL" />{pageRules.length > 1 && <button type="button" onClick={() => handleDeletePageRule(rule.id)} className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition-all hover:border-rose-200 hover:text-rose-500">X</button>}</div> : <div className="h-[34px] rounded-xl border border-dashed border-slate-200 bg-slate-50" />}</div>
-                      <div className="flex items-end justify-end"><button type="button" onClick={() => handleDeletePageRule(rule.id)} className="rounded-2xl border border-rose-200 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-widest text-rose-500 shadow-sm transition-all hover:bg-rose-50">Remover</button></div>
+                      <div className="space-y-2"><label className="text-[9px] font-black uppercase tracking-widest text-slate-400">REGRA</label><select value={rule.condition_type} onChange={(event) => handleUpdatePageRule(rule.id, { condition_type: event.target.value as PageRuleCondition })} className="w-full rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#111524] px-3 py-2 text-xs font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]">{PAGE_RULE_OPTIONS.map((ruleOption) => (<option key={ruleOption.value} value={ruleOption.value}>{ruleOption.label}</option>))}</select></div>
+                      <div className="space-y-2"><label className="text-[9px] font-black uppercase tracking-widest text-slate-400">VALOR</label>{CONDITION_TYPES_WITH_VALUE.includes(rule.condition_type) ? <div className="flex items-center gap-2"><input type="text" value={rule.value} onChange={(event) => handleUpdatePageRule(rule.id, { value: event.target.value })} className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold outline-none" placeholder="/colecao, /produto/nome-do-produto ou trecho da URL" />{pageRules.length > 1 && <button type="button" onClick={() => handleDeletePageRule(rule.id)} className="rounded-full border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] p-2 text-slate-500 dark:text-slate-400 shadow-xs transition-all hover:border-rose-200 hover:text-rose-500">X</button>}</div> : <div className="h-[34px] rounded-xl border border-dashed border-slate-200 dark:border-[#ff7a29]/20 bg-slate-50 dark:bg-[#111524]/50" />}</div>
+                      <div className="flex items-end justify-end"><button type="button" onClick={() => handleDeletePageRule(rule.id)} className="rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-white dark:bg-[#1a1f35] px-4 py-3 text-[10px] font-black uppercase tracking-widest text-rose-500 shadow-xs transition-all hover:bg-rose-50 dark:hover:bg-rose-500/10">Remover</button></div>
                     </div>
                   </div>
                 ))}
-                <button type="button" onClick={handleAddPageRule} className="rounded-xl bg-[#0094EB] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0E4787]">+ Adicionar página</button>
+                <button type="button" onClick={handleAddPageRule} className="rounded-xl bg-[#0091ff] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm hover:bg-[#0070f3]">+ Adicionar página</button>
               </div>
             </div>
           </div>
@@ -1067,7 +1067,7 @@ const SelectorModal = () => {
     type="button"
     onClick={handleSave}
     disabled={isSaving}
-    className="flex items-center gap-2 rounded-2xl bg-[#0094EB] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 transition-all hover:bg-[#0E4787] disabled:opacity-60"
+    className="flex items-center gap-2 rounded-2xl bg-[#0091ff] dark:bg-[#ff7a29] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-blue-100 dark:shadow-orange-500/20 transition-all hover:bg-[#0070f3] dark:hover:bg-[#e05e10] disabled:opacity-60"
   >
     {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
     {isSaving ? 'Salvando...' : 'Salvar Alterações'}

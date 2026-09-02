@@ -54,7 +54,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0094EB]" />
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0091ff]" />
       </div>
     );
   }
@@ -73,7 +73,7 @@ const GuestRoute = ({ children }: { children: React.ReactNode }) => {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0094EB]" />
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0091ff]" />
       </div>
     );
   }
@@ -113,7 +113,7 @@ const HomeGuard = () => {
   if (authLoading || checking) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0094EB]" />
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0091ff]" />
       </div>
     );
   }

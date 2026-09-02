@@ -68,21 +68,21 @@ const VideoThumb = ({ video, onClick, size = 'table' }: { video: Video; onClick:
   const canUseVideoPreview = !thumb && Boolean(videoUrl) && (video.source_type === 'upload' || isDirectVideoUrl(videoUrl));
 
   const wrapperClass = size === 'large'
-    ? 'aspect-[9/16] w-full overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-950 shadow-xl'
-    : 'h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100';
+    ? 'aspect-[9/16] w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-950 shadow-xl'
+    : 'h-12 w-12 overflow-hidden rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-100 dark:bg-[#1a1f35]';
 
   const playClass = size === 'large'
-    ? 'h-14 w-14 rounded-full bg-white/95 text-[#0094EB] shadow-xl'
-    : 'h-7 w-7 rounded-full bg-white/95 text-[#0094EB] shadow-md';
+    ? 'h-14 w-14 rounded-full bg-white/95 text-[#0091ff] shadow-xl'
+    : 'h-7 w-7 rounded-full bg-white/95 text-[#0091ff] shadow-md';
 
   return (
-    <button type="button" onClick={onClick} className={cn('group relative block shrink-0 transition-all hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#0094EB]/30', wrapperClass)} title={`Visualizar ${video.title}`}>
+    <button type="button" onClick={onClick} className={cn('group relative block shrink-0 transition-all hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#0091ff]/30', wrapperClass)} title={`Visualizar ${video.title}`}>
       {thumb ? (
         <img src={thumb} alt={video.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
       ) : canUseVideoPreview ? (
         <video src={videoUrl} className="h-full w-full object-cover" muted playsInline preload="metadata" />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400"><Film size={size === 'large' ? 42 : 18} /></div>
+        <div className="flex h-full w-full items-center justify-center bg-slate-100 dark:bg-[#1a1f35] text-slate-400 dark:text-slate-500"><Film size={size === 'large' ? 42 : 18} /></div>
       )}
       <div className="absolute inset-0 bg-black/20 opacity-100 transition-opacity group-hover:bg-black/30" />
       <div className="absolute inset-0 flex items-center justify-center">
@@ -287,32 +287,37 @@ const VideoGalleryPage = () => {
     <div className="space-y-6 animate-fade-in pb-20">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Galeria de Vídeos</h1>
-          <p className="text-slate-500 font-medium mt-1">Gerencie os vídeos disponíveis para exibição nos stories.</p>
+        <div className="flex items-center gap-3.5 group">
+          <div className="w-[45px] h-[45px] rounded-2xl flex items-center justify-center bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <Film className="w-[22px] h-[22px]" />
+          </div>
+          <div>
+            <h1 className="text-[18px] font-black text-slate-900 dark:text-white tracking-tight">Galeria de Vídeos</h1>
+            <p className="text-[14px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Gerencie os vídeos disponíveis para exibição nos stories.</p>
+          </div>
         </div>
-        <button type="button" onClick={() => navigate('/videos/new')} className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-xl font-black text-sm shadow-md transition-all flex items-center gap-2">
+        <button type="button" onClick={() => navigate('/videos/new')} className="bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xs transition-all flex items-center gap-2 hover:scale-[1.02]">
           <Plus size={18} /> Novo Vídeo
         </button>
       </div>
 
       {/* Filtros */}
-      <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 flex flex-col md:flex-row gap-4 shadow-sm">
+      <div className="bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl p-4 flex flex-col md:flex-row gap-4 shadow-xs transition-all duration-300 hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input type="text" placeholder="Pesquisar por título..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB]" />
+          <input type="text" placeholder="Pesquisar por título..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-[#0091ff]/30 focus:border-[#0091ff] dark:focus:ring-[#ff7a29]/30 dark:focus:border-[#ff7a29] transition-colors" />
         </div>
         <div className="flex gap-2 flex-wrap">
-          <select value={filterSource} onChange={e => setFilterSource(e.target.value as any)} className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]">
+          <select value={filterSource} onChange={e => setFilterSource(e.target.value as any)} className="bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-white outline-none focus:ring-[#0091ff]/30 focus:border-[#0091ff] dark:focus:ring-[#ff7a29]/30 dark:focus:border-[#ff7a29] transition-colors">
             <option value="all">Todas Fontes</option>
             <option value="upload">Upload</option>
             <option value="external_url">URL</option>
           </select>
-          <select value={productFilter} onChange={e => setProductFilter(e.target.value)} className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]">
+          <select value={productFilter} onChange={e => setProductFilter(e.target.value)} className="bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-white outline-none focus:ring-[#0091ff]/30 focus:border-[#0091ff] dark:focus:ring-[#ff7a29]/30 dark:focus:border-[#ff7a29] transition-colors">
             <option value="all">Todos os Produtos</option>
             {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          <select value={storyFilter} onChange={e => setStoryFilter(e.target.value)} className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-[#0094EB]">
+          <select value={storyFilter} onChange={e => setStoryFilter(e.target.value)} className="bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-white outline-none focus:ring-[#0091ff]/30 focus:border-[#0091ff] dark:focus:ring-[#ff7a29]/30 dark:focus:border-[#ff7a29] transition-colors">
             <option value="all">Todos os Stories</option>
             {storyList.map(s => (
               <option key={s.id} value={s.id}>{s.title}</option>
@@ -324,43 +329,43 @@ const VideoGalleryPage = () => {
       {/* ═══════════════════════════════════════════════════════
           TABELA
           ═══════════════════════════════════════════════════════ */}
-      <div className="bg-white border border-slate-200 rounded-[1.5rem] overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl overflow-hidden shadow-xs transition-all duration-300 hover:shadow-md">
         <div className="w-full overflow-x-auto">
           <table className="w-full min-w-[880px] table-fixed border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="w-[72px] px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left">Vídeo</th>
-                <th onClick={() => handleSort('nome')} className="w-[29%] cursor-pointer select-none px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left hover:opacity-75">
+              <tr className="bg-slate-50 dark:bg-[#111524] border-b border-slate-200 dark:border-[#ff7a29]/20">
+                <th className="w-[72px] px-3 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest text-left">Vídeo</th>
+                <th onClick={() => handleSort('nome')} className="w-[29%] cursor-pointer select-none px-3 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest text-left hover:opacity-75">
                   <span className="inline-flex items-center gap-1">Nome {sortColumn === 'nome' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
                 </th>
-                <th onClick={() => handleSort('produto')} className="w-[23%] cursor-pointer select-none px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left hover:opacity-75">
+                <th onClick={() => handleSort('produto')} className="w-[23%] cursor-pointer select-none px-3 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest text-left hover:opacity-75">
                   <span className="inline-flex items-center gap-1">Produto {sortColumn === 'produto' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
                 </th>
-                <th onClick={() => handleSort('story')} className="w-[23%] cursor-pointer select-none px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-left hover:opacity-75">
+                <th onClick={() => handleSort('story')} className="w-[23%] cursor-pointer select-none px-3 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest text-left hover:opacity-75">
                   <span className="inline-flex items-center gap-1">Story vinculado {sortColumn === 'story' && (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}</span>
                 </th>
-                <th className="w-[120px] px-3 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Ações</th>
+                <th className="w-[120px] px-3 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest text-center">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-[#ff7a29]/10">
               {processedVideos.map(video => {
                 const productName = products.find(p => p.id === (video as any).product_id)?.name || 'Sem produto';
                 const storyName = storyMap[video.id] || '—';
                 const isUrlLike = video.source_type === 'external_url';
 
                 return (
-                  <tr key={video.id} className="hover:bg-slate-50/50 transition-colors align-middle">
+                  <tr key={video.id} className="hover:bg-slate-50/50 dark:hover:bg-[#111524]/60 transition-colors align-middle">
                     <td className="px-3 py-4">
                       <VideoThumb video={video} onClick={() => handleViewVideo(video)} />
                     </td>
                     <td className="px-3 py-4 overflow-hidden">
                       <div className="min-w-0">
-                        <p className="font-bold text-slate-800 truncate">{video.title}</p>
+                        <p className="font-bold text-slate-800 dark:text-white truncate">{video.title}</p>
                         <span className={cn(
-                          'inline-block mt-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border',
-                          video.source_type === 'upload' && 'bg-blue-50 text-blue-600 border-blue-100',
-                          isUrlLike && 'bg-red-50 text-red-600 border-red-100',
-                          video.source_type !== 'upload' && !isUrlLike && 'bg-slate-50 text-slate-500 border-slate-100',
+                          'inline-block mt-1 px-2 py-0.5 rounded-2xl text-[9px] font-black uppercase tracking-wider border',
+                          video.source_type === 'upload' && 'bg-blue-50 dark:bg-[#0091ff]/10 text-blue-600 dark:text-[#0091ff] border-blue-100 dark:border-[#0091ff]/20',
+                          isUrlLike && 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-100 dark:border-red-500/20',
+                          video.source_type !== 'upload' && !isUrlLike && 'bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-100 dark:border-white/10',
                         )}>
                           {getSourceLabel(video.source_type)}
                         </span>
@@ -368,7 +373,7 @@ const VideoGalleryPage = () => {
                     </td>
                     <td className="px-3 py-4 overflow-hidden">
                       <div className="min-w-0 max-w-full">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold border border-slate-100 truncate max-w-full">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-2xl bg-slate-50 dark:bg-[#111524] text-slate-600 dark:text-slate-300 text-xs font-bold border border-slate-100 dark:border-[#ff7a29]/20 truncate max-w-full">
                           <Film size={12} className="shrink-0" />
                           <span className="truncate">{productName}</span>
                         </span>
@@ -377,20 +382,20 @@ const VideoGalleryPage = () => {
                     <td className="px-3 py-4 overflow-hidden">
                       <div className="min-w-0 max-w-full">
                         {storyName !== '—' ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-600 text-xs font-bold border border-purple-100 truncate max-w-full">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-2xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold border border-purple-100 dark:border-purple-500/20 truncate max-w-full">
                             <BookOpen size={12} className="shrink-0" />
                             <span className="truncate">{storyName}</span>
                           </span>
                         ) : (
-                          <span className="text-xs font-medium text-slate-400">—</span>
+                          <span className="text-xs font-medium text-slate-400 dark:text-slate-500">—</span>
                         )}
                       </div>
                     </td>
                     <td className="px-3 py-4 text-center">
                       <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
-                        <button onClick={() => handleViewVideo(video)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors shrink-0" title="Ver"><Eye size={16} /></button>
-                        <button onClick={() => navigate(`/videos/${video.id}/edit`)} className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors shrink-0" title="Editar"><Edit3 size={16} /></button>
-                        <button onClick={() => handleDeleteClick(video)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0" title="Excluir"><Trash2 size={16} /></button>
+                        <button onClick={() => handleViewVideo(video)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors shrink-0" title="Ver"><Eye size={16} /></button>
+                        <button onClick={() => navigate(`/videos/${video.id}/edit`)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors shrink-0" title="Editar"><Edit3 size={16} /></button>
+                        <button onClick={() => handleDeleteClick(video)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-colors shrink-0" title="Excluir"><Trash2 size={16} /></button>
                       </div>
                     </td>
                   </tr>
@@ -401,8 +406,8 @@ const VideoGalleryPage = () => {
         </div>
         {processedVideos.length === 0 && (
           <div className="p-12 text-center">
-            <Film size={48} className="mx-auto text-slate-300 mb-4" />
-            <p className="text-slate-500 font-bold">Nenhum vídeo encontrado.</p>
+            <Film size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+            <p className="text-slate-500 dark:text-slate-400 font-bold">Nenhum vídeo encontrado.</p>
           </div>
         )}
       </div>
@@ -436,11 +441,11 @@ const VideoGalleryPage = () => {
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
 
             {/* Modal */}
-            <div className="relative z-10 w-full max-w-3xl bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-fade-in">
+            <div className="relative z-10 w-full max-w-3xl bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <h2 className="text-lg font-black text-slate-900">Visualizar Vídeo</h2>
-                <button onClick={closeModal} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#ff7a29]/20">
+                <h2 className="text-lg font-black text-slate-900 dark:text-white">Visualizar Vídeo</h2>
+                <button onClick={closeModal} className="p-2 text-slate-400 dark:text-slate-500 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors">
                   <X size={20} />
                 </button>
               </div>
@@ -451,7 +456,7 @@ const VideoGalleryPage = () => {
                   {/* Player / Thumb */}
                   <div className="w-full lg:w-[280px] shrink-0 mx-auto lg:mx-0">
                     {hasPlayer ? (
-                      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-black aspect-[9/16] w-full max-w-[280px] mx-auto">
+                      <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-black aspect-[9/16] w-full max-w-[280px] mx-auto">
                         {shouldUseYouTubeEmbed ? (
                           <iframe src={embedUrl} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen loading="lazy" referrerPolicy="strict-origin-when-cross-origin" title={viewingVideo.title} />
                         ) : videoUrl ? (
@@ -463,13 +468,13 @@ const VideoGalleryPage = () => {
                     ) : modalThumb ? (
                       <VideoThumb video={viewingVideo} size="large" onClick={() => {}} />
                     ) : (
-                      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center aspect-[9/16] max-w-[280px] mx-auto flex flex-col items-center justify-center">
-                        <Film size={36} className="mb-2 text-slate-300" />
-                        <p className="text-xs font-bold text-slate-500">Prévia indisponível</p>
+                      <div className="rounded-2xl border border-dashed border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#1a1f35] p-6 text-center aspect-[9/16] max-w-[280px] mx-auto flex flex-col items-center justify-center">
+                        <Film size={36} className="mb-2 text-slate-300 dark:text-slate-600" />
+                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Prévia indisponível</p>
                       </div>
                     )}
                     {videoUrl && !hasPlayer && (
-                      <a href={videoUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50 w-full">
+                      <a href={videoUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] px-3 py-2 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#111524] hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 w-full transition-all">
                         Abrir na plataforma <ExternalLink size={12} />
                       </a>
                     )}
@@ -478,8 +483,8 @@ const VideoGalleryPage = () => {
                   {/* Info + Ações */}
                   <div className="flex-1 flex flex-col min-w-0">
                     <div className="mb-3">
-                      <h3 className="text-lg font-black text-slate-900 truncate">{viewingVideo.title}</h3>
-                      <span className="inline-block mt-1 bg-blue-50 text-[#0094EB] px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">{getSourceLabel(viewingVideo.source_type)}</span>
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white truncate">{viewingVideo.title}</h3>
+                      <span className="inline-block mt-1 bg-blue-50 dark:bg-[#0091ff]/10 border border-blue-100 dark:border-[#0091ff]/20 text-[#0091ff] dark:text-[#0091ff] px-2.5 py-1 rounded-2xl text-[9px] font-black uppercase tracking-widest">{getSourceLabel(viewingVideo.source_type)}</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 mb-4">
@@ -490,11 +495,11 @@ const VideoGalleryPage = () => {
                       <InfoCard label="Status" value={(viewingVideo as any).active === false ? 'Desativado' : 'Ativo'} />
                     </div>
 
-                    <div className="flex gap-2 mt-auto pt-2 border-t border-slate-100">
-                      <button onClick={() => { closeModal(); navigate(`/videos/${viewingVideo.id}/edit`); }} className="flex-1 py-2.5 bg-[#0094EB] text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5">
+                    <div className="flex gap-2 mt-auto pt-2 border-t border-slate-100 dark:border-[#ff7a29]/20">
+                      <button onClick={() => { closeModal(); navigate(`/videos/${viewingVideo.id}/edit`); }} className="flex-1 py-2.5 bg-[#0091ff] dark:bg-[#ff7a29] hover:bg-[#0070f3] dark:hover:bg-[#e05e10] text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 transition-all">
                         <Edit3 size={14} /> Editar
                       </button>
-                      <button onClick={closeModal} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-xs">
+                      <button onClick={closeModal} className="px-5 py-2.5 bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/30 text-slate-600 dark:text-slate-300 rounded-2xl font-black text-xs transition-all hover:bg-slate-50 dark:hover:bg-[#111524]">
                         Fechar
                       </button>
                     </div>
@@ -512,9 +517,9 @@ const VideoGalleryPage = () => {
 };
 
 const InfoCard = ({ label, value }: { label: string; value: string }) => (
-  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{label}</p>
-    <p className="mt-1 text-sm font-black text-slate-800 truncate">{value}</p>
+  <div className="rounded-2xl border border-slate-100 dark:border-[#ff7a29]/20 bg-slate-50 dark:bg-[#1a1f35] p-3">
+    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">{label}</p>
+    <p className="mt-1 text-sm font-black text-slate-800 dark:text-white truncate">{value}</p>
   </div>
 );
 

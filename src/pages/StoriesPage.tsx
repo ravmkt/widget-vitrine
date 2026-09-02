@@ -551,7 +551,7 @@ const StoriesPage = () => {
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
                         {/* Thumbnail Fictício do Story baseado no Formato */}
-                        <div className="w-12 h-12 rounded-xl bg-[#1c2237] border border-white/5 flex items-center justify-center text-[#ff7a29] shrink-0 shadow-inner">
+                        <div className="w-12 h-12 rounded-xl bg-[#1a1f35] border border-white/5 flex items-center justify-center text-[#ff7a29] shrink-0 shadow-inner">
                           {getFormatIcon(story.format)}
                         </div>
 
@@ -682,7 +682,7 @@ const StoriesPage = () => {
         {/* FEEDBACK CASO NÃO EXISTAM STORIES */}
         {filteredStories.length === 0 && (
           <div className="p-16 text-center border-t border-white/5 bg-[#14192a]/50">
-            <PlayCircle size={48} className="mx-auto text-slate-600 mb-4 animate-pulse" />
+            <PlayCircle size={48} className="mx-auto text-slate-600 dark:text-slate-400 mb-4 animate-pulse" />
             <p className="text-slate-400 font-bold">
               Nenhum Story encontrado.
             </p>

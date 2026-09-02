@@ -74,7 +74,7 @@ const VideoThumbnail = ({
         src={thumbnailUrl}
         alt={video.title || 'Thumbnail do vídeo'}
         className={cn(
-          'rounded-xl object-cover border border-slate-200 bg-slate-100',
+          'rounded-xl object-cover border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-100 dark:bg-[#1a1f35]',
           className,
         )}
         loading="lazy"
@@ -87,7 +87,7 @@ const VideoThumbnail = ({
       <video
         src={`${videoUrl}#t=0.1`}
         className={cn(
-          'rounded-xl object-cover border border-slate-200 bg-slate-950',
+          'rounded-xl object-cover border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-950',
           className,
         )}
         muted
@@ -100,7 +100,7 @@ const VideoThumbnail = ({
   return (
     <div
       className={cn(
-        'rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400',
+        'rounded-xl bg-slate-100 dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/30 flex items-center justify-center text-slate-400',
         className,
       )}
     >

@@ -170,14 +170,14 @@ export function AppLayout({ children }: AppLayoutProps) {
                 ? '!bg-red-50 dark:!bg-red-950/20 border-b border-red-200 dark:border-red-900/30'
                 : isWarning
                 ? '!bg-orange-50 dark:!bg-orange-950/10 border-b border-orange-200 dark:border-orange-900/20'
-                : '!bg-slate-100 dark:!bg-[#1e293b] border-b border-slate-200 dark:border-slate-800';
+                : '!bg-slate-100 dark:!bg-[#1e293b] border-b border-slate-200 dark:border-[#ff7a29]/20';
 
               // 3. Estilo Dinâmico do Botão "Fazer Upgrade" solicitado por você
               const buttonStyle = isCritical
                 ? '!bg-[#ef4444] hover:!bg-[#dc2626] !text-white border-transparent animate-pulse shadow-md shadow-red-500/20' // 🔴 Vermelho Pulsante
                 : isWarning
-                ? '!bg-[#ff7a29] hover:!bg-[#e66c22] !text-white border-transparent shadow-md shadow-orange-500/25'       // 🟠 Laranja do Logotipo Vidlytics
-                : '!bg-[#0094EB] hover:!bg-[#0081cc] !text-white border-transparent shadow-sm';                            // 🔵 Azul padrão do sistema
+                ? '!bg-[#ff7a29] hover:!bg-[#e05e10] !text-white border-transparent shadow-md shadow-orange-500/25'       // 🟠 Laranja do Logotipo Vidlytics
+                : '!bg-[#0091ff] hover:!bg-[#0070f3] !text-white border-transparent shadow-sm';                            // 🔵 Azul padrão do sistema
 
               // 4. Cor do Texto e Ícones da Barra
               const textAndIconClass = isCritical
@@ -238,7 +238,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <button
                     type="button"
                     onClick={() => navigate('/plans')}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1 text-xs font-bold text-red-600 shadow-sm transition hover:bg-red-50"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3 py-1 text-xs font-bold text-red-600 shadow-sm transition hover:bg-red-50"
                   >
                     <Sparkles size={13} />
                     Reativar Assinatura
@@ -257,7 +257,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <button
                     type="button"
                     onClick={() => navigate('/billing')}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1 text-xs font-bold text-amber-700 shadow-sm transition hover:bg-amber-50"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3 py-1 text-xs font-bold text-amber-700 shadow-sm transition hover:bg-amber-50"
                   >
                     Ver Faturas
                   </button>
@@ -270,7 +270,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <div className="mx-auto w-full max-w-7xl flex-1">
               {isBlocked ? (
                 /* ── TELA DE BLOQUEIO DO SISTEMA (HARDENING) ── */
-                <div className="flex flex-col items-center justify-center text-center py-20 px-6 bg-slate-50 dark:bg-[#111422] rounded-[2.5rem] border border-dashed border-slate-200 dark:border-white/10 min-h-[50vh] shadow-xs">
+                <div className="flex flex-col items-center justify-center text-center py-20 px-6 bg-slate-50 dark:bg-[#111524] rounded-2xl border border-dashed border-slate-200 dark:border-white/10 min-h-[50vh] shadow-xs">
                   <div className="h-16 w-16 bg-red-100 dark:bg-red-950/40 rounded-full flex items-center justify-center text-red-600 dark:text-red-400 mb-6 border border-red-200 dark:border-red-900/30 shadow-md">
                     <Lock size={32} />
                   </div>
@@ -285,7 +285,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <button
                       type="button"
                       onClick={() => navigate('/plans')}
-                      className="inline-flex items-center gap-2.5 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3.5 text-sm font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer"
+                      className="inline-flex items-center gap-2.5 rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-6 py-3.5 text-sm font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer"
                     >
                       <Sparkles size={16} />
                       Escolher Plano & Reativar Conta
@@ -310,7 +310,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 &copy; {new Date().getFullYear()} Vidlytics Stories. Todos os direitos reservados.
               </div>
               
-              <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-[#111422] px-4 py-2 rounded-xl border border-slate-100 dark:border-white/5 shadow-xs">
+              <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-[#111524] px-4 py-2 rounded-xl border border-slate-100 dark:border-white/5 shadow-xs">
                 <span className="text-[10px] uppercase font-black tracking-wider text-slate-400 dark:text-[#8a90a0]">
                   Desenvolvido por:
                 </span>
