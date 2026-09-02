@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react's
+import React, { useState, useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
