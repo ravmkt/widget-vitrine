@@ -184,9 +184,9 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
     return sortDir === 'asc' ? (
-      <ChevronUp size={12} className="inline ml-1" />
+      <ChevronUp size={12} className="inline ml-1 shrink-0 text-[#0094EB]" />
     ) : (
-      <ChevronDown size={12} className="inline ml-1" />
+      <ChevronDown size={12} className="inline ml-1 shrink-0 text-[#0094EB]" />
     );
   };
 
@@ -194,20 +194,28 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
     field,
     children,
     className,
+    align = 'left',
   }: {
     field: SortField;
     children: React.ReactNode;
     className?: string;
+    align?: 'left' | 'center' | 'right';
   }) => (
     <th
       className={cn(
-        'px-4 py-3 text-left text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-colors select-none',
+        'px-4 py-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-colors select-none',
+        align === 'left' ? 'text-left' : align === 'center' ? 'text-center' : 'text-right',
         className,
       )}
       onClick={() => handleSort(field)}
     >
-      {children}
-      <SortIcon field={field} />
+      <div className={cn(
+        'inline-flex items-center gap-1',
+        align === 'center' && 'justify-center w-full'
+      )}>
+        {children}
+        <SortIcon field={field} />
+      </div>
     </th>
   );
 
@@ -237,20 +245,20 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
       </div>
 
       {/* Tabela */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2.5rem] shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800">
-                <Th field="title" className="min-w-[220px]">
+                <Th field="title" className="min-w-[220px]" align="left">
                   Vídeo
                 </Th>
-                <Th field="views">Visualizações</Th>
-                <Th field="ctr">CTR</Th>
-                <Th field="conversions">Conversões</Th>
-                <Th field="revenue">Receita</Th>
-                <Th field="likes">Engajamento</Th>
-                <Th field="duration">Duração</Th>
+                <Th field="views" align="center">Visualizações</Th>
+                <Th field="ctr" align="center">CTR</Th>
+                <Th field="conversions" align="center">Conversões</Th>
+                <Th field="revenue" align="center">Receita</Th>
+                <Th field="likes" align="center">Engajamento</Th>
+                <Th field="duration" align="center">Duração</Th>
               </tr>
             </thead>
             <tbody>
@@ -260,7 +268,7 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
                   className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
                 >
                   {/* Vídeo */}
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-left">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-16 rounded-lg bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
                         {video.thumbnail_url ? (
@@ -275,7 +283,7 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
                           </div>
                         )}
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 text-left">
                         <p className="text-sm font-black text-slate-800 dark:text-white truncate max-w-[200px]">
                           {video.title}
                         </p>
@@ -287,17 +295,17 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
                   </td>
 
                   {/* Visualizações */}
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center">
                     <p className="text-sm font-black text-slate-800 dark:text-white">
                       {video.metrics.views.toLocaleString()}
                     </p>
                   </td>
 
                   {/* CTR */}
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center">
                     <span
                       className={cn(
-                        'inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-black',
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black',
                         video.metrics.ctr >= 5
                           ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
                           : video.metrics.ctr >= 2
@@ -310,14 +318,14 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
                   </td>
 
                   {/* Conversões */}
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center">
                     <p className="text-sm font-black text-slate-800 dark:text-white">
                       {video.metrics.conversions.toLocaleString()}
                     </p>
                   </td>
 
                   {/* Receita */}
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center">
                     <p className="text-sm font-black text-slate-800 dark:text-white">
                       {video.metrics.revenue > 0
                         ? `R$ ${video.metrics.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
@@ -326,8 +334,8 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
                   </td>
 
                   {/* Engajamento */}
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-3">
+                  <td className="px-4 py-4 text-center">
+                    <div className="flex items-center justify-center gap-3">
                       <span
                         className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400"
                         title="Curtidas"
@@ -353,7 +361,7 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
                   </td>
 
                   {/* Duração */}
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center">
                     <p className="text-sm font-bold text-slate-500 dark:text-slate-400 font-mono">
                       {formatDuration(video.duration)}
                     </p>
