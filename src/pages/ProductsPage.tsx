@@ -200,7 +200,6 @@ const formatXmlCategory = (value: string) =>
   value.replace(/&gt;|>/g, ': ').replace(/\s+/g, ' ').replace(/\s*:\s*/g, ': ').replace(/\s+([A-Za-zÀ-ÿ])/g, ' $1').trim();
 
 const ProductsPage = () => {
-  const ProductsPage = () => {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState<Product[]>([]);
