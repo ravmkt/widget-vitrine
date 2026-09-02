@@ -69,8 +69,8 @@ export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: Insi
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse">
-        <div className="h-40 bg-[#1a1f35] rounded-2xl" />
-        <div className="h-40 bg-[#1a1f35] rounded-2xl" />
+        <div className="h-40 bg-[#1a1f35] rounded-2xl border border-[#ff7a29]/30" />
+        <div className="h-40 bg-[#1a1f35] rounded-2xl border border-[#ff7a29]/30" />
       </div>
     )
   }
@@ -86,8 +86,8 @@ export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: Insi
   // ── ESTADO VAZIO: SEM EXIBIÇÕES NO WIDGET AINDA ──
   if (!hasData) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center bg-[#111524] rounded-2xl border border-white/5 h-auto py-12 px-6 max-w-4xl mx-auto my-6 font-sans">
-        {/* Quadrado Laranja Premium com Ícone Branco */}
+      <div className="flex flex-col items-center justify-center p-8 text-center bg-[#111524] rounded-2xl border border-[#ff7a29]/30 h-auto py-12 px-6 max-w-4xl mx-auto my-6 font-sans">
+        {/* Quadrado Laranja com Ícone Branco */}
         <div className="w-[64px] h-[64px] rounded-2xl bg-[#ff7a29] flex items-center justify-center mb-5 shadow-lg shadow-[#ff7a29]/30">
           <Sparkles className="w-9 h-9 text-white animate-pulse" />
         </div>
@@ -97,11 +97,11 @@ export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: Insi
           Seus relatórios e diagnósticos de <strong>{benchmark.sector_name}</strong> ficarão ativos assim que o widget registrar as primeiras visualizações de stories na sua loja.
         </p>
 
-        {/* Cards Auxiliares */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-10 pt-8 border-t border-white/5">
+        {/* Cards Auxiliares com Borda Laranja */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-10 pt-8 border-t border-[#ff7a29]/30">
           {/* Card 1 - Script Instalado */}
-          <div className="flex flex-col items-center text-center p-6 bg-[#171c30] rounded-2xl border border-white/5 hover:border-[#ff7a29]/60 shadow-sm transition-all duration-300 group">
-            <Code className="w-8 h-8 text-[#0094EB] dark:text-[#ff7a29] mb-3 group-hover:scale-110 transition-transform duration-300" />
+          <div className="flex flex-col items-center text-center p-6 bg-[#171c30] rounded-2xl border border-[#ff7a29]/30 hover:border-[#ff7a29]/60 shadow-sm transition-all duration-300 group">
+            <Code className="w-8 h-8 text-[#ff7a29] mb-3 group-hover:scale-110 transition-transform duration-300" />
             <span className="text-[14px] font-black text-white">1. Script Instalado?</span>
             <p className="text-xs text-slate-400 mt-2 leading-relaxed">
               Garanta que o código do widget foi adicionado nas páginas do seu site.
@@ -109,7 +109,7 @@ export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: Insi
           </div>
 
           {/* Card 2 - Publique Vídeos */}
-          <div className="flex flex-col items-center text-center p-6 bg-[#171c30] rounded-2xl border border-white/5 hover:border-[#ff7a29]/60 shadow-sm transition-all duration-300 group">
+          <div className="flex flex-col items-center text-center p-6 bg-[#171c30] rounded-2xl border border-[#ff7a29]/30 hover:border-[#ff7a29]/60 shadow-sm transition-all duration-300 group">
             <PlayCircle className="w-8 h-8 text-[#ff7a29] mb-3 group-hover:scale-110 transition-transform duration-300" />
             <span className="text-[14px] font-black text-white">2. Publique Vídeos</span>
             <p className="text-xs text-slate-400 mt-2 leading-relaxed">
@@ -118,8 +118,8 @@ export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: Insi
           </div>
 
           {/* Card 3 - Faça um Teste */}
-          <div className="flex flex-col items-center text-center p-6 bg-[#171c30] rounded-2xl border border-white/5 hover:border-[#ff7a29]/60 shadow-sm transition-all duration-300 group">
-            <TrendingUp className="w-8 h-8 text-emerald-400 mb-3 group-hover:scale-110 transition-transform duration-300" />
+          <div className="flex flex-col items-center text-center p-6 bg-[#171c30] rounded-2xl border border-[#ff7a29]/30 hover:border-[#ff7a29]/60 shadow-sm transition-all duration-300 group">
+            <TrendingUp className="w-8 h-8 text-[#ff7a29] mb-3 group-hover:scale-110 transition-transform duration-300" />
             <span className="text-[14px] font-black text-white">3. Faça um Teste</span>
             <p className="text-xs text-slate-400 mt-2 leading-relaxed">
               Abra sua loja em uma aba anônima e assista aos stories para coletar dados.
@@ -148,17 +148,17 @@ export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: Insi
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2.5">
-              <div className="flex justify-between items-center text-xs pb-1 border-b border-white/5">
+              <div className="flex justify-between items-center text-xs pb-1 border-b border-[#ff7a29]/20">
                 <span className="font-bold text-slate-500">Métrica</span>
                 <span className="font-bold text-slate-500">Resultado / Meta Setor</span>
               </div>
-              <div className="border-b border-white/5 pb-2 flex justify-between items-center text-xs">
+              <div className="border-b border-[#ff7a29]/20 pb-2 flex justify-between items-center text-xs">
                 <span className="text-slate-300">CTR (Cliques)</span>
                 <span className={`font-black ${ctrDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {storeCTR.toFixed(1)}% <span className="text-slate-500 font-normal">/ {benchmark.avg_ctr}%</span>
                 </span>
               </div>
-              <div className="border-b border-white/5 pb-2 flex justify-between items-center text-xs">
+              <div className="border-b border-[#ff7a29]/20 pb-2 flex justify-between items-center text-xs">
                 <span className="text-slate-300">CVR (Vendas)</span>
                 <span className={`font-black ${cvrDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {storeCVR.toFixed(1)}% <span className="text-slate-500 font-normal">/ {benchmark.avg_cvr}%</span>
@@ -178,7 +178,7 @@ export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: Insi
       <div className="lg:col-span-2 space-y-5">
         {/* INSIGHT 1: Oportunidade de Cliques (CTR) */}
         {ctrDelta < 0 ? (
-          <Card className="rounded-2xl border border-rose-500/20 bg-[#111524] hover:border-rose-500/40 transition-all duration-300">
+          <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] hover:border-[#ff7a29]/60 transition-all duration-300">
             <CardHeader className="flex flex-row items-center gap-3.5 pb-2 space-y-0">
               <div className="w-[45px] h-[45px] rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
                 <AlertCircle className="w-[22px] h-[22px]" />
@@ -195,7 +195,7 @@ export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: Insi
             </CardContent>
           </Card>
         ) : (
-          <Card className="rounded-2xl border border-emerald-500/20 bg-[#111524] hover:border-emerald-500/40 transition-all duration-300">
+          <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] hover:border-[#ff7a29]/60 transition-all duration-300">
             <CardHeader className="flex flex-row items-center gap-3.5 pb-2 space-y-0">
               <div className="w-[45px] h-[45px] rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
                 <CheckCircle className="w-[22px] h-[22px]" />
@@ -213,7 +213,7 @@ export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: Insi
 
         {/* INSIGHT 2: Se o Hook Rate estiver ruim */}
         {hookDelta < 0 && (
-          <Card className="rounded-2xl border border-amber-500/20 bg-[#111524] hover:border-amber-500/40 transition-all duration-300">
+          <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] hover:border-[#ff7a29]/60 transition-all duration-300">
             <CardHeader className="flex flex-row items-center gap-3.5 pb-2 space-y-0">
               <div className="w-[45px] h-[45px] rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
                 <Lightbulb className="w-[22px] h-[22px]" />
