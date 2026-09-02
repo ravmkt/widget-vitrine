@@ -26,6 +26,9 @@ const generateUUID = () => {
 const MedidasPage = () => {
   const { storeId, loading: tenantLoading } = useTenant();
 
+  const navigate = useNavigate();
+
+
   const [models, setModels] = useState<SizingModel[]>([]);
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
