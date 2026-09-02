@@ -77,7 +77,7 @@ export function OverviewTab({
           audienceBehavior: "Consumidores de tecnologia são extremamente racionais e técnicos. Eles buscam demonstrações de recursos específicos, unboxings detalhados e testes de durabilidade.",
           tips: [
             "Uso Funcional Imediato: Não mostre o eletrônico desligado. O vídeo deve começar com o aparelho executando sua principal função ou brilhando.",
-            "Resolvendo uma Dor Técnica: Mostre como o gadget economiza tempo ou resolve um gargalo técnico específico no dia a dia.",
+            "Resolvendo uma Dor Técnico: Mostre como o gadget economiza tempo ou resolve um gargalo técnico específico no dia a dia.",
             "Unboxing Dinâmico: Stories ágeis de 15s revelando o que vem na caixa e o sentimento de novidade estimulam a conversão."
           ]
         };
@@ -273,12 +273,12 @@ export function OverviewTab({
     const positive = delta >= 0
     return (
       <span className={cn(
-        "inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-xl mt-1.5 border bg-white shadow-xs",
+        "inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-2xl mt-1.5 border shadow-xs transition-colors",
         positive
-          ? "text-emerald-600 border-emerald-500/30"
-          : "text-[#E33] border-[#E33]/30"
+          ? "text-emerald-400 border-emerald-500/20 bg-emerald-500/5"
+          : "text-rose-400 border-rose-500/25 bg-rose-500/5"
       )}>
-        {positive ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> : <TrendingDown className="w-3.5 h-3.5 text-[#E33]" />}
+        {positive ? <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-400" />}
         {positive ? '+' : ''}{delta.toFixed(1)}% vs Setor
       </span>
     )
@@ -289,10 +289,10 @@ export function OverviewTab({
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 animate-pulse">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-32 bg-slate-100 dark:bg-[#1a1f35] rounded-2xl" />
+            <div key={i} className="h-32 bg-[#1a1f35] rounded-2xl" />
           ))}
         </div>
-        <div className="h-80 bg-slate-100 dark:bg-[#1a1f35] rounded-2xl animate-pulse" />
+        <div className="h-80 bg-[#1a1f35] rounded-2xl animate-pulse" />
       </div>
     )
   }
@@ -302,91 +302,91 @@ export function OverviewTab({
       {/* ── METRICAS DO FUNIL ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* 1. VISUALIZAÇÕES */}
-        <Card className="rounded-2xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
+        <Card className="rounded-2xl border border-white/5 dark:border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-white">
+            <span className="text-[14px] font-black uppercase tracking-wider text-white">
               1. Visualizações
             </span>
-            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
-              <Eye className="w-5 h-5" />
+            <div className="w-[45px] h-[45px] rounded-2xl bg-[#ff7a29]/10 border border-[#ff7a29]/20 text-[#ff7a29] flex items-center justify-center shrink-0">
+              <Eye className="w-[22px] h-[22px]" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-800 dark:text-white">
+            <div className="text-2xl font-black text-white">
               {data.views.toLocaleString('pt-BR')}
             </div>
-            <p className="text-[10px] text-slate-400 dark:text-slate-300 mt-1">Interações no widget</p>
+            <p className="text-[11px] text-slate-400 mt-1">Interações no widget</p>
           </CardContent>
         </Card>
 
         {/* 2. CLIQUES */}
-        <Card className="rounded-2xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
+        <Card className="rounded-2xl border border-white/5 dark:border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-white">
+            <span className="text-[14px] font-black uppercase tracking-wider text-white">
               2. Cliques em CTA
             </span>
-            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
-              <MousePointerClick className="w-5 h-5" />
+            <div className="w-[45px] h-[45px] rounded-2xl bg-[#ff7a29]/10 border border-[#ff7a29]/20 text-[#ff7a29] flex items-center justify-center shrink-0">
+              <MousePointerClick className="w-[22px] h-[22px]" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-800 dark:text-white">
+            <div className="text-2xl font-black text-white">
               {data.clicks.toLocaleString('pt-BR')}
             </div>
             <div className="flex flex-col mt-0.5">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-300">CTR: {ctr.toFixed(1)}%</span>
+              <span className="text-[11px] font-bold text-slate-400">CTR: {ctr.toFixed(1)}%</span>
               {renderSectorBadge(ctrDelta)}
             </div>
           </CardContent>
         </Card>
 
         {/* 3. VENDAS */}
-        <Card className="rounded-2xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
+        <Card className="rounded-2xl border border-white/5 dark:border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-white">
+            <span className="text-[14px] font-black uppercase tracking-wider text-white">
               3. Vendas Realizadas
             </span>
-            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
-              <Trophy className="w-5 h-5" />
+            <div className="w-[45px] h-[45px] rounded-2xl bg-[#ff7a29]/10 border border-[#ff7a29]/20 text-[#ff7a29] flex items-center justify-center shrink-0">
+              <Trophy className="w-[22px] h-[22px]" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-800 dark:text-white">
+            <div className="text-2xl font-black text-white">
               {data.conversions.toLocaleString('pt-BR')}
             </div>
             <div className="flex flex-col mt-0.5">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-300">Conversão: {cvr.toFixed(1)}%</span>
+              <span className="text-[11px] font-bold text-slate-400">Conversão: {cvr.toFixed(1)}%</span>
               {renderSectorBadge(cvrDelta)}
             </div>
           </CardContent>
         </Card>
 
         {/* 4. RECEITA */}
-        <Card className="rounded-2xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
+        <Card className="rounded-2xl border border-white/5 dark:border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-white">
+            <span className="text-[14px] font-black uppercase tracking-wider text-white">
               4. Faturamento ROI
             </span>
-            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
-              <CircleDollarSign className="w-5 h-5" />
+            <div className="w-[45px] h-[45px] rounded-2xl bg-[#ff7a29]/10 border border-[#ff7a29]/20 text-[#ff7a29] flex items-center justify-center shrink-0">
+              <CircleDollarSign className="w-[22px] h-[22px]" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+            <div className="text-2xl font-black text-emerald-400">
               R$ {data.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-[10px] text-emerald-500 dark:text-emerald-300 mt-1 font-bold">Vendas Diretas dos Vídeos</p>
+            <p className="text-[11px] text-emerald-400 mt-1 font-bold">Vendas Diretas dos Vídeos</p>
           </CardContent>
         </Card>
 
         {/* 5. ENGAJAMENTO SOCIAL */}
-        <Card className="rounded-2xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
+        <Card className="rounded-2xl border border-white/5 dark:border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-white">
+            <span className="text-[14px] font-black uppercase tracking-wider text-white">
               Engajamento Social
             </span>
-            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
-              <Heart className="w-5 h-5 fill-orange-500 text-orange-500" />
+            <div className="w-[45px] h-[45px] rounded-2xl bg-[#ff7a29]/10 border border-[#ff7a29]/20 text-[#ff7a29] flex items-center justify-center shrink-0">
+              <Heart className="w-[22px] h-[22px] fill-[#ff7a29] text-[#ff7a29]" />
             </div>
           </CardHeader>
           <CardContent>
@@ -395,33 +395,33 @@ export function OverviewTab({
                 <span className="text-base font-black text-rose-500 flex items-center gap-1">
                   ❤️ {data.likes}
                 </span>
-                <span className="text-[9px] text-slate-400 dark:text-slate-300">Curtidas</span>
+                <span className="text-[11px] text-slate-400">Curtidas</span>
               </div>
-              <div className="border-l border-slate-100 dark:border-white/10 pl-4">
-                <span className="text-base font-black text-sky-500 flex items-center gap-1">
+              <div className="border-l border-white/10 pl-4">
+                <span className="text-base font-black text-sky-400 flex items-center gap-1">
                   💬 {data.comments}
                 </span>
-                <span className="text-[9px] text-slate-400 dark:text-slate-300">Comentários</span>
+                <span className="text-[11px] text-slate-400">Comentários</span>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* ── NOVO GRÁFICO DE EVOLUÇÃO TEMPORAL ── */}
-      <Card className="rounded-2xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] p-6 shadow-sm">
+      {/* ── GRÁFICO DE EVOLUÇÃO TEMPORAL (rounded-2xl) ── */}
+      <Card className="rounded-2xl border border-white/5 bg-[#111524] dark:bg-[#1a1f35] p-6 shadow-sm">
         <CardHeader className="p-0 pb-6">
-          <CardTitle className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
+          <CardTitle className="text-[18px] font-black text-white flex items-center gap-2">
             📊 Evolução Diária de Conversões
           </CardTitle>
-          <p className="text-xs text-slate-400 mt-1">Comparativo de cliques em CTAs e exibições dos Stories ao longo do tempo</p>
+          <p className="text-[14px] text-slate-400 mt-1">Comparativo de cliques em CTAs e exibições dos Stories ao longo do tempo</p>
         </CardHeader>
         <CardContent className="p-0 h-80 w-full">
           {chartData.length === 0 || (data.views === 0 && data.clicks === 0) ? (
-            <div className="h-full flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-100 dark:border-white/5 rounded-2xl p-6">
+            <div className="h-full flex flex-col items-center justify-center text-center border-2 border-dashed border-white/5 rounded-2xl p-6">
               <span className="text-3xl">📈</span>
-              <h5 className="font-bold text-slate-700 dark:text-slate-300 mt-2">Sem dados históricos para exibir</h5>
-              <p className="text-xs text-slate-400 max-w-xs mt-1">Assim que seu widget receber as primeiras interações, o gráfico de evolução será desenhado automaticamente.</p>
+              <h5 className="font-bold text-slate-300 mt-2">Sem dados históricos para exibir</h5>
+              <p className="text-[12px] text-slate-400 max-w-xs mt-1">Assim que seu widget receber as primeiras interações, o gráfico de evolução será desenhado automaticamente.</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -436,7 +436,7 @@ export function OverviewTab({
                     <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.1)" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.05)" />
                 <XAxis
                   dataKey="date"
                   tickLine={false}
@@ -481,13 +481,13 @@ export function OverviewTab({
         </CardContent>
       </Card>
 
-      {/* ── CONTEXTO DO MERCADO COM COPYS CORRIGIDAS E MODAL DE ESTUDO ── */}
-      <div className="bg-slate-50 dark:bg-[#0f1220] border border-slate-100 dark:border-white/5 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
-        <div className="flex items-start gap-3">
-          <Compass className="w-5 h-5 text-[#0094EB] dark:text-[#ff7a29] shrink-0 mt-0.5 animate-spin" style={{ animationDuration: '8s' }} />
-          <div className="text-xs">
-            <h4 className="font-bold text-slate-800 dark:text-slate-200">Como funciona o benchmark do setor?</h4>
-            <p className="text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed max-w-2xl">
+      {/* ── CONTEXTO DO MERCADO ── */}
+      <div className="bg-[#111524] border border-white/5 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
+        <div className="flex items-start gap-3.5">
+          <Compass className="w-7 h-7 text-[#ff7a29] shrink-0 mt-0.5 animate-spin" style={{ animationDuration: '8s' }} />
+          <div>
+            <h4 className="text-[14px] font-black text-slate-200">Como funciona o benchmark do setor?</h4>
+            <p className="text-[12px] text-slate-400 mt-1 leading-relaxed max-w-2xl">
               As metas de comparação do setor de <strong>{benchmark?.sector_name || 'Geral'}</strong> são baseadas em pesquisas consolidadas de mercado e inteligência competitiva nacional de 2026 (cruzando relatórios oficiais da Ebit/Nielsen, Neotrust e Social Commerce global).
             </p>
           </div>
@@ -495,7 +495,7 @@ export function OverviewTab({
         <button
           type="button"
           onClick={() => setIsBenchmarkModalOpen(true)}
-          className="bg-[#FF7A00] dark:bg-[#FF7A00] border border-[#FF7A00] dark:border-[#FF7A00] hover:bg-[#E66E00] dark:hover:bg-[#E66E00] text-white dark:text-white font-black text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm shrink-0 flex items-center gap-1.5 hover:scale-[1.02]"
+          className="bg-[#ff7a29] hover:bg-[#e05e10] text-white font-black text-xs px-4 py-2.5 rounded-2xl transition-all cursor-pointer shadow-sm shrink-0 flex items-center gap-1.5 hover:scale-[1.02]"
         >
           <FileText size={14} className="text-white" />
           Ver Estudo de Mercado
@@ -504,26 +504,26 @@ export function OverviewTab({
 
       {/* ── MODAL PREMIUM: ESTUDO DE MERCADO E BENCHMARK 2026 ── */}
       {isBenchmarkModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in font-sans">
-          <div className="relative w-full max-w-2xl bg-white dark:bg-[#121625] border border-slate-100 dark:border-white/5 rounded-2xl shadow-2xl p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in font-sans text-white">
+          <div className="relative w-full max-w-2xl bg-[#111524] border border-white/10 rounded-2xl shadow-2xl p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto">
 
             {/* Botão Fechar */}
             <button
               onClick={() => setIsBenchmarkModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-white transition-all cursor-pointer"
+              className="absolute top-5 right-5 p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all cursor-pointer"
             >
               <X size={18} />
             </button>
 
             {/* Cabeçalho */}
-            <div className="space-y-1.5 border-b border-slate-100 dark:border-white/5 pb-5">
-              <span className="inline-flex items-center gap-1 bg-[#0094EB]/10 dark:bg-[#ff7a29]/10 text-[#0094EB] dark:text-[#ff7a29] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+            <div className="space-y-1.5 border-b border-white/5 pb-5">
+              <span className="inline-flex items-center gap-1 bg-[#ff7a29]/10 text-[#ff7a29] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
                 <Sparkles className="w-3 h-3" /> Inteligência Setorial 2026
               </span>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">
+              <h3 className="text-xl sm:text-2xl font-black text-white leading-tight">
                 Estudo de Mercado: {benchmark?.sector_name || 'Geral'}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-400">
                 Métricas e taxas ideais coletadas do ecossistema de Social Commerce do varejo brasileiro.
               </p>
             </div>
@@ -531,26 +531,26 @@ export function OverviewTab({
             {/* Grid das Métricas do Benchmark */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
 
-              <div className="p-4 rounded-2xl bg-blue-500/[0.02] dark:bg-white/[0.01] border border-slate-100 dark:border-white/5">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">CTR Médio (Cliques)</span>
-                <p className="text-2xl font-black text-indigo-500 mt-1">{benchmark?.avg_ctr || 0}%</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 leading-relaxed">
+              <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/5">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CTR Médio (Cliques)</span>
+                <p className="text-2xl font-black text-[#ff7a29] mt-1">{benchmark?.avg_ctr || 0}%</p>
+                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
                   Taxa ideal de visualizadores que clicam em um product/CTA no story.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-emerald-500/[0.02] dark:bg-white/[0.01] border border-slate-100 dark:border-white/5">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">CVR Médio (Conversão)</span>
-                <p className="text-2xl font-black text-emerald-500 mt-1">{benchmark?.avg_cvr || 0}%</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 leading-relaxed">
+              <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/5">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CVR Médio (Conversão)</span>
+                <p className="text-2xl font-black text-emerald-400 mt-1">{benchmark?.avg_cvr || 0}%</p>
+                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
                   Taxa ideal de vendas geradas em relação às visualizações totais.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-amber-500/[0.02] dark:bg-white/[0.01] border border-slate-100 dark:border-white/5">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hook Rate (Fisgada 3s)</span>
-                <p className="text-2xl font-black text-amber-500 mt-1">{benchmark?.avg_hook_rate || 0}%</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 leading-relaxed">
+              <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/5">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Hook Rate (Fisgada 3s)</span>
+                <p className="text-2xl font-black text-amber-400 mt-1">{benchmark?.avg_hook_rate || 0}%</p>
+                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
                   Média de retenção de usuários nos primeiros 3s críticos do vídeo.
                 </p>
               </div>
@@ -558,28 +558,28 @@ export function OverviewTab({
             </div>
 
             {/* Playbook de Ação */}
-            <div className="mt-6 space-y-4 bg-slate-50 dark:bg-[#1a1f35]/50 border border-slate-100 dark:border-white/5 p-5 rounded-2xl">
+            <div className="mt-6 space-y-4 bg-[#171c30]/50 border border-white/5 p-5 rounded-2xl">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-[#0094EB] dark:text-[#ff7a29]" />
-                <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">
+                <TrendingUp className="w-5 h-5 text-[#ff7a29]" />
+                <h4 className="text-xs font-black text-white uppercase tracking-tight">
                   Playbook de Ação para Alcançar a Meta
                 </h4>
               </div>
 
               <div className="space-y-3.5">
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Comportamento do Consumidor:</span>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Comportamento do Consumidor:</span>
+                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                     {playbook.audienceBehavior}
                   </p>
                 </div>
 
-                <div className="border-t dark:border-white/5 pt-3.5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Recomendações Práticas (2026):</span>
+                <div className="border-t border-white/5 pt-3.5">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Recomendações Práticas (2026):</span>
                   <div className="space-y-2">
                     {playbook.tips.map((tip, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
-                        <div className="p-0.5 bg-emerald-500/10 text-emerald-500 rounded-md shrink-0 mt-0.5">
+                      <div key={idx} className="flex items-start gap-2 text-xs text-slate-300">
+                        <div className="p-0.5 bg-emerald-500/10 text-emerald-400 rounded-md shrink-0 mt-0.5">
                           <Check size={12} className="stroke-[3]" />
                         </div>
                         <span className="leading-relaxed">{tip}</span>
@@ -591,7 +591,7 @@ export function OverviewTab({
             </div>
 
             {/* Metodologia de Fundo */}
-            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/5 text-[10px] text-slate-400 dark:text-slate-500 text-center leading-relaxed">
+            <div className="mt-6 pt-4 border-t border-white/5 text-[10px] text-slate-500 text-center leading-relaxed">
               * Estudo metodológico compilado em Janeiro/2026 a partir do cruzamento de pesquisas consolidadas de mercado nacional (Ebit, Nielsen, Neotrust) e taxas empíricas de Social Video Commerce do varejo digital brasileiro B2C.
             </div>
 
