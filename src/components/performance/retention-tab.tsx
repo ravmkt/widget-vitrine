@@ -199,7 +199,7 @@ export function RetentionTab(_props: Props) {
       </div>
 
       {/* ── Gráfico de retenção (funil) ── */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2.5rem] p-8 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 sm:p-8 shadow-sm">
         <h3 className="text-lg font-black text-slate-800 dark:text-white mb-8">
           Curva de Retenção — {selectedVideoId === 'all' ? 'Todos os Vídeos' : videoSelecionado?.title}
         </h3>
@@ -270,28 +270,28 @@ export function RetentionTab(_props: Props) {
       </div>
 
       {/* ── Tabela de retenção por vídeo ── */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2.5rem] p-8 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 sm:p-8 shadow-sm">
         <h3 className="text-lg font-black text-slate-800 dark:text-white mb-8">
           Retenção por Vídeo
         </h3>
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-700">
-                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Vídeo</th>
-                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">25%</th>
-                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">50%</th>
-                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">75%</th>
-                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">100%</th>
-                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">⏭️ Pulos</th>
-                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">⏮️ Retro.</th>
-                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">🚫 Aband.</th>
+                <th className="pb-4 text-left text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Vídeo</th>
+                <th className="pb-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">25%</th>
+                <th className="pb-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">50%</th>
+                <th className="pb-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">75%</th>
+                <th className="pb-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">100%</th>
+                <th className="pb-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">⏭️ Pulos</th>
+                <th className="pb-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">⏮️ Retro.</th>
+                <th className="pb-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">🚫 Aband.</th>
               </tr>
             </thead>
             <tbody>
               {retentions.map(r => (
                 <tr key={r.video_id} className="border-b border-slate-100 dark:border-slate-800 last:border-0">
-                  <td className="py-4 pr-4">
+                  <td className="py-4 pr-4 text-left">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
                         {r.thumbnail_url && (
@@ -304,19 +304,19 @@ export function RetentionTab(_props: Props) {
                     </div>
                   </td>
                   {r.retention.map(p => (
-                    <td key={p.percentual} className="py-4">
+                    <td key={p.percentual} className="py-4 text-center">
                       <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
                         {p.espectadores}
                       </span>
                     </td>
                   ))}
-                  <td className="py-4">
+                  <td className="py-4 text-center">
                     <span className="text-sm font-bold text-amber-600">{r.pulos}</span>
                   </td>
-                  <td className="py-4">
+                  <td className="py-4 text-center">
                     <span className="text-sm font-bold text-emerald-600">{r.retrocessos}</span>
                   </td>
-                  <td className="py-4">
+                  <td className="py-4 text-center">
                     <span className="text-sm font-bold text-rose-600">{r.abandonos}</span>
                   </td>
                 </tr>
@@ -329,7 +329,7 @@ export function RetentionTab(_props: Props) {
   );
 }
 
-// ─── Card de retenção (Dual-Theme: Azul no Light / Laranja no Dark) ───
+// ─── Card de retenção (Dual-Theme) ───
 
 const RetentionCard = ({
   icon: Icon,
@@ -342,7 +342,7 @@ const RetentionCard = ({
   color?: string;
 }) => {
   return (
-    <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2rem] p-6 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between">
+    <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl p-6 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between">
       <div className="flex items-start justify-between mb-4">
         {/* Quadrado do Ícone Dual-Theme: Azul #0094EB no Light / Laranja #ff7a29 no Dark */}
         <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform duration-300 group-hover:scale-110 shrink-0">
