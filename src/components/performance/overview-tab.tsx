@@ -287,22 +287,22 @@ export function OverviewTab({
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 animate-pulse">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-32 bg-[#1a1f35] rounded-2xl" />
+            <div key={i} className="h-36 bg-[#1a1f35] rounded-2xl border border-[#ff7a29]/30 animate-pulse" />
           ))}
         </div>
-        <div className="h-80 bg-[#1a1f35] rounded-2xl animate-pulse" />
+        <div className="h-80 bg-[#1a1f35] rounded-2xl border border-[#ff7a29]/30 animate-pulse" />
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      {/* ── METRICAS DO FUNIL ── */}
+      {/* ── METRICAS DO FUNIL (Symmetry: Orange Borders + rounded-2xl) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* 1. VISUALIZAÇÕES */}
-        <Card className="rounded-2xl border border-white/5 dark:border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
+        <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-[14px] font-black uppercase tracking-wider text-white">
               1. Visualizações
@@ -320,7 +320,7 @@ export function OverviewTab({
         </Card>
 
         {/* 2. CLIQUES */}
-        <Card className="rounded-2xl border border-white/5 dark:border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
+        <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-[14px] font-black uppercase tracking-wider text-white">
               2. Cliques em CTA
@@ -341,7 +341,7 @@ export function OverviewTab({
         </Card>
 
         {/* 3. VENDAS */}
-        <Card className="rounded-2xl border border-white/5 dark:border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
+        <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-[14px] font-black uppercase tracking-wider text-white">
               3. Vendas Realizadas
@@ -362,7 +362,7 @@ export function OverviewTab({
         </Card>
 
         {/* 4. RECEITA */}
-        <Card className="rounded-2xl border border-white/5 dark:border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
+        <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-[14px] font-black uppercase tracking-wider text-white">
               4. Faturamento ROI
@@ -380,7 +380,7 @@ export function OverviewTab({
         </Card>
 
         {/* 5. ENGAJAMENTO SOCIAL */}
-        <Card className="rounded-2xl border border-white/5 dark:border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
+        <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-[14px] font-black uppercase tracking-wider text-white">
               Engajamento Social
@@ -397,7 +397,7 @@ export function OverviewTab({
                 </span>
                 <span className="text-[11px] text-slate-400">Curtidas</span>
               </div>
-              <div className="border-l border-white/10 pl-4">
+              <div className="border-l border-[#ff7a29]/20 pl-4">
                 <span className="text-base font-black text-sky-400 flex items-center gap-1">
                   💬 {data.comments}
                 </span>
@@ -408,8 +408,8 @@ export function OverviewTab({
         </Card>
       </div>
 
-      {/* ── GRÁFICO DE EVOLUÇÃO TEMPORAL (rounded-2xl) ── */}
-      <Card className="rounded-2xl border border-white/5 bg-[#111524] dark:bg-[#1a1f35] p-6 shadow-sm">
+      {/* ── GRÁFICO DE EVOLUÇÃO TEMPORAL (Symmetry: Orange Borders + rounded-2xl) ── */}
+      <Card className="rounded-2xl border border-[#ff7a29]/30 bg-[#111524] dark:bg-[#1a1f35] p-6 shadow-sm hover:border-[#ff7a29]/50 transition-all duration-300">
         <CardHeader className="p-0 pb-6">
           <CardTitle className="text-[18px] font-black text-white flex items-center gap-2">
             📊 Evolução Diária de Conversões
@@ -418,7 +418,7 @@ export function OverviewTab({
         </CardHeader>
         <CardContent className="p-0 h-80 w-full">
           {chartData.length === 0 || (data.views === 0 && data.clicks === 0) ? (
-            <div className="h-full flex flex-col items-center justify-center text-center border-2 border-dashed border-white/5 rounded-2xl p-6">
+            <div className="h-full flex flex-col items-center justify-center text-center border border-dashed border-[#ff7a29]/30 rounded-2xl p-6">
               <span className="text-3xl">📈</span>
               <h5 className="font-bold text-slate-300 mt-2">Sem dados históricos para exibir</h5>
               <p className="text-[12px] text-slate-400 max-w-xs mt-1">Assim que seu widget receber as primeiras interações, o gráfico de evolução será desenhado automaticamente.</p>
@@ -450,9 +450,9 @@ export function OverviewTab({
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                    backgroundColor: '#111524',
                     borderRadius: '16px',
-                    border: 'none',
+                    border: '1px solid rgba(255, 122, 41, 0.3)',
                     color: '#fff',
                     fontSize: '12px'
                   }}
@@ -482,7 +482,7 @@ export function OverviewTab({
       </Card>
 
       {/* ── CONTEXTO DO MERCADO ── */}
-      <div className="bg-[#111524] border border-white/5 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
+      <div className="bg-[#111524] border border-[#ff7a29]/30 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
         <div className="flex items-start gap-3.5">
           <Compass className="w-7 h-7 text-[#ff7a29] shrink-0 mt-0.5 animate-spin" style={{ animationDuration: '8s' }} />
           <div>
@@ -495,7 +495,7 @@ export function OverviewTab({
         <button
           type="button"
           onClick={() => setIsBenchmarkModalOpen(true)}
-          className="bg-[#ff7a29] hover:bg-[#e05e10] text-white font-black text-xs px-4 py-2.5 rounded-2xl transition-all cursor-pointer shadow-sm shrink-0 flex items-center gap-1.5 hover:scale-[1.02]"
+          className="bg-[#ff7a29] border border-[#ff7a29]/30 hover:bg-[#e05e10] text-white font-black text-xs px-4 py-2.5 rounded-2xl transition-all cursor-pointer shadow-sm shrink-0 flex items-center gap-1.5 hover:scale-[1.02]"
         >
           <FileText size={14} className="text-white" />
           Ver Estudo de Mercado
@@ -505,19 +505,19 @@ export function OverviewTab({
       {/* ── MODAL PREMIUM: ESTUDO DE MERCADO E BENCHMARK 2026 ── */}
       {isBenchmarkModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in font-sans text-white">
-          <div className="relative w-full max-w-2xl bg-[#111524] border border-white/10 rounded-2xl shadow-2xl p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-[#111524] border border-[#ff7a29]/30 rounded-2xl shadow-2xl p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto">
 
-            {/* Botão Fechar */}
+            {/* Botão Fechar em Borda Laranja */}
             <button
               onClick={() => setIsBenchmarkModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all cursor-pointer"
+              className="absolute top-5 right-5 p-2 rounded-2xl border border-[#ff7a29]/30 bg-[#111524] text-slate-400 hover:text-[#ff7a29] transition-all cursor-pointer"
             >
               <X size={18} />
             </button>
 
             {/* Cabeçalho */}
-            <div className="space-y-1.5 border-b border-white/5 pb-5">
-              <span className="inline-flex items-center gap-1 bg-[#ff7a29]/10 text-[#ff7a29] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+            <div className="space-y-1.5 border-b border-[#ff7a29]/20 pb-5">
+              <span className="inline-flex items-center gap-1 bg-[#ff7a29]/10 border border-[#ff7a29]/30 text-[#ff7a29] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
                 <Sparkles className="w-3 h-3" /> Inteligência Setorial 2026
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-white leading-tight">
@@ -528,10 +528,10 @@ export function OverviewTab({
               </p>
             </div>
 
-            {/* Grid das Métricas do Benchmark */}
+            {/* Grid das Métricas do Benchmark com Borda Laranja */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
 
-              <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/5">
+              <div className="p-4 rounded-2xl bg-white/[0.01] border border-[#ff7a29]/30">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CTR Médio (Cliques)</span>
                 <p className="text-2xl font-black text-[#ff7a29] mt-1">{benchmark?.avg_ctr || 0}%</p>
                 <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
@@ -539,7 +539,7 @@ export function OverviewTab({
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/5">
+              <div className="p-4 rounded-2xl bg-white/[0.01] border border-[#ff7a29]/30">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CVR Médio (Conversão)</span>
                 <p className="text-2xl font-black text-emerald-400 mt-1">{benchmark?.avg_cvr || 0}%</p>
                 <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
@@ -547,7 +547,7 @@ export function OverviewTab({
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/5">
+              <div className="p-4 rounded-2xl bg-white/[0.01] border border-[#ff7a29]/30">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Hook Rate (Fisgada 3s)</span>
                 <p className="text-2xl font-black text-amber-400 mt-1">{benchmark?.avg_hook_rate || 0}%</p>
                 <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
@@ -557,8 +557,8 @@ export function OverviewTab({
 
             </div>
 
-            {/* Playbook de Ação */}
-            <div className="mt-6 space-y-4 bg-[#171c30]/50 border border-white/5 p-5 rounded-2xl">
+            {/* Playbook de Ação com Borda Laranja */}
+            <div className="mt-6 space-y-4 bg-[#171c30]/50 border border-[#ff7a29]/30 p-5 rounded-2xl">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-[#ff7a29]" />
                 <h4 className="text-xs font-black text-white uppercase tracking-tight">
@@ -574,7 +574,7 @@ export function OverviewTab({
                   </p>
                 </div>
 
-                <div className="border-t border-white/5 pt-3.5">
+                <div className="border-t border-[#ff7a29]/20 pt-3.5">
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Recomendações Práticas (2026):</span>
                   <div className="space-y-2">
                     {playbook.tips.map((tip, idx) => (
@@ -591,7 +591,7 @@ export function OverviewTab({
             </div>
 
             {/* Metodologia de Fundo */}
-            <div className="mt-6 pt-4 border-t border-white/5 text-[10px] text-slate-500 text-center leading-relaxed">
+            <div className="mt-6 pt-4 border-t border-[#ff7a29]/20 text-[10px] text-slate-500 text-center leading-relaxed">
               * Estudo metodológico compilado em Janeiro/2026 a partir do cruzamento de pesquisas consolidadas de mercado nacional (Ebit, Nielsen, Neotrust) e taxas empíricas de Social Video Commerce do varejo digital brasileiro B2C.
             </div>
 
