@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
+import FloatingHelpButton from './FloatingHelpButton';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { supabase } from '@/lib/supabase';
 import { Sparkles, Clock, AlertTriangle, XCircle, Lock } from 'lucide-react';
@@ -329,6 +330,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </footer>
           </main>
         </SidebarInset>
+        <FloatingHelpButton />
       </div>
     </SidebarProvider>
   );
