@@ -1007,6 +1007,26 @@ const ProductsPage = () => {
         </div>
       </div>
 
+      {/* ── ABAS: PRODUTOS / MEDIDAS ── */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-white/10">
+        <button
+          type="button"
+          onClick={() => navigate('/produtos')}
+          className="flex items-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 border-[#0094EB] dark:border-[#ff7a29] text-[#0094EB] dark:text-[#ff7a29] transition-colors cursor-pointer"
+        >
+          <Package size={15} />
+          Produtos
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/medidas')}
+          className="flex items-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 border-transparent text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+        >
+          <Ruler size={15} />
+          Medidas
+        </button>
+      </div>
+
       {/* ── CARD PRINCIPAL UNIFICADO (Filtros, Busca e Tabela em um só bloco) ── */}
       <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2.5rem] overflow-hidden shadow-sm p-6 sm:p-8 space-y-6">
         
