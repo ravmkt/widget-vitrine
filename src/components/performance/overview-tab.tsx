@@ -120,7 +120,7 @@ export function OverviewTab({
         };
       case 'infantil_brinquedos':
         return {
-          audienceBehavior: "La compra é feita pelos pais, mas motivada pela alegria e desenvolvimento dos filhos. Destaque segurança, estímulo cognitivo e momentos felizes em família.",
+          audienceBehavior: "A compra é feita pelos pais, mas motivada pela alegria e desenvolvimento dos filhos. Destaque segurança, estímulo cognitivo e momentos felizes em família.",
           tips: [
             "Crianças Brincando Livremente: Mostre a interação genuína e as risadas das crianças interagindo com o brinquedo de forma segura.",
             "Benefício Educativo: Explique rapidamente quais habilidades motoras, criativas ou sociais o produto ajuda a desenvolver.",
@@ -140,7 +140,7 @@ export function OverviewTab({
         return {
           audienceBehavior: "Mercado de luxo, autoestima e presentes memoráveis. O foco deve ser o brilho sob iluminação correta, o refinamento da peça e a embalagem luxuosa.",
           tips: [
-            "O Jogo da Luz: Filme as joias sob luz natural direta para capturar o reflexo e o brilho real de cada detalhe e pedra precisa.",
+            "O Jogo da Luz: Filme as joias sob luz natural direta para capturar o reflexo e o brilho real de cada detalhe e pedra preciosa.",
             "Modelos em Close: Mostre a peça sendo usada de forma harmoniosa no pescoço, orelha ou dedos, para dar noção de escala e sofisticação.",
             "Experiência do Unboxing Premium: Grave o processo de abertura de caixas de veludo, sacolas de seda e certificados de garantia."
           ]
@@ -278,8 +278,13 @@ export function OverviewTab({
   const renderSectorBadge = (delta: number) => {
     const positive = delta >= 0
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-black px-2.5 py-1 rounded-full mt-1.5 border border-slate-200 dark:border-white/10 bg-white dark:bg-[#FFF] text-[#E33] dark:text-[#E33] shadow-xs">
-        {positive ? <TrendingUp className="w-3.5 h-3.5 text-[#E33]" /> : <TrendingDown className="w-3.5 h-3.5 text-[#E33]" />}
+      <span className={cn(
+        "inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-xl mt-1.5 border bg-white shadow-xs",
+        positive
+          ? "text-emerald-600 border-emerald-500/30"
+          : "text-[#E33] border-[#E33]/30"
+      )}>
+        {positive ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> : <TrendingDown className="w-3.5 h-3.5 text-[#E33]" />}
         {positive ? '+' : ''}{delta.toFixed(1)}% vs Setor
       </span>
     )
@@ -305,39 +310,37 @@ export function OverviewTab({
         {/* 1. VISUALIZAÇÕES */}
         <Card className="rounded-3xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-white">
               1. Visualizações
             </span>
-            <div className="p-1.5 rounded-lg bg-sky-500/10 text-sky-500">
-              <Eye className="w-4 h-4" />
+            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
+              <Eye className="w-5 h-5" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-slate-800 dark:text-white">
               {data.views.toLocaleString('pt-BR')}
             </div>
-            <p className="text-[10px] text-slate-400 mt-1">Interações no widget</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-300 mt-1">Interações no widget</p>
           </CardContent>
         </Card>
 
         {/* 2. CLIQUES */}
         <Card className="rounded-3xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-white">
               2. Cliques em CTA
             </span>
-            <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-500">
-              <MousePointerClick className="w-4 h-4" />
+            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
+              <MousePointerClick className="w-5 h-5" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-slate-800 dark:text-white">
               {data.clicks.toLocaleString('pt-BR')}
             </div>
-            <div className="flex flex-col mt-1.5 gap-1.5 items-start">
-              <span className="text-sm font-extrabold text-[#E33] dark:text-[#E33] bg-white dark:bg-[#FFF] border border-slate-200 dark:border-white/10 px-2.5 py-1 rounded-xl shadow-xs">
-                CTR: {ctr.toFixed(1)}%
-              </span>
+            <div className="flex flex-col mt-0.5">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-300">CTR: {ctr.toFixed(1)}%</span>
               {renderSectorBadge(ctrDelta)}
             </div>
           </CardContent>
@@ -346,52 +349,50 @@ export function OverviewTab({
         {/* 3. VENDAS */}
         <Card className="rounded-3xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-white">
               3. Vendas Realizadas
             </span>
-            <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500">
-              <Trophy className="w-4 h-4" />
+            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
+              <Trophy className="w-5 h-5" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-slate-800 dark:text-white">
               {data.conversions.toLocaleString('pt-BR')}
             </div>
-            <div className="flex flex-col mt-1.5 gap-1.5 items-start">
-              <span className="text-sm font-extrabold text-[#E33] dark:text-[#E33] bg-white dark:bg-[#FFF] border border-slate-200 dark:border-white/10 px-2.5 py-1 rounded-xl shadow-xs">
-                Conversão: {cvr.toFixed(1)}%
-              </span>
+            <div className="flex flex-col mt-0.5">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-300">Conversão: {cvr.toFixed(1)}%</span>
               {renderSectorBadge(cvrDelta)}
             </div>
           </CardContent>
         </Card>
 
         {/* 4. RECEITA */}
-        <Card className="rounded-3xl border-emerald-500/20 dark:border-emerald-500/10 bg-emerald-500/[0.02] dark:bg-emerald-500/[0.04] shadow-sm hover:shadow-md transition-all duration-300">
+        <Card className="rounded-3xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-white">
               4. Faturamento ROI
             </span>
-            <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-              <CircleDollarSign className="w-4 h-4" />
+            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
+              <CircleDollarSign className="w-5 h-5" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
               R$ {data.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-[10px] text-emerald-500 mt-1 font-bold">Vendas Diretas dos Vídeos</p>
+            <p className="text-[10px] text-emerald-500 dark:text-emerald-300 mt-1 font-bold">Vendas Diretas dos Vídeos</p>
           </CardContent>
         </Card>
 
         {/* 5. ENGAJAMENTO SOCIAL */}
         <Card className="rounded-3xl border-slate-100 dark:border-white/5 bg-white dark:bg-[#1a1f35] shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-white">
               Engajamento Social
             </span>
-            <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500">
-              <Heart className="w-4 h-4 fill-rose-500" />
+            <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500">
+              <Heart className="w-5 h-5 fill-orange-500 text-orange-500" />
             </div>
           </CardHeader>
           <CardContent>
@@ -400,13 +401,13 @@ export function OverviewTab({
                 <span className="text-base font-black text-rose-500 flex items-center gap-1">
                   ❤️ {data.likes}
                 </span>
-                <span className="text-[9px] text-slate-400">Curtidas</span>
+                <span className="text-[9px] text-slate-400 dark:text-slate-300">Curtidas</span>
               </div>
               <div className="border-l border-slate-100 dark:border-white/10 pl-4">
                 <span className="text-base font-black text-sky-500 flex items-center gap-1">
                   💬 {data.comments}
                 </span>
-                <span className="text-[9px] text-slate-400">Comentários</span>
+                <span className="text-[9px] text-slate-400 dark:text-slate-300">Comentários</span>
               </div>
             </div>
           </CardContent>
