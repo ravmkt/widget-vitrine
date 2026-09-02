@@ -225,28 +225,20 @@ export function RetentionTab(_props: Props) {
                   tickLine={false}
                   tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 700 }}
                   tickFormatter={(v: number) => v.toLocaleString()}
+                />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#ffffff', // Fundo branco puro
                     borderRadius: '16px',
-                    border: '1px solid #e2e8f0', // Borda sutil cinza
-                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.15)',
+                    border: 'none',
+                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
                     padding: '12px',
                     fontSize: '12px',
                   }}
-                  labelStyle={{
-                    color: '#000000', // Título (Ex: "50%") em preto puro
-                    fontWeight: '900',
-                    marginBottom: '4px',
-                  }}
-                  itemStyle={{
-                    color: '#000000', // Corpo em preto puro
-                    fontWeight: '700',
-                    padding: 0,
-                  }}
-                  formatter={(val: number) => [
-                    `${val.toLocaleString('pt-BR')}`,
-                    'Espectadores'
+                  formatter={(val: number, name: string) => [
+                    name === 'taxa'
+                      ? `${val}%`
+                      : val.toLocaleString(),
+                    name === 'taxa' ? 'Retenção (%)' : 'Espectadores',
                   ]}
                 />
                 <Bar dataKey="espectadores" fill="url(#barGradient)" radius={[8, 8, 0, 0]} name="Espectadores" />
