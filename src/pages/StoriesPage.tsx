@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTenant } from '@/context/TenantContext'; // 🆕 Importando o contexto do Tenant
+import { useTenant } from '@/context/TenantContext'; 
 import { db, resolveStoreId, Story } from '@/lib/db';
 import { logPanelActivity } from '@/lib/activityLog';
 import {
@@ -24,12 +24,12 @@ import { cn } from '@/lib/utils';
 
 const StoriesPage = () => {
   const navigate = useNavigate();
-  const { currentStore } = useTenant(); // 🆕 Resgata os dados da loja atual (contendo a URL)
+  const { currentStore } = useTenant(); 
 
   const [stories, setStories] = useState<Story[]>([]);
   const [videoCounts, setVideoCounts] = useState<Record<string, number>>({});
   const [locations, setLocations] = useState<Record<string, string>>({});
-  const [pageRules, setPageRules] = useState<Record<string, string>>({}); // 🆕 Novo estado para regras amigáveis
+  const [pageRules, setPageRules] = useState<Record<string, string>>({}); 
   const [loading, setLoading] = useState(true);
   const [currentStoreId, setCurrentStoreId] = useState<string>('');
   const [storeRealUrl, setStoreRealUrl] = useState('');
@@ -58,7 +58,6 @@ const StoriesPage = () => {
       const resolvedStoreId = await resolveStoreId();
       setCurrentStoreId(resolvedStoreId);
 
-      // 🎯 Busca a URL REAL da loja (configurada em Configurações) para o preview
       try {
         const settings = await db.getSettings(resolvedStoreId);
         setStoreRealUrl(String(settings?.store_url || ''));
@@ -69,12 +68,10 @@ const StoriesPage = () => {
       const s = await db.stories.getAll(resolvedStoreId);
       const storyIds = s.map(story => story.id);
 
-      // Agora filtra direto pelo store_id no banco
       const allSv = await db.storyVideos.getAll(resolvedStoreId);
       const sv = allSv.filter(v => storyIds.includes(v.story_id));
 
       const dl = await db.displayLocations.getAll(resolvedStoreId);
-      // 🆕 Busca as regras de exibição de páginas do banco
       const rules = await (db as any).pageRules.getAll(resolvedStoreId);
 
       const countMap: Record<string, number> = {};
@@ -96,7 +93,6 @@ const StoriesPage = () => {
 
       setLocations(locationMap);
 
-      // 🆕 Traduz as regras de página em textos legíveis para o lojista
       const rulesMap: Record<string, string> = {};
       rules.forEach((rule: any) => {
         if (!rulesMap[rule.story_id]) {
@@ -328,54 +324,54 @@ const StoriesPage = () => {
   const getFormatIcon = (format: string) => {
     switch (format) {
       case 'floating_widget':
-        return <MousePointer2 size={13} />;
+        return <MousePointer2 size={16} />;
       case 'carousel':
       case 'dynamic_carousel':
-        return <Layout size={13} />;
+        return <Layout size={16} />;
       case 'grid':
-        return <Layers size={13} />;
+        return <Layers size={16} />;
       default:
-        return <PlayCircle size={13} />;
+        return <PlayCircle size={16} />;
     }
   };
 
   const getTypeBadgeClass = () =>
-    'inline-flex h-7 items-center justify-center gap-1.5 rounded-full border border-[#CDEBFF] bg-[#EBF7FF] px-3.5 text-xs font-bold text-[#0094EB] whitespace-nowrap';
+    'inline-flex h-7 items-center justify-center gap-1.5 rounded-full border border-sky-500/10 bg-sky-500/5 px-3.5 text-xs font-bold text-sky-400 whitespace-nowrap';
 
   const getLocalBadgeClass = () =>
-    'inline-flex h-7 items-center justify-center rounded-full border border-slate-100 bg-slate-50 px-3.5 text-xs font-bold text-slate-600 whitespace-nowrap';
+    'inline-flex h-7 items-center justify-center rounded-full border border-slate-800 bg-slate-900/50 px-3.5 text-xs font-bold text-slate-400 whitespace-nowrap';
 
   if (loading) return null;
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20">
+    <div className="space-y-8 animate-fade-in pb-20 font-sans text-white">
       {/* HEADER DA PÁGINA */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-black text-white tracking-tight">
             Stories
           </h1>
-          <p className="text-slate-500 font-medium mt-1">
+          <p className="text-slate-400 font-medium mt-1">
             Gerencie as configurações de exibição e agrupamento de vídeos.
           </p>
         </div>
 
         <button
           onClick={() => navigate('/stories/new')}
-          className="bg-[#0094EB] hover:bg-[#0E4787] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center gap-2 cursor-pointer"
+          className="bg-[#ff7a29] hover:bg-[#e05e10] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-orange-500/10 transition-all flex items-center gap-2 cursor-pointer"
         >
           <Plus size={18} /> Novo Story
         </button>
       </div>
 
-      {/* ── CARD PRINCIPAL UNIFICADO (Padrão de Armazenamento) ── */}
-      <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden">
+      {/* ── CARD PRINCIPAL UNIFICADO PREMIUM (Tema Escuro + rounded-2xl) ── */}
+      <div className="bg-[#111524] border border-white/5 rounded-2xl shadow-2xl overflow-hidden">
         
         {/* BARRA DE FILTROS E BUSCA INTERNA DO CARD */}
-        <div className="p-6 pb-4 flex flex-col md:flex-row gap-4 justify-between items-center border-b border-slate-100">
+        <div className="p-6 pb-4 flex flex-col md:flex-row gap-4 justify-between items-center border-b border-white/5">
           <div className="relative flex-1 w-full">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
               size={18}
             />
             <input
@@ -383,21 +379,21 @@ const StoriesPage = () => {
               placeholder="Pesquisar por nome, tipo ou local..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#0094EB] focus:bg-white transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-[#171c30] border border-white/5 rounded-2xl text-sm font-bold text-white placeholder-slate-500 outline-none focus:border-[#ff7a29] transition-all"
             />
           </div>
 
-          {/* BOTÕES DE FILTRO ESTILO ARMAZENAMENTO (Azul ativo / Cinza inativo) */}
+          {/* BOTÕES DE FILTRO PREMIUM (Laranja ativo / Escuro inativo) */}
           <div className="flex gap-2 w-full md:w-auto shrink-0">
             {(['all', 'active', 'inactive'] as const).map(status => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
                 className={cn(
-                  'px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border text-center flex-1 md:flex-initial cursor-pointer',
+                  'px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border text-center flex-1 md:flex-initial cursor-pointer',
                   filterStatus === status
-                    ? 'bg-[#0094EB] border-[#0094EB] text-white shadow-lg shadow-blue-500/15'
-                    : 'bg-slate-50 border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-100',
+                    ? 'bg-[#ff7a29] border-[#ff7a29] text-white shadow-lg shadow-orange-500/15'
+                    : 'bg-[#171c30] border-transparent text-slate-400 hover:text-white hover:bg-[#1e253c]',
                 )}
               >
                 {status === 'all'
@@ -410,112 +406,112 @@ const StoriesPage = () => {
           </div>
         </div>
 
-        {/* TABELA DE STORIES */}
+        {/* TABELA DE STORIES NO ESTILO DO PRINT DE VÍDEOS */}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-200">
+              <tr className="bg-[#171c30]/40 border-b border-white/5">
                 <th
                   onClick={() => handleSort('nome')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest hover:text-slate-600 transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest hover:text-white transition-colors"
                 >
                   <span className="inline-flex items-center gap-1">
-                    Nome{' '}
+                    Story / Nome{' '}
                     {sortColumn === 'nome' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} />
+                        <ChevronUp size={12} className="text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} />
+                        <ChevronDown size={12} className="text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
 
                 <th
                   onClick={() => handleSort('tipo')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest hover:text-slate-600 transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest hover:text-white transition-colors"
                 >
                   <span className="inline-flex items-center gap-1">
                     Tipo{' '}
                     {sortColumn === 'tipo' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} />
+                        <ChevronUp size={12} className="text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} />
+                        <ChevronDown size={12} className="text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
 
                 <th
                   onClick={() => handleSort('videos')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-slate-600 transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-white transition-colors"
                 >
                   <span className="inline-flex items-center gap-1 justify-center">
                     Vídeos{' '}
                     {sortColumn === 'videos' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} />
+                        <ChevronUp size={12} className="text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} />
+                        <ChevronDown size={12} className="text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
 
                 <th
                   onClick={() => handleSort('local')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest hover:text-slate-600 transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest hover:text-white transition-colors"
                 >
                   <span className="inline-flex items-center gap-1">
-                    Local{' '}
+                    Localização{' '}
                     {sortColumn === 'local' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} />
+                        <ChevronUp size={12} className="text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} />
+                        <ChevronDown size={12} className="text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
 
                 <th
                   onClick={() => handleSort('visualizacoes')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-slate-600 transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-white transition-colors"
                 >
                   <span className="inline-flex items-center gap-1 justify-center">
                     Visualizações{' '}
                     {sortColumn === 'visualizacoes' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} />
+                        <ChevronUp size={12} className="text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} />
+                        <ChevronDown size={12} className="text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
 
                 <th
                   onClick={() => handleSort('cliques')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-slate-600 transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-white transition-colors"
                 >
                   <span className="inline-flex items-center gap-1 justify-center">
-                    Cliques{' '}
+                    CTR / Cliques{' '}
                     {sortColumn === 'cliques' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} />
+                        <ChevronUp size={12} className="text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} />
+                        <ChevronDown size={12} className="text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
 
                 <th
                   onClick={() => handleSort('status')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-slate-600 transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-white transition-colors"
                 >
                   <span className="inline-flex items-center gap-1 justify-center">
                     Status{' '}
                     {sortColumn === 'status' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} />
+                        <ChevronUp size={12} className="text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} />
+                        <ChevronDown size={12} className="text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
@@ -526,7 +522,7 @@ const StoriesPage = () => {
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/[0.03]">
               {sortedStories.map(story => {
                 const views =
                   (story as any).views_count ??
@@ -543,19 +539,37 @@ const StoriesPage = () => {
                   (story as any).cliques ??
                   0;
 
+                const ctr = views > 0 ? (clicks / views) * 100 : 0;
+                const active = isStoryActive(story);
+
                 return (
                   <tr
                     key={story.id}
-                    className="hover:bg-slate-50/40 transition-colors align-middle"
+                    className="hover:bg-white/[0.015] border-b border-white/[0.02] transition-colors align-middle"
                   >
+                    {/* COLUNA 1 - NOME (No formato do print com thumbnail/ícone, título e status embaixo) */}
                     <td className="px-6 py-5">
-                      <div className="min-w-0">
-                        <h3 className="text-sm font-black text-slate-800 truncate max-w-xs uppercase">
-                          {story.title}
-                        </h3>
+                      <div className="flex items-center gap-4">
+                        {/* Thumbnail Fictício do Story baseado no Formato */}
+                        <div className="w-12 h-12 rounded-xl bg-[#1c2237] border border-white/5 flex items-center justify-center text-[#ff7a29] shrink-0 shadow-inner">
+                          {getFormatIcon(story.format)}
+                        </div>
+
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-black text-white truncate max-w-[200px] uppercase tracking-wide">
+                            {story.title}
+                          </h3>
+                          <span className={cn(
+                            "text-xs font-bold block mt-0.5",
+                            active ? "text-emerald-500" : "text-rose-500"
+                          )}>
+                            {active ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </div>
                       </div>
                     </td>
 
+                    {/* COLUNA 2 - TIPO */}
                     <td className="px-6 py-5">
                       <span className={getTypeBadgeClass()}>
                         {getFormatIcon(story.format)}{' '}
@@ -563,10 +577,12 @@ const StoriesPage = () => {
                       </span>
                     </td>
 
-                    <td className="px-6 py-5 text-center font-black text-slate-800 text-sm">
+                    {/* COLUNA 3 - NÚMERO DE VÍDEOS */}
+                    <td className="px-6 py-5 text-center font-black text-white text-sm">
                       {videoCounts[story.id] || 0}
                     </td>
 
+                    {/* COLUNA 4 - LOCALIZAÇÃO */}
                     <td className="px-6 py-5">
                       <span
                         className={getLocalBadgeClass()}
@@ -576,34 +592,50 @@ const StoriesPage = () => {
                       </span>
                     </td>
 
-                    <td className="px-6 py-5 text-center font-black text-slate-800 text-sm">
+                    {/* COLUNA 5 - VISUALIZAÇÕES */}
+                    <td className="px-6 py-5 text-center font-black text-white text-sm">
                       {views}
                     </td>
 
-                    <td className="px-6 py-5 text-center font-black text-slate-800 text-sm">
-                      {clicks}
+                    {/* COLUNA 6 - CTR / CLIQUES (Com badge vermelha do print para 0.0% e verde para melhor) */}
+                    <td className="px-6 py-5 text-center">
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className={cn(
+                          "px-2.5 py-0.5 text-xs font-black rounded-full border",
+                          ctr === 0 
+                            ? "bg-rose-500/10 text-rose-500 border-rose-500/20" 
+                            : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        )}>
+                          {ctr.toFixed(1)}%
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-bold">
+                          {clicks} cliques
+                        </span>
+                      </div>
                     </td>
 
+                    {/* COLUNA 7 - STATUS (Toggle interativo) */}
                     <td className="px-6 py-5 text-center">
                       <button
                         type="button"
                         onClick={() => handleToggleStatus(story)}
                         className={cn(
                           'inline-flex h-7 items-center justify-center rounded-full px-4 text-[10px] font-black uppercase tracking-wider border transition-all mx-auto cursor-pointer',
-                          isStoryActive(story)
-                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/50'
-                            : 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100/50',
+                          active
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                            : 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20',
                         )}
                         title={
-                          isStoryActive(story)
+                          active
                             ? 'Clique para desativar'
                             : 'Clique para ativar'
                         }
                       >
-                        {isStoryActive(story) ? 'ATIVO' : 'INATIVO'}
+                        {active ? 'ATIVO' : 'INATIVO'}
                       </button>
                     </td>
 
+                    {/* COLUNA 8 - AÇÕES */}
                     <td className="px-6 py-5 text-center">
                       <div className="flex justify-center gap-1">
                         {/* 1. Preview */}
@@ -615,7 +647,7 @@ const StoriesPage = () => {
                               'noopener,noreferrer',
                             );
                           }}
-                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                          className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all cursor-pointer"
                           title="Preview Story"
                         >
                           <Eye size={16} />
@@ -624,7 +656,7 @@ const StoriesPage = () => {
                         {/* 2. Editar */}
                         <button
                           onClick={() => navigate(`/stories/${story.id}`)}
-                          className="p-2 text-slate-400 hover:text-[#0094EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                          className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all cursor-pointer"
                           title="Editar Story"
                         >
                           <Edit3 size={16} />
@@ -633,7 +665,7 @@ const StoriesPage = () => {
                         {/* 3. Excluir */}
                         <button
                           onClick={() => handleDeleteClick(story)}
-                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
                           title="Excluir Story"
                         >
                           <Trash2 size={16} />
@@ -649,9 +681,9 @@ const StoriesPage = () => {
 
         {/* FEEDBACK CASO NÃO EXISTAM STORIES */}
         {filteredStories.length === 0 && (
-          <div className="p-16 text-center">
-            <PlayCircle size={48} className="mx-auto text-slate-300 mb-4" />
-            <p className="text-slate-500 font-bold">
+          <div className="p-16 text-center border-t border-white/5 bg-[#14192a]/50">
+            <PlayCircle size={48} className="mx-auto text-slate-600 mb-4 animate-pulse" />
+            <p className="text-slate-400 font-bold">
               Nenhum Story encontrado.
             </p>
           </div>
