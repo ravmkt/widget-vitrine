@@ -20,8 +20,6 @@ import {
 } from '@/components/ui/select';
 import { Play, SkipForward, Rewind, XCircle, Clock } from 'lucide-react';
 
-// ─── Tipos ──────────────────────────────────────────────────
-
 interface RetentionPoint {
   percentual: string;
   espectadores: number;
@@ -46,8 +44,6 @@ type Props = {
   customTo?: string;
 };
 
-// ─── Mock ───────────────────────────────────────────────────
-
 function generateMockRetention(videos: any[]): VideoRetention[] {
   return videos.map((v) => {
     const baseViewers = 50 + Math.floor(Math.random() * 200);
@@ -71,8 +67,6 @@ function generateMockRetention(videos: any[]): VideoRetention[] {
     };
   });
 }
-
-// ─── Componente ─────────────────────────────────────────────
 
 export function RetentionTab(_props: Props) {
   const { storeId } = useTenant();
@@ -101,12 +95,11 @@ export function RetentionTab(_props: Props) {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0094EB]" />
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#ff7a29]" />
       </div>
     );
   }
 
-  // ── Dados agregados (todos os vídeos) ──
   const dataAgregada = retentions.length > 0
     ? (() => {
         const total = retentions.reduce((acc, r) => {
@@ -125,7 +118,6 @@ export function RetentionTab(_props: Props) {
       })()
     : [];
 
-  // ── Vídeo selecionado ──
   const videoSelecionado = selectedVideoId === 'all'
     ? null
     : retentions.find(r => r.video_id === selectedVideoId);
@@ -138,7 +130,6 @@ export function RetentionTab(_props: Props) {
         taxa: arr[0] ? +((p.espectadores / arr[0].espectadores) * 100).toFixed(1) : 0,
       }));
 
-  // ── Totais agregados ──
   const totalPulos = retentions.reduce((s, r) => s + r.pulos, 0);
   const totalRetrocessos = retentions.reduce((s, r) => s + r.retrocessos, 0);
   const totalAbandonos = retentions.reduce((s, r) => s + r.abandonos, 0);
@@ -147,45 +138,41 @@ export function RetentionTab(_props: Props) {
     : 0;
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in font-sans">
       {/* ── Cards resumo ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <RetentionCard
           icon={Clock}
           label="Taxa de Conclusão"
           value={`${taxaConclusaoMedia}%`}
-          color="blue"
         />
         <RetentionCard
           icon={SkipForward}
           label="Pulos p/ Frente"
           value={totalPulos.toLocaleString()}
-          color="amber"
         />
         <RetentionCard
           icon={Rewind}
           label="Retrocessos"
           value={totalRetrocessos.toLocaleString()}
-          color="emerald"
         />
         <RetentionCard
           icon={XCircle}
           label="Abandonos"
           value={totalAbandonos.toLocaleString()}
-          color="rose"
         />
       </div>
 
       {/* ── Seletor de vídeo ── */}
       <div className="flex items-center gap-4">
-        <span className="text-sm font-black text-slate-600 dark:text-slate-300">
+        <span className="text-[14px] font-black text-slate-300">
           Vídeo:
         </span>
         <Select value={selectedVideoId} onValueChange={setSelectedVideoId}>
-          <SelectTrigger className="w-[280px] h-9 rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold">
+          <SelectTrigger className="w-[280px] h-10 rounded-2xl border border-white/5 bg-[#111524] text-xs font-bold text-white">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#111524] border border-white/10 text-white rounded-2xl">
             <SelectItem value="all" className="text-xs font-bold">
               📊 Todos os vídeos (agregado)
             </SelectItem>
@@ -199,8 +186,8 @@ export function RetentionTab(_props: Props) {
       </div>
 
       {/* ── Gráfico de retenção (funil) ── */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 sm:p-8 shadow-sm">
-        <h3 className="text-lg font-black text-slate-800 dark:text-white mb-8">
+      <div className="bg-[#111524] border border-white/5 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <h3 className="text-[18px] font-black text-white mb-8">
           Curva de Retenção — {selectedVideoId === 'all' ? 'Todos os Vídeos' : videoSelecionado?.title}
         </h3>
         <div className="h-[340px] w-full">
@@ -209,11 +196,11 @@ export function RetentionTab(_props: Props) {
               <BarChart data={dadosGrafico} barSize={60}>
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0094EB" stopOpacity={0.85} />
-                    <stop offset="100%" stopColor="#0094EB" stopOpacity={0.3} />
+                    <stop offset="0%" stopColor="#ff7a29" stopOpacity={0.85} />
+                    <stop offset="100%" stopColor="#ff7a29" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.05)" />
                 <XAxis
                   dataKey="percentual"
                   axisLine={false}
@@ -227,26 +214,26 @@ export function RetentionTab(_props: Props) {
                   tickFormatter={(v: number) => v.toLocaleString()}
                 />
                 <Tooltip
-                  cursor={{ fill: 'rgba(255, 255, 255, 0.04)', radius: 8 }}
+                  cursor={{ fill: 'rgba(255, 255, 255, 0.02)', radius: 8 }}
                   content={({ active, payload }: any) => {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
                       return (
-                        <div className="bg-[#1a1f35] border border-white/10 p-3.5 rounded-2xl shadow-xl text-left min-w-[160px] backdrop-blur-md">
+                        <div className="bg-[#171c30] border border-white/10 p-3.5 rounded-2xl shadow-xl text-left min-w-[160px] backdrop-blur-md">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
                             Ponto: {data.percentual}
                           </p>
-                          <div className="space-y-1.5">
+                          <div className="space-y-1.5 text-white">
                             <div className="flex items-center justify-between gap-4">
                               <span className="text-xs text-slate-300 font-medium">Espectadores:</span>
-                              <span className="text-xs font-black text-white">
+                              <span className="text-xs font-black">
                                 {data.espectadores?.toLocaleString()}
                               </span>
                             </div>
                             {data.taxa !== undefined && (
                               <div className="flex items-center justify-between gap-4">
                                 <span className="text-xs text-slate-300 font-medium">Retenção:</span>
-                                <span className="text-xs font-black text-[#0094EB]">
+                                <span className="text-xs font-black text-[#ff7a29]">
                                   {data.taxa}%
                                 </span>
                               </div>
@@ -262,7 +249,7 @@ export function RetentionTab(_props: Props) {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex h-full items-center justify-center text-slate-400">
+            <div className="flex h-full items-center justify-center text-slate-500">
               Nenhum dado disponível
             </div>
           )}
@@ -270,14 +257,14 @@ export function RetentionTab(_props: Props) {
       </div>
 
       {/* ── Tabela de retenção por vídeo ── */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 sm:p-8 shadow-sm">
-        <h3 className="text-lg font-black text-slate-800 dark:text-white mb-8">
+      <div className="bg-[#111524] border border-white/5 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <h3 className="text-[18px] font-black text-white mb-8">
           Retenção por Vídeo
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700">
+              <tr className="border-b border-white/5">
                 <th className="pb-4 text-left text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Vídeo</th>
                 <th className="pb-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">25%</th>
                 <th className="pb-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">50%</th>
@@ -290,34 +277,34 @@ export function RetentionTab(_props: Props) {
             </thead>
             <tbody>
               {retentions.map(r => (
-                <tr key={r.video_id} className="border-b border-slate-100 dark:border-slate-800 last:border-0">
+                <tr key={r.video_id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
                   <td className="py-4 pr-4 text-left">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
+                      <div className="h-10 w-10 rounded-xl bg-slate-800 overflow-hidden shrink-0 border border-white/5">
                         {r.thumbnail_url && (
                           <img src={r.thumbnail_url} alt={r.title} className="h-full w-full object-cover" />
                         )}
                       </div>
-                      <span className="text-sm font-black text-slate-800 dark:text-white truncate max-w-[140px]">
+                      <span className="text-sm font-black text-white truncate max-w-[140px]">
                         {r.title}
                       </span>
                     </div>
                   </td>
                   {r.retention.map(p => (
                     <td key={p.percentual} className="py-4 text-center">
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                      <span className="text-sm font-bold text-slate-300">
                         {p.espectadores}
                       </span>
                     </td>
                   ))}
                   <td className="py-4 text-center">
-                    <span className="text-sm font-bold text-amber-600">{r.pulos}</span>
+                    <span className="text-sm font-bold text-amber-500">{r.pulos}</span>
                   </td>
                   <td className="py-4 text-center">
-                    <span className="text-sm font-bold text-emerald-600">{r.retrocessos}</span>
+                    <span className="text-sm font-bold text-emerald-400">{r.retrocessos}</span>
                   </td>
                   <td className="py-4 text-center">
-                    <span className="text-sm font-bold text-rose-600">{r.abandonos}</span>
+                    <span className="text-sm font-bold text-rose-500">{r.abandonos}</span>
                   </td>
                 </tr>
               ))}
@@ -329,8 +316,6 @@ export function RetentionTab(_props: Props) {
   );
 }
 
-// ─── Card de retenção (Dual-Theme) ───
-
 const RetentionCard = ({
   icon: Icon,
   label,
@@ -339,21 +324,20 @@ const RetentionCard = ({
   icon: React.ElementType;
   label: string;
   value: string;
-  color?: string;
 }) => {
   return (
-    <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl p-6 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between">
+    <div className="bg-[#111524] dark:bg-[#1a1f35] border border-white/5 dark:border-[#ff7a29]/30 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300 group flex flex-col justify-between">
       <div className="flex items-start justify-between mb-4">
-        {/* Quadrado do Ícone Dual-Theme: Azul #0094EB no Light / Laranja #ff7a29 no Dark */}
-        <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform duration-300 group-hover:scale-110 shrink-0">
-          <Icon size={20} className="!text-white stroke-[2.5]" />
+        {/* Quadrado do Ícone Premium Ampliado para 45px */}
+        <div className="w-[45px] h-[45px] rounded-2xl flex items-center justify-center bg-[#ff7a29]/10 border border-[#ff7a29]/20 text-[#ff7a29] transition-transform duration-300 group-hover:scale-110 shrink-0">
+          <Icon className="w-[22px] h-[22px] text-[#ff7a29] stroke-[2.5]" />
         </div>
       </div>
       <div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-1">
+        <p className="text-[14px] font-black uppercase tracking-wider text-white mb-1">
           {label}
         </p>
-        <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+        <h3 className="text-2xl font-black text-white mt-1">
           {value}
         </h3>
       </div>
