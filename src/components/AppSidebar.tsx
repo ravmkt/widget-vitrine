@@ -7,18 +7,13 @@ import {
   Code, 
   ShoppingCart,
   MessageSquare,
-  Ruler,
-  MonitorPlay,
   User,
   LogOut,
-  HardDrive,
   BarChart3,
   PanelLeftClose,
-  PanelLeftOpen,
-  HelpCircle // ← Adicionado aqui
+  PanelLeftOpen
 } from "lucide-react";
 import {
-  Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
@@ -29,29 +24,41 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import React, { useEffect, useState, useCallback } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { db } from "@/lib/db";
 import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
-const menuItems = [
-  { title: "Visão Geral", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Stories", url: "/stories", icon: PlayCircle },
-  { title: "Armazenamento", url: "/armazenamento", icon: HardDrive },
-  { title: "Performance", url: "/videos/performance", icon: BarChart3 },
-  { title: "Produtos", url: "/produtos", icon: ShoppingCart },
-  { title: "Medidas", url: "/medidas", icon: Ruler },
-  { title: "Aparência", url: "/aparencia", icon: Palette },
-  { title: "Comentários", url: "/comentarios", icon: MessageSquare },
-  { title: "Instalação", url: "/integration", icon: Code },
-  { title: "Configurações", url: "/settings", icon: Settings },
-  { title: "Suporte", url: "/suporte", icon: HelpCircle }, // ← Adicionado aqui
+// Estrutura de navegação por grupos (Métricas, Operação e Ajustes)
+const menuGroups = [
+  {
+    label: "MÉTRICAS",
+    items: [
+      { title: "Visão Geral", url: "/dashboard", icon: LayoutDashboard },
+      { title: "Resultados", url: "/videos/performance", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "OPERAÇÃO",
+    items: [
+      { title: "Stories", url: "/stories", icon: PlayCircle },
+      { title: "Biblioteca", url: "/armazenamento", icon: Library },
+      { title: "Produtos", url: "/produtos", icon: ShoppingCart },
+      { title: "Comentários", url: "/comentarios", icon: MessageSquare },
+    ],
+  },
+  {
+    label: "AJUSTES",
+    items: [
+      { title: "Aparência", url: "/aparencia", icon: Palette },
+      { title: "Instalação", url: "/integration", icon: Code },
+      { title: "Configurações", url: "/settings", icon: Settings },
+    ],
+  },
 ];
 
 export function AppSidebar() {
   const location = useLocation();
-  const navigate = useNavigate();
   const [storeName, setStoreName] = useState('');
   const [storeLogoUrl, setStoreLogoUrl] = useState('');
   const [planName, setPlanName] = useState('Plano Iniciante');
@@ -183,56 +190,63 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className={cn("px-3 py-2 overflow-y-auto [&::-webkit-scrollbar]:hidden", isExpanded ? "overflow-x-hidden" : "overflow-x-visible")}>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1.5">
-              {menuItems.map((item) => {
-                const isItemActive = location.pathname === item.url;
-                return (
-                  <SidebarMenuItem key={item.title} className="relative group">
-                    <SidebarMenuButton 
-                      asChild 
-                      isActive={isItemActive}
-                      className={cn(
-                        "h-11 rounded-xl px-3.5 transition-all duration-200 font-black overflow-hidden",
-                        isItemActive 
-                          ? "!bg-[#0094EB] dark:!bg-[#ff7a29] !text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 hover:!bg-[#0094EB] dark:hover:!bg-[#ff7a29]" 
-                          : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white"
-                      )}
-                    >
-                      <Link to={item.url} className="flex items-center gap-3 w-full">
-                        <item.icon 
-                          className={cn(
-                            "h-4.5 w-4.5 shrink-0 transition-colors",
-                            isItemActive ? "!text-white stroke-[2.5]" : "text-slate-400 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white"
-                          )} 
-                        />
-                        <span
-                          className={cn(
-                            "text-sm whitespace-nowrap transition-all duration-300 font-black",
-                            isItemActive ? "!text-white" : "",
-                            isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
-                          )}
-                        >
-                          {item.title}
-                        </span>
-                      </Link>
-                    </SidebarMenuButton>
+        {menuGroups.map((group) => (
+          <SidebarGroup key={group.label} className="px-0 py-2 first:pt-0">
+            {isExpanded && (
+              <div className="px-3.5 py-1 text-[10px] font-black tracking-wider text-slate-400 dark:text-slate-500 uppercase select-none mb-1">
+                {group.label}
+              </div>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1.5">
+                {group.items.map((item) => {
+                  const isItemActive = location.pathname === item.url;
+                  return (
+                    <SidebarMenuItem key={item.title} className="relative group">
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={isItemActive}
+                        className={cn(
+                          "h-11 rounded-xl px-3.5 transition-all duration-200 font-black overflow-hidden",
+                          isItemActive 
+                            ? "!bg-[#0094EB] dark:!bg-[#ff7a29] !text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 hover:!bg-[#0094EB] dark:hover:!bg-[#ff7a29]" 
+                            : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white"
+                        )}
+                      >
+                        <Link to={item.url} className="flex items-center gap-3 w-full">
+                          <item.icon 
+                            className={cn(
+                              "h-4.5 w-4.5 shrink-0 transition-colors",
+                              isItemActive ? "!text-white stroke-[2.5]" : "text-slate-400 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white"
+                            )} 
+                          />
+                          <span
+                            className={cn(
+                              "text-sm whitespace-nowrap transition-all duration-300 font-black",
+                              isItemActive ? "!text-white" : "",
+                              isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
+                            )}
+                          >
+                            {item.title}
+                          </span>
+                        </Link>
+                      </SidebarMenuButton>
 
-                    {/* Tooltip flutuante no modo recolhido (Azul no Light / Laranja no Dark) */}
-                    {!isExpanded && (
-                      <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
-                        <div className="bg-[#0094EB] dark:bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/40 dark:shadow-orange-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
-                          {item.title}
+                      {/* Tooltip flutuante no modo recolhido (Azul no Light / Laranja no Dark) */}
+                      {!isExpanded && (
+                        <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
+                          <div className="bg-[#0094EB] dark:bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/40 dark:shadow-orange-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+                            {item.title}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-[#F1F5F9] dark:border-slate-800 overflow-hidden shrink-0">
