@@ -234,7 +234,7 @@ export function RetentionTab(_props: Props) {
                       return (
                         <div className="bg-[#1a1f35] border border-white/10 p-3.5 rounded-2xl shadow-xl text-left min-w-[160px] backdrop-blur-md">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
-                            Ponto: {data.name}
+                            Ponto: {data.percentual}
                           </p>
                           <div className="space-y-1.5">
                             <div className="flex items-center justify-between gap-4">
@@ -258,6 +258,16 @@ export function RetentionTab(_props: Props) {
                     return null;
                   }}
                 />
+                <Bar dataKey="espectadores" fill="url(#barGradient)" radius={[8, 8, 0, 0]} name="Espectadores" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center text-slate-400">
+              Nenhum dado disponível
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* ── Tabela de retenção por vídeo ── */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2.5rem] p-8 shadow-sm">
