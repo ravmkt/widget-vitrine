@@ -90,7 +90,7 @@ const { currentStore: tenant, loading: tenantLoading } = useTenant()
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Performance
+            Resultados
           </h1>
           <p className="text-sm font-medium text-slate-500 dark:text-[#c0c5d4] mt-1">
             Métricas reais de <span className="text-[#0094EB] dark:text-[#ff7a29] font-bold">{benchmark.sector_name}</span> comparadas aos benchmarks nacionais de 2026.
