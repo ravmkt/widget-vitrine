@@ -19,6 +19,7 @@ import {
   ChevronDown,
   FileText,
   Link,
+  Ruler,
 } from 'lucide-react';
 
 import { showError, showSuccess } from '@/utils/toast';
