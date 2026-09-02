@@ -28,21 +28,19 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError } from '@/utils/toast';
-import CustomDialog from '@/components/CustomDialog'; // 🚀 Importado para manter o padrão visual dos modais
+import CustomDialog from '@/components/CustomDialog';
 
-// Utilitário robusto para extrair e gerar a capa de links externos (YouTube Shorts, Vídeos e Instagram Reels)
+// Utilitário robusto para extrair e gerar a capa de links externos
 const getExternalVideoThumbnail = (url: string): string => {
   if (!url) return '';
   const cleanUrl = url.trim();
 
-  // 1. YouTube Shorts e Vídeos Tradicionais (youtube.com/shorts/, watch?v=, youtu.be/)
   const youtubeMatch = cleanUrl.match(/(?:youtube\.com\/(?:shorts\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
   if (youtubeMatch && youtubeMatch[1]) {
     const videoId = youtubeMatch[1];
     return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
   }
 
-  // 2. Instagram Reels (instagram.com/reel/ ou instagram.com/p/)
   const instaMatch = cleanUrl.match(/instagram\.com\/(?:reel|p)\/([a-zA-Z0-9_-]+)/i);
   if (instaMatch) {
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
@@ -63,7 +61,6 @@ const getExternalVideoThumbnail = (url: string): string => {
     return `data:image/svg+xml;base64,${btoa(svgContent)}`;
   }
 
-  // 3. Imagens ou Mídias diretas com extensões válidas
   if (cleanUrl.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i)) {
     return cleanUrl;
   }
@@ -71,21 +68,18 @@ const getExternalVideoThumbnail = (url: string): string => {
   return cleanUrl;
 };
 
-// Converte links do YouTube para formato de incorporação (Embed) compatível com iframe
 const getYoutubeEmbedUrl = (url: string): string | null => {
   if (!url) return null;
   const match = url.match(/(?:youtube\.com\/(?:shorts\/|watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
   return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1` : null;
 };
 
-// Converte links do Instagram Reels/Posts para formato de incorporação (Embed) compatível com iframe
 const getInstagramEmbedUrl = (url: string): string | null => {
   if (!url) return null;
   const match = url.match(/instagram\.com\/(?:reel|p)\/([a-zA-Z0-9_-]+)/i);
   return match ? `https://www.instagram.com/p/${match[1]}/embed` : null;
 };
 
-// Utilitário global para extrair o primeiro frame de um vídeo via Canvas de forma resiliente
 const generateVideoThumbnail = (file: File): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
@@ -164,7 +158,6 @@ const generateVideoThumbnail = (file: File): Promise<Blob> => {
       reject(err);
     };
 
-    // Timeout defensivo de 4 segundos com guarda de decodificação
     timeoutId = setTimeout(() => {
       if (!captured) {
         if (video.readyState >= 2) {
@@ -179,11 +172,10 @@ const generateVideoThumbnail = (file: File): Promise<Blob> => {
   });
 };
 
-// Utilitário para extrair o primeiro frame de um vídeo hospedado via URL pública (com suporte a CORS)
 const generateVideoThumbnailFromUrl = (url: string): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
-    video.crossOrigin = 'anonymous'; // Essencial para evitar bloqueio de Canvas CORS taints
+    video.crossOrigin = 'anonymous'; 
     video.preload = 'auto';
     video.muted = true;
     video.playsInline = true;
@@ -256,7 +248,6 @@ const generateVideoThumbnailFromUrl = (url: string): Promise<Blob> => {
   });
 };
 
-// Chamada à Edge Function do Supabase para processar o vídeo no servidor se o navegador falhar
 const fetchThumbnailFromEdge = async (videoUrl: string, storeId: string): Promise<string | null> => {
   try {
     if (!supabase) return null;
@@ -286,9 +277,8 @@ interface StorageItem {
   canDelete: boolean;
 }
 
-const PLAN_LIMIT_BYTES = 500 * 1024 * 1024; // 500 MB em bytes (Padrão Plano Iniciante)
+const PLAN_LIMIT_BYTES = 500 * 1024 * 1024; 
 
-// Componentes de Ícones Vetorizados Oficiais das Plataformas
 const SocialIcons = {
   Instagram: () => (
     <svg className="h-4 w-4 shrink-0 fill-current" viewBox="0 0 24 24">
@@ -300,16 +290,6 @@ const SocialIcons = {
       <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.82.57-1.31 1.56-1.31 2.56.02.83.42 1.63 1.05 2.15.82.68 1.97.87 2.97.58.98-.28 1.83-1.07 2.13-2.05.17-.63.19-1.29.18-1.94V.02z" />
     </svg>
   ),
-  YouTube: () => (
-    <svg className="h-4 w-4 shrink-0 fill-current" viewBox="0 0 24 24">
-      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-    </svg>
-  ),
-  Pinterest: () => (
-    <svg className="h-4 w-4 shrink-0 fill-current" viewBox="0 0 24 24">
-      <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.02 0 1.513.769 1.513 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.367 18.62 0 12.017 0z" />
-    </svg>
-  ),
 };
 
 export default function StoragePage() {
@@ -318,8 +298,8 @@ export default function StoragePage() {
   const [loading, setLoading] = useState(true);
   const [instagramVideos, setInstagramVideos] = useState<InstagramMedia[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(false);
-  const [tiktokVideos, setTikTokVideos] = useState<any[]>([]); // Estado para vídeos do TikTok
-  const [loadingTikTok, setLoadingTikTok] = useState(false); // Carregamento do TikTok
+  const [tiktokVideos, setTikTokVideos] = useState<any[]>([]); 
+  const [loadingTikTok, setLoadingTikTok] = useState(false); 
   const [storeId, setStoreId] = useState<string | null>(null);
   const [planName, setPlanName] = useState<string>('Plano Iniciante');
   const [serverStorageUsedBytes, setServerStorageUsedBytes] = useState<number | null>(null);
@@ -338,17 +318,14 @@ export default function StoragePage() {
   const [sizingModelsList, setSizingModelsList] = useState<any[]>([]);
   const [savingUrl, setSavingUrl] = useState(false);
   
-  // ── ESTADO PARA O POPUP DE CONFIRMAÇÃO DE EXCLUSÃO PERSONALIZADO ──
   const [deleteFileConfirm, setDeleteFileConfirm] = useState<{ id: string; name: string } | null>(null);
 
-  // Estado para gerenciar a visualização da mídia atual no modal interno
   const [previewMedia, setPreviewMedia] = useState<{
     url: string;
     type: 'video' | 'image' | 'youtube' | 'iframe';
     name: string;
   } | null>(null);
 
-  // ── RESOLUÇÃO DE STORE ID ULTRA RESILIENTE (ANTI-FALHAS E MULTI-TENANT) ──
   const resolveActiveStoreId = useCallback(async (): Promise<string | null> => {
     if (storeId) return storeId;
 
@@ -419,7 +396,7 @@ export default function StoragePage() {
     try {
       const pathParts = window.location.pathname.split('/');
       for (const part of pathParts) {
-        if (part.length === 36 && part.includes('-')) { // Detecção de formato UUID v4
+        if (part.length === 36 && part.includes('-')) {
           localStorage.setItem('vidlytics_current_store_id', part);
           setStoreId(part);
           return part;
@@ -438,7 +415,6 @@ export default function StoragePage() {
     return null;
   }, [storeId]);
 
-  // Carrega as plataformas sociais conectadas à loja no Supabase e trata o retorno do OAuth
   useEffect(() => {
     const checkIntegrations = async () => {
       try {
@@ -460,7 +436,6 @@ export default function StoragePage() {
     checkIntegrations();
   }, [resolveActiveStoreId]);
 
-  // Busca os vídeos do Instagram assim que a loja for identificada e o Instagram estiver conectado
   useEffect(() => {
     const loadInstagramContent = async () => {
       if (!storeId || !connectedPlatforms.includes('instagram')) return;
@@ -479,7 +454,6 @@ export default function StoragePage() {
     loadInstagramContent();
   }, [storeId, connectedPlatforms]);
 
-  // Busca os vídeos do TikTok assim que a loja for identificada e a plataforma conectada
   useEffect(() => {
     const loadTikTokContent = async () => {
       if (!storeId || !connectedPlatforms.includes('tiktok')) return;
@@ -498,7 +472,6 @@ export default function StoragePage() {
     loadTikTokContent();
   }, [storeId, connectedPlatforms]);
 
-  // Função para salvar o Vídeo do TikTok no banco de dados
   const handleImportAndEditTikTokVideo = async (video: any) => {
     try {
       if (!storeId) {
@@ -532,7 +505,6 @@ export default function StoragePage() {
     }
   };
 
-  // Função para salvar o Reels do Instagram no banco de dados e abrir a edição para vincular produtos/stories
   const handleImportAndEditInstagramVideo = async (video: InstagramMedia) => {
     try {
       if (!storeId) {
@@ -567,7 +539,6 @@ export default function StoragePage() {
     }
   };
 
-  // Carrega produtos e modelos de medidas da loja para os seletores do modal
   useEffect(() => {
     const fetchSelectData = async () => {
       try {
@@ -600,7 +571,6 @@ export default function StoragePage() {
     fetchSelectData();
   }, [resolveActiveStoreId]);
 
-  // Processa a gravação da Mídia por URL Externa com suporte a Produto e Modelo de Medidas
   const handleSaveExternalUrl = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -700,12 +670,10 @@ export default function StoragePage() {
     }
   };
 
-  // Gatilho para abrir a janela do sistema operacional ao clicar em "Fazer Upload"
   const handleTriggerUpload = () => {
     fileInputRef.current?.click();
   };
 
-  // Processa o arquivo selecionado na janela e gera a miniatura de forma resiliente em 3 níveis
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -878,7 +846,6 @@ export default function StoragePage() {
     }
   };
 
-  // Função de Download Forçado via Blob
   const handleDownloadFile = async (url: string, fileName: string) => {
     if (!url) {
       showError('URL do arquivo indisponível para download.');
@@ -922,7 +889,6 @@ export default function StoragePage() {
     }
   };
 
-  // Redireciona a visualização da mídia para o modal interno
   const handlePreviewMedia = (file: StorageItem) => {
     const url = file.fileUrl || file.thumbnailUrl;
     if (!url || url.trim() === '') {
@@ -949,7 +915,6 @@ export default function StoragePage() {
     });
   };
 
-  // Carrega vídeos e imagens cadastrados na conta real do usuário
   const loadAccountStorageData = useCallback(async () => {
     try {
       setLoading(true);
@@ -1187,7 +1152,6 @@ export default function StoragePage() {
     loadAccountStorageData();
   }, [loadAccountStorageData]);
 
-  // Cálculo oficial do consumo de armazenamento
   const totalUsedBytes = useMemo(() => {
     if (serverStorageUsedBytes !== null) {
       return serverStorageUsedBytes;
@@ -1221,7 +1185,6 @@ export default function StoragePage() {
     });
   }, [files, searchTerm, selectedType]);
 
-  // ── FUNÇÃO QUE DISPARA O MODAL DE EXCLUSÃO PERSONALIZADO (ANTI-POPUP NATIVO) ──
   const triggerDeleteConfirm = (id: string, name: string) => {
     if (id === 'logo-setting-file') {
       showError('O logotipo da loja não pode ser excluído por este painel.');
@@ -1230,14 +1193,12 @@ export default function StoragePage() {
     setDeleteFileConfirm({ id, name });
   };
 
-  // ── PROCESSA A EXCLUSÃO FÍSICA E REGISTRAL APÓS A CONFIRMAÇÃO DO USUÁRIO ──
   const handleDeleteFile = async () => {
     if (!deleteFileConfirm) return;
     const { id, name } = deleteFileConfirm;
 
     try {
       if (supabase) {
-        // 1. Busca as URLs da mídia no banco de dados antes de remover o registro
         const { data: videoData, error: fetchError } = await supabase
           .from('videos')
           .select('video_url, thumbnail_url')
@@ -1246,11 +1207,9 @@ export default function StoragePage() {
 
         if (fetchError) throw fetchError;
 
-        // 2. Exclui o registro definitivo na tabela 'videos'
         const { error: dbError } = await supabase.from('videos').delete().eq('id', id);
         if (dbError) throw dbError;
 
-        // 3. Deleta os arquivos físicos correspondentes de forma transparente do Supabase Storage
         if (videoData) {
           const extractStorageParams = (url: string) => {
             if (!url) return null;
@@ -1287,7 +1246,7 @@ export default function StoragePage() {
 
       showSuccess('Arquivo removido com sucesso!');
       logPanelActivity('storage.file_deleted', name);
-      setDeleteFileConfirm(null); // Fecha o modal
+      setDeleteFileConfirm(null); 
       await loadAccountStorageData();
     } catch (err) {
       console.error('Erro ao excluir arquivo:', err);
@@ -1296,14 +1255,14 @@ export default function StoragePage() {
   };
 
   return (
-    <div className="animate-fade-in space-y-8 pb-20 font-sans">
+    <div className="animate-fade-in space-y-8 pb-20 font-sans text-white">
       {/* ── CABEÇALHO DA PÁGINA ── */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-3xl font-black tracking-tight text-white">
             Biblioteca
           </h1>
-          <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-[#c0c5d4] leading-relaxed">
+          <p className="mt-1 text-sm font-medium text-slate-400 leading-relaxed">
             Gerencie os vídeos e imagens hospedados no seu plano e monitore o uso de espaço.
           </p>
         </div>
@@ -1324,7 +1283,7 @@ export default function StoragePage() {
               "flex items-center gap-2 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-wider transition-all border shadow-sm cursor-pointer",
               connectedPlatforms.includes('instagram')
                 ? "border-pink-500/40 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white shadow-pink-500/20 hover:opacity-95"
-                : "border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-slate-600 dark:text-[#c0c5d4] hover:bg-slate-50 dark:hover:bg-white/5"
+                : "border-white/5 bg-[#171c30] text-slate-400 hover:text-white hover:bg-[#1e253c]"
             )}
           >
             <SocialIcons.Instagram />
@@ -1345,10 +1304,8 @@ export default function StoragePage() {
             className={cn(
               "flex items-center gap-2 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-wider transition-all border shadow-sm cursor-pointer",
               connectedPlatforms.includes('tiktok')
-                ? activePlatformTab === 'tiktok'
-                  ? "border-slate-700 bg-slate-800 text-white shadow-slate-900/40"
-                  : "border-slate-700 bg-black text-white shadow-slate-900/40 hover:bg-slate-950"
-                : "border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] text-slate-600 dark:text-[#c0c5d4] hover:bg-slate-50 dark:hover:bg-white/5"
+                ? "border-slate-700 bg-black text-white shadow-slate-900/40 hover:bg-slate-950"
+                : "border-white/5 bg-[#171c30] text-slate-400 hover:text-white hover:bg-[#1e253c]"
             )}
           >
             <SocialIcons.TikTok />
@@ -1367,9 +1324,9 @@ export default function StoragePage() {
           <button
             type="button"
             onClick={() => setShowUrlModal(true)}
-            className="flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-[#e8ecf4] shadow-sm hover:border-purple-400 hover:text-purple-500 transition-all cursor-pointer"
+            className="flex items-center gap-2 rounded-2xl border border-white/5 bg-[#171c30] px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-400 shadow-sm hover:border-purple-500 hover:text-purple-400 transition-all cursor-pointer"
           >
-            <Link size={15} className="text-purple-500" />
+            <Link size={15} className="text-[#ff7a29]" />
             URL Externa
           </button>
 
@@ -1378,7 +1335,7 @@ export default function StoragePage() {
             type="button"
             disabled={uploading}
             onClick={handleTriggerUpload}
-            className="flex items-center gap-2 rounded-2xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-2 rounded-2xl bg-[#ff7a29] hover:bg-[#e05e10] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/10 transition-all disabled:opacity-50 cursor-pointer"
           >
             <UploadCloud size={16} className={cn("!text-white stroke-[2.5]", uploading && "animate-bounce")} />
             {uploading ? 'Enviando...' : 'Fazer Upload'}
@@ -1398,23 +1355,23 @@ export default function StoragePage() {
             : '#22c55e';
 
         return (
-          <div className="rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm space-y-4">
+          <div className="rounded-2xl border border-white/5 bg-[#111524] p-6 sm:p-7 shadow-2xl space-y-4">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform hover:scale-105 shrink-0">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ff7a29] text-white shadow-md shadow-orange-500/20 transition-transform hover:scale-105 shrink-0">
                   <HardDrive size={22} className="!text-white stroke-[2.5]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    <h3 className="text-base font-black text-white uppercase tracking-tight">
                       {planName}
                     </h3>
-                    <span className="rounded-full bg-slate-100 dark:bg-[#0f1220] px-2.5 py-0.5 text-[10px] font-black uppercase text-slate-600 dark:text-[#ff7a29] border border-transparent dark:border-white/5">
+                    <span className="rounded-full bg-[#171c30] px-2.5 py-0.5 text-[10px] font-black uppercase text-[#ff7a29] border border-white/5">
                       {formatSize(maxLimitBytes)} Limite
                     </span>
                   </div>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-[#c0c5d4] mt-0.5">
-                    Uso atual: <strong className="text-slate-800 dark:text-white">{formatSize(totalUsedBytes)}</strong> de {formatSize(maxLimitBytes)}
+                  <p className="text-xs font-medium text-slate-400 mt-0.5">
+                    Uso atual: <strong className="text-white">{formatSize(totalUsedBytes)}</strong> de {formatSize(maxLimitBytes)}
                   </p>
                 </div>
               </div>
@@ -1425,7 +1382,7 @@ export default function StoragePage() {
                     type="button"
                     onClick={() => showSuccess('Redirecionando para a página de planos...')}
                     style={{ backgroundColor: currentColorHex }}
-                    className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-white shadow-md transition-all hover:opacity-90"
+                    className="flex items-center gap-1.5 rounded-2xl px-4 py-2 text-xs font-black text-white shadow-md transition-all hover:opacity-90"
                   >
                     <Sparkles size={14} className="!text-white" />
                     Faça Upgrade
@@ -1439,7 +1396,7 @@ export default function StoragePage() {
                   >
                     {usedPercentage}%
                   </span>
-                  <span className="block text-[11px] font-bold text-slate-400 dark:text-[#8a90a0]">
+                  <span className="block text-[11px] font-bold text-slate-500">
                     Espaço Consumido
                   </span>
                 </div>
@@ -1449,10 +1406,10 @@ export default function StoragePage() {
             {(isWarning || isCritical) && (
               <div
                 className={cn(
-                  'flex items-center gap-2 rounded-xl p-3 text-xs font-bold',
+                  'flex items-center gap-2 rounded-2xl p-3 text-xs font-bold',
                   isCritical
-                    ? 'bg-rose-50 text-[#ef4444] dark:bg-rose-950/30 dark:text-rose-400 border border-rose-500/20'
-                    : 'bg-orange-50 text-[#ff7a29] dark:bg-orange-950/30 dark:text-orange-400 border border-orange-500/20'
+                    ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                    : 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
                 )}
               >
                 <AlertTriangle size={16} className="shrink-0" />
@@ -1465,7 +1422,7 @@ export default function StoragePage() {
             )}
 
             {/* Barra de Progresso */}
-            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#0f1220] p-0.5 border border-transparent dark:border-white/5">
+            <div className="h-3 w-full overflow-hidden rounded-full bg-[#171c30] p-0.5 border border-white/5">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
@@ -1480,9 +1437,9 @@ export default function StoragePage() {
 
       {/* Seção de Vídeos Importados do Instagram */}
       {connectedPlatforms.includes('instagram') && activePlatformTab === 'instagram' && (
-        <div className="rounded-[1.5rem] border border-pink-500/20 bg-white p-6 shadow-sm dark:border-pink-900/30 dark:bg-slate-950 space-y-4 animate-in fade-in duration-300">
+        <div className="rounded-2xl border border-pink-500/20 bg-[#111524] p-6 shadow-2xl space-y-4 animate-in fade-in duration-300">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-base font-black text-white flex items-center gap-2">
               <Instagram className="h-5 w-5 text-pink-500" />
               Reels da sua Conta do Instagram
             </h2>
@@ -1493,7 +1450,7 @@ export default function StoragePage() {
               <button
                 type="button"
                 onClick={() => setActivePlatformTab('none')}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                className="rounded-xl p-1 text-slate-400 hover:bg-white/5 hover:text-white"
                 title="Fechar gaveta"
               >
                 <X size={16} />
@@ -1502,15 +1459,15 @@ export default function StoragePage() {
           </div>
 
           {loadingVideos ? (
-            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-              <span className="text-xs font-bold text-slate-400">Carregando mídias do Instagram...</span>
+            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-[#171c30] border border-white/5">
+              <span className="text-xs font-bold text-slate-500">Carregando mídias do Instagram...</span>
             </div>
           ) : instagramVideos.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {instagramVideos.map((video) => (
                 <div
                   key={video.id}
-                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-pink-500 transition-all duration-300 shadow-sm"
+                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-white/5 hover:border-pink-500 transition-all duration-300 shadow-sm"
                 >
                   <img
                     src={video.thumbnail_url || video.media_url}
@@ -1541,8 +1498,8 @@ export default function StoragePage() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
-              <p className="text-xs font-bold text-slate-400">Nenhum Reels ou vídeo encontrado nesta conta do Instagram.</p>
+            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#171c30] border border-white/5 text-center">
+              <p className="text-xs font-bold text-slate-500">Nenhum Reels ou vídeo encontrado nesta conta do Instagram.</p>
             </div>
           )}
         </div>
@@ -1550,10 +1507,10 @@ export default function StoragePage() {
       
       {/* Seção de Vídeos Importados do TikTok */}
       {connectedPlatforms.includes('tiktok') && activePlatformTab === 'tiktok' && (
-        <div className="rounded-[1.5rem] border border-slate-700/20 bg-white p-6 shadow-sm dark:border-slate-700/30 dark:bg-slate-950 space-y-4 animate-in fade-in duration-300">
+        <div className="rounded-2xl border border-white/5 bg-[#111524] p-6 shadow-2xl space-y-4 animate-in fade-in duration-300">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <div className="text-black dark:text-white"><SocialIcons.TikTok /></div>
+            <h2 className="text-base font-black text-white flex items-center gap-2">
+              <div className="text-white"><SocialIcons.TikTok /></div>
               Vídeos da sua Conta do TikTok
             </h2>
             <div className="flex items-center gap-3">
@@ -1563,7 +1520,7 @@ export default function StoragePage() {
               <button
                 type="button"
                 onClick={() => setActivePlatformTab('none')}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                className="rounded-xl p-1 text-slate-400 hover:bg-white/5 hover:text-white"
                 title="Fechar gaveta"
               >
                 <X size={16} />
@@ -1572,15 +1529,15 @@ export default function StoragePage() {
           </div>
 
           {loadingTikTok ? (
-            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-              <span className="text-xs font-bold text-slate-400">Carregando mídias do TikTok...</span>
+            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-[#171c30] border border-white/5">
+              <span className="text-xs font-bold text-slate-500">Carregando mídias do TikTok...</span>
             </div>
           ) : tiktokVideos.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {tiktokVideos.map((video) => (
                 <div
                   key={video.id}
-                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-400 transition-all duration-300 shadow-sm"
+                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-white/5 hover:border-slate-400 transition-all duration-300 shadow-sm"
                 >
                   <img
                     src={video.cover_image_url || video.thumbnail_url || video.video_url}
@@ -1611,26 +1568,26 @@ export default function StoragePage() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
-              <p className="text-xs font-bold text-slate-400">Nenhum vídeo encontrado nesta conta do TikTok.</p>
+            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#171c30] border border-white/5 text-center">
+              <p className="text-xs font-bold text-slate-500">Nenhum vídeo encontrado nesta conta do TikTok.</p>
             </div>
           )}
         </div>
       )}
 
-      {/* ── CARD PRINCIPAL UNIFICADO (Tabela e Busca) ── */}
-      <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-6">
+      {/* ── CARD PRINCIPAL UNIFICADO PREMIUM (Tabela e Busca) ── */}
+      <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#111524] shadow-2xl p-6 sm:p-8 space-y-6">
         
         {/* BARRA INTERNA DE FILTROS E BUSCA */}
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-center border-b border-slate-100 dark:border-white/5 pb-5">
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-center border-b border-white/5 pb-5">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8a90a0]" size={18} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
             <input
               type="text"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Pesquisar pelo nome do arquivo..."
-              className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#0f1220] pl-12 pr-4 py-3.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0094EB] dark:focus:border-[#ff7a29] focus:bg-white dark:focus:bg-[#0f1220] transition-all"
+              className="w-full rounded-2xl border border-white/5 bg-[#171c30] pl-12 pr-4 py-3.5 text-xs font-bold text-white placeholder-slate-500 outline-none transition focus:border-[#ff7a29] transition-all"
             />
           </div>
 
@@ -1639,10 +1596,10 @@ export default function StoragePage() {
               type="button"
               onClick={() => setSelectedType('all')}
               className={cn(
-                "rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer",
+                "rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer border border-transparent",
                 selectedType === 'all'
-                  ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/10 dark:shadow-orange-500/20"
-                  : "bg-[#F8FAFC] dark:bg-[#0f1220] text-slate-400 dark:text-[#8a90a0] hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent"
+                  ? "bg-[#ff7a29] text-white shadow-lg shadow-orange-500/15"
+                  : "bg-[#171c30] text-slate-400 hover:text-white hover:bg-[#1e253c]"
               )}
             >
               Todos
@@ -1651,10 +1608,10 @@ export default function StoragePage() {
               type="button"
               onClick={() => setSelectedType('video')}
               className={cn(
-                "flex items-center justify-center gap-1.5 rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer",
+                "flex items-center justify-center gap-1.5 rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer border border-transparent",
                 selectedType === 'video'
-                  ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/10 dark:shadow-orange-500/20"
-                  : "bg-[#F8FAFC] dark:bg-[#0f1220] text-slate-400 dark:text-[#8a90a0] hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent"
+                  ? "bg-[#ff7a29] text-white shadow-lg shadow-orange-500/15"
+                  : "bg-[#171c30] text-slate-400 hover:text-white hover:bg-[#1e253c]"
               )}
             >
               <FileVideo size={14} />
@@ -1664,10 +1621,10 @@ export default function StoragePage() {
               type="button"
               onClick={() => setSelectedType('image')}
               className={cn(
-                "flex items-center justify-center gap-1.5 rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer",
+                "flex items-center justify-center gap-1.5 rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer border border-transparent",
                 selectedType === 'image'
-                  ? "bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/10 dark:shadow-orange-500/20"
-                  : "bg-[#F8FAFC] dark:bg-[#0f1220] text-slate-400 dark:text-[#8a90a0] hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent"
+                  ? "bg-[#ff7a29] text-white shadow-lg shadow-orange-500/15"
+                  : "bg-[#171c30] text-slate-400 hover:text-white hover:bg-[#1e253c]"
               )}
             >
               <FileImage size={14} />
@@ -1680,7 +1637,7 @@ export default function StoragePage() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#0f1220]/50 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+              <tr className="border-b border-white/5 bg-[#171c30]/40 text-[10px] font-black uppercase tracking-widest text-slate-400">
                 <th className="px-6 py-4 rounded-l-2xl">Mídia</th>
                 <th className="px-6 py-4">Nome do Arquivo</th>
                 <th className="px-6 py-4">Produto</th>
@@ -1690,24 +1647,25 @@ export default function StoragePage() {
                 <th className="px-6 py-4 text-right rounded-r-2xl">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+            <tbody className="divide-y divide-white/[0.03]">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-400 dark:text-[#8a90a0]">
+                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-500">
                     Carregando mídias da sua conta...
                   </td>
                 </tr>
               ) : filteredFiles.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-400 dark:text-[#8a90a0]">
+                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-500">
                     Nenhum arquivo encontrado no seu armazenamento.
                   </td>
                 </tr>
               ) : (
                 filteredFiles.map(file => (
-                  <tr key={file.id} className="transition-colors hover:bg-slate-50/60 dark:hover:bg-white/[0.02]">
+                  <tr key={file.id} className="transition-colors hover:bg-white/[0.015] border-b border-white/[0.02]">
+                    {/* COLUNA 1: MÍDIA (Thumb circular/quadrada com curvatura) */}
                     <td className="px-6 py-3.5">
-                      <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#0f1220] shadow-xs flex items-center justify-center shrink-0">
+                      <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-white/10 bg-[#171c30] shadow-xs flex items-center justify-center shrink-0">
                         {file.thumbnailUrl || (file.type === 'image' && file.fileUrl) ? (
                           <img 
                             src={file.thumbnailUrl || file.fileUrl} 
@@ -1734,17 +1692,18 @@ export default function StoragePage() {
                               <FileVideo size={16} />
                             </div>
                           ) : (
-                            <FileImage size={16} className="text-slate-400 dark:text-[#8a90a0]" />
+                            <FileImage size={16} className="text-slate-500" />
                           )}
                         </div>
                       </div>
                     </td>
                     
+                    {/* COLUNA 2: NOME (Título + Tipo com tag de hospedagem em laranja) */}
                     <td className="px-6 py-3.5 max-w-xs truncate">
-                      <span className="text-xs font-black text-slate-800 dark:text-[#e8ecf4] block truncate" title={file.name}>
+                      <span className="text-xs font-black text-white block truncate" title={file.name}>
                         {file.name}
                       </span>
-                      <span className="text-[10px] font-bold text-[#0094EB] dark:text-[#ff7a29] uppercase tracking-wider">
+                      <span className="text-[10px] font-bold text-[#ff7a29] uppercase tracking-wider">
                         {file.type === 'image'
                           ? 'Imagem (Hospedada)'
                           : file.sizeInBytes === 0
@@ -1753,13 +1712,14 @@ export default function StoragePage() {
                       </span>
                     </td>
 
+                    {/* COLUNA 3: PRODUTO */}
                     <td className="px-6 py-3.5">
                       {file.productName ? (
                         <div 
-                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 dark:border-white/5 bg-slate-50/80 dark:bg-[#0f1220]/60 p-1.5 pr-3 shadow-xs"
+                          className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-[#171c30]/50 p-1.5 pr-3 shadow-xs"
                           title={file.productName}
                         >
-                          <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35]">
+                          <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#111524]">
                             {file.productImageUrl ? (
                               <img
                                 src={file.productImageUrl}
@@ -1771,53 +1731,56 @@ export default function StoragePage() {
                                 }}
                               />
                             ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-slate-100 dark:bg-[#1a1f35] text-[10px] font-black text-slate-400">
+                              <div className="flex h-full w-full items-center justify-center bg-[#171c30] text-[10px] font-black text-slate-500">
                                 {file.productName.charAt(0).toUpperCase()}
                               </div>
                             )}
                           </div>
-                          <span className="max-w-[120px] truncate text-[11px] font-bold text-slate-700 dark:text-[#c0c5d4]">
+                          <span className="max-w-[120px] truncate text-[11px] font-bold text-slate-300">
                             {file.productName}
                           </span>
                         </div>
                       ) : (
-                        <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-[#0f1220] px-2.5 py-1 text-[10px] font-bold text-slate-400 dark:text-[#8a90a0] border border-transparent dark:border-white/5">
+                        <span className="inline-flex items-center rounded-xl bg-[#171c30] px-2.5 py-1 text-[10px] font-bold text-slate-500 border border-transparent">
                           Sem produto
                         </span>
                       )}
                     </td>
 
+                    {/* COLUNA 4: STORY VINCULADO (Centralizado) */}
                     <td className="px-6 py-3.5 text-center">
                       {file.storyTitle ? (
                         <span 
-                          style={{ backgroundColor: 'rgba(0, 148, 235, 0.12)', color: '#0094EB', borderColor: 'rgba(0, 148, 235, 0.25)' }}
-                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider border shadow-xs"
+                          className="inline-flex items-center gap-1 rounded-xl bg-[#0094eb]/10 border border-[#0094eb]/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#0094eb] shadow-xs"
                         >
                           {file.storyTitle}
                         </span>
                       ) : (
-                        <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">—</span>
+                        <span className="text-xs font-bold text-slate-500">—</span>
                       )}
                     </td>
 
-                    <td className="px-6 py-3.5 text-center font-mono text-xs font-black text-slate-700 dark:text-[#e8ecf4]">
+                    {/* COLUNA 5: TAMANHO (Centralizado) */}
+                    <td className="px-6 py-3.5 text-center font-mono text-xs font-black text-white">
                       {formatSize(file.sizeInBytes)}
                     </td>
 
+                    {/* COLUNA 6: STATUS (Centralizado) */}
                     <td className="px-6 py-3.5 text-center">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                        <CheckCircle2 size={11} />
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-400">
+                        <CheckCircle2 size={11} className="stroke-[2.5]" />
                         Disponível
                       </span>
                     </td>
 
+                    {/* COLUNA 7: AÇÕES */}
                     <td className="px-6 py-3.5 text-right">
                       <div className="flex items-center justify-end gap-1">
                         {file.type === 'video' && (
                           <button
                             type="button"
                             onClick={() => window.location.href = `/videos/${file.id}/edit`}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all cursor-pointer"
+                            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
                             title="Editar vínculos do vídeo"
                           >
                             <Pencil size={15} />
@@ -1826,7 +1789,7 @@ export default function StoragePage() {
                         <button
                           type="button"
                           onClick={() => handlePreviewMedia(file)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-[#0094EB] hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-all cursor-pointer"
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
                           title="Visualizar mídia"
                         >
                           <Eye size={15} />
@@ -1834,15 +1797,15 @@ export default function StoragePage() {
                         <button
                           type="button"
                           onClick={() => handleDownloadFile(file.fileUrl || file.thumbnailUrl, file.name)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all cursor-pointer"
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
                           title="Baixar arquivo"
                         >
                           <Download size={15} />
                         </button>
                         <button
                           type="button"
-                          onClick={() => triggerDeleteConfirm(file.id, file.name)} // 🚀 Substituído pelo gatilho do CustomDialog
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
+                          onClick={() => triggerDeleteConfirm(file.id, file.name)}
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer"
                           title="Excluir arquivo"
                         >
                           <Trash2 size={15} />
@@ -1860,17 +1823,17 @@ export default function StoragePage() {
       {/* Modal de Cadastro por URL Externa */}
       {showUrlModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-950 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#111524] p-6 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400">
                   <Link size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  <h3 className="text-lg font-black text-white">
                     Adicionar Vídeo por URL
                   </h3>
-                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <p className="text-xs font-medium text-slate-400">
                     Insira links do Pinterest, YouTube, Panda Video, Bunny CDN ou link direto.
                   </p>
                 </div>
@@ -1878,7 +1841,7 @@ export default function StoragePage() {
               <button
                 type="button"
                 onClick={() => setShowUrlModal(false)}
-                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 cursor-pointer"
+                className="rounded-xl p-2 text-slate-400 hover:bg-white/5 hover:text-white cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1886,7 +1849,7 @@ export default function StoragePage() {
 
             <form onSubmit={handleSaveExternalUrl} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
                   Link / URL Externa do Vídeo <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -1895,12 +1858,12 @@ export default function StoragePage() {
                   value={externalUrl}
                   onChange={(e) => setExternalUrl(e.target.value)}
                   placeholder="https://pinterest.com/pin/... ou YouTube / Link direto"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                  className="w-full rounded-2xl border border-white/5 bg-[#171c30] px-4 py-2.5 text-xs font-bold text-white placeholder-slate-500 outline-none focus:border-[#ff7a29]"
                 />
               </div>
               
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
                   Título ou Identificação da Mídia
                 </label>
                 <input
@@ -1908,22 +1871,22 @@ export default function StoragePage() {
                   value={externalTitle}
                   onChange={(e) => setExternalTitle(e.target.value)}
                   placeholder="Ex: REEL_PROMO_LANCAMENTO.mp4"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                  className="w-full rounded-2xl border border-white/5 bg-[#171c30] px-4 py-2.5 text-xs font-bold text-white placeholder-slate-500 outline-none focus:border-[#ff7a29]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
                   Vincular a um Produto (Opcional)
                 </label>
                 <select
                   value={selectedProductId}
                   onChange={(e) => setSelectedProductId(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                  className="w-full rounded-2xl border border-white/5 bg-[#171c30] px-4 py-2.5 text-xs font-bold text-white outline-none focus:border-[#ff7a29]"
                 >
-                  <option value="">Sem produto vinculado</option>
+                  <option value="" className="bg-[#111524]">Sem produto vinculado</option>
                   {productsList.map((prod) => (
-                    <option key={prod.id} value={prod.id}>
+                    <option key={prod.id} value={prod.id} className="bg-[#111524]">
                       {prod.title || prod.name}
                     </option>
                   ))}
@@ -1931,35 +1894,35 @@ export default function StoragePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
                   Vincular a um Modelo de Medidas (Opcional)
                 </label>
                 <select
                   value={selectedModelId}
                   onChange={(e) => setSelectedModelId(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-800 outline-none transition focus:border-[#0094EB] focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                  className="w-full rounded-2xl border border-white/5 bg-[#171c30] px-4 py-2.5 text-xs font-bold text-white outline-none focus:border-[#ff7a29]"
                 >
-                  <option value="">Sem modelo de medidas vinculado</option>
+                  <option value="" className="bg-[#111524]">Sem modelo de medidas vinculado</option>
                   {sizingModelsList.map((model) => (
-                    <option key={model.id} value={model.id}>
+                    <option key={model.id} value={model.id} className="bg-[#111524]">
                       {model.name || model.title || `Modelo ${model.id.slice(0, 6)}`}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
                 <button
                   type="button"
                   onClick={() => setShowUrlModal(false)}
-                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                  className="rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-400 hover:text-white transition-all cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingUrl}
-                  className="rounded-xl bg-[#0094EB] px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#0081cc] transition-all disabled:opacity-50 cursor-pointer"
+                  className="rounded-2xl bg-[#ff7a29] hover:bg-[#e05e10] px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {savingUrl ? 'Salvando...' : 'Cadastrar Mídia'}
                 </button>
@@ -1969,25 +1932,25 @@ export default function StoragePage() {
         </div>
       )}
 
-      {/* ── MODAL DE PREVIEW DA MÍDIA ── */}
+      {/* ── MODAL DE PREVIEW DA MÍDIA (rounded-2xl) ── */}
       {previewMedia && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div className={cn(
-            "relative w-full rounded-[2.5rem] border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1220] p-6 sm:p-8 shadow-2xl flex flex-col max-h-[92vh] transition-all duration-300",
+            "relative w-full rounded-2xl border border-white/10 bg-[#111524] p-6 sm:p-8 shadow-2xl flex flex-col max-h-[92vh] transition-all duration-300",
             previewMedia.type === 'image' ? 'max-w-3xl' : 'max-w-[400px]'
           )}>
             
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-orange-500/10 text-[#0094EB] dark:text-[#ff7a29]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-[#ff7a29]">
                   <Eye size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-xs" title={previewMedia.name}>
+                  <h3 className="text-sm sm:text-base font-black text-white truncate max-w-[200px] sm:max-w-xs" title={previewMedia.name}>
                     {previewMedia.name}
                   </h3>
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0] uppercase tracking-widest">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                     Visualização de Mídia
                   </p>
                 </div>
@@ -1995,7 +1958,7 @@ export default function StoragePage() {
               <button
                 type="button"
                 onClick={() => setPreviewMedia(null)}
-                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-600 dark:hover:text-white transition-all cursor-pointer"
+                className="rounded-xl p-2 text-slate-400 hover:bg-white/5 hover:text-white transition-all cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -2059,11 +2022,11 @@ export default function StoragePage() {
             </div>
 
             {/* Rodapé */}
-            <div className="flex items-center justify-stretch gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
+            <div className="flex items-center justify-stretch gap-3 mt-4 pt-4 border-t border-white/5">
               <button
                 type="button"
                 onClick={() => setPreviewMedia(null)}
-                className="w-full rounded-xl bg-[#0094EB] hover:bg-[#0081cc] dark:bg-[#ff7a29] dark:hover:bg-[#e66c22] py-3 text-xs font-black text-white shadow-md hover:scale-[1.01] transition-all cursor-pointer text-center uppercase tracking-wider"
+                className="w-full rounded-2xl bg-[#ff7a29] hover:bg-[#e05e10] py-3 text-xs font-black text-white shadow-md hover:scale-[1.01] transition-all cursor-pointer text-center uppercase tracking-wider"
               >
                 Fechar
               </button>
@@ -2073,7 +2036,7 @@ export default function StoragePage() {
         </div>
       )}
 
-      {/* ── 🚀 MODAL DE CONFIRMAÇÃO DE EXCLUSÃO DE MÍDIA PERSONALIZADO (PADRÃO DO SISTEMA) ── */}
+      {/* ── MODAL DE CONFIRMAÇÃO DE EXCLUSÃO DE MÍDIA PERSONALIZADO (PADRÃO DO SISTEMA) ── */}
       <CustomDialog
         isOpen={!!deleteFileConfirm}
         type="form"
@@ -2086,16 +2049,16 @@ export default function StoragePage() {
         <div className="space-y-6 py-2">
           {/* Ícone de Atenção centralizado grande */}
           <div className="flex justify-center">
-            <div className="p-4 bg-amber-500/[0.06] dark:bg-amber-500/[0.03] rounded-full border border-amber-500/10">
+            <div className="p-4 bg-amber-500/[0.03] rounded-full border border-amber-500/10">
               <AlertTriangle className="h-12 w-12 text-amber-500 stroke-[1.5]" />
             </div>
           </div>
 
-          {/* Caixa de Alerta amarela estilizada conforme o print 1 */}
+          {/* Caixa de Alerta amarela estilizada */}
           <div className="flex items-start gap-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] p-4 text-left">
             <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-xs font-bold text-amber-800 dark:text-amber-300 leading-relaxed">
-              Esta ação é irreversível. O item <span className="text-[#0094EB] dark:text-[#ff7a29]">"{deleteFileConfirm?.name}"</span> será removido permanentemente.
+            <p className="text-xs font-bold text-amber-300 leading-relaxed">
+              Esta ação é irreversível. O item <span className="text-[#ff7a29]">"{deleteFileConfirm?.name}"</span> será removido permanentemente.
             </p>
           </div>
         </div>
