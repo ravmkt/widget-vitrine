@@ -2,21 +2,21 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/lib/supabase'
 import { useTenant } from '@/context/TenantContext'
-import { 
-  HelpCircle, 
-  FileText, 
-  X, 
-  Check, 
-  ArrowRight, 
-  Sparkles, 
-  TrendingUp, 
-  Compass, 
-  Eye, 
-  MousePointerClick, 
-  TrendingDown, 
-  CircleDollarSign, 
-  Heart, 
-  Trophy 
+import {
+  HelpCircle,
+  FileText,
+  X,
+  Check,
+  ArrowRight,
+  Sparkles,
+  TrendingUp,
+  Compass,
+  Eye,
+  MousePointerClick,
+  TrendingDown,
+  CircleDollarSign,
+  Heart,
+  Trophy
 } from 'lucide-react'
 import type { SectorBenchmark } from '@/pages/PerformancePage'
 import { cn } from '@/lib/utils'
@@ -120,7 +120,7 @@ export function OverviewTab({
         };
       case 'infantil_brinquedos':
         return {
-          audienceBehavior: "A compra é feita pelos pais, mas motivada pela alegria e desenvolvimento dos filhos. Destaque segurança, estímulo cognitivo e momentos felizes em família.",
+          audienceBehavior: "La compra é feita pelos pais, mas motivada pela alegria e desenvolvimento dos filhos. Destaque segurança, estímulo cognitivo e momentos felizes em família.",
           tips: [
             "Crianças Brincando Livremente: Mostre a interação genuína e as risadas das crianças interagindo com o brinquedo de forma segura.",
             "Benefício Educativo: Explique rapidamente quais habilidades motoras, criativas ou sociais o produto ajuda a desenvolver.",
@@ -129,7 +129,7 @@ export function OverviewTab({
         };
       case 'alimentos_bebidas':
         return {
-          audienceBehavior: "O apetite-appeal é a chave de ouro. O cliente precisa 'comer com os olhos'. O som da crocância, a fumaça quente ou o brilho do alimento vendem o produto na hora.",
+          audienceBehavior: "O appetite-appeal é a chave de ouro. O cliente precisa 'comer com os olhos'. O som da crocância, a fumaça quente ou o brilho do alimento vendem o produto na hora.",
           tips: [
             "Closes Sensoriais Extremas: O queijo derretendo, o corte macio de uma carne ou a calda de chocolate caindo bem devagar sobre o doce.",
             "Efeitos de Áudio (ASMR): Capte o som real da embalagem abrindo, do gelo caindo no copo ou da crocância ao morder.",
@@ -140,7 +140,7 @@ export function OverviewTab({
         return {
           audienceBehavior: "Mercado de luxo, autoestima e presentes memoráveis. O foco deve ser o brilho sob iluminação correta, o refinamento da peça e a embalagem luxuosa.",
           tips: [
-            "O Jogo da Luz: Filme as joias sob luz natural direta para capturar o reflexo e o brilho real de cada detalhe e pedra preciosa.",
+            "O Jogo da Luz: Filme as joias sob luz natural direta para capturar o reflexo e o brilho real de cada detalhe e pedra precisa.",
             "Modelos em Close: Mostre a peça sendo usada de forma harmoniosa no pescoço, orelha ou dedos, para dar noção de escala e sofisticação.",
             "Experiência do Unboxing Premium: Grave o processo de abertura de caixas de veludo, sacolas de seda e certificados de garantia."
           ]
@@ -278,13 +278,8 @@ export function OverviewTab({
   const renderSectorBadge = (delta: number) => {
     const positive = delta >= 0
     return (
-      <span className={cn(
-        "inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full mt-1.5 border",
-        positive
-          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-          : "bg-rose-500/10 text-rose-600 border-rose-500/20"
-      )}>
-        {positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+      <span className="inline-flex items-center gap-1 text-xs font-black px-2.5 py-1 rounded-full mt-1.5 border border-slate-200 dark:border-white/10 bg-white dark:bg-[#FFF] text-[#E33] dark:text-[#E33] shadow-xs">
+        {positive ? <TrendingUp className="w-3.5 h-3.5 text-[#E33]" /> : <TrendingDown className="w-3.5 h-3.5 text-[#E33]" />}
         {positive ? '+' : ''}{delta.toFixed(1)}% vs Setor
       </span>
     )
@@ -339,8 +334,10 @@ export function OverviewTab({
             <div className="text-2xl font-black text-slate-800 dark:text-white">
               {data.clicks.toLocaleString('pt-BR')}
             </div>
-            <div className="flex flex-col mt-0.5">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">CTR: {ctr.toFixed(1)}%</span>
+            <div className="flex flex-col mt-1.5 gap-1.5 items-start">
+              <span className="text-sm font-extrabold text-[#E33] dark:text-[#E33] bg-white dark:bg-[#FFF] border border-slate-200 dark:border-white/10 px-2.5 py-1 rounded-xl shadow-xs">
+                CTR: {ctr.toFixed(1)}%
+              </span>
               {renderSectorBadge(ctrDelta)}
             </div>
           </CardContent>
@@ -360,8 +357,10 @@ export function OverviewTab({
             <div className="text-2xl font-black text-slate-800 dark:text-white">
               {data.conversions.toLocaleString('pt-BR')}
             </div>
-            <div className="flex flex-col mt-0.5">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Conversão: {cvr.toFixed(1)}%</span>
+            <div className="flex flex-col mt-1.5 gap-1.5 items-start">
+              <span className="text-sm font-extrabold text-[#E33] dark:text-[#E33] bg-white dark:bg-[#FFF] border border-slate-200 dark:border-white/10 px-2.5 py-1 rounded-xl shadow-xs">
+                Conversão: {cvr.toFixed(1)}%
+              </span>
               {renderSectorBadge(cvrDelta)}
             </div>
           </CardContent>
@@ -443,43 +442,43 @@ export function OverviewTab({
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.1)" />
-                <XAxis 
-                  dataKey="date" 
-                  tickLine={false} 
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
                   axisLine={false}
                   tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
                 />
-                <YAxis 
-                  tickLine={false} 
+                <YAxis
+                  tickLine={false}
                   axisLine={false}
                   tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
                 />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'rgba(30, 41, 59, 0.95)', 
-                    borderRadius: '16px', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                    borderRadius: '16px',
                     border: 'none',
                     color: '#fff',
                     fontSize: '12px'
                   }}
                 />
-                <Area 
+                <Area
                   name="Visualizações"
-                  type="monotone" 
-                  dataKey="views" 
-                  stroke="#38bdf8" 
+                  type="monotone"
+                  dataKey="views"
+                  stroke="#38bdf8"
                   strokeWidth={2.5}
-                  fillOpacity={1} 
-                  fill="url(#colorViews)" 
+                  fillOpacity={1}
+                  fill="url(#colorViews)"
                 />
-                <Area 
+                <Area
                   name="Cliques em CTA"
-                  type="monotone" 
-                  dataKey="clicks" 
-                  stroke="#6366f1" 
+                  type="monotone"
+                  dataKey="clicks"
+                  stroke="#6366f1"
                   strokeWidth={2.5}
-                  fillOpacity={1} 
-                  fill="url(#colorClicks)" 
+                  fillOpacity={1}
+                  fill="url(#colorClicks)"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -501,9 +500,9 @@ export function OverviewTab({
         <button
           type="button"
           onClick={() => setIsBenchmarkModalOpen(true)}
-          className="bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-white/10 hover:border-[#0094EB] dark:hover:border-[#ff7a29] text-slate-700 dark:text-slate-200 hover:text-[#0094EB] dark:hover:text-[#ff7a29] font-black text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-xs shrink-0 flex items-center gap-1.5 hover:scale-[1.02]"
+          className="bg-[#FF7A00] dark:bg-[#FF7A00] border border-[#FF7A00] dark:border-[#FF7A00] hover:bg-[#E66E00] dark:hover:bg-[#E66E00] text-white dark:text-white font-black text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm shrink-0 flex items-center gap-1.5 hover:scale-[1.02]"
         >
-          <FileText size={14} />
+          <FileText size={14} className="text-white" />
           Ver Estudo de Mercado
         </button>
       </div>
@@ -512,7 +511,7 @@ export function OverviewTab({
       {isBenchmarkModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in font-sans">
           <div className="relative w-full max-w-2xl bg-white dark:bg-[#121625] border border-slate-100 dark:border-white/5 rounded-[2.5rem] shadow-2xl p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto">
-            
+
             {/* Botão Fechar */}
             <button
               onClick={() => setIsBenchmarkModalOpen(false)}
@@ -536,7 +535,7 @@ export function OverviewTab({
 
             {/* Grid das Métricas do Benchmark */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-              
+
               <div className="p-4 rounded-2xl bg-blue-500/[0.02] dark:bg-white/[0.01] border border-slate-100 dark:border-white/5">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">CTR Médio (Cliques)</span>
                 <p className="text-2xl font-black text-indigo-500 mt-1">{benchmark?.avg_ctr || 0}%</p>
