@@ -225,22 +225,29 @@ export function RetentionTab(_props: Props) {
                   tickLine={false}
                   tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 700 }}
                   tickFormatter={(v: number) => v.toLocaleString()}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: '16px',
-                    border: 'none',
-                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-                    padding: '12px',
-                    fontSize: '12px',
-                  }}
-                  formatter={(val: number, name: string) => [
-                    name === 'taxa'
-                      ? `${val}%`
-                      : val.toLocaleString(),
-                    name === 'taxa' ? 'Retenção (%)' : 'Espectadores',
-                  ]}
-                />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#ffffff', // Força o fundo branco do balão
+                      borderRadius: '16px',
+                      border: '1px solid #e2e8f0', // Bordinha sutil cinza
+                      boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                      padding: '12px',
+                      fontSize: '12px',
+                    }}
+                    labelStyle={{
+                      color: '#0f172a', // Cor preta/slate-900 para a label (Ex: "50%")
+                      fontWeight: '900',
+                      marginBottom: '4px',
+                    }}
+                    itemStyle={{
+                      color: '#334155', // Cor cinza escuro para os valores (Ex: "Espectadores : 190")
+                      fontWeight: '600',
+                    }}
+                    formatter={(val: number) => [
+                      `${val.toLocaleString('pt-BR')}`,
+                      'Espectadores'
+                    ]}
+                  />
                 <Bar dataKey="espectadores" fill="url(#barGradient)" radius={[8, 8, 0, 0]} name="Espectadores" />
               </BarChart>
             </ResponsiveContainer>
