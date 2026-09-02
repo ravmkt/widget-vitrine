@@ -1301,7 +1301,7 @@ export default function StoragePage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Armazenamento
+            Biblioteca
           </h1>
           <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-[#c0c5d4] leading-relaxed">
             Gerencie os vídeos e imagens hospedados no seu plano e monitore o uso de espaço.
