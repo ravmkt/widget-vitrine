@@ -1,25 +1,22 @@
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { 
   Sparkles, 
   Lightbulb, 
-  ArrowUpRight, 
   TrendingUp, 
-  Video, 
   AlertTriangle, 
   Zap,
-  CheckCircle2,
   ChevronRight
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface InsightsTabProps {
-  timeRange: string
+  timeRange: string;
 }
 
 export function InsightsTab({ timeRange }: InsightsTabProps) {
   // Simulação de insights inteligentes baseados na loja de teste
-  const [insights, setInsights] = useState([
+  const [insights] = useState([
     {
       id: 1,
       type: 'success',
@@ -47,10 +44,10 @@ export function InsightsTab({ timeRange }: InsightsTabProps) {
       actionText: 'Agendar Stories',
       icon: Lightbulb
     }
-  ])
+  ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in font-sans">
       {/* Header com chamada IA */}
       <div className="bg-white dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all duration-300">
         <div className="flex items-start gap-4">
@@ -75,7 +72,7 @@ export function InsightsTab({ timeRange }: InsightsTabProps) {
       {/* Grid de Recomendações */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {insights.map((insight) => {
-          const IconComponent = insight.icon
+          const IconComponent = insight.icon;
           return (
             <Card 
               key={insight.id} 
@@ -123,9 +120,9 @@ export function InsightsTab({ timeRange }: InsightsTabProps) {
                 </button>
               </div>
             </Card>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
