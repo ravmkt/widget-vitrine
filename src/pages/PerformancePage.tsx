@@ -15,7 +15,7 @@ import { DayPicker } from 'react-day-picker'
 import CustomDialog from '@/components/CustomDialog'
 import type { TimeRange } from '@/services/metrics-service'
 import { supabase } from '@/lib/supabase'
-import { useTenant } from '@/context/TenantContext' // Certifique-se de usar o path correto do seu contexto
+import { useTenant } from '@/context/TenantContext'
 
 // Componentes modulares
 import { OverviewTab } from '@/components/performance/overview-tab'
@@ -35,7 +35,7 @@ export interface SectorBenchmark {
 }
 
 export default function PerformancePage() {
-const { currentStore: tenant, loading: tenantLoading } = useTenant()
+  const { currentStore: tenant, loading: tenantLoading } = useTenant()
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [timeRange, setTimeRange] = useState<TimeRange>('30d')
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
@@ -131,7 +131,7 @@ const { currentStore: tenant, loading: tenantLoading } = useTenant()
         </div>
       </div>
 
-      {/* ── ABAS DE NAVEGAÇÃO MODULARES E ARREDONDADAS ── */}
+      {/* ── ABAS DE NAVEGAÇÃO COM CONTRASTE REFINADO NO DARK MODE ── */}
       <Tabs
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as TabKey)}
@@ -140,25 +140,25 @@ const { currentStore: tenant, loading: tenantLoading } = useTenant()
         <TabsList className="w-fit bg-slate-100 dark:bg-[#0f1220] border border-slate-200 dark:border-white/5 rounded-2xl p-1.5 gap-1 shadow-inner h-auto">
           <TabsTrigger
             value="overview"
-            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30 cursor-pointer"
           >
             📊 Visão Geral
           </TabsTrigger>
           <TabsTrigger
             value="videos"
-            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30 cursor-pointer"
           >
             🎬 Vídeos
           </TabsTrigger>
           <TabsTrigger
             value="retention"
-            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30 cursor-pointer"
           >
             📈 Retenção
           </TabsTrigger>
           <TabsTrigger
             value="insights"
-            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-black transition-all text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white data-[state=active]:!bg-[#0094EB] dark:data-[state=active]:!bg-[#ff7a29] data-[state=active]:!text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30 cursor-pointer"
           >
             🧠 Insights
           </TabsTrigger>
