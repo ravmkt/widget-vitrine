@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 "use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -201,10 +202,8 @@ const formatXmlCategory = (value: string) =>
 
 const ProductsPage = () => {
   const navigate = useNavigate();
-
-  const [products, setProducts] = useState<Product[]>([]);
-
   const { storeId, loading: tenantLoading } = useTenant();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
