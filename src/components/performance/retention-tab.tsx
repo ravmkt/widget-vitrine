@@ -139,7 +139,7 @@ export function RetentionTab(_props: Props) {
 
   return (
     <div className="space-y-8 animate-fade-in font-sans">
-      {/* ── Cards resumo ── */}
+      {/* ── Cards resumo com a borda de visualizações/cliques/vendas ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <RetentionCard
           icon={Clock}
@@ -169,10 +169,10 @@ export function RetentionTab(_props: Props) {
           Vídeo:
         </span>
         <Select value={selectedVideoId} onValueChange={setSelectedVideoId}>
-          <SelectTrigger className="w-[280px] h-10 rounded-2xl border border-white/5 bg-[#111524] text-xs font-bold text-white">
+          <SelectTrigger className="w-[280px] h-10 rounded-2xl border border-[#ff7a29]/30 bg-[#111524] text-xs font-bold text-white focus:ring-2 focus:ring-[#ff7a29]/30 focus:border-[#ff7a29]">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-[#111524] border border-white/10 text-white rounded-2xl">
+          <SelectContent className="bg-[#111524] border border-[#ff7a29]/30 text-white rounded-2xl">
             <SelectItem value="all" className="text-xs font-bold">
               📊 Todos os vídeos (agregado)
             </SelectItem>
@@ -185,8 +185,8 @@ export function RetentionTab(_props: Props) {
         </Select>
       </div>
 
-      {/* ── Gráfico de retenção (funil) ── */}
-      <div className="bg-[#111524] border border-white/5 rounded-2xl p-6 sm:p-8 shadow-sm">
+      {/* ── Gráfico de retenção (funil) com borda laranja ── */}
+      <div className="bg-[#111524] border border-[#ff7a29]/30 rounded-2xl p-6 sm:p-8 shadow-sm">
         <h3 className="text-[18px] font-black text-white mb-8">
           Curva de Retenção — {selectedVideoId === 'all' ? 'Todos os Vídeos' : videoSelecionado?.title}
         </h3>
@@ -219,7 +219,7 @@ export function RetentionTab(_props: Props) {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
                       return (
-                        <div className="bg-[#171c30] border border-white/10 p-3.5 rounded-2xl shadow-xl text-left min-w-[160px] backdrop-blur-md">
+                        <div className="bg-[#171c30] border border-[#ff7a29]/30 p-3.5 rounded-2xl shadow-xl text-left min-w-[160px] backdrop-blur-md">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
                             Ponto: {data.percentual}
                           </p>
@@ -256,15 +256,15 @@ export function RetentionTab(_props: Props) {
         </div>
       </div>
 
-      {/* ── Tabela de retenção por vídeo ── */}
-      <div className="bg-[#111524] border border-white/5 rounded-2xl p-6 sm:p-8 shadow-sm">
+      {/* ── Tabela de retenção por vídeo com borda laranja ── */}
+      <div className="bg-[#111524] border border-[#ff7a29]/30 rounded-2xl p-6 sm:p-8 shadow-sm">
         <h3 className="text-[18px] font-black text-white mb-8">
           Retenção por Vídeo
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/5">
+              <tr className="border-b border-[#ff7a29]/20">
                 <th className="pb-4 text-left text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Vídeo</th>
                 <th className="pb-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">25%</th>
                 <th className="pb-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">50%</th>
@@ -277,7 +277,7 @@ export function RetentionTab(_props: Props) {
             </thead>
             <tbody>
               {retentions.map(r => (
-                <tr key={r.video_id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
+                <tr key={r.video_id} className="border-b border-[#ff7a29]/10 last:border-0 hover:bg-white/[0.02] transition-colors">
                   <td className="py-4 pr-4 text-left">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-xl bg-slate-800 overflow-hidden shrink-0 border border-white/5">
@@ -326,9 +326,9 @@ const RetentionCard = ({
   value: string;
 }) => {
   return (
-    <div className="bg-[#111524] dark:bg-[#1a1f35] border border-white/5 dark:border-[#ff7a29]/30 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300 group flex flex-col justify-between">
+    <div className="bg-[#111524] dark:bg-[#1a1f35] border border-[#ff7a29]/30 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-[#ff7a29]/60 transition-all duration-300 group flex flex-col justify-between">
       <div className="flex items-start justify-between mb-4">
-        {/* Quadrado do Ícone Premium Ampliado para 45px */}
+        {/* Quadrado do Ícone Premium Ampliado para 45px com Borda Laranja */}
         <div className="w-[45px] h-[45px] rounded-2xl flex items-center justify-center bg-[#ff7a29]/10 border border-[#ff7a29]/20 text-[#ff7a29] transition-transform duration-300 group-hover:scale-110 shrink-0">
           <Icon className="w-[22px] h-[22px] text-[#ff7a29] stroke-[2.5]" />
         </div>
