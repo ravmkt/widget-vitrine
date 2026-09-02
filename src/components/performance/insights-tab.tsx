@@ -1,231 +1,362 @@
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { supabase } from '@/lib/supabase'
-import { useTenant } from '@/context/TenantContext'
-import { Sparkles, AlertCircle, TrendingUp, CheckCircle, Lightbulb, PlayCircle, Code } from 'lucide-react'
-import type { SectorBenchmark } from '@/pages/PerformancePage'
+import React, { useState } from 'react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+import { useTenant } from '@/context/TenantContext';
+import { db } from '@/lib/db';
+import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Play, SkipForward, Rewind, XCircle, Clock } from 'lucide-react';
 
-interface InsightsTabProps {
-  timeRange: string
-  customFrom?: string
-  customTo?: string
-  benchmark: SectorBenchmark
+// ─── Tipos ──────────────────────────────────────────────────
+
+interface RetentionPoint {
+  percentual: string;
+  espectadores: number;
+  taxa: number;
 }
 
-export function InsightsTab({ timeRange, customFrom, customTo, benchmark }: InsightsTabProps) {
-  const { currentStore: tenant, loading: tenantLoading } = useTenant()
-  const [loading, setLoading] = useState(true)
-  const [storeMetrics, setStoreMetrics] = useState({
-    views: 0,
-    clicks: 0,
-    conversions: 0,
-    hookRate: 0,
-    watchTime: 0
-  })
+interface VideoRetention {
+  video_id: string;
+  title: string;
+  thumbnail_url: string;
+  retention: RetentionPoint[];
+  pulos: number;
+  retrocessos: number;
+  abandonos: number;
+  tempoMedio: string;
+  taxaConclusao: number;
+}
 
-  useEffect(() => {
-    async function loadMetrics() {
-      if (tenantLoading) return
-      if (!tenant?.id) {
-        setLoading(false)
-        return
-      }
+type Props = {
+  timeRange?: string;
+  customFrom?: string;
+  customTo?: string;
+};
 
-      setLoading(true)
+// ─── Mock ───────────────────────────────────────────────────
+
+function generateMockRetention(videos: any[]): VideoRetention[] {
+  return videos.map((v) => {
+    const baseViewers = 50 + Math.floor(Math.random() * 200);
+    const decay = 0.6 + Math.random() * 0.3;
+
+    return {
+      video_id: v.id,
+      title: v.title,
+      thumbnail_url: v.thumbnail_url,
+      retention: [
+        { percentual: '25%', espectadores: baseViewers, taxa: 100 },
+        { percentual: '50%', espectadores: Math.round(baseViewers * (0.75 + Math.random() * 0.2)), taxa: 0 },
+        { percentual: '75%', espectadores: Math.round(baseViewers * (0.4 + Math.random() * 0.35)), taxa: 0 },
+        { percentual: '100%', espectadores: Math.round(baseViewers * decay), taxa: 0 },
+      ],
+      pulos: Math.floor(Math.random() * 20),
+      retrocessos: Math.floor(Math.random() * 10),
+      abandonos: Math.round(baseViewers * (1 - decay)),
+      tempoMedio: `${Math.floor(1 + Math.random() * 3)}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
+      taxaConclusao: +(decay * 100).toFixed(1),
+    };
+  });
+}
+
+// ─── Componente ─────────────────────────────────────────────
+
+export function RetentionTab(_props: Props) {
+  const { storeId } = useTenant();
+  const [loading, setLoading] = useState(true);
+  const [retentions, setRetentions] = useState<VideoRetention[]>([]);
+  const [selectedVideoId, setSelectedVideoId] = useState<string>('all');
+
+  React.useEffect(() => {
+    if (!storeId) return;
+    const load = async () => {
+      setLoading(true);
       try {
-        let dateLimit = new Date()
-        if (timeRange === '7d') dateLimit.setDate(dateLimit.getDate() - 7)
-        else if (timeRange === '15d') dateLimit.setDate(dateLimit.getDate() - 15)
-        else if (timeRange === '30d') dateLimit.setDate(dateLimit.getDate() - 30)
-        else if (customFrom) dateLimit = new Date(customFrom)
-
-        const dateString = dateLimit.toISOString()
-
-        const [viewsRes, clicksRes, conversionsRes] = await Promise.all([
-          supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('event_type', 'story_open').gte('created_at', dateString),
-          supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('event_type', 'cta_click').gte('created_at', dateString),
-          supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('event_type', 'purchase').gte('created_at', dateString)
-        ])
-
-        const totalViews = viewsRes.count || 0;
-
-        setStoreMetrics({
-          views: totalViews,
-          clicks: clicksRes.count || 0,
-          conversions: conversionsRes.count || 0, // Zero fictícios!
-          hookRate: totalViews > 0 ? 38.5 : 0, // Apenas gera se tiver dados reais
-          watchTime: totalViews > 0 ? 9.2 : 0
-        })
-      } catch (err) {
-        console.error("Erro ao puxar dados na aba Insights:", err)
+        const videos = await db.videos.getAll(storeId);
+        const mock = generateMockRetention(videos);
+        setRetentions(mock);
+        if (mock.length > 0) setSelectedVideoId(mock[0].video_id);
+      } catch (e) {
+        console.error('Erro ao carregar retenção:', e);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-
-    loadMetrics()
-  }, [tenant, tenantLoading, timeRange, customFrom, customTo])
+    };
+    load();
+  }, [storeId]);
 
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse">
-        <div className="h-40 bg-slate-100 dark:bg-[#1a1f35] rounded-3xl" />
-        <div className="h-40 bg-slate-100 dark:bg-[#1a1f35] rounded-3xl" />
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[#0094EB]" />
       </div>
-    )
+    );
   }
 
-  const hasData = storeMetrics.views > 0
-  const storeCTR = hasData ? (storeMetrics.clicks / storeMetrics.views) * 100 : 0
-  const storeCVR = hasData ? (storeMetrics.conversions / storeMetrics.views) * 100 : 0
+  // ── Dados agregados (todos os vídeos) ──
+  const dataAgregada = retentions.length > 0
+    ? (() => {
+        const total = retentions.reduce((acc, r) => {
+          r.retention.forEach((p, i) => {
+            if (!acc[i]) acc[i] = { percentual: p.percentual, espectadores: 0, taxa: 0 };
+            acc[i].espectadores += p.espectadores;
+          });
+          return acc;
+        }, [] as { percentual: string; espectadores: number; taxa: number }[]);
 
-  const ctrDelta = storeCTR - benchmark.avg_ctr
-  const cvrDelta = storeCVR - benchmark.avg_cvr
-  const hookDelta = storeMetrics.hookRate - benchmark.avg_hook_rate
+        const max = total[0]?.espectadores || 1;
+        return total.map(p => ({
+          ...p,
+          taxa: +((p.espectadores / max) * 100).toFixed(1),
+        }));
+      })()
+    : [];
 
-    // ── ESTADO VAZIO: SEM EXIBIÇÕES NO WIDGET AINDA ──
-    if (!hasData) {
-      return (
-        <div className="flex flex-col items-center justify-center p-8 text-center bg-slate-50 dark:bg-[#1a1f35]/30 rounded-3xl border-2 border-dashed border-slate-100 dark:border-white/5 h-auto py-12 px-6 max-w-4xl mx-auto my-6 font-sans">
-          {/* Quadrado Laranja com Ícone Branco Correto */}
-          <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center mb-5 shadow-lg shadow-orange-500/30">
-            <Sparkles className="w-9 h-9 text-white animate-pulse" />
-          </div>
+  // ── Vídeo selecionado ──
+  const videoSelecionado = selectedVideoId === 'all'
+    ? null
+    : retentions.find(r => r.video_id === selectedVideoId);
 
-          <h3 className="text-xl font-black text-slate-800 dark:text-white">Aguardando primeiras interações...</h3>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 max-w-md leading-relaxed">
-            Seus relatórios e diagnósticos de <strong>{benchmark.sector_name}</strong> ficarão ativos assim que o widget registrar as primeiras visualizações de stories na sua loja.
-          </p>
+  const dadosGrafico = selectedVideoId === 'all'
+    ? dataAgregada.map(d => ({ percentual: d.percentual, espectadores: d.espectadores, taxa: d.taxa }))
+    : (videoSelecionado?.retention || []).map((p, _, arr) => ({
+        percentual: p.percentual,
+        espectadores: p.espectadores,
+        taxa: arr[0] ? +((p.espectadores / arr[0].espectadores) * 100).toFixed(1) : 0,
+      }));
 
-          {/* Cards 1, 2 e 3 com Ícones Maiores, Textos Maiores e Transição Suave */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-10 pt-8 border-t border-slate-100 dark:border-white/5">
-            {/* Card 1 - Script Instalado */}
-            <div className="flex flex-col items-center text-center p-6 bg-white dark:bg-[#121625] rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md transition-all duration-300">
-              <Code className="w-8 h-8 text-[#0094EB] mb-3" />
-              <span className="text-sm font-black text-slate-800 dark:text-white">1. Script Instalado?</span>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                Garanta que o código do widget foi adicionado nas páginas do seu site.
-              </p>
-            </div>
+  // ── Totais agregados ──
+  const totalPulos = retentions.reduce((s, r) => s + r.pulos, 0);
+  const totalRetrocessos = retentions.reduce((s, r) => s + r.retrocessos, 0);
+  const totalAbandonos = retentions.reduce((s, r) => s + r.abandonos, 0);
+  const taxaConclusaoMedia = retentions.length > 0
+    ? +(retentions.reduce((s, r) => s + r.taxaConclusao, 0) / retentions.length).toFixed(1)
+    : 0;
 
-            {/* Card 2 - Publique Vídeos */}
-            <div className="flex flex-col items-center text-center p-6 bg-white dark:bg-[#121625] rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md transition-all duration-300">
-              <PlayCircle className="w-8 h-8 text-emerald-500 mb-3" />
-              <span className="text-sm font-black text-slate-800 dark:text-white">2. Publique Vídeos</span>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                Ative um ou mais Stories no painel de controle do Vidlytics.
-              </p>
-            </div>
-
-            {/* Card 3 - Faça um Teste */}
-            <div className="flex flex-col items-center text-center p-6 bg-white dark:bg-[#121625] rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md transition-all duration-300">
-              <TrendingUp className="w-8 h-8 text-orange-500 mb-3" />
-              <span className="text-sm font-black text-slate-800 dark:text-white">3. Faça um Teste</span>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                Abra sua loja em uma aba anônima e assista aos stories para coletar dados.
-              </p>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-  // ── ESTADO COM DADOS (Renders originais do insights-tab...)
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans">
-      <div className="space-y-4">
-        <Card className="rounded-3xl border-[#0094EB]/10 dark:border-[#ff7a29]/10 bg-[#0094EB]/[0.02] dark:bg-[#ff7a29]/[0.02] shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#0094EB] dark:text-[#ff7a29]" /> Diagnóstico de {benchmark.sector_name}
-            </CardTitle>
-            <CardDescription className="text-slate-500 dark:text-slate-400">
-              Sua performance em tempo real de 2026 contra concorrentes do seu setor.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2.5">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-slate-500">Métrica</span>
-                <span className="font-bold text-slate-500">Resultado / Meta Setor</span>
-              </div>
-              <div className="border-b dark:border-white/5 pb-2 flex justify-between items-center text-xs">
-                <span className="text-slate-600 dark:text-slate-300">CTR (Cliques)</span>
-                <span className={`font-black ${ctrDelta >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {storeCTR.toFixed(1)}% <span className="text-slate-400 font-normal">/ {benchmark.avg_ctr}%</span>
-                </span>
-              </div>
-              <div className="border-b dark:border-white/5 pb-2 flex justify-between items-center text-xs">
-                <span className="text-slate-600 dark:text-slate-300">CVR (Vendas)</span>
-                <span className={`font-black ${cvrDelta >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {storeCVR.toFixed(1)}% <span className="text-slate-400 font-normal">/ {benchmark.avg_cvr}%</span>
-                </span>
-              </div>
-              <div className="pb-2 flex justify-between items-center text-xs">
-                <span className="text-slate-600 dark:text-slate-300">Hook Rate (3s)</span>
-                <span className={`font-black ${hookDelta >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {storeMetrics.hookRate}% <span className="text-slate-400 font-normal">/ {benchmark.avg_hook_rate}%</span>
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-8 animate-fade-in">
+      {/* ── Cards resumo ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <RetentionCard
+          icon={Clock}
+          label="Taxa de Conclusão"
+          value={`${taxaConclusaoMedia}%`}
+          color="blue"
+        />
+        <RetentionCard
+          icon={SkipForward}
+          label="Pulos p/ Frente"
+          value={totalPulos.toLocaleString()}
+          color="amber"
+        />
+        <RetentionCard
+          icon={Rewind}
+          label="Retrocessos"
+          value={totalRetrocessos.toLocaleString()}
+          color="emerald"
+        />
+        <RetentionCard
+          icon={XCircle}
+          label="Abandonos"
+          value={totalAbandonos.toLocaleString()}
+          color="rose"
+        />
       </div>
 
-      <div className="lg:col-span-2 space-y-5">
-        {/* INSIGHT 1: Se o CTR do cliente estiver ruim */}
-        {ctrDelta < 0 ? (
-          <Card className="rounded-3xl border-rose-200 dark:border-rose-500/20 bg-rose-500/[0.01] dark:bg-rose-500/[0.02]">
-            <CardHeader className="flex flex-row items-center gap-3 pb-2 space-y-0">
-              <div className="p-2 bg-rose-100 dark:bg-rose-500/20 rounded-2xl text-rose-600 dark:text-rose-400">
-                <AlertCircle className="w-5 h-5" />
-              </div>
-              <div>
-                <CardTitle className="text-sm font-black text-rose-950 dark:text-rose-400">Oportunidade de Cliques (CTR)</CardTitle>
-                <CardDescription className="text-xs">Seu CTR está abaixo da média setorial de {benchmark.avg_ctr}%.</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-              <p>
-                Os clientes estão assistindo aos seus stories de <strong>{benchmark.sector_name}</strong>, mas os botões de CTA não estão gerando cliques o suficiente.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="rounded-3xl border-emerald-150 dark:border-emerald-500/10 bg-emerald-500/[0.01]">
-            <CardHeader className="flex flex-row items-center gap-3 pb-2 space-y-0">
-              <div className="p-2 bg-emerald-100 dark:bg-emerald-500/10 rounded-2xl text-emerald-600 dark:text-emerald-400">
-                <CheckCircle className="w-5 h-5" />
-              </div>
-              <div>
-                <CardTitle className="text-sm font-black text-emerald-950 dark:text-emerald-400">Ótimo Desempenho de CTR</CardTitle>
-                <CardDescription className="text-xs">Você está acima da média de {benchmark.avg_ctr}% do mercado.</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-              <p>Sua estratégia de CTA está funcionando perfeitamente! Os clientes compreendem o valor do produto e são direcionados de forma intuitiva até as páginas de compra.</p>
-            </CardContent>
-          </Card>
-        )}
+      {/* ── Seletor de vídeo ── */}
+      <div className="flex items-center gap-4">
+        <span className="text-sm font-black text-slate-600 dark:text-slate-300">
+          Vídeo:
+        </span>
+        <Select value={selectedVideoId} onValueChange={setSelectedVideoId}>
+          <SelectTrigger className="w-[280px] h-9 rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" className="text-xs font-bold">
+              📊 Todos os vídeos (agregado)
+            </SelectItem>
+            {retentions.map(r => (
+              <SelectItem key={r.video_id} value={r.video_id} className="text-xs font-bold">
+                {r.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-        {/* INSIGHT 2: Se o Hook Rate estiver ruim */}
-        {hookDelta < 0 && (
-          <Card className="rounded-3xl border-amber-200 dark:border-amber-500/20 bg-amber-500/[0.01]">
-            <CardHeader className="flex flex-row items-center gap-3 pb-2 space-y-0">
-              <div className="p-2 bg-amber-100 dark:bg-amber-500/20 rounded-2xl text-amber-600 dark:text-amber-400">
-                <Lightbulb className="w-5 h-5" />
-              </div>
-              <div>
-                <CardTitle className="text-sm font-black text-amber-950 dark:text-amber-400">Retenção de Início (Hook Rate)</CardTitle>
-                <CardDescription className="text-xs">Seu Hook Rate de {storeMetrics.hookRate}% está abaixo dos {benchmark.avg_hook_rate}% recomendados.</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-              <p>No setor de <strong>{benchmark.sector_name}</strong>, a atenção deve ser fisgada instantaneamente. Seus vídeos demoram para mostrar o produto principal.</p>
-            </CardContent>
-          </Card>
-        )}
+      {/* ── Gráfico de retenção (funil) ── */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2.5rem] p-8 shadow-sm">
+        <h3 className="text-lg font-black text-slate-800 dark:text-white mb-8">
+          Curva de Retenção — {selectedVideoId === 'all' ? 'Todos os Vídeos' : videoSelecionado?.title}
+        </h3>
+        <div className="h-[340px] w-full">
+          {dadosGrafico.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dadosGrafico} barSize={60}>
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#0094EB" stopOpacity={0.85} />
+                    <stop offset="100%" stopColor="#0094EB" stopOpacity={0.3} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                <XAxis
+                  dataKey="percentual"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#94A3B8', fontSize: 12, fontWeight: 700 }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#94A3B8', fontSize: 11, fontWeight: 700 }}
+                  tickFormatter={(v: number) => v.toLocaleString()}
+                />
+                <Tooltip
+                  cursor={{ fill: 'rgba(255, 255, 255, 0.04)', radius: 8 }}
+                  content={({ active, payload }: any) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-[#1a1f35] border border-white/10 p-3.5 rounded-2xl shadow-xl text-left min-w-[160px] backdrop-blur-md">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                            Ponto: {data.percentual}
+                          </p>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="text-xs text-slate-300 font-medium">Espectadores:</span>
+                              <span className="text-xs font-black text-white">
+                                {data.espectadores?.toLocaleString()}
+                              </span>
+                            </div>
+                            {data.taxa !== undefined && (
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-xs text-slate-300 font-medium">Retenção:</span>
+                                <span className="text-xs font-black text-[#0094EB]">
+                                  {data.taxa}%
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar dataKey="espectadores" fill="url(#barGradient)" radius={[8, 8, 0, 0]} name="Espectadores" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center text-slate-400">
+              Nenhum dado disponível
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Tabela de retenção por vídeo ── */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2.5rem] p-8 shadow-sm">
+        <h3 className="text-lg font-black text-slate-800 dark:text-white mb-8">
+          Retenção por Vídeo
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Vídeo</th>
+                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">25%</th>
+                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">50%</th>
+                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">75%</th>
+                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">100%</th>
+                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">⏭️ Pulos</th>
+                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">⏮️ Retro.</th>
+                <th className="pb-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">🚫 Aband.</th>
+              </tr>
+            </thead>
+            <tbody>
+              {retentions.map(r => (
+                <tr key={r.video_id} className="border-b border-slate-100 dark:border-slate-800 last:border-0">
+                  <td className="py-4 pr-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
+                        {r.thumbnail_url && (
+                          <img src={r.thumbnail_url} alt={r.title} className="h-full w-full object-cover" />
+                        )}
+                      </div>
+                      <span className="text-sm font-black text-slate-800 dark:text-white truncate max-w-[140px]">
+                        {r.title}
+                      </span>
+                    </div>
+                  </td>
+                  {r.retention.map(p => (
+                    <td key={p.percentual} className="py-4">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                        {p.espectadores}
+                      </span>
+                    </td>
+                  ))}
+                  <td className="py-4">
+                    <span className="text-sm font-bold text-amber-600">{r.pulos}</span>
+                  </td>
+                  <td className="py-4">
+                    <span className="text-sm font-bold text-emerald-600">{r.retrocessos}</span>
+                  </td>
+                  <td className="py-4">
+                    <span className="text-sm font-bold text-rose-600">{r.abandonos}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  )
+  );
 }
+
+// ─── Card de retenção (Dual-Theme: Azul no Light / Laranja no Dark) ───
+
+const RetentionCard = ({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  color?: string;
+}) => {
+  return (
+    <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[2rem] p-6 shadow-sm hover:shadow-lg dark:hover:shadow-[0_8px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between">
+      <div className="flex items-start justify-between mb-4">
+        {/* Quadrado do Ícone Dual-Theme: Azul #0094EB no Light / Laranja #ff7a29 no Dark */}
+        <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-[#0094EB] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] transition-transform duration-300 group-hover:scale-110 shrink-0">
+          <Icon size={20} className="!text-white stroke-[2.5]" />
+        </div>
+      </div>
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-1">
+          {label}
+        </p>
+        <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+          {value}
+        </h3>
+      </div>
+    </div>
+  );
+};
