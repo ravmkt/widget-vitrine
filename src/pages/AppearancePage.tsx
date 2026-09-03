@@ -2243,21 +2243,22 @@ const GridPreview = ({
   colors,
   isMobile = false,
 }: {
-  grid: GridConfig;
-  colors: PreviewColors;
+  grid: any; // Substitua por GridConfig se estiver importado
+  colors: any; // Substitua por PreviewColors se estiver importado
   isMobile?: boolean;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
   const [activeSeqIndex, setActiveSeqIndex] = useState(0);
-  const shape = normalizeWidgetShape(grid.shape, 'portrait');
+  
+  const shape = normalizeWidgetShape(grid?.shape, 'portrait');
   const isCircle = shape === 'circle';
-  const objectFit = (grid as any).object_fit || 'cover';
-  const spacing = safeNumber((grid as any).spacing, 12, 0);
-  const showPlayIcon = (grid as any).show_play_icon ?? true;
-  const showProduct = (grid as any).show_product ?? false;
-  const isSequential = grid.sequential_playback ?? false;
+  const objectFit = grid?.object_fit || 'cover';
+  const spacing = safeNumber(grid?.spacing, 12, 0);
+  const showPlayIcon = grid?.show_play_icon ?? true;
+  const showProduct = grid?.show_product ?? false;
+  const isSequential = grid?.sequential_playback ?? false;
 
-  const totalPreviewItems = isMobile ? 4 : limitNumber(grid.visible_items, 10, 1, 10) * 2;
+  const totalPreviewItems = isMobile ? 4 : limitNumber(grid?.visible_items, 10, 1, 10) * 2;
 
   // Reprodução sequencial: avança 1 item a cada 5s
   useEffect(() => {
@@ -2273,51 +2274,52 @@ const GridPreview = ({
       if (!vid) return;
       const shouldPlay = isSequential
         ? idx === activeSeqIndex
-        : (grid.autoplay_videos ?? true);
+        : (grid?.autoplay_videos ?? true);
       if (shouldPlay) {
         vid.play().catch(() => {});
       } else {
         vid.pause();
       }
     });
-  }, [grid.autoplay_videos, isSequential, activeSeqIndex]);
+  }, [grid?.autoplay_videos, isSequential, activeSeqIndex]);
 
-  const borderRadius = isCircle ? '50%' : cssSize(grid.border_radius, '12px');
+  const borderRadius = isCircle ? '50%' : cssSize(grid?.border_radius, '12px');
   
-  // FIX: Tratamento rigoroso para a largura da borda do vídeo e do card (evita valores em branco/NaN)
-  const rawBorder = (grid as any).border_width;
-  const parsedBorderWidth = rawBorder !== undefined && rawBorder !== null && rawBorder !== '' ? Number(rawBorder) : 0;
+  // FIX: Tratamento rigoroso para a largura da borda. Se vier em branco, NaN ou nulo, assume 0 com segurança.
+  const rawBorder = grid?.border_width ?? grid?.border_style;
+  const parsedBorderWidth = rawBorder !== undefined && rawBorder !== null && rawBorder !== '' && !isNaN(Number(rawBorder)) ? Number(rawBorder) : 0;
   
-  const rawCardBorder = (grid as any).product_card_border_width;
-  const parsedCardBorderWidth = rawCardBorder !== undefined && rawCardBorder !== null && rawCardBorder !== '' ? Number(rawCardBorder) : 0;
+  const rawCardBorder = grid?.product_card_border_width;
+  const parsedCardBorderWidth = rawCardBorder !== undefined && rawCardBorder !== null && rawCardBorder !== '' && !isNaN(Number(rawCardBorder)) ? Number(rawCardBorder) : 0;
 
   const desktopCanvasWidth = 850;
-  const desktopScale = isMobile ? 1 : Math.min(1, desktopCanvasWidth / Math.max(1, limitNumber(grid.visible_items, 10, 1, 10) * 160));
+  const desktopScale = isMobile ? 1 : Math.min(1, desktopCanvasWidth / Math.max(1, limitNumber(grid?.visible_items, 10, 1, 10) * 160));
 
   const titleAlignClass = {
     left: 'text-left',
     center: 'text-center',
     right: 'text-right',
-  }[(grid as any).title_align ?? 'center'] || 'text-center';
+  }[grid?.title_align ?? 'center'] || 'text-center';
 
   const titleStyle: React.CSSProperties = {
-    fontSize: `${safeNumber((grid as any).title_font_size, 14, 8)}px`,
-    fontWeight: ((grid as any).title_bold ?? true) ? 900 : 500,
+    fontSize: `${safeNumber(grid?.title_font_size, 14, 8)}px`,
+    fontWeight: (grid?.title_bold ?? true) ? 900 : 500,
   };
 
   const renderProductCard = (i: number, compact = false) => (
     <div
       style={{
-        backgroundColor: (grid as any).product_card_bg || '#FFFFFF',
-        borderColor: (grid as any).product_card_border_color || '#E2E8F0',
+        backgroundColor: grid?.product_card_bg || '#FFFFFF',
+        borderColor: grid?.product_card_border_color || '#E2E8F0',
         borderWidth: `${parsedCardBorderWidth}px`,
-        borderRadius: `${safeNumber((grid as any).product_card_border_radius, 8, 0)}px`,
+        borderRadius: `${safeNumber(grid?.product_card_border_radius, 8, 0)}px`,
+        boxSizing: 'border-box'
       }}
-      className={`border flex items-center gap-1 shadow-sm ${compact ? 'p-1' : 'p-0.5'}`}
+      className={`border flex items-center gap-1 shadow-sm overflow-hidden ${compact ? 'p-1' : 'p-2'}`}
     >
-      <div className={`rounded shrink-0 overflow-hidden ${compact ? 'w-5 h-5' : 'w-4 h-4'} bg-slate-200`}>
+      <div className={`rounded shrink-0 overflow-hidden ${compact ? 'w-5 h-5' : 'w-8 h-8'} bg-slate-200 border border-slate-100`}>
         <img
-          src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=50&q=80"
+          src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80"
           className="w-full h-full object-cover"
         />
       </div>
@@ -2325,27 +2327,27 @@ const GridPreview = ({
         <p
           className="truncate"
           style={{
-            fontSize: `${safeNumber((grid as any).product_card_name_size, 7, 6)}px`,
-            color: (grid as any).product_card_name_color || '#0F172A',
+            fontSize: `${safeNumber(grid?.product_card_name_size, compact ? 7 : 9, 6)}px`,
+            color: grid?.product_card_name_color || '#0F172A',
             fontWeight: 700,
           }}
         >
-          Calça Bicolor
+          Calça Confort
         </p>
         <p
           style={{
-            fontSize: `${safeNumber((grid as any).product_card_price_size, 6.5, 6)}px`,
-            color: (grid as any).product_card_price_color || colors.primary,
+            fontSize: `${safeNumber(grid?.product_card_price_size, compact ? 6.5 : 8, 6)}px`,
+            color: grid?.product_card_price_color || colors?.primary || '#0094EB',
             fontWeight: 900,
           }}
         >
-          R$ 154,95
+          R$ 149,95
         </p>
       </div>
     </div>
   );
 
-  // MOBILE: Limitação de no máximo 2 colunas para mobile
+  // --- MOBILE ---
   if (isMobile) {
     const items = Array.from({ length: 4 });
 
@@ -2359,10 +2361,10 @@ const GridPreview = ({
     }
 
     return (
-      <div className="w-full py-2 flex flex-col space-y-3">
-        {grid.show_title && (
+      <div className="w-full py-2 flex flex-col space-y-3 box-border">
+        {grid?.show_title && (
           <h4 className={`uppercase tracking-wider text-slate-800 ${titleAlignClass}`} style={titleStyle}>
-            {grid.title_text || 'Grade de Vídeos'}
+            {grid?.title_text || 'Grade de Vídeos'}
           </h4>
         )}
 
@@ -2376,22 +2378,23 @@ const GridPreview = ({
                 className={`relative bg-slate-950 overflow-hidden shadow-sm flex items-center justify-center transition-all duration-300 ${aspectClass}`}
                 style={{
                   borderRadius: isCircle ? '50%' : borderRadius,
-                  border: `${parsedBorderWidth}px solid ${grid.border_color || colors.primary}`
+                  border: `${parsedBorderWidth}px solid ${grid?.border_color || colors?.primary || '#0094EB'}`,
+                  boxSizing: 'border-box' // Garante que a borda não quebre as colunas da grade
                 }}
               >
                 <video
-                  ref={el => el && videoRefs.current.set(i, el)}
+                  ref={el => { if (el) videoRefs.current.set(i, el); }}
                   src={DEMO_PREVIEW_VIDEOS[i % DEMO_PREVIEW_VIDEOS.length]}
                   loop
                   muted
                   playsInline
-                  className="w-full h-full"
+                  className="w-full h-full pointer-events-none"
                   style={{ objectFit: objectFit as any }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/45 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none" />
                 {showPlayIcon && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-5 h-5 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-6 h-6 rounded-full bg-white/95 flex items-center justify-center shadow-sm">
                       <Play size={8} className="text-slate-900 fill-slate-900 ml-0.5" />
                     </div>
                   </div>
@@ -2406,47 +2409,53 @@ const GridPreview = ({
     );
   }
 
-  // DESKTOP: Segue o número de colunas das configurações normais
-  const cols = limitNumber(grid.visible_items, 10, 1, 10);
-  const totalItems = cols * 2; // Mostra duas linhas no desktop
+  // --- DESKTOP ---
+  const cols = limitNumber(grid?.visible_items, 10, 1, 10);
+  const totalItems = cols * 2;
   const items = Array.from({ length: totalItems });
   const shapeRatio = shape === 'landscape' ? (9 / 16) : (16 / 9);
 
   return (
-    <div className="w-full py-3 space-y-3">
-      {grid.show_title && (
+    <div className="w-full py-3 space-y-3 box-border">
+      {grid?.show_title && (
         <h4 className={`tracking-wider text-slate-100 ${titleAlignClass}`} style={titleStyle}>
-          {grid.title_text || 'Grade de Vídeos'}
+          {grid?.title_text || 'Grade de Vídeos'}
         </h4>
       )}
       <div
         className="grid w-full"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: `${spacing * desktopScale}px`, transform: `scale(${desktopScale})`, transformOrigin: 'center center' }}
+        style={{ 
+          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, 
+          gap: `${spacing * desktopScale}px`, 
+          transform: `scale(${desktopScale})`, 
+          transformOrigin: 'center center' 
+        }}
       >
         {items.map((_, i) => (
-          <div key={i} className="w-full flex flex-col space-y-1">
+          <div key={i} className="w-full flex flex-col space-y-2">
             <div
               style={{
                 width: '100%',
                 aspectRatio: isCircle ? '1 / 1' : `${1} / ${shapeRatio}`,
                 borderRadius,
-                border: `${parsedBorderWidth}px solid ${grid.border_color || colors.primary}`
+                border: `${parsedBorderWidth}px solid ${grid?.border_color || colors?.primary || '#0094EB'}`,
+                boxSizing: 'border-box' // Garante que a borda seja interna e não estoure o layout
               }}
               className="relative overflow-hidden bg-slate-950 shadow-sm flex items-center justify-center shrink-0"
             >
               <video
-                ref={el => el && videoRefs.current.set(i, el)}
+                ref={el => { if (el) videoRefs.current.set(i, el); }}
                 src={DEMO_PREVIEW_VIDEOS[i % DEMO_PREVIEW_VIDEOS.length]}
                 loop
                 muted
                 playsInline
-                className="w-full h-full"
+                className="w-full h-full pointer-events-none"
                 style={{ objectFit: objectFit as any }}
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none" />
               {showPlayIcon && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-6 h-6 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-8 h-8 rounded-full bg-white/95 flex items-center justify-center shadow-sm">
                     <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
                   </div>
                 </div>
