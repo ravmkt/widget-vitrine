@@ -2802,10 +2802,21 @@ const PreviewCard = ({
           </div>
         ) : (
           /* 2. OUTRAS ABAS (Flutuante, Carrossel, Grade, Player) */
-          <div className="w-full flex justify-center items-center h-full">
+          <div className="w-full flex justify-center items-center h-full preview-container-canvas">
+            {/* CSS de Hardening para garantir que nenhum scrollbar apareça nos previews */}
+            <style>{`
+              .preview-container-canvas *::-webkit-scrollbar {
+                display: none !important;
+              }
+              .preview-container-canvas * {
+                scrollbar-width: none !important;
+                -ms-overflow-style: none !important;
+              }
+            `}</style>
+
             {isMobileFrame ? (
               /* ================== MOCKUP DO CELULAR PREMIUM (Autoajustável) ================== */
-              <div className="relative mx-auto w-[280px] h-[560px] bg-[#07080d] rounded-[2.5rem] p-2 flex shrink-0 ring-4 ring-[#ff7a29]/20 shadow-2xl border border-[#ff7a29]/30 transition-all duration-300">
+              <div className="relative mx-auto w-[275px] h-[550px] bg-[#07080d] rounded-[2.5rem] p-2 flex shrink-0 ring-4 ring-[#ff7a29]/20 shadow-2xl border border-[#ff7a29]/30 transition-all duration-300">
                 {/* Notch / Câmera */}
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-4 bg-[#07080d] rounded-b-xl z-50 flex justify-center items-center">
                   <div className="w-6 h-0.5 rounded-full bg-slate-800"></div>
@@ -2814,25 +2825,41 @@ const PreviewCard = ({
                 {/* Tela interna do Celular */}
                 <div className="flex-1 w-full h-full bg-[#0d0f17] rounded-[1.9rem] overflow-hidden relative flex flex-col border border-[#ff7a29]/10">
                   {activeTab === 'floating' ? (
-                    /* FLUTUANTE: Fundo escuro limpo, widget posicionado perfeitamente */
                     <div className="relative w-full h-full p-2 flex flex-col justify-end">
                       <div className="relative w-full h-full z-10">
                         <FloatingPreview floating={floating} colors={colors} device={activeDevice} />
                       </div>
                     </div>
                   ) : activeTab === 'modal' ? (
-                    /* PLAYER (MODAL): Imersivo de ponta a ponta (100% do celular) */
                     <div className="w-full h-full">
                       <ModalPreview formData={formData} colors={colors} isMobile={true} />
                     </div>
                   ) : (
-                    /* WIDGETS COM SCROLL INTERNO CONTROLADO (Carrossel, Carrossel Dinâmico, Grade) */
-                    /* px-0 nas laterais para que carrosséis encostem no extremo da tela */
+                    /* Mobile: Carrosséis encostam 100% nas bordas laterais (px-0) */
                     <div className={`flex-1 w-full h-full overflow-hidden flex flex-col justify-center bg-[#0d0f17] ${
                       activeTab === 'grid' ? 'p-3' : 'px-0 py-3'
                     }`}>
-                      {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} isMobile={true} />}
-                      {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} isMobile={true} />}
+                      {activeTab === 'carousel' && (
+                        <CarouselPreview 
+                          carousel={{
+                            ...carousel,
+                            // Garante proporção mobile sem quebrar os lados
+                            itemWidth: Math.min(carousel.itemWidth, 180) 
+                          }} 
+                          colors={colors} 
+                          isMobile={true} 
+                        />
+                      )}
+                      {activeTab === 'dynamic_carousel' && (
+                        <DynamicCarouselPreview 
+                          carousel={{
+                            ...dynamicCarousel,
+                            itemWidth: Math.min(dynamicCarousel.itemWidth, 180)
+                          }} 
+                          colors={colors} 
+                          isMobile={true} 
+                        />
+                      )}
                       {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} isMobile={true} />}
                     </div>
                   )}
@@ -2844,9 +2871,7 @@ const PreviewCard = ({
                 
                 {activeTab === 'floating' && (
                   <div className="absolute inset-0 w-full h-full p-6 flex flex-col justify-end">
-                    {/* Fundo escuro uniforme e limpo */}
                     <div className="absolute inset-0 bg-[#0d0f17] z-0" />
-                    {/* Widget flutuante renderizado sem esqueleto de site poluindo o fundo */}
                     <div className="relative z-10 w-full h-full">
                       <FloatingPreview floating={floating} colors={colors} device={activeDevice} />
                     </div>
@@ -2854,34 +2879,52 @@ const PreviewCard = ({
                 )}
 
                 {activeTab === 'carousel' && (
-                  <div className="absolute inset-0 flex items-center justify-center p-6 bg-[#0d0f17]">
-                    {/* Escala dinâmica para renderizar os itens visíveis corretos sem cortar Título ou Cards */}
+                  <div className="absolute inset-0 flex items-center justify-center px-4 py-8 bg-[#0d0f17]">
                     <ScaleToFit>
-                      <CarouselPreview carousel={carousel} colors={colors} isMobile={false} />
+                      <div className="w-[850px] max-w-full flex justify-center">
+                        <CarouselPreview 
+                          carousel={{
+                            ...carousel,
+                            // Cálculo matemático dinâmico para forçar a renderização exata do número de colunas configuradas
+                            itemWidth: Math.floor((850 - (Number(carousel.gap || 16) * (Number(carousel.visibleItems || 4) - 1))) / Number(carousel.visibleItems || 4))
+                          }} 
+                          colors={colors} 
+                          isMobile={false} 
+                        />
+                      </div>
                     </ScaleToFit>
                   </div>
                 )}
 
                 {activeTab === 'dynamic_carousel' && (
-                  <div className="absolute inset-0 flex items-center justify-center p-6 bg-[#0d0f17]">
-                    {/* Escala dinâmica para o carrossel dinâmico preencher harmoniosamente as bordas */}
+                  <div className="absolute inset-0 flex items-center justify-center px-4 py-8 bg-[#0d0f17]">
                     <ScaleToFit>
-                      <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} isMobile={false} />
+                      <div className="w-[850px] max-w-full flex justify-center">
+                        <DynamicCarouselPreview 
+                          carousel={{
+                            ...dynamicCarousel,
+                            // Mesma inteligência dinâmica para preencher de ponta a ponta sem cortes laterais
+                            itemWidth: Math.floor((850 - (Number(dynamicCarousel.gap || 16) * (Number(dynamicCarousel.visibleItems || 3) - 1))) / Number(dynamicCarousel.visibleItems || 3))
+                          }} 
+                          colors={colors} 
+                          isMobile={false} 
+                        />
+                      </div>
                     </ScaleToFit>
                   </div>
                 )}
 
                 {activeTab === 'grid' && (
                   <div className="absolute inset-0 flex items-center justify-center p-6 bg-[#0d0f17]">
-                    {/* Escala dinâmica para a grade não cortar a base nem as laterais */}
                     <ScaleToFit>
-                      <GridPreview grid={grid} colors={colors} isMobile={false} />
+                      <div className="w-[850px] max-w-full flex justify-center">
+                        <GridPreview grid={grid} colors={colors} isMobile={false} />
+                      </div>
                     </ScaleToFit>
                   </div>
                 )}
 
                 {activeTab === 'modal' && (
-                  /* Player (Modal) centralizado e escalado harmonicamente para a simulação desktop */
                   <div className="absolute inset-0 flex items-center justify-center p-4 bg-[#0d0f17]">
                     <div className="w-full max-w-[820px] h-[440px] rounded-2xl overflow-hidden shadow-2xl border border-white/5 transition-all duration-300">
                       <ModalPreview formData={formData} colors={colors} isMobile={false} />
