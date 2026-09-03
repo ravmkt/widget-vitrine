@@ -2434,6 +2434,14 @@ export const ModalPreview = ({
     return `${size * mobileScale}px`;
   };
 
+  // ==========================================
+  // FLAGS DE EXIBIÇÃO (Resilientes a variações de nome no form)
+  // ==========================================
+  const showLike = m.show_like_button !== false;
+  const showComments = m.show_comments_button !== false && m.show_comment_button !== false && m.show_comments !== false;
+  const showShare = m.show_share_button !== false;
+  const showProduct = m.show_product !== false;
+
   if (isMobile) {
     return (
       <div className="relative w-full h-full overflow-hidden bg-slate-950/90 flex items-center justify-center p-4">
@@ -2479,7 +2487,7 @@ export const ModalPreview = ({
 
           {/* Botões de engajamento Lateral */}
           <div className="absolute right-3 bottom-[110px] z-20 flex flex-col items-center gap-3.5">
-            {m.show_like_button !== false && (
+            {showLike && (
               <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
                 <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
                   <Heart size={16} className="text-white fill-white" />
@@ -2487,7 +2495,7 @@ export const ModalPreview = ({
                 <span className="text-[8px] font-semibold mt-0.5 drop-shadow">1.2k</span>
               </button>
             )}
-            {m.show_comments_button !== false && (
+            {showComments && (
               <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
                 <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
                   <MessageCircle size={16} className="text-white" />
@@ -2495,7 +2503,7 @@ export const ModalPreview = ({
                 <span className="text-[8px] font-semibold mt-0.5 drop-shadow">48</span>
               </button>
             )}
-            {m.show_share_button !== false && (
+            {showShare && (
               <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
                 <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
                   <Share2 size={16} className="text-white" />
@@ -2507,7 +2515,7 @@ export const ModalPreview = ({
 
           {/* Rodapé com Card e Linha de Progresso */}
           <div className="relative z-20 w-full p-3 space-y-2.5">
-            {m.show_product !== false && (
+            {showProduct && (
               <div 
                 className="backdrop-blur-md p-2.5 flex items-center gap-2.5 shadow-2xl transition hover:scale-[1.01]"
                 style={getCardStyle()}
@@ -2591,7 +2599,6 @@ export const ModalPreview = ({
             borderColor: m.border_color || colors.primary,
             borderWidth: `${parsedBorderWidth}px`,
             borderStyle: parsedBorderWidth > 0 ? 'solid' : 'none',
-            // Usando cssSize se estiver importado, caso contrário ajuste para: m.border_radius ? `${m.border_radius}px` : '1.25rem'
             borderRadius: m.border_radius ? `${m.border_radius}px` : '1.25rem',
           }}
         >
@@ -2626,7 +2633,7 @@ export const ModalPreview = ({
 
           {/* Botões Desktop */}
           <div className="absolute right-2.5 bottom-[88px] z-20 flex flex-col items-center gap-2.5">
-            {m.show_like_button !== false && (
+            {showLike && (
               <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
                 <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
                   <Heart size={13} className="text-white fill-white" />
@@ -2634,7 +2641,7 @@ export const ModalPreview = ({
                 <span className="text-[7px] font-semibold mt-0.5 drop-shadow">1.2k</span>
               </button>
             )}
-            {m.show_comments_button !== false && (
+            {showComments && (
               <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
                 <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
                   <MessageCircle size={13} className="text-white" />
@@ -2642,7 +2649,7 @@ export const ModalPreview = ({
                 <span className="text-[7px] font-semibold mt-0.5 drop-shadow">48</span>
               </button>
             )}
-            {m.show_share_button !== false && (
+            {showShare && (
               <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
                 <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
                   <Share2 size={13} className="text-white" />
@@ -2654,7 +2661,7 @@ export const ModalPreview = ({
 
           {/* Card Produto Desktop */}
           <div className="relative z-20 w-full p-2.5 space-y-2">
-            {m.show_product !== false && (
+            {showProduct && (
               <div 
                 className="backdrop-blur-md p-2 flex items-center gap-2 shadow-2xl transition hover:scale-[1.01]"
                 style={getCardStyle()}
@@ -2671,7 +2678,6 @@ export const ModalPreview = ({
                     className="font-bold truncate"
                     style={{ 
                       color: m.product_card_name_color || '#0F172A',
-                      // Reduz ligeiramente a fonte no mock de desktop para caber na visualização menor
                       fontSize: getFontSize(m.product_card_name_size, 9, 0.8) 
                     }}
                   >
