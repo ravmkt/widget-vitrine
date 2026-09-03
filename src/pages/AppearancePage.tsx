@@ -1849,18 +1849,17 @@ const CarouselPreview = ({
   const pCardPriceSize = Number(carousel?.product_card_price_size ?? 8);
   const pCardPriceColor = carousel?.product_card_price_color || colors?.primary || '#0094EB';
 
-  // MATEMÁTICA DE LARGURA
   const cw = containerWidth || (isMobile ? 320 : 850);
   
-  // Mobile: Usa 60% da tela para deixar 20% sobrando para as pontas (20-60-20 perfeito)
-  // Desktop: Divide a tela pelos Itens Visíveis descontando os vãos, garantindo 100% de preenchimento.
+  // MATEMÁTICA DE LARGURA PERFEITA
+  // Mobile: Crava em exatos 60%. Isso garante a regra do "20-60-20" e exibe no máximo 3 vídeos.
+  // Desktop: Preenche 100% dividindo pelos itens visíveis descontando vãos.
   const baseItemWidth = isMobile
-    ? cw * 0.6
+    ? cw * 0.6 
     : Math.max(40, (cw - (spacingNum * (visibleItems - 1))) / visibleItems);
 
   const step = baseItemWidth + spacingNum;
 
-  // Autoplay Inteligente: Apenas roda os vídeos que estão fisicamente na tela
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
@@ -1876,7 +1875,6 @@ const CarouselPreview = ({
     });
   }, [carousel?.autoplay_videos, trackIndex, isMobile, visibleItems]);
 
-  // Handlers de Drag (Arrasto)
   const handleDragStart = (clientX: number) => {
     setNoTransition(true);
     setDragStartX(clientX);
@@ -1907,7 +1905,6 @@ const CarouselPreview = ({
         </h4>
       )}
 
-      {/* Container interativo */}
       <div
         className="relative w-full cursor-grab active:cursor-grabbing touch-pan-y"
         onMouseDown={e => handleDragStart(e.clientX)}
@@ -1922,7 +1919,7 @@ const CarouselPreview = ({
           className="flex items-start"
           style={{
             gap: `${spacingNum}px`,
-            // Posicionamento perfeito dependendo do dispositivo
+            // Posicionamento: Mobile centraliza perfeitamente nos 50% (20-60-20), Desktop alinha à esquerda
             transform: isMobile 
               ? `translateX(calc(50% - ${trackIndex * step + baseItemWidth / 2}px + ${dragOffset}px))`
               : `translateX(calc(-${trackIndex * step}px + ${dragOffset}px))`,
@@ -1930,7 +1927,6 @@ const CarouselPreview = ({
           }}
         >
           {trackVideos.map((videoSrc, i) => {
-            // Proporções exatas de altura
             let cardHeightStr = '100%';
             if (isCircle || shape === 'square') {
               cardHeightStr = `${baseItemWidth}px`;
@@ -1944,12 +1940,8 @@ const CarouselPreview = ({
               <div
                 key={i}
                 className="shrink-0 flex flex-col transition-all duration-300"
-                style={{
-                  width: `${baseItemWidth}px`,
-                  gap: '8px', // Espaçamento harmonioso caso o card do produto exista
-                }}
+                style={{ width: `${baseItemWidth}px`, gap: '8px' }}
               >
-                {/* DIV DO VÍDEO (Com border-box garantido) */}
                 <div
                   style={{
                     width: '100%',
@@ -1979,7 +1971,6 @@ const CarouselPreview = ({
                   )}
                 </div>
 
-                {/* CARD DO PRODUTO (Totalmente blindado) */}
                 {showProductCard && !isCircle && (
                   <div
                     className="w-full flex items-center gap-2 overflow-hidden pointer-events-none"
@@ -1992,10 +1983,7 @@ const CarouselPreview = ({
                     }}
                   >
                     <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-50">
-                      <img
-                        src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80"
-                        className="w-full h-full object-cover"
-                      />
+                      <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0 text-left">
                       <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-bold truncate">Calça Confort</p>
