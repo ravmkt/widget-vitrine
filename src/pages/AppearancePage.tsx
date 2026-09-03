@@ -1729,10 +1729,15 @@ const CarouselPreview = ({
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
   const isCircle = shape === 'circle';
 
-  // Prioriza o itemWidth calculado dinamicamente pelo Canvas de Preview desktop
-  const configuredWidth = (carousel as any).itemWidth ?? safeNumber(parseFloat(carousel.width || '120'), 120, 40);
-  const rawWidth = isMobile ? Math.min(configuredWidth * 0.75, 130) : configuredWidth;
-  const spacingNum = safeNumber(carousel.spacing || (carousel as any).gap, 12, 0);
+  // REGRA DE LARGURA CONFORME VIEWPORT (MOBILE VS DESKTOP)
+  const rawWidth = isMobile
+    ? 100 // Largura perfeitamente otimizada para encaixar 3 itens (1 centro + pontas) na tela de 275px do mobile
+    : (carousel as any).itemWidth ?? safeNumber(parseFloat(carousel.width || '120'), 120, 40);
+
+  const spacingNum = isMobile
+    ? 8   // Espaçamento otimizado para mobile
+    : safeNumber(carousel.spacing || (carousel as any).gap || (carousel as any).spacing, 12, 0);
+
   const step = rawWidth + spacingNum;
 
   const cardHeight = isCircle || shape === 'square'
@@ -1765,38 +1770,40 @@ const CarouselPreview = ({
   const pCardPriceSize = Number((carousel as any).product_card_price_size ?? 8);
   const pCardPriceColor = (carousel as any).product_card_price_color || colors.primary;
 
-  const visibleItems = safeNumber(carousel.visible_items, 4, 1);
-  const containerWidthPx = isMobile ? null : visibleItems * step - spacingNum;
+  const visibleItems = isMobile
+    ? 3
+    : Math.max(1, Number(carousel.visible_items || (carousel as any).visibleItems || 4));
+
+  // FORÇA O CONTAINER DESKTOP A SER EXATAMENTE OS 850PX PARA COLAR NAS BORDAS DA MOLDURA LARANJA
+  const containerWidthPx = isMobile ? null : 850;
 
   const loopWidth = len * step;
   const middleStart = Math.floor(REPEAT_TILES / 2) * loopWidth;
 
   // Mede o container e posiciona o scroll ANTES do primeiro paint (evita "pulo" visual no mobile)
-useLayoutEffect(() => {
-  const el = scrollRef.current;
-  if (!el) return;
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
 
-  const positionScroll = () => {
-    if (isMobile) {
-      const offset = (el.clientWidth - rawWidth) / 2;
-      setCenterOffset(offset);
-      el.scrollLeft = middleStart - offset;
-    } else {
-      el.scrollLeft = middleStart;
-    }
-  };
+    const positionScroll = () => {
+      if (isMobile) {
+        const offset = (el.clientWidth - rawWidth) / 2;
+        setCenterOffset(offset);
+        el.scrollLeft = middleStart - offset;
+      } else {
+        el.scrollLeft = middleStart;
+      }
+    };
 
-  // Medição inicial (pode estar incorreta se a transição do mockup ainda não terminou)
-  positionScroll();
-
-  // Recalcula quando o container estabilizar de fato (após transições/resize)
-  const observer = new ResizeObserver(() => {
     positionScroll();
-  });
-  observer.observe(el);
 
-  return () => observer.disconnect();
-}, [isMobile, rawWidth, middleStart]);
+    const observer = new ResizeObserver(() => {
+      positionScroll();
+    });
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, [isMobile, rawWidth, middleStart]);
 
   const teleportIfNeeded = () => {
     const el = scrollRef.current;
@@ -1827,7 +1834,7 @@ useLayoutEffect(() => {
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDown.current || !scrollRef.current) return;
     e.preventDefault();
-    const delta = e.pageX - startX.current; // 1:1, sem multiplicador (elimina os "pulinhos")
+    const delta = e.pageX - startX.current;
     scrollRef.current.scrollLeft = startScrollLeft.current - delta;
   };
 
