@@ -2454,7 +2454,11 @@ const ModalPreview = ({
   isMobile?: boolean;
 }) => {
   const { modal_config: m } = formData;
-  const borderW = safeNumber(m.border_width, 0, 0);
+  
+  // Ajuste na largura da borda (permite valor 0 corretamente)
+  const parsedBorderWidth = m.border_width !== undefined && m.border_width !== null && m.border_width !== '' 
+    ? Number(m.border_width) 
+    : 0;
 
   if (isMobile) {
     return (
@@ -2479,26 +2483,26 @@ const ModalPreview = ({
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90 pointer-events-none z-10" />
 
         {/* Header do Player (Notch Safe) */}
-        <div className="relative z-20 flex items-center justify-between p-3 pt-9">
+        <div className="relative z-20 flex items-center justify-between p-3 pt-8">
           {m.show_title && (
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm" />
               <div>
-                <h4 className="text-xs font-bold text-white drop-shadow">Calça Confort</h4>
+                <h4 className="text-xs font-bold text-white drop-shadow leading-tight">Calça Confort</h4>
                 <p className="text-[9px] text-white/70">Vidlytics Store</p>
               </div>
             </div>
           )}
           <button
             type="button"
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10"
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 transition-colors hover:bg-black/60"
           >
             <X size={14} />
           </button>
         </div>
 
-        {/* Botões de engajamento na Lateral (Simulado TikTok/Instagram) */}
-        <div className="absolute right-3 bottom-24 z-20 flex flex-col items-center gap-3.5">
+        {/* Botões de engajamento na Lateral */}
+        <div className="absolute right-3 bottom-[110px] z-20 flex flex-col items-center gap-3.5">
           <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
             <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
               <Heart size={16} className="text-white fill-white" />
@@ -2532,18 +2536,21 @@ const ModalPreview = ({
             <div className="flex-1 min-w-0">
               <h5 className="text-[11px] font-bold text-slate-900 truncate">Calça Confort Premium</h5>
               <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-[11px] font-black text-[#0091ff]">R$ 149,95</span>
+                <span className="text-[11px] font-black" style={{ color: colors.primary }}>R$ 149,95</span>
                 <span className="text-[9px] text-slate-400 line-through">R$ 199,90</span>
               </div>
             </div>
-            <button className="bg-[#0091ff] text-white text-[10px] font-black py-1.5 px-3 rounded-xl hover:bg-[#0070f3] transition shrink-0 shadow-sm shadow-[#0091ff]/10">
+            <button 
+              className="text-white text-[10px] font-black py-1.5 px-3 rounded-xl transition shrink-0 shadow-sm"
+              style={{ backgroundColor: colors.primary }}
+            >
               Comprar
             </button>
           </div>
 
           {/* Barra de progresso do vídeo */}
           <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full bg-[#0091ff] rounded-full w-2/3" />
+            <div className="h-full rounded-full w-2/3" style={{ backgroundColor: colors.primary }} />
           </div>
         </div>
       </div>
@@ -2571,15 +2578,15 @@ const ModalPreview = ({
       </div>
 
       {/* Overlay escuro com desfoque: simula o player abrindo no meio da tela do desktop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
         <div
-          className="relative h-[410px] w-[230px] overflow-hidden shadow-2xl shrink-0 bg-slate-900 flex flex-col justify-between"
+          className="relative h-full max-h-[410px] w-full max-w-[230px] overflow-hidden shadow-2xl shrink-0 bg-slate-900 flex flex-col justify-between"
           style={{
             color: '#FFFFFF',
             fontFamily: formData.font_family,
             borderColor: m.border_color || colors.primary,
-            borderWidth: `${borderW}px`,
-            borderStyle: borderW > 0 ? 'solid' : 'none',
+            borderWidth: `${parsedBorderWidth}px`,
+            borderStyle: parsedBorderWidth > 0 ? 'solid' : 'none',
             borderRadius: cssSize(m.border_radius, '1.25rem'),
           }}
         >
@@ -2602,21 +2609,21 @@ const ModalPreview = ({
               <div className="flex items-center gap-1.5">
                 <div className="w-5 h-5 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm" />
                 <div className="min-w-0">
-                  <h4 className="text-[10px] font-bold text-white drop-shadow truncate w-24">Calça Confort</h4>
+                  <h4 className="text-[10px] font-bold text-white drop-shadow truncate w-24 leading-tight">Calça Confort</h4>
                   <p className="text-[8px] text-white/70 truncate w-24">Vidlytics Store</p>
                 </div>
               </div>
             )}
             <button
               type="button"
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition-colors hover:bg-black/60"
             >
               <X size={12} />
             </button>
           </div>
 
-          {/* Botões de engajamento na Lateral (Simulado TikTok/Instagram) ajustados para Desktop */}
-          <div className="absolute right-2.5 bottom-20 z-20 flex flex-col items-center gap-2.5">
+          {/* Botões de engajamento na Lateral ajustados para Desktop */}
+          <div className="absolute right-2.5 bottom-[88px] z-20 flex flex-col items-center gap-2.5">
             <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
               <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
                 <Heart size={13} className="text-white fill-white" />
@@ -2650,18 +2657,21 @@ const ModalPreview = ({
               <div className="flex-1 min-w-0">
                 <h5 className="text-[9px] font-bold text-slate-900 truncate">Calça Confort Premium</h5>
                 <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[9px] font-black text-[#0091ff]">R$ 149,95</span>
+                  <span className="text-[9px] font-black" style={{ color: colors.primary }}>R$ 149,95</span>
                   <span className="text-[7px] text-slate-400 line-through">R$ 199,90</span>
                 </div>
               </div>
-              <button className="bg-[#0091ff] text-white text-[8px] font-black py-1 px-2 rounded-lg hover:bg-[#0070f3] transition shrink-0 shadow-sm shadow-[#0091ff]/10">
+              <button 
+                className="text-white text-[8px] font-black py-1 px-2 rounded-lg transition shrink-0 shadow-sm"
+                style={{ backgroundColor: colors.primary }}
+              >
                 Comprar
               </button>
             </div>
 
             {/* Barra de progresso do vídeo */}
             <div className="w-full h-0.5 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-[#0091ff] rounded-full w-2/3" />
+              <div className="h-full rounded-full w-2/3" style={{ backgroundColor: colors.primary }} />
             </div>
           </div>
         </div>
