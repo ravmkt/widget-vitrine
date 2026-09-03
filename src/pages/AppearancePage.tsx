@@ -1995,10 +1995,14 @@ const DynamicCarouselPreview = ({
   const titleSizeVal = Number(carousel?.title_font_size ?? 14);
   const isBold = carousel?.title_bold ?? true;
 
-  // Prioriza o itemWidth calculado dinamicamente pelo Canvas de Preview desktop
-  const configuredWidth = Number(carousel?.itemWidth ?? carousel?.width ?? 90);
-  const rawWidth = isMobile ? Math.min(configuredWidth * 0.75, 115) : configuredWidth;
-  const spacingNum = Number(carousel?.spacing ?? carousel?.gap ?? 8);
+  // REGRA DE LARGURA CONFORME VIEWPORT (MOBILE VS DESKTOP)
+  const rawWidth = isMobile
+    ? 95 // Largura ideal fixa para manter visual snap "peek" de 3 itens no celular (275px)
+    : Number(carousel?.itemWidth ?? carousel?.width ?? 90);
+
+  const spacingNum = isMobile
+    ? 8  // Espaçamento otimizado para o celular
+    : Number(carousel?.spacing ?? carousel?.gap ?? 8);
 
   const playInactive = carousel?.autoplay_videos ?? true;
   const showPlayIcon = carousel?.show_play_icon ?? true;
@@ -2128,8 +2132,8 @@ const DynamicCarouselPreview = ({
                       <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0 text-left">
-                      <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-extrabold truncate">Calça Confort</p>
-                      <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 154,95</p>
+                      <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-bold truncate">Calça Confort</p>
+                      <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 149,95</p>
                     </div>
                   </div>
                 )}
