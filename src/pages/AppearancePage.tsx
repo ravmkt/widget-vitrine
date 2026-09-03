@@ -2874,17 +2874,13 @@ const PreviewCard = ({
                           isMobile={false}
                         />
                       )}
-                      {activeTab === 'dynamic_carousel' && (
-                        <DynamicCarouselPreview
-                          carousel={{
-                            ...dynamicCarousel,
-                            // Suporta propriedades snake_case e camelCase de forma segura
-                            itemWidth: Math.floor((850 - (Number(dynamicCarousel.spacing || dynamicCarousel.gap || 16) * (Number(dynamicCarousel.visible_items || dynamicCarousel.visibleItems || 3) - 1))) / Number(dynamicCarousel.visible_items || dynamicCarousel.visibleItems || 3))
-                          }}
-                          colors={colors}
-                          isMobile={false}
-                        />
-                      )}
+{activeTab === 'dynamic_carousel' && (
+  <DynamicCarouselPreview
+    carousel={dynamicCarousel}
+    colors={colors}
+    isMobile={true}
+  />
+)}
                       {activeTab === 'grid' && <GridPreview grid={grid} colors={colors} isMobile={true} />}
                     </div>
                   )}
