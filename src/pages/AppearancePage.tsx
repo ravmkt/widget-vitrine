@@ -2014,59 +2014,71 @@ const DynamicCarouselPreview = ({
   isMobile?: boolean;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(isMobile ? 320 : 850);
+
+  // Monitora a largura real do contêiner para eliminar espaços sobrando nas laterais
+  useEffect(() => {
+    const obs = new ResizeObserver(entries => {
+      if (entries[0]) {
+        setContainerWidth(entries[0].contentRect.width);
+      }
+    });
+    if (containerRef.current) {
+      obs.observe(containerRef.current);
+    }
+    return () => obs.disconnect();
+  }, []);
+
   const videoSources = DEMO_PREVIEW_VIDEOS;
   const len = videoSources.length;
 
-  // Multiplicador de blocos aumentado de 9 para 12 para cobrir perfeitamente o desktop (850px) de ponta a ponta
-  const REPEAT_TILES = 12;
+  const REPEAT_TILES = 16;
   const middleTile = Math.floor(REPEAT_TILES / 2);
   const baseIndex = middleTile * len;
   const trackVideos = Array.from({ length: REPEAT_TILES }, () => videoSources).flat();
 
   const [trackIndex, setTrackIndex] = useState(baseIndex);
   const [noTransition, setNoTransition] = useState(false);
+  
+  // Estados para gerenciar o Drag/Swipe
+  const [dragStartX, setDragStartX] = useState<number | null>(null);
+  const [dragOffset, setDragOffset] = useState(0);
 
+  // Autoplay da trilha
   useEffect(() => {
     const delay = Number(carousel?.autoplay_delay) || 5000;
-    if (delay <= 0) return;
+    if (delay <= 0 || dragStartX !== null) return; // Pausa o autoplay durante o drag
     const interval = setInterval(() => {
       setTrackIndex((prev) => prev + 1);
     }, delay);
     return () => clearInterval(interval);
-  }, [carousel?.autoplay_delay]);
+  }, [carousel?.autoplay_delay, dragStartX]);
 
+  // Loop infinito
   useEffect(() => {
-    if (trackIndex - baseIndex >= len) {
+    if (trackIndex - baseIndex >= len || trackIndex - baseIndex <= -len) {
       const t = setTimeout(() => {
         setNoTransition(true);
-        setTrackIndex((prev) => prev - len);
+        setTrackIndex(baseIndex + ((trackIndex - baseIndex) % len));
         requestAnimationFrame(() => {
           requestAnimationFrame(() => setNoTransition(false));
         });
-      }, 800);
+      }, 600);
       return () => clearTimeout(t);
     }
   }, [trackIndex, baseIndex, len]);
 
-  const shape = carousel?.shape || 'portrait';
+  const shape = normalizeWidgetShape(carousel?.shape, 'portrait');
   const isCircle = shape === 'circle';
   const showTitle = carousel?.show_title ?? false;
   const titleText = carousel?.title_text ?? 'Destaques';
   const titleAlign = carousel?.title_align ?? 'center';
   const titleSizeVal = Number(carousel?.title_font_size ?? 14);
   const isBold = carousel?.title_bold ?? true;
+  const objectFit = carousel?.object_fit || 'cover';
 
-  // LARGURA ADAPTATIVA DE ALTA PRECISÃO
-  // No mobile, fixamos em 92px para desenhar o snap "peek" de 3 itens de forma consistente
-  // No desktop, respeitamos dinamicamente a largura definida pelo usuário no slider do painel
-  const rawWidth = isMobile
-    ? 92 
-    : Number(carousel?.itemWidth ?? carousel?.width ?? 90);
-
-  const spacingNum = isMobile
-    ? 8  // Espaçamento responsivo e refinado para o celular
-    : Number(carousel?.spacing ?? carousel?.gap ?? 8);
-
+  const spacingNum = Number(carousel?.spacing ?? 8) || 0;
   const playInactive = carousel?.autoplay_videos ?? true;
   const showPlayIcon = carousel?.show_play_icon ?? true;
   const scaleHighlight = carousel?.highlight_enlarge_active ?? false;
@@ -2076,20 +2088,19 @@ const DynamicCarouselPreview = ({
   const showProductCard = carousel?.show_product ?? false;
   const pCardBg = carousel?.product_card_bg || '#FFFFFF';
   const pCardBorderColor = carousel?.product_card_border_color || '#E2E8F0';
-  const pCardBorderWidth = Number(carousel?.product_card_border_width ?? 1);
-  const pCardBorderRadius = Number(carousel?.product_card_border_radius ?? 12);
+  const pCardBorderWidth = Number(carousel?.product_card_border_width ?? 1) || 0;
+  const pCardBorderRadius = Number(carousel?.product_card_border_radius ?? 12) || 0;
   const pCardNameSize = Number(carousel?.product_card_name_size ?? 9);
   const pCardNameColor = carousel?.product_card_name_color || '#0F172A';
   const pCardPriceSize = Number(carousel?.product_card_price_size ?? 8);
   const pCardPriceColor = carousel?.product_card_price_color || colors?.primary || '#0094EB';
 
-  const visibleItems = isMobile
-    ? 3
-    : Math.max(1, Number(carousel?.visible_items ?? carousel?.visibleItems ?? 4));
+  const visibleItems = Math.max(1, Number(carousel?.visible_items ?? 4));
 
-  const borderWidth = Number(carousel?.border_style ?? 0);
+  const rawBorderWidth = carousel?.border_width ?? carousel?.border_style;
+  const borderWidth = rawBorderWidth !== undefined && rawBorderWidth !== '' ? Number(rawBorderWidth) : 0;
   const borderColor = carousel?.border_color || colors?.primary || '#0094EB';
-  const borderRadiusNum = Number(carousel?.border_radius ?? 12);
+  const borderRadiusNum = Number(carousel?.border_radius ?? 12) || 0;
   const borderRadius = isCircle ? '50%' : `${borderRadiusNum}px`;
 
   useEffect(() => {
@@ -2105,6 +2116,40 @@ const DynamicCarouselPreview = ({
     });
   }, [playInactive, trackIndex]);
 
+  // --- HANDLERS DE ARRASTO (DRAG) ---
+  const handleDragStart = (clientX: number) => {
+    setNoTransition(true);
+    setDragStartX(clientX);
+  };
+
+  const handleDragMove = (clientX: number) => {
+    if (dragStartX === null) return;
+    setDragOffset(clientX - dragStartX);
+  };
+
+  const handleDragEnd = () => {
+    if (dragStartX === null) return;
+    if (dragOffset > 50) {
+      setTrackIndex(prev => prev - 1);
+    } else if (dragOffset < -50) {
+      setTrackIndex(prev => prev + 1);
+    }
+    setDragStartX(null);
+    setDragOffset(0);
+    setNoTransition(false);
+  };
+
+  const cw = containerWidth || (isMobile ? 320 : 850);
+  
+  // MATEMÁTICA DE PREENCHIMENTO E RESPONSIVIDADE
+  // Mobile: Usa 50% da tela para base. Quando ganha o destaque de 1.2x, vira 60% exatos, sobrando 20% pras laterais!
+  // Desktop: Divide a tela limpa pela quantidade de itens visíveis, descontando os espaços. Ocupa 100%.
+  const baseItemWidth = isMobile 
+    ? cw * 0.5 
+    : Math.max(80, (cw - (spacingNum * (visibleItems - 1))) / visibleItems);
+
+  const step = baseItemWidth + spacingNum;
+
   const titleStyle: React.CSSProperties = {
     fontSize: `${titleSizeVal}px`,
     fontWeight: isBold ? 'bold' : 'normal',
@@ -2115,70 +2160,76 @@ const DynamicCarouselPreview = ({
     titleAlign === 'right' ? 'text-right w-full px-4' :
     'text-center w-full';
 
-  // Sombra com maior suavidade de desfoque
   const shadowStyle = applyShadow ? '0 12px 28px -5px rgba(0,0,0,0.45), 0 8px 12px -6px rgba(0,0,0,0.15)' : 'none';
-  const desktopCanvasWidth = 850;
-  const desktopScale = isMobile ? 1 : Math.min(1, desktopCanvasWidth / Math.max(1, visibleItems * (rawWidth + spacingNum)));
-  const scaledRawWidth = rawWidth * desktopScale;
-  const scaledStep = scaledRawWidth + spacingNum * desktopScale;
-  const scaledCardHeight = isCircle || shape === 'square'
-    ? scaledRawWidth
-    : shape === 'landscape'
-      ? Math.round(scaledRawWidth * (9 / 16))
-      : Math.round(scaledRawWidth * (16 / 9));
-  const step = scaledStep;
 
   return (
-    <div className="w-full py-3 space-y-3 overflow-visible">
+    <div className="w-full py-3 space-y-3 overflow-hidden select-none" ref={containerRef}>
       {showTitle && (
         <div className={titleAlignClass}>
-          <h4 style={titleStyle} className={cn(isMobile ? 'text-slate-800' : 'text-slate-100', 'tracking-wider')}>{titleText}</h4>
+          <h4 style={titleStyle} className={isMobile ? 'text-slate-800' : 'text-slate-100 uppercase tracking-wider'}>{titleText}</h4>
         </div>
       )}
 
-      {/* 
-        🔥 CORREÇÃO DO CLIPPING (OVERFLOW):
-        Substituímos o overflowY inconsistente e adicionamos paddings adequados (pt-8 e pb-24).
-        Isso garante que o zoom do card ativo e as sombras tenham espaço físico de sobra para renderizar sem sofrer cortes.
-      */}
-      <div className="relative w-full pt-8 pb-24 overflow-hidden">
+      {/* Container de swipe com paddings pra não cortar a sombra */}
+      <div 
+        className="relative w-full py-6 cursor-grab active:cursor-grabbing touch-pan-y"
+        onMouseDown={e => handleDragStart(e.clientX)}
+        onMouseMove={e => handleDragMove(e.clientX)}
+        onMouseUp={handleDragEnd}
+        onMouseLeave={handleDragEnd}
+        onTouchStart={e => handleDragStart(e.touches[0].clientX)}
+        onTouchMove={e => handleDragMove(e.touches[0].clientX)}
+        onTouchEnd={handleDragEnd}
+      >
         <div
           className="flex items-center"
           style={{
-            gap: `${spacingNum * desktopScale}px`,
-            transform: `translateX(calc(50% - ${trackIndex * step + scaledRawWidth / 2}px)) scale(${desktopScale})`,
-            transformOrigin: 'center center',
-            transition: noTransition ? 'none' : 'transform 0.8s cubic-bezier(0.65, 0, 0.35, 1)',
+            gap: `${spacingNum}px`,
+            // Track matemática milimetricamente ajustada
+            transform: `translateX(calc(50% - ${trackIndex * step + baseItemWidth / 2}px + ${dragOffset}px))`,
+            transition: noTransition || dragStartX !== null ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
           }}
         >
           {trackVideos.map((videoSrc, i) => {
             const isAct = i === trackIndex;
-            const cardHeight = isCircle || shape === 'square'
-              ? `${scaledRawWidth}px`
-              : shape === 'landscape'
-                ? `${Math.round(scaledRawWidth * (9 / 16))}px`
-                : `${Math.round(scaledRawWidth * (16 / 9))}px`;
+            
+            // Altura proporcional
+            let cardHeightStr = '100%';
+            if (isCircle || shape === 'square') {
+              cardHeightStr = `${baseItemWidth}px`;
+            } else if (shape === 'landscape') {
+              cardHeightStr = `${Math.round(baseItemWidth * (9 / 16))}px`;
+            } else {
+              cardHeightStr = `${Math.round(baseItemWidth * (16 / 9))}px`;
+            }
+
+            // Controle da ampliação
+            let activeScale = scaleHighlight ? (isMobile ? 1.2 : 1.05) : 1;
+            let inactiveScale = scaleHighlight ? (isMobile ? 0.85 : 0.95) : 1;
+            const scaleVal = isAct ? activeScale : inactiveScale;
 
             return (
               <div
                 key={i}
-                className="shrink-0 relative transition-all duration-300"
+                className="shrink-0 flex flex-col items-center transition-all duration-500"
                 style={{
-                  width: `${scaledRawWidth}px`,
-                  height: cardHeight,
-                  transform: isAct && scaleHighlight ? 'scale(1.1)' : 'scale(0.95)',
+                  width: `${baseItemWidth}px`,
+                  transform: `scale(${scaleVal})`,
                   zIndex: isAct ? 10 : 1,
+                  gap: '12px', // Desgruda o card do produto com margem flex limpa
                 }}
               >
                 <div
                   style={{
-                    width: `${scaledRawWidth}px`,
-                    height: cardHeight,
+                    width: '100%',
+                    height: cardHeightStr,
                     borderRadius,
                     border: `${borderWidth}px solid ${borderColor}`,
                     boxShadow: isAct ? shadowStyle : 'none',
+                    opacity: !isAct && desaturate ? 0.6 : 1,
+                    filter: !isAct && desaturate ? 'grayscale(100%)' : 'none',
                   }}
-                  className="relative overflow-hidden bg-slate-950 transition-all duration-300 box-border"
+                  className="relative overflow-hidden bg-slate-950 transition-all duration-500 box-border pointer-events-none"
                 >
                   <video
                     ref={el => { if (el) videoRefs.current.set(i, el); else videoRefs.current.delete(i); }}
@@ -2187,28 +2238,28 @@ const DynamicCarouselPreview = ({
                     muted
                     playsInline
                     autoPlay={isAct ? true : playInactive}
-                    style={{ filter: !isAct && desaturate ? 'grayscale(100%) opacity(0.55)' : 'none' }}
-                    className="w-full h-full object-cover transition-all duration-500"
+                    style={{ objectFit: objectFit as any }}
+                    className="w-full h-full"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40" />
                   {isAct && showPlayIcon && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
-                        <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-white/95 shadow-md flex items-center justify-center">
+                        <Play size={14} className="text-slate-900 fill-slate-900 ml-1" />
                       </div>
                     </div>
                   )}
                 </div>
 
+                {/* Card de Produto */}
                 {showProductCard && !isCircle && (
                   <div
-                    className="absolute left-0 w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border"
+                    className="w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border pointer-events-none"
                     style={{
-                      top: `calc(${scaledCardHeight} + ${8 * desktopScale}px)`,
                       backgroundColor: pCardBg,
                       border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
                       borderRadius: `${pCardBorderRadius}px`,
-                      padding: `${6 * desktopScale}px`,
+                      padding: '8px',
                     }}
                   >
                     <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
