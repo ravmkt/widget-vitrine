@@ -2032,6 +2032,10 @@ const DynamicCarouselPreview = ({
   const pCardPriceSize = Number(carousel?.product_card_price_size ?? 8);
   const pCardPriceColor = carousel?.product_card_price_color || colors?.primary || '#0094EB';
 
+  const visibleItems = isMobile
+    ? 3
+    : Math.max(1, Number(carousel?.visible_items ?? carousel?.visibleItems ?? 4));
+
   const borderWidth = Number(carousel?.border_style ?? 0);
   const borderColor = carousel?.border_color || colors?.primary || '#0094EB';
   const borderRadiusNum = Number(carousel?.border_radius ?? 12);
