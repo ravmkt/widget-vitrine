@@ -1609,6 +1609,13 @@ const getShapeLabel = (shape: WidgetShape) => {
 // ──────────────────── PREVIEWS (SANDBOX REAL) ────────────────────
 
 // Função utilitária mockada (ajuste conforme o seu arquivo original se necessário)
+const normalizeWidgetShape = (val: string, fallback: string) => val || fallback;
+const DEMO_PREVIEW_VIDEOS = [
+  'https://cdn.coverr.co/videos/coverr-shopping-in-a-store-5244/1080p.mp4',
+  'https://cdn.coverr.co/videos/coverr-woman-shopping-for-clothes-5243/1080p.mp4',
+  'https://cdn.coverr.co/videos/coverr-clothes-shopping-5251/1080p.mp4',
+  'https://cdn.coverr.co/videos/coverr-shopping-in-a-store-5244/1080p.mp4',
+];
 
 export const FloatingPreview = ({
   floating,
@@ -4198,4 +4205,3 @@ const AppearancePage = () => {
 };
 
 export default AppearancePage;
-
