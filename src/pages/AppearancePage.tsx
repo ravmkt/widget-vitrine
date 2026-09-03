@@ -2025,22 +2025,16 @@ const DynamicCarouselPreview = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(isMobile ? 320 : 850);
 
-  // Monitora a largura real do contêiner para eliminar espaços sobrando nas laterais
   useEffect(() => {
     const obs = new ResizeObserver(entries => {
-      if (entries[0]) {
-        setContainerWidth(entries[0].contentRect.width);
-      }
+      if (entries[0]) setContainerWidth(entries[0].contentRect.width);
     });
-    if (containerRef.current) {
-      obs.observe(containerRef.current);
-    }
+    if (containerRef.current) obs.observe(containerRef.current);
     return () => obs.disconnect();
   }, []);
 
   const videoSources = DEMO_PREVIEW_VIDEOS;
   const len = videoSources.length;
-
   const REPEAT_TILES = 16;
   const middleTile = Math.floor(REPEAT_TILES / 2);
   const baseIndex = middleTile * len;
@@ -2048,22 +2042,16 @@ const DynamicCarouselPreview = ({
 
   const [trackIndex, setTrackIndex] = useState(baseIndex);
   const [noTransition, setNoTransition] = useState(false);
-  
-  // Estados para gerenciar o Drag/Swipe
   const [dragStartX, setDragStartX] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
 
-  // Autoplay da trilha
   useEffect(() => {
     const delay = Number(carousel?.autoplay_delay) || 5000;
-    if (delay <= 0 || dragStartX !== null) return; // Pausa o autoplay durante o drag
-    const interval = setInterval(() => {
-      setTrackIndex((prev) => prev + 1);
-    }, delay);
+    if (delay <= 0 || dragStartX !== null) return;
+    const interval = setInterval(() => setTrackIndex((prev) => prev + 1), delay);
     return () => clearInterval(interval);
   }, [carousel?.autoplay_delay, dragStartX]);
 
-  // Loop infinito
   useEffect(() => {
     if (trackIndex - baseIndex >= len || trackIndex - baseIndex <= -len) {
       const t = setTimeout(() => {
@@ -2124,24 +2112,18 @@ const DynamicCarouselPreview = ({
     });
   }, [playInactive, trackIndex]);
 
-  // --- HANDLERS DE ARRASTO (DRAG) ---
   const handleDragStart = (clientX: number) => {
     setNoTransition(true);
     setDragStartX(clientX);
   };
-
   const handleDragMove = (clientX: number) => {
     if (dragStartX === null) return;
     setDragOffset(clientX - dragStartX);
   };
-
   const handleDragEnd = () => {
     if (dragStartX === null) return;
-    if (dragOffset > 50) {
-      setTrackIndex(prev => prev - 1);
-    } else if (dragOffset < -50) {
-      setTrackIndex(prev => prev + 1);
-    }
+    if (dragOffset > 50) setTrackIndex(prev => prev - 1);
+    else if (dragOffset < -50) setTrackIndex(prev => prev + 1);
     setDragStartX(null);
     setDragOffset(0);
     setNoTransition(false);
@@ -2150,24 +2132,16 @@ const DynamicCarouselPreview = ({
   const cw = containerWidth || (isMobile ? 320 : 850);
   
   // MATEMÁTICA DE PREENCHIMENTO E RESPONSIVIDADE
-  // Mobile: Usa 50% da tela para base. Quando ganha o destaque de 1.2x, vira 60% exatos, sobrando 20% pras laterais!
-  // Desktop: Divide a tela limpa pela quantidade de itens visíveis, descontando os espaços. Ocupa 100%.
+  // Mobile: Crava em 60% para bater na mesma regra 20-60-20 do estático
+  // Desktop: Divide perfeitamente para preencher 100% da largura
   const baseItemWidth = isMobile 
-    ? cw * 0.5 
+    ? cw * 0.6 
     : Math.max(80, (cw - (spacingNum * (visibleItems - 1))) / visibleItems);
 
   const step = baseItemWidth + spacingNum;
 
-  const titleStyle: React.CSSProperties = {
-    fontSize: `${titleSizeVal}px`,
-    fontWeight: isBold ? 'bold' : 'normal',
-  };
-
-  const titleAlignClass =
-    titleAlign === 'left' ? 'text-left w-full px-4' :
-    titleAlign === 'right' ? 'text-right w-full px-4' :
-    'text-center w-full';
-
+  const titleStyle: React.CSSProperties = { fontSize: `${titleSizeVal}px`, fontWeight: isBold ? 'bold' : 'normal' };
+  const titleAlignClass = titleAlign === 'left' ? 'text-left w-full px-4' : titleAlign === 'right' ? 'text-right w-full px-4' : 'text-center w-full';
   const shadowStyle = applyShadow ? '0 12px 28px -5px rgba(0,0,0,0.45), 0 8px 12px -6px rgba(0,0,0,0.15)' : 'none';
 
   return (
@@ -2178,7 +2152,6 @@ const DynamicCarouselPreview = ({
         </div>
       )}
 
-      {/* Container de swipe com paddings pra não cortar a sombra */}
       <div 
         className="relative w-full py-6 cursor-grab active:cursor-grabbing touch-pan-y"
         onMouseDown={e => handleDragStart(e.clientX)}
@@ -2193,39 +2166,29 @@ const DynamicCarouselPreview = ({
           className="flex items-center"
           style={{
             gap: `${spacingNum}px`,
-            // Track matemática milimetricamente ajustada
+            // Sempre centralizado para manter o efeito de coverflow dinâmico
             transform: `translateX(calc(50% - ${trackIndex * step + baseItemWidth / 2}px + ${dragOffset}px))`,
             transition: noTransition || dragStartX !== null ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
           }}
         >
           {trackVideos.map((videoSrc, i) => {
             const isAct = i === trackIndex;
-            
-            // Altura proporcional
             let cardHeightStr = '100%';
-            if (isCircle || shape === 'square') {
-              cardHeightStr = `${baseItemWidth}px`;
-            } else if (shape === 'landscape') {
-              cardHeightStr = `${Math.round(baseItemWidth * (9 / 16))}px`;
-            } else {
-              cardHeightStr = `${Math.round(baseItemWidth * (16 / 9))}px`;
-            }
+            if (isCircle || shape === 'square') cardHeightStr = `${baseItemWidth}px`;
+            else if (shape === 'landscape') cardHeightStr = `${Math.round(baseItemWidth * (9 / 16))}px`;
+            else cardHeightStr = `${Math.round(baseItemWidth * (16 / 9))}px`;
 
-            // Controle da ampliação
-            let activeScale = scaleHighlight ? (isMobile ? 1.2 : 1.05) : 1;
-            let inactiveScale = scaleHighlight ? (isMobile ? 0.85 : 0.95) : 1;
+            // O SEGREDINHO PARA PREENCHER O DESKTOP:
+            // No Desktop, os inativos recebem '1' (não encolhem), então eles preenchem toda a largura da borda até a borda
+            let activeScale = scaleHighlight ? (isMobile ? 1.15 : 1.05) : 1;
+            let inactiveScale = scaleHighlight ? (isMobile ? 0.85 : 1) : 1;
             const scaleVal = isAct ? activeScale : inactiveScale;
 
             return (
               <div
                 key={i}
                 className="shrink-0 flex flex-col items-center transition-all duration-500"
-                style={{
-                  width: `${baseItemWidth}px`,
-                  transform: `scale(${scaleVal})`,
-                  zIndex: isAct ? 10 : 1,
-                  gap: '12px', // Desgruda o card do produto com margem flex limpa
-                }}
+                style={{ width: `${baseItemWidth}px`, transform: `scale(${scaleVal})`, zIndex: isAct ? 10 : 1, gap: '12px' }}
               >
                 <div
                   style={{
@@ -2259,7 +2222,6 @@ const DynamicCarouselPreview = ({
                   )}
                 </div>
 
-                {/* Card de Produto */}
                 {showProductCard && !isCircle && (
                   <div
                     className="w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border pointer-events-none"
