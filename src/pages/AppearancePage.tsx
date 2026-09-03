@@ -1988,9 +1988,10 @@ const DynamicCarouselPreview = ({
   const titleSizeVal = Number(carousel?.title_font_size ?? 14);
   const isBold = carousel?.title_bold ?? true;
 
-  const configuredWidth = Number(carousel?.width ?? 90);
+  // Prioriza o itemWidth calculado dinamicamente pelo Canvas de Preview desktop
+  const configuredWidth = Number(carousel?.itemWidth ?? carousel?.width ?? 90);
   const rawWidth = isMobile ? Math.min(configuredWidth * 0.75, 115) : configuredWidth;
-  const spacingNum = Number(carousel?.spacing ?? 8);
+  const spacingNum = Number(carousel?.spacing ?? carousel?.gap ?? 8);
 
   const playInactive = carousel?.autoplay_videos ?? true;
   const showPlayIcon = carousel?.show_play_icon ?? true;
