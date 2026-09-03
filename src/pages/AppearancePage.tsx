@@ -1755,6 +1755,8 @@ export const FloatingPreview = ({
 };
 
 
+import { Play } from 'lucide-react'; // Certifique-se de importar o ícone caso não esteja
+
 export const CarouselPreview = ({
   carousel,
   colors,
@@ -1787,13 +1789,7 @@ export const CarouselPreview = ({
   const [dragStartX, setDragStartX] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
 
-  useEffect(() => {
-    const delay = Number(carousel?.autoplay_delay) || 5000;
-    if (delay <= 0 || dragStartX !== null) return;
-    const interval = setInterval(() => setTrackIndex((prev) => prev + 1), delay);
-    return () => clearInterval(interval);
-  }, [carousel?.autoplay_delay, dragStartX]);
-
+  // Loop infinito ao arrastar para as bordas para criar o efeito de carrossel contínuo
   useEffect(() => {
     if (trackIndex - baseIndex >= len || trackIndex - baseIndex <= -len) {
       const t = setTimeout(() => {
@@ -1805,11 +1801,9 @@ export const CarouselPreview = ({
     }
   }, [trackIndex, baseIndex, len]);
 
-  // --- CORREÇÃO PRINCIPAL DE LAYOUT ---
   const cw = containerWidth || (isMobile ? 320 : 850);
   
-  // TRAVA DE SEGURANÇA: Se o container tem menos de 480px (mockup celular), FORÇA layout mobile, 
-  // mesmo que o componente pai esqueça de passar isMobile={true}.
+  // TRAVA DE SEGURANÇA para forçar mobile no painel
   const isMobileView = isMobile || cw <= 480;
 
   const shape = normalizeWidgetShape(carousel?.shape, 'portrait');
@@ -1817,7 +1811,6 @@ export const CarouselPreview = ({
   const showTitle = carousel?.show_title ?? false;
   const spacingNum = Number(carousel?.spacing ?? carousel?.gap ?? 12) || 0;
   
-  // A quantidade configurada no painel (ex: 4) SÓ afeta o Desktop agora.
   const visibleItemsDesktop = Math.max(1, Number(carousel?.visible_items ?? carousel?.visibleItems ?? 4));
 
   const rawBorderWidth = carousel?.border_width ?? carousel?.border_style;
@@ -1826,18 +1819,23 @@ export const CarouselPreview = ({
   const borderRadiusNum = Number(carousel?.border_radius) || 12;
   const borderRadius = isCircle ? '50%' : `${borderRadiusNum}px`;
 
-  // No Mobile View, o item ocupa exatos 60% da tela. 
-  // Isso garante a matemática perfeita: 1 inteiro central + 2 vazando nas bordas (20% cada).
+  // LARGURA: 60% no mobile (1 no meio, 2 nas bordas cortados). Sem redimensionamento (mesmo tamanho).
   const baseItemWidth = isMobileView
     ? cw * 0.60 
     : Math.max(40, (cw - (spacingNum * (visibleItemsDesktop - 1))) / visibleItemsDesktop);
 
   const step = baseItemWidth + spacingNum;
 
+  // Lógica para tocar os vídeos visíveis na tela
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
-      const isVisible = isMobileView ? (i === trackIndex) : (i >= trackIndex && i < trackIndex + visibleItemsDesktop);
+      
+      // No mobile, os 3 itens na tela (centro, esq, dir) tocam vídeo. No desktop, os "visibleItems" tocam.
+      const isVisible = isMobileView 
+        ? (i >= trackIndex - 1 && i <= trackIndex + 1) 
+        : (i >= trackIndex && i < trackIndex + visibleItemsDesktop);
+        
       if (isVisible && (carousel?.autoplay_videos ?? true)) {
         video.play().catch(() => {});
       } else {
@@ -1855,7 +1853,6 @@ export const CarouselPreview = ({
     setDragStartX(null); setDragOffset(0); setNoTransition(false);
   };
 
-  // Cálculo seguro do translateX usando pixels em vez de porcentagem para não quebrar o flex container
   const transformStyle = isMobileView 
     ? `translateX(${ (cw / 2) - ((trackIndex * step) + (baseItemWidth / 2)) + dragOffset }px)`
     : `translateX(${ -(trackIndex * step) + dragOffset }px)`;
@@ -1890,9 +1887,6 @@ export const CarouselPreview = ({
           }}
         >
           {trackVideos.map((videoSrc, i) => {
-            const isCenterMobile = isMobileView && i === trackIndex;
-            const isInactiveMobile = isMobileView && !isCenterMobile;
-
             let cardHeightStr = isCircle || shape === 'square' 
               ? `${baseItemWidth}px` 
               : shape === 'landscape' 
@@ -1905,9 +1899,8 @@ export const CarouselPreview = ({
                 className="shrink-0 flex flex-col transition-all duration-300"
                 style={{ 
                   width: `${baseItemWidth}px`, 
-                  gap: '8px',
-                  transform: isInactiveMobile ? 'scale(0.92)' : 'scale(1)',
-                  opacity: isInactiveMobile ? 0.9 : 1
+                  gap: '8px' 
+                  // Removidos 'scale(0.92)' e opacidades (todos iguais agora)
                 }}
               >
                 <div
@@ -1915,10 +1908,10 @@ export const CarouselPreview = ({
                     width: '100%',
                     height: cardHeightStr,
                     borderRadius,
-                    border: isInactiveMobile ? `${borderWidth}px solid transparent` : `${borderWidth}px solid ${borderColor}`,
+                    border: `${borderWidth}px solid ${borderColor}`, // Todos ganham a mesma borda
                     boxSizing: 'border-box'
                   }}
-                  className="relative overflow-hidden bg-slate-950 flex items-center justify-center shrink-0 pointer-events-none shadow-sm transition-all duration-300"
+                  className="relative overflow-hidden bg-slate-950 flex items-center justify-center shrink-0 pointer-events-none shadow-sm"
                 >
                   <video
                     ref={el => { if (el) videoRefs.current.set(i, el); else videoRefs.current.delete(i); }}
@@ -1930,11 +1923,9 @@ export const CarouselPreview = ({
                     className="w-full h-full pointer-events-none"
                   />
                   
-                  {isInactiveMobile && <div className="absolute inset-0 bg-black/60 z-10 transition-colors duration-300" />}
-                  
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none" />
                   
-                  {carousel?.show_play_icon !== false && !isInactiveMobile && (
+                  {carousel?.show_play_icon !== false && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                       <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
                         <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
@@ -1945,14 +1936,14 @@ export const CarouselPreview = ({
 
                 {carousel?.show_product && !isCircle && (
                   <div
-                    className="w-full flex items-center gap-2 overflow-hidden pointer-events-none transition-all duration-300"
+                    className="w-full flex items-center gap-2 overflow-hidden pointer-events-none"
                     style={{
                       backgroundColor: carousel?.product_card_bg || '#FFFFFF',
                       border: `${Number(carousel?.product_card_border_width ?? 1)}px solid ${carousel?.product_card_border_color || '#E2E8F0'}`,
                       borderRadius: `${Number(carousel?.product_card_border_radius ?? 12)}px`,
                       padding: '6px',
                       boxSizing: 'border-box',
-                      filter: isInactiveMobile ? 'grayscale(80%) opacity(70%)' : 'none'
+                      // Removido o filtro de escala de cinza/opacidade, todos os cards ficam nítidos
                     }}
                   >
                     <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-50">
