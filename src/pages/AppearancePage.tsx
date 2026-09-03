@@ -1774,8 +1774,15 @@ const CarouselPreview = ({
     ? 3
     : Math.max(1, Number(carousel.visible_items || (carousel as any).visibleItems || 4));
 
-  // FORÇA O CONTAINER DESKTOP A SER EXATAMENTE OS 850PX PARA COLAR NAS BORDAS DA MOLDURA LARANJA
-  const containerWidthPx = isMobile ? null : 850;
+  const desktopCanvasWidth = 850;
+  const desktopScale = isMobile ? 1 : Math.min(1, desktopCanvasWidth / Math.max(1, visibleItems * step));
+  const scaledRawWidth = rawWidth * desktopScale;
+  const scaledStep = scaledRawWidth + spacingNum * desktopScale;
+  const scaledCardHeight = isCircle || shape === 'square'
+    ? scaledRawWidth
+    : shape === 'landscape'
+      ? Math.round(scaledRawWidth * 9 / 16)
+      : Math.round(scaledRawWidth * 16 / 9);
 
   const loopWidth = len * step;
   const middleStart = Math.floor(REPEAT_TILES / 2) * loopWidth;
@@ -1880,17 +1887,19 @@ const CarouselPreview = ({
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
           style={{
-            width: containerWidthPx ? `${containerWidthPx}px` : '100%',
-            gap: `${spacingNum}px`,
+            width: isMobile ? '100%' : `${desktopCanvasWidth}px`,
+            gap: `${isMobile ? spacingNum : spacingNum * desktopScale}px`,
+            transform: isMobile ? 'none' : `scale(${desktopScale})`,
+            transformOrigin: 'center center',
           }}
           className="flex items-start overflow-x-auto scrollbar-none cursor-grab active:cursor-grabbing"
         >
           {trackVideos.map((videoSrc, i) => (
-            <div key={i} style={{ width: `${rawWidth}px` }} className="flex flex-col space-y-1.5 shrink-0">
+            <div key={i} style={{ width: `${scaledRawWidth}px` }} className="flex flex-col space-y-1.5 shrink-0">
               <div
                 style={{
-                  width: `${rawWidth}px`,
-                  height: `${cardHeight}px`,
+                  width: `${scaledRawWidth}px`,
+                  height: `${scaledCardHeight}px`,
                   borderRadius,
                   border: `${borderWidth}px solid ${borderColor}`,
                 }}
@@ -2053,7 +2062,16 @@ const DynamicCarouselPreview = ({
 
   // Sombra com maior suavidade de desfoque
   const shadowStyle = applyShadow ? '0 12px 28px -5px rgba(0,0,0,0.45), 0 8px 12px -6px rgba(0,0,0,0.15)' : 'none';
-  const step = rawWidth + spacingNum;
+  const desktopCanvasWidth = 850;
+  const desktopScale = isMobile ? 1 : Math.min(1, desktopCanvasWidth / Math.max(1, visibleItems * (rawWidth + spacingNum)));
+  const scaledRawWidth = rawWidth * desktopScale;
+  const scaledStep = scaledRawWidth + spacingNum * desktopScale;
+  const scaledCardHeight = isCircle || shape === 'square'
+    ? scaledRawWidth
+    : shape === 'landscape'
+      ? Math.round(scaledRawWidth * (9 / 16))
+      : Math.round(scaledRawWidth * (16 / 9));
+  const step = scaledStep;
 
   return (
     <div className="w-full py-3 space-y-3 overflow-visible">
@@ -2072,35 +2090,34 @@ const DynamicCarouselPreview = ({
         <div
           className="flex items-center"
           style={{
-            gap: `${spacingNum}px`,
-            // O cálculo de translate baseia-se perfeitamente no container-pai (desktop de 850px ou simulador celular)
-            transform: `translateX(calc(50% - ${trackIndex * step + rawWidth / 2}px))`,
+            gap: `${spacingNum * desktopScale}px`,
+            transform: `translateX(calc(50% - ${trackIndex * step + scaledRawWidth / 2}px)) scale(${desktopScale})`,
+            transformOrigin: 'center center',
             transition: noTransition ? 'none' : 'transform 0.8s cubic-bezier(0.65, 0, 0.35, 1)',
           }}
         >
           {trackVideos.map((videoSrc, i) => {
             const isAct = i === trackIndex;
             const cardHeight = isCircle || shape === 'square'
-              ? `${rawWidth}px`
+              ? `${scaledRawWidth}px`
               : shape === 'landscape'
-                ? `${Math.round(rawWidth * (9 / 16))}px`
-                : `${Math.round(rawWidth * (16 / 9))}px`;
+                ? `${Math.round(scaledRawWidth * (9 / 16))}px`
+                : `${Math.round(scaledRawWidth * (16 / 9))}px`;
 
             return (
               <div
                 key={i}
                 className="shrink-0 relative transition-all duration-300"
                 style={{
-                  width: `${rawWidth}px`,
+                  width: `${scaledRawWidth}px`,
                   height: cardHeight,
-                  // Aplica o scale com segurança graças ao padding vertical do contêiner pai
                   transform: isAct && scaleHighlight ? 'scale(1.1)' : 'scale(0.95)',
                   zIndex: isAct ? 10 : 1,
                 }}
               >
                 <div
                   style={{
-                    width: `${rawWidth}px`,
+                    width: `${scaledRawWidth}px`,
                     height: cardHeight,
                     borderRadius,
                     border: `${borderWidth}px solid ${borderColor}`,
@@ -2132,11 +2149,11 @@ const DynamicCarouselPreview = ({
                   <div
                     className="absolute left-0 w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border"
                     style={{
-                      top: `calc(${cardHeight} + 8px)`,
+                      top: `calc(${scaledCardHeight} + ${8 * desktopScale}px)`,
                       backgroundColor: pCardBg,
                       border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
                       borderRadius: `${pCardBorderRadius}px`,
-                      padding: '6px',
+                      padding: `${6 * desktopScale}px`,
                     }}
                   >
                     <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
@@ -2203,6 +2220,8 @@ const GridPreview = ({
 
   const borderRadius = isCircle ? '50%' : cssSize(grid.border_radius, '12px');
   const borderWidth = safeNumber((grid as any).border_width, 1, 0);
+  const desktopCanvasWidth = 850;
+  const desktopScale = isMobile ? 1 : Math.min(1, desktopCanvasWidth / Math.max(1, limitNumber(grid.visible_items, 10, 1, 10) * 160));
 
   const titleAlignClass = {
     left: 'text-left',
@@ -2321,6 +2340,8 @@ const GridPreview = ({
   const totalItems = cols * 2; // Mostra duas linhas no desktop
   const items = Array.from({ length: totalItems });
   const shapeRatio = shape === 'landscape' ? (9 / 16) : (16 / 9);
+  const desktopCanvasWidth = 850;
+  const desktopScale = isMobile ? 1 : Math.min(1, desktopCanvasWidth / Math.max(1, cols * 160));
 
   return (
     <div className="w-full py-3 space-y-3">
@@ -2331,7 +2352,7 @@ const GridPreview = ({
       )}
 <div
   className="grid w-full"
-  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: `${spacing}px` }}
+  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: `${spacing * desktopScale}px`, transform: `scale(${desktopScale})`, transformOrigin: 'center center' }}
 >
         {items.map((_, i) => (
           <div key={i} className="w-full flex flex-col space-y-1">
@@ -2478,7 +2499,7 @@ const ModalPreview = ({
 
   // DESKTOP: Player aberto sobre a tela desktop simulada, com overlay escuro e desfoque
   return (
-    <div className="relative h-full w-full overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden bg-[#0f111a] border border-slate-800/80 rounded-2xl">
       {/* Esqueleto decorativo de página real por trás do overlay */}
       <div aria-hidden className="absolute inset-0 pointer-events-none select-none px-10 py-8 flex flex-col gap-4">
         <div className="flex items-center justify-between">
