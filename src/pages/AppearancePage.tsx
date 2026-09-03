@@ -1608,7 +1608,20 @@ const getShapeLabel = (shape: WidgetShape) => {
 
 // ──────────────────── PREVIEWS (SANDBOX REAL) ────────────────────
 
-const FloatingPreview = ({
+import React, { useEffect, useRef, useState } from 'react';
+import { Play, X } from 'lucide-react';
+import { cn } from '@/lib/utils'; // Certifique-se de que o caminho do seu 'cn' está correto
+
+// Função utilitária mockada (ajuste conforme o seu arquivo original se necessário)
+const normalizeWidgetShape = (val: string, fallback: string) => val || fallback;
+const DEMO_PREVIEW_VIDEOS = [
+  'https://cdn.coverr.co/videos/coverr-shopping-in-a-store-5244/1080p.mp4',
+  'https://cdn.coverr.co/videos/coverr-woman-shopping-for-clothes-5243/1080p.mp4',
+  'https://cdn.coverr.co/videos/coverr-clothes-shopping-5251/1080p.mp4',
+  'https://cdn.coverr.co/videos/coverr-shopping-in-a-store-5244/1080p.mp4',
+];
+
+export const FloatingPreview = ({
   floating,
   colors,
   device,
@@ -1634,30 +1647,24 @@ const FloatingPreview = ({
   const isSquare = shape === 'square';
   const isMobile = device === 'mobile';
 
-  // No mobile, escalamos levemente os tamanhos para que caiba proporcionalmente
   const scale = isMobile ? 0.85 : 1;
   const baseWidth = (Number(floating?.width || 80)) * scale;
 
-  // Altura auto-calculada dependendo do formato escolhido
   const baseHeight = (isCircle || isSquare)
     ? baseWidth
     : shape === 'landscape'
       ? Math.round(baseWidth * 9 / 16)
       : Math.round(baseWidth * 16 / 9);
 
-  // Fallbacks Seguros para Border Radius
   const rawRadius = floating?.border_radius;
   const radiusNum = rawRadius !== undefined && rawRadius !== '' ? rawRadius : 12;
   const borderRadius = isCircle ? '50%' : `${radiusNum}px`;
 
-  // Ajuste na largura da borda (permite valor 0 e corrige bug visual)
   const rawBorderWidth = floating?.border_width ?? floating?.border_style;
   const parsedBorderWidth = rawBorderWidth !== undefined && rawBorderWidth !== '' ? Number(rawBorderWidth) : 0;
   
-  // Cor da borda com fallback para cor primária do painel
   const borderColor = floating?.border_color || colors?.primary || '#0094EB';
 
-  // Tratamento de margens proporcionais no mobile para não estourar a tela do mockup
   const pos = floating?.position || 'fixed_bottom_right';
   const gapBottom = isMobile ? '12px' : (floating?.bottom_spacing !== undefined ? `${floating.bottom_spacing}px` : '20px');
   const gapTop = isMobile ? '12px' : (floating?.top_spacing !== undefined ? `${floating.top_spacing}px` : '20px');
@@ -1674,7 +1681,6 @@ const FloatingPreview = ({
   if (pos.includes('left')) positionStyle.left = gapLeft;
   if (pos.includes('right')) positionStyle.right = gapRight;
 
-  // Resolvedor Blindado para Valores Booleanos que vêm do Formulário
   const resolveBool = (val: any, fallback: boolean) => {
     if (val === undefined || val === null || val === '') return fallback;
     return String(val) === 'true' || val === true || val === 1 || val === '1';
@@ -1684,16 +1690,21 @@ const FloatingPreview = ({
   const showClose = resolveBool(floating?.show_close_icon ?? floating?.show_close_button ?? floating?.show_close, false);
   const showTooltip = resolveBool(floating?.show_tooltip ?? floating?.show_cta, false);
 
+  // Variáveis para a Pílula CPA
+  const cpaText = floating?.cpa_text || floating?.tooltip_text || 'VER VÍDEO';
+  const cpaBgColor = floating?.cpa_bg_color || colors?.primary || '#0094EB';
+  const cpaTextColor = floating?.cpa_text_color || '#FFFFFF';
+
   return (
     <div
       style={positionStyle}
       className={cn(
-        "absolute shadow-xl transition-all duration-300 flex items-center justify-center cursor-pointer",
+        "absolute shadow-xl transition-all duration-300 flex items-center justify-center cursor-pointer z-10",
         isCircle ? "aspect-square" : "",
-        "overflow-visible z-10" // overflow-visible para o X e o Tooltip não serem cortados
+        "overflow-visible" 
       )}
     >
-      {/* Container interno: A borda fica aqui com box-sizing: border-box */}
+      {/* CONTAINER DO VÍDEO */}
       <div 
         className="w-full h-full relative overflow-hidden bg-slate-950 shadow-sm"
         style={{ 
@@ -1711,7 +1722,6 @@ const FloatingPreview = ({
           className="w-full h-full pointer-events-none"
           style={{ objectFit: floating?.object_fit || 'cover' }}
         />
-        {/* Indicador de Stories / Play Icon */}
         {showPlay && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-all">
             <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
@@ -1719,288 +1729,42 @@ const FloatingPreview = ({
             </div>
           </div>
         )}
+
+        {/* Botão de Fechar (X) Movido para DENTRO do vídeo conforme print 1 */}
+        {showClose && (
+          <div className="absolute top-2 right-2 w-6 h-6 bg-white text-slate-500 rounded-full flex items-center justify-center z-20 shadow-md">
+            <X size={14} />
+          </div>
+        )}
       </div>
 
-      {/* Botão de Fechar (X) */}
-      {showClose && (
-        <div className="absolute -top-2 -right-2 w-6 h-6 bg-slate-900 text-white rounded-full flex items-center justify-center z-20 shadow-md border border-slate-700">
-          <X size={12} />
-        </div>
-      )}
-
-      {/* Pílula / CTA (Tooltip) */}
+      {/* CPA - Pílula Vazando (Tooltip) */}
       {showTooltip && (
         <div 
-          className="absolute z-20 bg-white text-slate-900 font-semibold px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap text-[12px] border border-slate-100"
+          className="absolute z-20 shadow-md flex items-center justify-center whitespace-nowrap"
           style={{
+            backgroundColor: cpaBgColor,
+            color: cpaTextColor,
+            padding: '8px 16px',
+            borderRadius: '24px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            bottom: '12px',
+            // Posiciona saindo pra direita (se no lado esquerdo da tela) ou pra esquerda (se lado direito)
             ...(pos.includes('left') 
-                ? { left: 'calc(100% + 14px)', top: '50%', transform: 'translateY(-50%)' } 
-                : { right: 'calc(100% + 14px)', top: '50%', transform: 'translateY(-50%)' })
+                ? { left: 'calc(100% - 20px)' } 
+                : { right: 'calc(100% - 20px)' })
           }}
         >
-          {floating?.tooltip_text || 'Ver histórias'}
-          {/* Setinha do Tooltip apontando para o vídeo */}
-          <div 
-            className="absolute top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent"
-            style={{
-              ...(pos.includes('left')
-                ? { left: '-6px', borderRight: '6px solid white' }
-                : { right: '-6px', borderLeft: '6px solid white' })
-            }}
-          />
+          {cpaText}
         </div>
       )}
     </div>
   );
 };
 
-const CarouselPreview = ({
-  carousel,
-  colors,
-  isMobile = false,
-}: {
-  carousel: any;
-  colors: any;
-  isMobile?: boolean;
-}) => {
-  const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(isMobile ? 320 : 850);
 
-  // Monitora a largura real do contêiner para eliminar espaços sobrando nas laterais
-  useEffect(() => {
-    const obs = new ResizeObserver(entries => {
-      if (entries[0]) {
-        setContainerWidth(entries[0].contentRect.width);
-      }
-    });
-    if (containerRef.current) {
-      obs.observe(containerRef.current);
-    }
-    return () => obs.disconnect();
-  }, []);
-
-  const videoSources = DEMO_PREVIEW_VIDEOS;
-  const len = videoSources.length;
-  const REPEAT_TILES = 16;
-  const middleTile = Math.floor(REPEAT_TILES / 2);
-  const baseIndex = middleTile * len;
-  const trackVideos = Array.from({ length: REPEAT_TILES }, () => videoSources).flat();
-
-  const [trackIndex, setTrackIndex] = useState(baseIndex);
-  const [noTransition, setNoTransition] = useState(false);
-  const [dragStartX, setDragStartX] = useState<number | null>(null);
-  const [dragOffset, setDragOffset] = useState(0);
-
-  // Autoplay da trilha
-  useEffect(() => {
-    const delay = Number(carousel?.autoplay_delay) || 5000;
-    if (delay <= 0 || dragStartX !== null) return;
-    const interval = setInterval(() => {
-      setTrackIndex((prev) => prev + 1);
-    }, delay);
-    return () => clearInterval(interval);
-  }, [carousel?.autoplay_delay, dragStartX]);
-
-  // Loop infinito invisível
-  useEffect(() => {
-    if (trackIndex - baseIndex >= len || trackIndex - baseIndex <= -len) {
-      const t = setTimeout(() => {
-        setNoTransition(true);
-        setTrackIndex(baseIndex + ((trackIndex - baseIndex) % len));
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => setNoTransition(false));
-        });
-      }, 500);
-      return () => clearTimeout(t);
-    }
-  }, [trackIndex, baseIndex, len]);
-
-  // Variáveis de Configuração com Validação Segura
-  const shape = normalizeWidgetShape(carousel?.shape, 'portrait');
-  const isCircle = shape === 'circle';
-  const showTitle = carousel?.show_title ?? false;
-  const titleText = carousel?.title_text || 'Stories';
-  const titleAlign = carousel?.title_align ?? 'left';
-  const titleFontSize = Number(carousel?.title_font_size ?? 14);
-  const titleBold = carousel?.title_bold ?? true;
-  const objectFit = carousel?.object_fit || 'cover';
-
-  const spacingNum = Number(carousel?.spacing ?? carousel?.gap ?? 12) || 0;
-  const visibleItems = Math.max(1, Number(carousel?.visible_items ?? carousel?.visibleItems ?? 4));
-
-  const rawBorderWidth = carousel?.border_width ?? carousel?.border_style;
-  const borderWidth = rawBorderWidth !== undefined && rawBorderWidth !== '' ? Number(rawBorderWidth) : 0;
-  const borderColor = carousel?.border_color || colors?.primary || '#0094EB';
-  const rawRadius = carousel?.border_radius;
-  const borderRadiusNum = rawRadius !== undefined && rawRadius !== '' ? Number(rawRadius) : 12;
-  const borderRadius = isCircle ? '50%' : `${borderRadiusNum}px`;
-
-  const showProductCard = carousel?.show_product ?? false;
-  const showPlayIcon = carousel?.show_play_icon ?? true;
-  const pCardBg = carousel?.product_card_bg || '#FFFFFF';
-  const pCardBorderColor = carousel?.product_card_border_color || '#E2E8F0';
-  const rawCardBorder = carousel?.product_card_border_width;
-  const pCardBorderWidth = rawCardBorder !== undefined && rawCardBorder !== '' ? Number(rawCardBorder) : 1;
-  const rawCardRadius = carousel?.product_card_border_radius;
-  const pCardBorderRadius = rawCardRadius !== undefined && rawCardRadius !== '' ? Number(rawCardRadius) : 12;
-  const pCardNameSize = Number(carousel?.product_card_name_size ?? 9);
-  const pCardNameColor = carousel?.product_card_name_color || '#0F172A';
-  const pCardPriceSize = Number(carousel?.product_card_price_size ?? 8);
-  const pCardPriceColor = carousel?.product_card_price_color || colors?.primary || '#0094EB';
-
-  const cw = containerWidth || (isMobile ? 320 : 850);
-  
-  // MATEMÁTICA DE LARGURA PERFEITA
-  // Mobile: Crava em exatos 60%. Isso garante a regra do "20-60-20" e exibe no máximo 3 vídeos.
-  // Desktop: Preenche 100% dividindo pelos itens visíveis descontando vãos.
-  const baseItemWidth = isMobile
-    ? cw * 0.6 
-    : Math.max(40, (cw - (spacingNum * (visibleItems - 1))) / visibleItems);
-
-  const step = baseItemWidth + spacingNum;
-
-  useEffect(() => {
-    videoRefs.current.forEach((video, i) => {
-      if (!video) return;
-      const isVisible = isMobile
-        ? (i >= trackIndex - 1 && i <= trackIndex + 1)
-        : (i >= trackIndex && i < trackIndex + visibleItems);
-
-      if (isVisible && (carousel?.autoplay_videos ?? true)) {
-        video.play().catch(() => {});
-      } else {
-        video.pause();
-      }
-    });
-  }, [carousel?.autoplay_videos, trackIndex, isMobile, visibleItems]);
-
-  const handleDragStart = (clientX: number) => {
-    setNoTransition(true);
-    setDragStartX(clientX);
-  };
-  const handleDragMove = (clientX: number) => {
-    if (dragStartX === null) return;
-    setDragOffset(clientX - dragStartX);
-  };
-  const handleDragEnd = () => {
-    if (dragStartX === null) return;
-    if (dragOffset > 40) setTrackIndex(prev => prev - 1);
-    else if (dragOffset < -40) setTrackIndex(prev => prev + 1);
-    setDragStartX(null);
-    setDragOffset(0);
-    setNoTransition(false);
-  };
-
-  const titleAlignClass = titleAlign === 'center' ? 'text-center' : titleAlign === 'right' ? 'text-right' : 'text-left';
-
-  return (
-    <div className="w-full py-2 flex flex-col space-y-3 select-none overflow-hidden box-border" ref={containerRef}>
-      {showTitle && (
-        <h4
-          style={{ fontSize: `${titleFontSize}px`, fontWeight: titleBold ? 'bold' : 'normal' }}
-          className={cn('tracking-wider w-full px-1', isMobile ? 'text-slate-800' : 'text-slate-100', titleAlignClass)}
-        >
-          {titleText}
-        </h4>
-      )}
-
-      <div
-        className="relative w-full cursor-grab active:cursor-grabbing touch-pan-y"
-        onMouseDown={e => handleDragStart(e.clientX)}
-        onMouseMove={e => handleDragMove(e.clientX)}
-        onMouseUp={handleDragEnd}
-        onMouseLeave={handleDragEnd}
-        onTouchStart={e => handleDragStart(e.touches[0].clientX)}
-        onTouchMove={e => handleDragMove(e.touches[0].clientX)}
-        onTouchEnd={handleDragEnd}
-      >
-        <div
-          className="flex items-start"
-          style={{
-            gap: `${spacingNum}px`,
-            // Posicionamento: Mobile centraliza perfeitamente nos 50% (20-60-20), Desktop alinha à esquerda
-            transform: isMobile 
-              ? `translateX(calc(50% - ${trackIndex * step + baseItemWidth / 2}px + ${dragOffset}px))`
-              : `translateX(calc(-${trackIndex * step}px + ${dragOffset}px))`,
-            transition: noTransition || dragStartX !== null ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
-          }}
-        >
-          {trackVideos.map((videoSrc, i) => {
-            let cardHeightStr = '100%';
-            if (isCircle || shape === 'square') {
-              cardHeightStr = `${baseItemWidth}px`;
-            } else if (shape === 'landscape') {
-              cardHeightStr = `${Math.round(baseItemWidth * (9 / 16))}px`;
-            } else {
-              cardHeightStr = `${Math.round(baseItemWidth * (16 / 9))}px`;
-            }
-
-            return (
-              <div
-                key={i}
-                className="shrink-0 flex flex-col transition-all duration-300"
-                style={{ width: `${baseItemWidth}px`, gap: '8px' }}
-              >
-                <div
-                  style={{
-                    width: '100%',
-                    height: cardHeightStr,
-                    borderRadius,
-                    border: `${borderWidth}px solid ${borderColor}`,
-                    boxSizing: 'border-box'
-                  }}
-                  className="relative overflow-hidden bg-slate-950 flex items-center justify-center shrink-0 pointer-events-none shadow-sm"
-                >
-                  <video
-                    ref={el => { if (el) videoRefs.current.set(i, el); else videoRefs.current.delete(i); }}
-                    src={videoSrc}
-                    loop
-                    muted
-                    playsInline
-                    style={{ objectFit: objectFit as any }}
-                    className="w-full h-full pointer-events-none"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none" />
-                  {showPlayIcon && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
-                        <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {showProductCard && !isCircle && (
-                  <div
-                    className="w-full flex items-center gap-2 overflow-hidden pointer-events-none"
-                    style={{
-                      backgroundColor: pCardBg,
-                      border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
-                      borderRadius: `${pCardBorderRadius}px`,
-                      padding: '6px',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-50">
-                      <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-bold truncate">Calça Confort</p>
-                      <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 149,95</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const DynamicCarouselPreview = ({
+export const CarouselPreview = ({
   carousel,
   colors,
   isMobile = false,
@@ -2024,8 +1788,7 @@ const DynamicCarouselPreview = ({
   const videoSources = DEMO_PREVIEW_VIDEOS;
   const len = videoSources.length;
   const REPEAT_TILES = 16;
-  const middleTile = Math.floor(REPEAT_TILES / 2);
-  const baseIndex = middleTile * len;
+  const baseIndex = Math.floor(REPEAT_TILES / 2) * len;
   const trackVideos = Array.from({ length: REPEAT_TILES }, () => videoSources).flat();
 
   const [trackIndex, setTrackIndex] = useState(baseIndex);
@@ -2045,10 +1808,8 @@ const DynamicCarouselPreview = ({
       const t = setTimeout(() => {
         setNoTransition(true);
         setTrackIndex(baseIndex + ((trackIndex - baseIndex) % len));
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => setNoTransition(false));
-        });
-      }, 600);
+        requestAnimationFrame(() => requestAnimationFrame(() => setNoTransition(false)));
+      }, 500);
       return () => clearTimeout(t);
     }
   }, [trackIndex, baseIndex, len]);
@@ -2056,30 +1817,231 @@ const DynamicCarouselPreview = ({
   const shape = normalizeWidgetShape(carousel?.shape, 'portrait');
   const isCircle = shape === 'circle';
   const showTitle = carousel?.show_title ?? false;
-  const titleText = carousel?.title_text ?? 'Destaques';
-  const titleAlign = carousel?.title_align ?? 'center';
-  const titleSizeVal = Number(carousel?.title_font_size ?? 14);
-  const isBold = carousel?.title_bold ?? true;
-  const objectFit = carousel?.object_fit || 'cover';
+  const spacingNum = Number(carousel?.spacing ?? carousel?.gap ?? 12) || 0;
+  const visibleItems = Math.max(1, Number(carousel?.visible_items ?? carousel?.visibleItems ?? 4));
 
+  const rawBorderWidth = carousel?.border_width ?? carousel?.border_style;
+  const borderWidth = rawBorderWidth !== undefined && rawBorderWidth !== '' ? Number(rawBorderWidth) : 0;
+  const borderColor = carousel?.border_color || colors?.primary || '#0094EB';
+  const borderRadiusNum = Number(carousel?.border_radius) || 12;
+  const borderRadius = isCircle ? '50%' : `${borderRadiusNum}px`;
+
+  const cw = containerWidth || (isMobile ? 320 : 850);
+  const baseItemWidth = isMobile
+    ? cw * 0.6 
+    : Math.max(40, (cw - (spacingNum * (visibleItems - 1))) / visibleItems);
+
+  const step = baseItemWidth + spacingNum;
+
+  useEffect(() => {
+    videoRefs.current.forEach((video, i) => {
+      if (!video) return;
+      const isVisible = isMobile ? (i === trackIndex) : (i >= trackIndex && i < trackIndex + visibleItems);
+      if (isVisible && (carousel?.autoplay_videos ?? true)) {
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  }, [carousel?.autoplay_videos, trackIndex, isMobile, visibleItems]);
+
+  const handleDragStart = (clientX: number) => { setNoTransition(true); setDragStartX(clientX); };
+  const handleDragMove = (clientX: number) => { if (dragStartX !== null) setDragOffset(clientX - dragStartX); };
+  const handleDragEnd = () => {
+    if (dragStartX === null) return;
+    if (dragOffset > 40) setTrackIndex(prev => prev - 1);
+    else if (dragOffset < -40) setTrackIndex(prev => prev + 1);
+    setDragStartX(null); setDragOffset(0); setNoTransition(false);
+  };
+
+  return (
+    <div className="w-full py-2 flex flex-col space-y-3 select-none overflow-hidden box-border" ref={containerRef}>
+      {showTitle && (
+        <h4
+          style={{ fontSize: `${carousel?.title_font_size || 14}px`, fontWeight: carousel?.title_bold ? 'bold' : 'normal' }}
+          className={cn('tracking-wider w-full px-1', isMobile ? 'text-slate-800' : 'text-slate-100 text-center')}
+        >
+          {carousel?.title_text || 'Stories'}
+        </h4>
+      )}
+
+      <div
+        className="relative w-full cursor-grab active:cursor-grabbing touch-pan-y"
+        onMouseDown={e => handleDragStart(e.clientX)}
+        onMouseMove={e => handleDragMove(e.clientX)}
+        onMouseUp={handleDragEnd}
+        onMouseLeave={handleDragEnd}
+        onTouchStart={e => handleDragStart(e.touches[0].clientX)}
+        onTouchMove={e => handleDragMove(e.touches[0].clientX)}
+        onTouchEnd={handleDragEnd}
+      >
+        <div
+          className="flex items-start"
+          style={{
+            gap: `${spacingNum}px`,
+            transform: isMobile 
+              ? `translateX(calc(50% - ${trackIndex * step + baseItemWidth / 2}px + ${dragOffset}px))`
+              : `translateX(calc(-${trackIndex * step}px + ${dragOffset}px))`,
+            transition: noTransition || dragStartX !== null ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
+          }}
+        >
+          {trackVideos.map((videoSrc, i) => {
+            // LÓGICA DE FOCO NO MOBILE
+            const isCenterMobile = i === trackIndex;
+            const isInactiveMobile = isMobile && !isCenterMobile;
+
+            let cardHeightStr = isCircle || shape === 'square' ? `${baseItemWidth}px` : shape === 'landscape' ? `${Math.round(baseItemWidth * (9 / 16))}px` : `${Math.round(baseItemWidth * (16 / 9))}px`;
+
+            return (
+              <div
+                key={i}
+                className="shrink-0 flex flex-col transition-all duration-300"
+                style={{ 
+                  width: `${baseItemWidth}px`, 
+                  gap: '8px',
+                  transform: isInactiveMobile ? 'scale(0.95)' : 'scale(1)',
+                  opacity: isInactiveMobile ? 0.7 : 1
+                }}
+              >
+                <div
+                  style={{
+                    width: '100%',
+                    height: cardHeightStr,
+                    borderRadius,
+                    // Apenas o central tem borda colorida no mobile
+                    border: isInactiveMobile ? `${borderWidth}px solid transparent` : `${borderWidth}px solid ${borderColor}`,
+                    boxSizing: 'border-box'
+                  }}
+                  className="relative overflow-hidden bg-slate-950 flex items-center justify-center shrink-0 pointer-events-none shadow-sm transition-all duration-300"
+                >
+                  <video
+                    ref={el => { if (el) videoRefs.current.set(i, el); else videoRefs.current.delete(i); }}
+                    src={videoSrc}
+                    loop
+                    muted
+                    playsInline
+                    style={{ objectFit: carousel?.object_fit || 'cover' }}
+                    className="w-full h-full pointer-events-none"
+                  />
+                  {/* Overlay escuro para os inativos (Design do Print 3) */}
+                  {isInactiveMobile && <div className="absolute inset-0 bg-black/60 z-10" />}
+                  
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none" />
+                  
+                  {carousel?.show_play_icon !== false && !isInactiveMobile && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                      <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
+                        <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {carousel?.show_product && !isCircle && (
+                  <div
+                    className="w-full flex items-center gap-2 overflow-hidden pointer-events-none transition-all duration-300"
+                    style={{
+                      backgroundColor: carousel?.product_card_bg || '#FFFFFF',
+                      border: `${Number(carousel?.product_card_border_width ?? 1)}px solid ${carousel?.product_card_border_color || '#E2E8F0'}`,
+                      borderRadius: `${Number(carousel?.product_card_border_radius ?? 12)}px`,
+                      padding: '6px',
+                      boxSizing: 'border-box',
+                      filter: isInactiveMobile ? 'grayscale(80%)' : 'none'
+                    }}
+                  >
+                    <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-50">
+                      <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p style={{ fontSize: `${Number(carousel?.product_card_name_size ?? 9)}px`, color: carousel?.product_card_name_color || '#0F172A' }} className="font-bold truncate">Calça Confort</p>
+                      <p style={{ fontSize: `${Number(carousel?.product_card_price_size ?? 8)}px`, color: carousel?.product_card_price_color || colors?.primary || '#0094EB' }} className="font-black">R$ 149,95</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+export const DynamicCarouselPreview = ({
+  carousel,
+  colors,
+  isMobile = false,
+}: {
+  carousel: any;
+  colors: any;
+  isMobile?: boolean;
+}) => {
+  const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(isMobile ? 320 : 850);
+
+  useEffect(() => {
+    const obs = new ResizeObserver(entries => {
+      if (entries[0]) setContainerWidth(entries[0].contentRect.width);
+    });
+    if (containerRef.current) obs.observe(containerRef.current);
+    return () => obs.disconnect();
+  }, []);
+
+  const videoSources = DEMO_PREVIEW_VIDEOS;
+  const len = videoSources.length;
+  const REPEAT_TILES = 16;
+  const baseIndex = Math.floor(REPEAT_TILES / 2) * len;
+  const trackVideos = Array.from({ length: REPEAT_TILES }, () => videoSources).flat();
+
+  const [trackIndex, setTrackIndex] = useState(baseIndex);
+  const [noTransition, setNoTransition] = useState(false);
+  const [dragStartX, setDragStartX] = useState<number | null>(null);
+  const [dragOffset, setDragOffset] = useState(0);
+
+  useEffect(() => {
+    const delay = Number(carousel?.autoplay_delay) || 5000;
+    if (delay <= 0 || dragStartX !== null) return;
+    const interval = setInterval(() => setTrackIndex((prev) => prev + 1), delay);
+    return () => clearInterval(interval);
+  }, [carousel?.autoplay_delay, dragStartX]);
+
+  useEffect(() => {
+    if (trackIndex - baseIndex >= len || trackIndex - baseIndex <= -len) {
+      const t = setTimeout(() => {
+        setNoTransition(true);
+        setTrackIndex(baseIndex + ((trackIndex - baseIndex) % len));
+        requestAnimationFrame(() => requestAnimationFrame(() => setNoTransition(false)));
+      }, 600);
+      return () => clearTimeout(t);
+    }
+  }, [trackIndex, baseIndex, len]);
+
+  // VARIÁVEIS DE CONFIGURAÇÃO
+  const shape = normalizeWidgetShape(carousel?.shape, 'portrait');
+  const isCircle = shape === 'circle';
   const spacingNum = Number(carousel?.spacing ?? 8) || 0;
-  const playInactive = carousel?.autoplay_videos ?? true;
-  const showPlayIcon = carousel?.show_play_icon ?? true;
-  const scaleHighlight = carousel?.highlight_enlarge_active ?? false;
-  const applyShadow = carousel?.highlight_shadow ?? false;
-  const desaturate = carousel?.highlight_desaturate_inactive ?? false;
-
-  const showProductCard = carousel?.show_product ?? false;
-  const pCardBg = carousel?.product_card_bg || '#FFFFFF';
-  const pCardBorderColor = carousel?.product_card_border_color || '#E2E8F0';
-  const pCardBorderWidth = Number(carousel?.product_card_border_width ?? 1) || 0;
-  const pCardBorderRadius = Number(carousel?.product_card_border_radius ?? 12) || 0;
-  const pCardNameSize = Number(carousel?.product_card_name_size ?? 9);
-  const pCardNameColor = carousel?.product_card_name_color || '#0F172A';
-  const pCardPriceSize = Number(carousel?.product_card_price_size ?? 8);
-  const pCardPriceColor = carousel?.product_card_price_color || colors?.primary || '#0094EB';
-
   const visibleItems = Math.max(1, Number(carousel?.visible_items ?? 4));
+
+  // MARGENS (Lidas para garantir alinhamento total)
+  const ml = Number(carousel?.margin_left ?? 0);
+  const mr = Number(carousel?.margin_right ?? 0);
+  const mt = Number(carousel?.margin_top ?? 0);
+  const mb = Number(carousel?.margin_bottom ?? 0);
+
+  const cw = containerWidth || (isMobile ? 320 : 850);
+  
+  // Largura útil descontando as margens configuradas
+  const availableWidth = Math.max(1, cw - ml - mr);
+  
+  // No Desktop: Usa a largura disponível para preencher até as bordas (se as margens forem 0)
+  // No Mobile: Crava em 60% para ver 3 vídeos
+  const baseItemWidth = isMobile 
+    ? cw * 0.6 
+    : Math.max(80, (availableWidth - (spacingNum * (visibleItems - 1))) / visibleItems);
+
+  const step = baseItemWidth + spacingNum;
 
   const rawBorderWidth = carousel?.border_width ?? carousel?.border_style;
   const borderWidth = rawBorderWidth !== undefined && rawBorderWidth !== '' ? Number(rawBorderWidth) : 0;
@@ -2090,58 +2052,47 @@ const DynamicCarouselPreview = ({
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
-      const isAct = i === trackIndex;
-      if (isAct) {
+      if (i === trackIndex || (carousel?.autoplay_videos ?? true)) {
         video.play().catch(() => {});
       } else {
-        if (playInactive) video.play().catch(() => {});
-        else video.pause();
+        video.pause();
       }
     });
-  }, [playInactive, trackIndex]);
+  }, [carousel?.autoplay_videos, trackIndex]);
 
-  const handleDragStart = (clientX: number) => {
-    setNoTransition(true);
-    setDragStartX(clientX);
-  };
-  const handleDragMove = (clientX: number) => {
-    if (dragStartX === null) return;
-    setDragOffset(clientX - dragStartX);
-  };
+  const handleDragStart = (clientX: number) => { setNoTransition(true); setDragStartX(clientX); };
+  const handleDragMove = (clientX: number) => { if (dragStartX !== null) setDragOffset(clientX - dragStartX); };
   const handleDragEnd = () => {
     if (dragStartX === null) return;
     if (dragOffset > 50) setTrackIndex(prev => prev - 1);
     else if (dragOffset < -50) setTrackIndex(prev => prev + 1);
-    setDragStartX(null);
-    setDragOffset(0);
-    setNoTransition(false);
+    setDragStartX(null); setDragOffset(0); setNoTransition(false);
   };
 
-  const cw = containerWidth || (isMobile ? 320 : 850);
-  
-  // MATEMÁTICA DE PREENCHIMENTO E RESPONSIVIDADE
-  // Mobile: Crava em 60% para bater na mesma regra 20-60-20 do estático
-  // Desktop: Divide perfeitamente para preencher 100% da largura
-  const baseItemWidth = isMobile 
-    ? cw * 0.6 
-    : Math.max(80, (cw - (spacingNum * (visibleItems - 1))) / visibleItems);
-
-  const step = baseItemWidth + spacingNum;
-
-  const titleStyle: React.CSSProperties = { fontSize: `${titleSizeVal}px`, fontWeight: isBold ? 'bold' : 'normal' };
-  const titleAlignClass = titleAlign === 'left' ? 'text-left w-full px-4' : titleAlign === 'right' ? 'text-right w-full px-4' : 'text-center w-full';
-  const shadowStyle = applyShadow ? '0 12px 28px -5px rgba(0,0,0,0.45), 0 8px 12px -6px rgba(0,0,0,0.15)' : 'none';
-
   return (
-    <div className="w-full py-3 space-y-3 overflow-hidden select-none" ref={containerRef}>
-      {showTitle && (
-        <div className={titleAlignClass}>
-          <h4 style={titleStyle} className={isMobile ? 'text-slate-800' : 'text-slate-100 uppercase tracking-wider'}>{titleText}</h4>
+    <div 
+      className="w-full overflow-hidden select-none box-border" 
+      ref={containerRef}
+      style={{
+        paddingTop: `${mt}px`,
+        paddingBottom: `${mb}px`,
+        paddingLeft: `${ml}px`,
+        paddingRight: `${mr}px`,
+      }}
+    >
+      {carousel?.show_title && (
+        <div className="w-full px-4 text-center">
+          <h4 
+            style={{ fontSize: `${Number(carousel?.title_font_size ?? 14)}px`, fontWeight: carousel?.title_bold ?? true ? 'bold' : 'normal' }} 
+            className={isMobile ? 'text-slate-800' : 'text-slate-100 uppercase tracking-wider'}
+          >
+            {carousel?.title_text ?? 'Destaques'}
+          </h4>
         </div>
       )}
 
       <div 
-        className="relative w-full py-6 cursor-grab active:cursor-grabbing touch-pan-y"
+        className="relative w-full py-4 cursor-grab active:cursor-grabbing touch-pan-y"
         onMouseDown={e => handleDragStart(e.clientX)}
         onMouseMove={e => handleDragMove(e.clientX)}
         onMouseUp={handleDragEnd}
@@ -2154,23 +2105,26 @@ const DynamicCarouselPreview = ({
           className="flex items-center"
           style={{
             gap: `${spacingNum}px`,
-            // Sempre centralizado para manter o efeito de coverflow dinâmico
-            transform: `translateX(calc(50% - ${trackIndex * step + baseItemWidth / 2}px + ${dragOffset}px))`,
+            // Desktop alinha à esquerda acompanhando o preenchimento, Mobile mantem foco centrado
+            transform: isMobile 
+              ? `translateX(calc(50% - ${trackIndex * step + baseItemWidth / 2}px + ${dragOffset}px))`
+              : `translateX(calc(-${trackIndex * step}px + ${dragOffset}px))`,
             transition: noTransition || dragStartX !== null ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
           }}
         >
           {trackVideos.map((videoSrc, i) => {
             const isAct = i === trackIndex;
-            let cardHeightStr = '100%';
-            if (isCircle || shape === 'square') cardHeightStr = `${baseItemWidth}px`;
-            else if (shape === 'landscape') cardHeightStr = `${Math.round(baseItemWidth * (9 / 16))}px`;
-            else cardHeightStr = `${Math.round(baseItemWidth * (16 / 9))}px`;
+            const isInactiveMobile = isMobile && !isAct;
+            
+            let cardHeightStr = isCircle || shape === 'square' ? `${baseItemWidth}px` : shape === 'landscape' ? `${Math.round(baseItemWidth * (9 / 16))}px` : `${Math.round(baseItemWidth * (16 / 9))}px`;
 
-            // O SEGREDINHO PARA PREENCHER O DESKTOP:
-            // No Desktop, os inativos recebem '1' (não encolhem), então eles preenchem toda a largura da borda até a borda
-            let activeScale = scaleHighlight ? (isMobile ? 1.15 : 1.05) : 1;
-            let inactiveScale = scaleHighlight ? (isMobile ? 0.85 : 1) : 1;
-            const scaleVal = isAct ? activeScale : inactiveScale;
+            // Escala só aplica os destaques no Mobile, no desktop estica pra ocupar
+            let scaleVal = 1;
+            if (isMobile && carousel?.highlight_enlarge_active) {
+              scaleVal = isAct ? 1.05 : 0.95;
+            } else if (isMobile && !isAct) {
+              scaleVal = 0.95;
+            }
 
             return (
               <div
@@ -2183,10 +2137,12 @@ const DynamicCarouselPreview = ({
                     width: '100%',
                     height: cardHeightStr,
                     borderRadius,
-                    border: `${borderWidth}px solid ${borderColor}`,
-                    boxShadow: isAct ? shadowStyle : 'none',
-                    opacity: !isAct && desaturate ? 0.6 : 1,
-                    filter: !isAct && desaturate ? 'grayscale(100%)' : 'none',
+                    // No mobile inativos perdem a cor real, desktop mantém preenchimento.
+                    border: isInactiveMobile ? `${borderWidth}px solid transparent` : `${borderWidth}px solid ${borderColor}`,
+                    boxShadow: isAct && carousel?.highlight_shadow ? '0 12px 28px -5px rgba(0,0,0,0.45)' : 'none',
+                    opacity: isInactiveMobile && carousel?.highlight_desaturate_inactive ? 0.7 : 1,
+                    filter: isInactiveMobile && carousel?.highlight_desaturate_inactive ? 'grayscale(80%)' : 'none',
+                    boxSizing: 'border-box'
                   }}
                   className="relative overflow-hidden bg-slate-950 transition-all duration-500 box-border pointer-events-none"
                 >
@@ -2196,13 +2152,14 @@ const DynamicCarouselPreview = ({
                     loop
                     muted
                     playsInline
-                    autoPlay={isAct ? true : playInactive}
-                    style={{ objectFit: objectFit as any }}
+                    style={{ objectFit: carousel?.object_fit || 'cover' }}
                     className="w-full h-full"
                   />
+                  {isInactiveMobile && <div className="absolute inset-0 bg-black/60 z-10" />}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40" />
-                  {isAct && showPlayIcon && (
-                    <div className="absolute inset-0 flex items-center justify-center">
+                  
+                  {isAct && carousel?.show_play_icon !== false && (
+                    <div className="absolute inset-0 flex items-center justify-center z-20">
                       <div className="w-10 h-10 rounded-full bg-white/95 shadow-md flex items-center justify-center">
                         <Play size={14} className="text-slate-900 fill-slate-900 ml-1" />
                       </div>
@@ -2210,22 +2167,23 @@ const DynamicCarouselPreview = ({
                   )}
                 </div>
 
-                {showProductCard && !isCircle && (
+                {carousel?.show_product && !isCircle && (
                   <div
                     className="w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border pointer-events-none"
                     style={{
-                      backgroundColor: pCardBg,
-                      border: `${pCardBorderWidth}px solid ${pCardBorderColor}`,
-                      borderRadius: `${pCardBorderRadius}px`,
+                      backgroundColor: carousel?.product_card_bg || '#FFFFFF',
+                      border: `${Number(carousel?.product_card_border_width ?? 1)}px solid ${carousel?.product_card_border_color || '#E2E8F0'}`,
+                      borderRadius: `${Number(carousel?.product_card_border_radius ?? 12)}px`,
                       padding: '8px',
+                      filter: isInactiveMobile ? 'grayscale(80%)' : 'none'
                     }}
                   >
                     <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
                       <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0 text-left">
-                      <p style={{ fontSize: `${pCardNameSize}px`, color: pCardNameColor }} className="font-bold truncate">Calça Confort</p>
-                      <p style={{ fontSize: `${pCardPriceSize}px`, color: pCardPriceColor }} className="font-black">R$ 149,95</p>
+                      <p style={{ fontSize: `${Number(carousel?.product_card_name_size ?? 9)}px`, color: carousel?.product_card_name_color || '#0F172A' }} className="font-bold truncate">Calça Confort</p>
+                      <p style={{ fontSize: `${Number(carousel?.product_card_price_size ?? 8)}px`, color: carousel?.product_card_price_color || colors?.primary || '#0094EB' }} className="font-black">R$ 149,95</p>
                     </div>
                   </div>
                 )}
