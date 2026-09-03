@@ -2164,13 +2164,17 @@ export const DynamicCarouselPreview = ({
   );
 };
 
-const GridPreview = ({
+import React, { useEffect, useRef, useState } from "react";
+import { Play } from "lucide-react";
+// Certifique-se de importar DEMO_PREVIEW_VIDEOS, normalizeWidgetShape, safeNumber, limitNumber etc.
+
+export const GridPreview = ({
   grid,
   colors,
   isMobile = false,
 }: {
-  grid: any; // Substitua por GridConfig se estiver importado
-  colors: any; // Substitua por PreviewColors se estiver importado
+  grid: any;
+  colors: any;
   isMobile?: boolean;
 }) => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
@@ -2186,7 +2190,7 @@ const GridPreview = ({
 
   const totalPreviewItems = isMobile ? 4 : limitNumber(grid?.visible_items, 10, 1, 10) * 2;
 
-  // Reprodução sequencial: avança 1 item a cada 5s
+  // Reprodução sequencial
   useEffect(() => {
     if (!isSequential) return;
     const interval = setInterval(() => {
@@ -2209,9 +2213,12 @@ const GridPreview = ({
     });
   }, [grid?.autoplay_videos, isSequential, activeSeqIndex]);
 
-  const borderRadius = isCircle ? '50%' : cssSize(grid?.border_radius, '12px');
+  // CORREÇÃO: Tratamento rigoroso para o Raio da Borda (Aceitar 0px e não voltar para 12px)
+  const rawBorderRadius = grid?.border_radius;
+  const borderRadiusNum = rawBorderRadius !== undefined && rawBorderRadius !== '' ? Number(rawBorderRadius) : 12;
+  const borderRadius = isCircle ? '50%' : `${borderRadiusNum}px`;
   
-  // FIX: Tratamento rigoroso para a largura da borda. Se vier em branco, NaN ou nulo, assume 0 com segurança.
+  // CORREÇÃO: Tratamento rigoroso para a largura da borda
   const rawBorder = grid?.border_width ?? grid?.border_style;
   const parsedBorderWidth = rawBorder !== undefined && rawBorder !== null && rawBorder !== '' && !isNaN(Number(rawBorder)) ? Number(rawBorder) : 0;
   
@@ -2303,9 +2310,9 @@ const GridPreview = ({
               <div
                 className={`relative bg-slate-950 overflow-hidden shadow-sm flex items-center justify-center transition-all duration-300 ${aspectClass}`}
                 style={{
-                  borderRadius: isCircle ? '50%' : borderRadius,
+                  borderRadius: borderRadius, // Usa a nova variável tratada
                   border: `${parsedBorderWidth}px solid ${grid?.border_color || colors?.primary || '#0094EB'}`,
-                  boxSizing: 'border-box' // Garante que a borda não quebre as colunas da grade
+                  boxSizing: 'border-box' 
                 }}
               >
                 <video
@@ -2363,9 +2370,9 @@ const GridPreview = ({
               style={{
                 width: '100%',
                 aspectRatio: isCircle ? '1 / 1' : `${1} / ${shapeRatio}`,
-                borderRadius,
+                borderRadius, // Usa a nova variável tratada
                 border: `${parsedBorderWidth}px solid ${grid?.border_color || colors?.primary || '#0094EB'}`,
-                boxSizing: 'border-box' // Garante que a borda seja interna e não estoure o layout
+                boxSizing: 'border-box'
               }}
               className="relative overflow-hidden bg-slate-950 shadow-sm flex items-center justify-center shrink-0"
             >
