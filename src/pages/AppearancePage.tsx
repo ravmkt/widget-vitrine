@@ -2842,14 +2842,14 @@ const PreviewCard = ({
                       activeTab === 'grid' ? 'p-3' : 'px-0 py-3'
                     }`}>
                       {activeTab === 'carousel' && (
-                        <CarouselPreview 
+                        <CarouselPreview
                           carousel={{
                             ...carousel,
-                            // Garante proporção mobile sem quebrar os lados
-                            itemWidth: Math.min(carousel.itemWidth, 180) 
-                          }} 
-                          colors={colors} 
-                          isMobile={true} 
+                            // Suporta propriedades snake_case e camelCase de forma segura
+                            itemWidth: Math.floor((850 - (Number(carousel.spacing || carousel.gap || 16) * (Number(carousel.visible_items || carousel.visibleItems || 4) - 1))) / Number(carousel.visible_items || carousel.visibleItems || 4))
+                          }}
+                          colors={colors}
+                          isMobile={false}
                         />
                       )}
                       {activeTab === 'dynamic_carousel' && (
