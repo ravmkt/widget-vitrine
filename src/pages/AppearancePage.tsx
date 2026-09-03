@@ -1786,7 +1786,7 @@ export const CarouselPreview = ({
   const [dragStartX, setDragStartX] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
 
-  // Loop infinito ao arrastar para as bordas para criar o efeito de carrossel contínuo
+  // Loop infinito na navegação
   useEffect(() => {
     if (trackIndex - baseIndex >= len || trackIndex - baseIndex <= -len) {
       const t = setTimeout(() => {
@@ -1799,40 +1799,38 @@ export const CarouselPreview = ({
   }, [trackIndex, baseIndex, len]);
 
   const cw = containerWidth || (isMobile ? 320 : 850);
-  
-  // TRAVA DE SEGURANÇA para forçar mobile no painel
   const isMobileView = isMobile || cw <= 480;
 
   const shape = normalizeWidgetShape(carousel?.shape, 'portrait');
   const isCircle = shape === 'circle';
   const showTitle = carousel?.show_title ?? false;
   const spacingNum = Number(carousel?.spacing ?? carousel?.gap ?? 12) || 0;
-  
+
   const visibleItemsDesktop = Math.max(1, Number(carousel?.visible_items ?? carousel?.visibleItems ?? 4));
 
   const rawBorderWidth = carousel?.border_width ?? carousel?.border_style;
   const borderWidth = rawBorderWidth !== undefined && rawBorderWidth !== '' ? Number(rawBorderWidth) : 0;
   const borderColor = carousel?.border_color || colors?.primary || '#0094EB';
-  const borderRadiusNum = Number(carousel?.border_radius) || 12;
+  
+  // CORREÇÃO DO RAIO DA BORDA: aceita o valor 0 corretamente
+  const rawBorderRadius = carousel?.border_radius ?? carousel?.borderRadius;
+  const borderRadiusNum = rawBorderRadius !== undefined && rawBorderRadius !== '' ? Number(rawBorderRadius) : 12;
   const borderRadius = isCircle ? '50%' : `${borderRadiusNum}px`;
 
-  // LARGURA: 60% no mobile (1 no meio, 2 nas bordas cortados). Sem redimensionamento (mesmo tamanho).
-  const baseItemWidth = isMobileView
-    ? cw * 0.60 
-    : Math.max(40, (cw - (spacingNum * (visibleItemsDesktop - 1))) / visibleItemsDesktop);
+  // CORREÇÃO DO ALINHAMENTO DO TÍTULO: pega a prop do painel ou centraliza por padrão
+  const titleAlign = carousel?.title_align ?? carousel?.title_alignment ?? (isMobileView ? 'left' : 'center');
 
+  const baseItemWidth = isMobileView
+    ? cw * 0.60
+    : Math.max(40, (cw - (spacingNum * (visibleItemsDesktop - 1))) / visibleItemsDesktop);
   const step = baseItemWidth + spacingNum;
 
-  // Lógica para tocar os vídeos visíveis na tela
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
-      
-      // No mobile, os 3 itens na tela (centro, esq, dir) tocam vídeo. No desktop, os "visibleItems" tocam.
-      const isVisible = isMobileView 
-        ? (i >= trackIndex - 1 && i <= trackIndex + 1) 
+      const isVisible = isMobileView
+        ? (i >= trackIndex - 1 && i <= trackIndex + 1)
         : (i >= trackIndex && i < trackIndex + visibleItemsDesktop);
-        
       if (isVisible && (carousel?.autoplay_videos ?? true)) {
         video.play().catch(() => {});
       } else {
@@ -1841,32 +1839,38 @@ export const CarouselPreview = ({
     });
   }, [carousel?.autoplay_videos, trackIndex, isMobileView, visibleItemsDesktop]);
 
-  const handleDragStart = (clientX: number) => { setNoTransition(true); setDragStartX(clientX); };
-  const handleDragMove = (clientX: number) => { if (dragStartX !== null) setDragOffset(clientX - dragStartX); };
+  const handleDragStart = (x: number) => { setNoTransition(true); setDragStartX(x); };
+  const handleDragMove = (x: number) => { if (dragStartX !== null) setDragOffset(x - dragStartX); };
   const handleDragEnd = () => {
     if (dragStartX === null) return;
     if (dragOffset > 40) setTrackIndex(prev => prev - 1);
     else if (dragOffset < -40) setTrackIndex(prev => prev + 1);
-    setDragStartX(null); setDragOffset(0); setNoTransition(false);
+    setDragStartX(null);
+    setDragOffset(0);
+    setNoTransition(false);
   };
 
-  const transformStyle = isMobileView 
-    ? `translateX(${ (cw / 2) - ((trackIndex * step) + (baseItemWidth / 2)) + dragOffset }px)`
-    : `translateX(${ -(trackIndex * step) + dragOffset }px)`;
+  const transformStyle = isMobileView
+    ? `translateX(${(cw / 2) - ((trackIndex * step) + (baseItemWidth / 2)) + dragOffset}px)`
+    : `translateX(${-trackIndex * step + dragOffset}px)`;
 
   return (
-    <div className="w-full py-2 flex flex-col space-y-3 select-none overflow-hidden box-border" ref={containerRef}>
+    <div className="w-full py-2 flex flex-col space-y-3 select-none overflow-hidden" ref={containerRef}>
       {showTitle && (
         <h4
-          style={{ fontSize: `${carousel?.title_font_size || 14}px`, fontWeight: carousel?.title_bold ? 'bold' : 'normal' }}
-          className={cn('tracking-wider w-full px-1', isMobileView ? 'text-slate-800' : 'text-slate-100 text-center')}
+          style={{ 
+            fontSize: `${carousel?.title_font_size || 14}px`, 
+            fontWeight: carousel?.title_bold ? 'bold' : 'normal',
+            textAlign: titleAlign as any // <- Aplica o alinhamento aqui
+          }}
+          className={cn('tracking-wider w-full px-1', isMobile ? 'text-slate-800' : 'text-slate-100')}
         >
           {carousel?.title_text || 'Stories'}
         </h4>
       )}
 
       <div
-        className="relative w-full cursor-grab active:cursor-grabbing touch-pan-y"
+        className="relative w-full cursor-grab active:cursor-grabbing"
         onMouseDown={e => handleDragStart(e.clientX)}
         onMouseMove={e => handleDragMove(e.clientX)}
         onMouseUp={handleDragEnd}
@@ -1883,78 +1887,48 @@ export const CarouselPreview = ({
             transition: noTransition || dragStartX !== null ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
           }}
         >
-          {trackVideos.map((videoSrc, i) => {
-            let cardHeightStr = isCircle || shape === 'square' 
-              ? `${baseItemWidth}px` 
-              : shape === 'landscape' 
-                ? `${Math.round(baseItemWidth * (9 / 16))}px` 
-                : `${Math.round(baseItemWidth * (16 / 9))}px`;
-
-            return (
+          {trackVideos.map((videoSrc, i) => (
+            <div
+              key={i}
+              className="shrink-0 flex flex-col transition-all duration-300"
+              style={{
+                width: `${baseItemWidth}px`,
+                gap: '8px'
+              }}
+            >
               <div
-                key={i}
-                className="shrink-0 flex flex-col transition-all duration-300"
-                style={{ 
-                  width: `${baseItemWidth}px`, 
-                  gap: '8px' 
-                  // Removidos 'scale(0.92)' e opacidades (todos iguais agora)
+                style={{
+                  width: '100%',
+                  height: isCircle || shape === 'square'
+                    ? `${baseItemWidth}px`
+                    : shape === 'landscape'
+                      ? `${Math.round(baseItemWidth * (9 / 16))}px`
+                      : `${Math.round(baseItemWidth * (16 / 9))}px`,
+                  borderRadius, // <- Agora respeita o valor 0 corretamente
+                  border: `${borderWidth}px solid ${borderColor}`,
+                  boxSizing: 'border-box'
                 }}
+                className="relative overflow-hidden bg-slate-950 flex items-center justify-center shadow-sm"
               >
-                <div
-                  style={{
-                    width: '100%',
-                    height: cardHeightStr,
-                    borderRadius,
-                    border: `${borderWidth}px solid ${borderColor}`, // Todos ganham a mesma borda
-                    boxSizing: 'border-box'
-                  }}
-                  className="relative overflow-hidden bg-slate-950 flex items-center justify-center shrink-0 pointer-events-none shadow-sm"
-                >
-                  <video
-                    ref={el => { if (el) videoRefs.current.set(i, el); else videoRefs.current.delete(i); }}
-                    src={videoSrc}
-                    loop
-                    muted
-                    playsInline
-                    style={{ objectFit: carousel?.object_fit || 'cover' }}
-                    className="w-full h-full pointer-events-none"
-                  />
-                  
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none" />
-                  
-                  {carousel?.show_play_icon !== false && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                      <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
-                        <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {carousel?.show_product && !isCircle && (
-                  <div
-                    className="w-full flex items-center gap-2 overflow-hidden pointer-events-none"
-                    style={{
-                      backgroundColor: carousel?.product_card_bg || '#FFFFFF',
-                      border: `${Number(carousel?.product_card_border_width ?? 1)}px solid ${carousel?.product_card_border_color || '#E2E8F0'}`,
-                      borderRadius: `${Number(carousel?.product_card_border_radius ?? 12)}px`,
-                      padding: '6px',
-                      boxSizing: 'border-box',
-                      // Removido o filtro de escala de cinza/opacidade, todos os cards ficam nítidos
-                    }}
-                  >
-                    <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-50">
-                      <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=100&q=80" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p style={{ fontSize: `${Number(carousel?.product_card_name_size ?? 9)}px`, color: carousel?.product_card_name_color || '#0F172A' }} className="font-bold truncate">Calça Confort</p>
-                      <p style={{ fontSize: `${Number(carousel?.product_card_price_size ?? 8)}px`, color: carousel?.product_card_price_color || colors?.primary || '#0094EB' }} className="font-black">R$ 149,95</p>
+                <video
+                  ref={el => { if (el) videoRefs.current.set(i, el); else videoRefs.current.delete(i); }}
+                  src={videoSrc}
+                  loop
+                  muted
+                  playsInline
+                  style={{ objectFit: carousel?.object_fit || 'cover' }}
+                  className="w-full h-full pointer-events-none"
+                />
+                {carousel?.show_play_icon !== false && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                    <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
+                      <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
                     </div>
                   </div>
                 )}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
     </div>
