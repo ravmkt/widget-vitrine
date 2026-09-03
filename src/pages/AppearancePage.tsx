@@ -1957,7 +1957,8 @@ const DynamicCarouselPreview = ({
   const videoSources = DEMO_PREVIEW_VIDEOS;
   const len = videoSources.length;
 
-  const REPEAT_TILES = 9;
+  // Multiplicador de blocos aumentado de 9 para 12 para cobrir perfeitamente o desktop (850px) de ponta a ponta
+  const REPEAT_TILES = 12;
   const middleTile = Math.floor(REPEAT_TILES / 2);
   const baseIndex = middleTile * len;
   const trackVideos = Array.from({ length: REPEAT_TILES }, () => videoSources).flat();
@@ -1995,13 +1996,15 @@ const DynamicCarouselPreview = ({
   const titleSizeVal = Number(carousel?.title_font_size ?? 14);
   const isBold = carousel?.title_bold ?? true;
 
-  // REGRA DE LARGURA CONFORME VIEWPORT (MOBILE VS DESKTOP)
+  // LARGURA ADAPTATIVA DE ALTA PRECISÃO
+  // No mobile, fixamos em 92px para desenhar o snap "peek" de 3 itens de forma consistente
+  // No desktop, respeitamos dinamicamente a largura definida pelo usuário no slider do painel
   const rawWidth = isMobile
-    ? 95 // Largura ideal fixa para manter visual snap "peek" de 3 itens no celular (275px)
+    ? 92 
     : Number(carousel?.itemWidth ?? carousel?.width ?? 90);
 
   const spacingNum = isMobile
-    ? 8  // Espaçamento otimizado para o celular
+    ? 8  // Espaçamento responsivo e refinado para o celular
     : Number(carousel?.spacing ?? carousel?.gap ?? 8);
 
   const playInactive = carousel?.autoplay_videos ?? true;
@@ -2048,7 +2051,8 @@ const DynamicCarouselPreview = ({
     titleAlign === 'right' ? 'text-right w-full px-4' :
     'text-center w-full';
 
-  const shadowStyle = applyShadow ? '0 10px 25px -5px rgba(0,0,0,0.4), 0 8px 10px -6px rgba(0,0,0,0.1)' : 'none';
+  // Sombra com maior suavidade de desfoque
+  const shadowStyle = applyShadow ? '0 12px 28px -5px rgba(0,0,0,0.45), 0 8px 12px -6px rgba(0,0,0,0.15)' : 'none';
   const step = rawWidth + spacingNum;
 
   return (
@@ -2059,11 +2063,17 @@ const DynamicCarouselPreview = ({
         </div>
       )}
 
-      <div className="relative w-full py-4 pb-20" style={{ overflowX: 'hidden', overflowY: 'visible' }}>
+      {/* 
+        🔥 CORREÇÃO DO CLIPPING (OVERFLOW):
+        Substituímos o overflowY inconsistente e adicionamos paddings adequados (pt-8 e pb-24).
+        Isso garante que o zoom do card ativo e as sombras tenham espaço físico de sobra para renderizar sem sofrer cortes.
+      */}
+      <div className="relative w-full pt-8 pb-24 overflow-hidden">
         <div
           className="flex items-center"
           style={{
             gap: `${spacingNum}px`,
+            // O cálculo de translate baseia-se perfeitamente no container-pai (desktop de 850px ou simulador celular)
             transform: `translateX(calc(50% - ${trackIndex * step + rawWidth / 2}px))`,
             transition: noTransition ? 'none' : 'transform 0.8s cubic-bezier(0.65, 0, 0.35, 1)',
           }}
@@ -2083,6 +2093,7 @@ const DynamicCarouselPreview = ({
                 style={{
                   width: `${rawWidth}px`,
                   height: cardHeight,
+                  // Aplica o scale com segurança graças ao padding vertical do contêiner pai
                   transform: isAct && scaleHighlight ? 'scale(1.1)' : 'scale(0.95)',
                   zIndex: isAct ? 10 : 1,
                 }}
