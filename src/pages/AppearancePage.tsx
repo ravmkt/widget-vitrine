@@ -2274,7 +2274,14 @@ const GridPreview = ({
   }, [grid.autoplay_videos, isSequential, activeSeqIndex]);
 
   const borderRadius = isCircle ? '50%' : cssSize(grid.border_radius, '12px');
-  const borderWidth = safeNumber((grid as any).border_width, 1, 0);
+  
+  // FIX: Tratamento rigoroso para a largura da borda do vídeo e do card (evita valores em branco/NaN)
+  const rawBorder = (grid as any).border_width;
+  const parsedBorderWidth = rawBorder !== undefined && rawBorder !== null && rawBorder !== '' ? Number(rawBorder) : 0;
+  
+  const rawCardBorder = (grid as any).product_card_border_width;
+  const parsedCardBorderWidth = rawCardBorder !== undefined && rawCardBorder !== null && rawCardBorder !== '' ? Number(rawCardBorder) : 0;
+
   const desktopCanvasWidth = 850;
   const desktopScale = isMobile ? 1 : Math.min(1, desktopCanvasWidth / Math.max(1, limitNumber(grid.visible_items, 10, 1, 10) * 160));
 
@@ -2294,7 +2301,7 @@ const GridPreview = ({
       style={{
         backgroundColor: (grid as any).product_card_bg || '#FFFFFF',
         borderColor: (grid as any).product_card_border_color || '#E2E8F0',
-        borderWidth: `${safeNumber((grid as any).product_card_border_width, 1, 0)}px`,
+        borderWidth: `${parsedCardBorderWidth}px`,
         borderRadius: `${safeNumber((grid as any).product_card_border_radius, 8, 0)}px`,
       }}
       className={`border flex items-center gap-1 shadow-sm ${compact ? 'p-1' : 'p-0.5'}`}
@@ -2360,7 +2367,7 @@ const GridPreview = ({
                 className={`relative bg-slate-950 overflow-hidden shadow-sm flex items-center justify-center transition-all duration-300 ${aspectClass}`}
                 style={{
                   borderRadius: isCircle ? '50%' : borderRadius,
-                  border: `${borderWidth}px solid ${grid.border_color || colors.primary}`
+                  border: `${parsedBorderWidth}px solid ${grid.border_color || colors.primary}`
                 }}
               >
                 <video
@@ -2403,10 +2410,10 @@ const GridPreview = ({
           {grid.title_text || 'Grade de Vídeos'}
         </h4>
       )}
-<div
-  className="grid w-full"
-  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: `${spacing * desktopScale}px`, transform: `scale(${desktopScale})`, transformOrigin: 'center center' }}
->
+      <div
+        className="grid w-full"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: `${spacing * desktopScale}px`, transform: `scale(${desktopScale})`, transformOrigin: 'center center' }}
+      >
         {items.map((_, i) => (
           <div key={i} className="w-full flex flex-col space-y-1">
             <div
@@ -2414,7 +2421,7 @@ const GridPreview = ({
                 width: '100%',
                 aspectRatio: isCircle ? '1 / 1' : `${1} / ${shapeRatio}`,
                 borderRadius,
-                border: `${borderWidth}px solid ${grid.border_color || colors.primary}`
+                border: `${parsedBorderWidth}px solid ${grid.border_color || colors.primary}`
               }}
               className="relative overflow-hidden bg-slate-950 shadow-sm flex items-center justify-center shrink-0"
             >
