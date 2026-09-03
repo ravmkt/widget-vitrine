@@ -1729,9 +1729,10 @@ const CarouselPreview = ({
   const shape = normalizeWidgetShape(carousel.shape, 'portrait');
   const isCircle = shape === 'circle';
 
-  const configuredWidth = safeNumber(parseFloat(carousel.width || '120'), 120, 40);
+  // Prioriza o itemWidth calculado dinamicamente pelo Canvas de Preview desktop
+  const configuredWidth = (carousel as any).itemWidth ?? safeNumber(parseFloat(carousel.width || '120'), 120, 40);
   const rawWidth = isMobile ? Math.min(configuredWidth * 0.75, 130) : configuredWidth;
-  const spacingNum = safeNumber(carousel.spacing, 12, 0);
+  const spacingNum = safeNumber(carousel.spacing || (carousel as any).gap, 12, 0);
   const step = rawWidth + spacingNum;
 
   const cardHeight = isCircle || shape === 'square'
