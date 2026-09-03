@@ -1857,7 +1857,7 @@ useLayoutEffect(() => {
       {showTitle && (
         <h4
           style={{ fontSize: `${titleFontSize}px`, fontWeight: titleBold ? 'bold' : 'normal' }}
-          className={cn('text-slate-800 tracking-wider w-full', titleAlignClass)}
+          className={cn('tracking-wider w-full', isMobile ? 'text-slate-800' : 'text-slate-100', titleAlignClass)}
         >
           {titleText}
         </h4>
@@ -2042,7 +2042,7 @@ const DynamicCarouselPreview = ({
     <div className="w-full py-3 space-y-3 overflow-visible">
       {showTitle && (
         <div className={titleAlignClass}>
-          <h4 style={titleStyle} className="text-slate-800 tracking-wider">{titleText}</h4>
+          <h4 style={titleStyle} className={cn(isMobile ? 'text-slate-800' : 'text-slate-100', 'tracking-wider')}>{titleText}</h4>
         </div>
       )}
 
@@ -2301,7 +2301,7 @@ const GridPreview = ({
   return (
     <div className="w-full py-3 space-y-3">
       {grid.show_title && (
-        <h4 className={`tracking-wider text-slate-800 ${titleAlignClass}`} style={titleStyle}>
+        <h4 className={`tracking-wider text-slate-100 ${titleAlignClass}`} style={titleStyle}>
           {grid.title_text || 'Grade de Vídeos'}
         </h4>
       )}
@@ -2452,9 +2452,28 @@ const ModalPreview = ({
     );
   }
 
-  // DESKTOP (Caso de visualização reduzida)
+  // DESKTOP: Player aberto sobre a tela desktop simulada, com overlay escuro e desfoque
   return (
-    <div className="overflow-hidden rounded-[1rem] border border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center h-[440px] w-full">
+    <div className="relative h-full w-full overflow-hidden">
+      {/* Esqueleto decorativo de página real por trás do overlay */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none select-none px-10 py-8 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div className="h-3 w-24 rounded-full bg-white/10" />
+          <div className="flex items-center gap-3">
+            <div className="h-2 w-12 rounded-full bg-white/10" />
+            <div className="h-2 w-12 rounded-full bg-white/10" />
+            <div className="h-2 w-12 rounded-full bg-white/10" />
+          </div>
+        </div>
+        <div className="mt-4 flex-1 rounded-2xl bg-white/[0.06] border border-white/10 flex flex-col items-center justify-center gap-3">
+          <div className="h-4 w-44 rounded-full bg-white/10" />
+          <div className="h-2.5 w-64 rounded-full bg-white/[0.07]" />
+          <div className="h-2.5 w-52 rounded-full bg-white/[0.07]" />
+        </div>
+      </div>
+
+      {/* Overlay escuro com desfoque: simula o player abrindo no meio da tela do desktop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center">
       <div
         className="relative h-[400px] w-[220px] overflow-hidden rounded-[1.25rem] shadow-2xl shrink-0 bg-slate-900"
         style={{
@@ -2490,6 +2509,7 @@ const ModalPreview = ({
             <X size={12} />
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
@@ -2689,13 +2709,13 @@ const PreviewCard = ({
       
       {/* Toggles de Dispositivo: Ocultados na aba Básico */}
       {!isBasicTab && (
-        <div className="absolute top-4 right-4 z-50 flex items-center bg-white/95 dark:bg-[#111524]/95 backdrop-blur-md border border-slate-200 dark:border-[#ff7a29]/30 p-1 rounded-xl shadow-xs">
+        <div className="absolute top-4 right-4 z-50 flex items-center bg-[#111524]/90 backdrop-blur-md border border-white/10 p-1 rounded-xl shadow-lg">
           <button
             type="button"
             onClick={() => handleDeviceChange('desktop')}
             className={cn(
               "flex items-center justify-center p-2 rounded-xl transition-all duration-200",
-              activeDevice === 'desktop' ? "bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
+              activeDevice === 'desktop' ? "bg-[#ff7a29] text-white shadow-md shadow-orange-500/40" : "text-slate-400 hover:text-white hover:bg-white/10"
             )}
             title="Visualizar em Desktop"
           >
@@ -2706,7 +2726,7 @@ const PreviewCard = ({
             onClick={() => handleDeviceChange('mobile')}
             className={cn(
               "flex items-center justify-center p-2 rounded-xl transition-all duration-200",
-              activeDevice === 'mobile' ? "bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
+              activeDevice === 'mobile' ? "bg-[#ff7a29] text-white shadow-md shadow-orange-500/40" : "text-slate-400 hover:text-white hover:bg-white/10"
             )}
             title="Visualizar em Mobile"
           >
@@ -2739,7 +2759,6 @@ const PreviewCard = ({
                   {activeTab === 'floating' ? (
                     /* FLUTUANTE: Área tracejada toma 100% da tela interna */
                     <div className="relative w-full h-full p-2 flex flex-col justify-end">
-                      <div className="absolute inset-1 border-2 border-dashed border-slate-300/70 rounded-[1.8rem] pointer-events-none" />
                       <div className="relative w-full h-full">
                         <FloatingPreview floating={floating} colors={colors} device={activeDevice} />
                       </div>
@@ -2760,24 +2779,50 @@ const PreviewCard = ({
                 </div>
               </div>
             ) : (
-              /* MOCKUP DESKTOP */
-<div className="w-full max-w-full h-[500px] transition-all duration-300 px-4">
+              /* ── CANVAS DESKTOP UNIFICADO: Tela simulada premium (padrão da aba Carrossel) ── */
+              <div className="relative w-full h-[500px] overflow-hidden bg-[#0f111a] border border-slate-800/80 rounded-2xl transition-all duration-300">
                 {activeTab === 'floating' && (
-                  <div className="relative w-full min-h-[350px] border-2 border-dashed border-slate-300 rounded-2xl bg-white p-4">
+                  <>
+                    {/* Esqueleto decorativo de uma página real por trás do widget */}
+                    <div aria-hidden className="absolute inset-0 pointer-events-none select-none px-10 py-8 flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <div className="h-3 w-24 rounded-full bg-white/10" />
+                        <div className="flex items-center gap-3">
+                          <div className="h-2 w-12 rounded-full bg-white/10" />
+                          <div className="h-2 w-12 rounded-full bg-white/10" />
+                          <div className="h-2 w-12 rounded-full bg-white/10" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex-1 rounded-2xl bg-white/[0.06] border border-white/10 flex flex-col items-center justify-center gap-3">
+                        <div className="h-4 w-44 rounded-full bg-white/10" />
+                        <div className="h-2.5 w-64 rounded-full bg-white/[0.07]" />
+                        <div className="h-2.5 w-52 rounded-full bg-white/[0.07]" />
+                      </div>
+                    </div>
+                    {/* Widget flutuante renderizado diretamente sobre a tela simulada (sem container limitador) */}
                     <FloatingPreview floating={floating} colors={colors} device={activeDevice} />
+                  </>
+                )}
+                {activeTab === 'carousel' && (
+                  <div className="absolute inset-0 flex items-center justify-center px-6 py-8">
+                    <CarouselPreview carousel={carousel} colors={colors} isMobile={false} />
                   </div>
                 )}
-                {activeTab === 'carousel' && <CarouselPreview carousel={carousel} colors={colors} isMobile={false} />}
-                {activeTab === 'dynamic_carousel' && <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} isMobile={false} />}
-{activeTab === 'grid' && (
-  <ScaleToFit>
-    <GridPreview grid={grid} colors={colors} isMobile={false} />
-  </ScaleToFit>
-)}
-                {activeTab === 'modal' && (
-                  <div className="flex justify-center items-center py-4">
-                    <ModalPreview formData={formData} colors={colors} isMobile={false} />
+                {activeTab === 'dynamic_carousel' && (
+                  <div className="absolute inset-0 flex items-center justify-center px-6 py-8">
+                    <DynamicCarouselPreview carousel={dynamicCarousel} colors={colors} isMobile={false} />
                   </div>
+                )}
+                {activeTab === 'grid' && (
+                  <div className="absolute inset-0 flex items-center justify-center p-6">
+                    <ScaleToFit>
+                      <GridPreview grid={grid} colors={colors} isMobile={false} />
+                    </ScaleToFit>
+                  </div>
+                )}
+                {activeTab === 'modal' && (
+                  /* Player abrindo sobre a tela desktop simulada */
+                  <ModalPreview formData={formData} colors={colors} isMobile={false} />
                 )}
               </div>
             )}
