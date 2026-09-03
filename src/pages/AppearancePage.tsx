@@ -39,7 +39,7 @@ import {
   Share2,
   Link,
   Link2Off,
-  Play, // <--- Adicionado aqui!
+  Play,
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
@@ -1630,30 +1630,36 @@ const FloatingPreview = ({
   }, [floating.autoplay_videos]);
 
   const isCircle = floating.shape === 'circle';
+  const isSquare = floating.shape === 'square';
   const isMobile = device === 'mobile';
-  
+
   // No mobile, escalamos levemente os tamanhos para que caiba proporcionalmente
   const scale = isMobile ? 0.85 : 1;
   const baseWidth = safeNumber(parseFloat(floating.width || '80'), 80, 40) * scale;
-  
+
   // Altura auto-calculada dependendo do formato escolhido
-  const baseHeight = isCircle 
-    ? baseWidth 
-    : floating.shape === 'landscape' 
-      ? Math.round(baseWidth * 9 / 16) 
+  const baseHeight = (isCircle || isSquare)
+    ? baseWidth
+    : floating.shape === 'landscape'
+      ? Math.round(baseWidth * 9 / 16)
       : Math.round(baseWidth * 16 / 9);
 
   const cardWidth = `${baseWidth}px`;
   const cardHeight = `${baseHeight}px`;
   const borderRadius = isCircle ? '50%' : cssSize(floating.border_radius, '12px');
 
+  // Ajuste na largura da borda (permite valor 0 e corrige bug do branco)
+  const parsedBorderWidth = floating.border_width !== undefined && floating.border_width !== null && floating.border_width !== '' 
+    ? Number(floating.border_width) 
+    : 0;
+
   const positionStyle: React.CSSProperties = {
     width: cardWidth,
     height: cardHeight,
     borderRadius: borderRadius,
     borderColor: colors.floatingBorder,
-    borderWidth: `${safeNumber(floating.border_width, 2, 0)}px`,
-    borderStyle: 'solid',
+    borderWidth: `${parsedBorderWidth}px`,
+    borderStyle: parsedBorderWidth > 0 ? 'solid' : 'none',
   };
 
   // Tratamento de margens proporcionais no mobile para não estourar a tela do mockup
@@ -1675,32 +1681,77 @@ const FloatingPreview = ({
     positionStyle.right = gapRight;
   }
 
+  // Fallbacks para booleanos
+  const showPlay = floating.show_play_button !== false;
+  const showClose = floating.show_close_button === true;
+  const showTooltip = floating.show_tooltip === true;
+
   return (
     <div
       style={positionStyle}
       className={cn(
-        "absolute overflow-hidden shadow-xl bg-slate-950 transition-all duration-300 flex items-center justify-center cursor-pointer",
-        isCircle ? "aspect-square" : ""
+        "absolute shadow-xl transition-all duration-300 flex items-center justify-center cursor-pointer",
+        isCircle ? "aspect-square" : "",
+        "overflow-visible z-10" // Importante: overflow-visible para o X e o Tooltip não serem cortados
       )}
     >
-      <video
-        ref={videoRef}
-        src={DEMO_PREVIEW_VIDEOS[0]}
-        loop
-        muted
-        playsInline
-        className={cn(
-          "w-full h-full object-cover",
-          floating.object_fit === 'contain' ? "object-contain" : 
-          floating.object_fit === 'fill' ? "object-fill" : "object-cover"
+      {/* Container interno que corta a imagem/video de acordo com o border radius */}
+      <div 
+        className="w-full h-full relative overflow-hidden bg-slate-950"
+        style={{ borderRadius: borderRadius }}
+      >
+        <video
+          ref={videoRef}
+          src={DEMO_PREVIEW_VIDEOS[0]}
+          loop
+          muted
+          playsInline
+          className={cn(
+            "w-full h-full object-cover",
+            floating.object_fit === 'contain' ? "object-contain" :
+            floating.object_fit === 'fill' ? "object-fill" : "object-cover"
+          )}
+        />
+        {/* Indicador de Stories / Play Icon */}
+        {showPlay && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-all">
+            <div className="w-6 h-6 rounded-full bg-white/90 shadow-md flex items-center justify-center">
+              <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
+            </div>
+          </div>
         )}
-      />
-      {/* Indicador de Stories / Play Icon */}
-      <div className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-all">
-        <div className="w-6 h-6 rounded-full bg-white/90 shadow-md flex items-center justify-center">
-          <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
-        </div>
       </div>
+
+      {/* Botão de Fechar (X) */}
+      {showClose && (
+        <div className="absolute -top-2 -right-2 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center z-20 shadow-sm backdrop-blur-sm">
+          <X size={12} />
+        </div>
+      )}
+
+      {/* Pílula / CTA (Tooltip) */}
+      {showTooltip && (
+        <div 
+          className="absolute z-20 bg-white text-slate-900 font-semibold px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap text-[11px]"
+          style={{
+            // Posiciona à esquerda ou à direita dependendo de onde o flutuante está na tela
+            ...(floating.position.includes('left') 
+                ? { left: 'calc(100% + 12px)', top: '50%', transform: 'translateY(-50%)' } 
+                : { right: 'calc(100% + 12px)', top: '50%', transform: 'translateY(-50%)' })
+          }}
+        >
+          {floating.tooltip_text || 'Ver histórias'}
+          {/* Setinha apontando para o flutuante */}
+          <div 
+            className="absolute top-1/2 -translate-y-1/2 w-0 h-0 border-y-[5px] border-y-transparent"
+            style={{
+              ...(floating.position.includes('left')
+                ? { left: '-5px', borderRight: '5px solid white' }
+                : { right: '-5px', borderLeft: '5px solid white' })
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };
