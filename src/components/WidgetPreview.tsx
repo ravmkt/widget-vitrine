@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Story, Appearance, Video, db, GeneralSettings } from '@/lib/db';
 import { Play, X } from 'lucide-react';
 
@@ -105,6 +105,10 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
     new Map(),
   );
 
+  // Estados e Referências para Escalonamento Dinâmico
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
   useEffect(() => {
     const buildStoryVideoMap = async () => {
       const storeId = (generalSettings as any)?.store_id || '';
@@ -142,6 +146,37 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
     buildStoryVideoMap();
   }, [stories, videos, generalSettings]);
 
+  // Efeito para recalcular a escala do smartphone simulado dinamicamente
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleResize = () => {
+      const containerHeight = container.clientHeight || 500;
+      const phoneHeight = 640; // Altura fixa original do celular simulado
+      
+      // Deixamos uma margem de segurança de 32px para o preview respirar
+      const availableHeight = containerHeight - 32; 
+
+      if (availableHeight < phoneHeight) {
+        // Calcula a escala proporcional limitando a um valor mínimo de 0.4 para não ficar ilegível
+        const calculatedScale = Math.max(0.4, availableHeight / phoneHeight);
+        setScale(calculatedScale);
+      } else {
+        setScale(1);
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+
+    resizeObserver.observe(container);
+    handleResize(); // Executa o cálculo inicial
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
   const activeStories = useMemo(
     () => stories.filter((s: any) => s.active !== false),
     [stories],
@@ -178,185 +213,197 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
   }
 
   return (
-    <div className="relative mx-auto flex h-[640px] w-[320px] flex-col overflow-hidden rounded-[40px] border-[12px] border-slate-900 bg-slate-950 shadow-2xl">
-      <div className="absolute left-1/2 top-0 z-50 flex h-6 w-32 -translate-x-1/2 transform items-center justify-center rounded-b-2xl bg-slate-900">
-        <div className="mb-1 h-1 w-12 rounded-full bg-slate-800" />
-      </div>
-
-      <div className="flex items-center justify-between border-b border-slate-100 bg-white px-4 pb-3 pt-8">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">
-            {(generalSettings as any).store_name?.charAt(0) || 'L'}
-          </div>
-
-          <div>
-            <h4 className="text-xs font-bold text-gray-800">
-              {(generalSettings as any).store_name || 'Loja'}
-            </h4>
-
-            <p className="text-[10px] text-gray-400">
-              {((generalSettings as any).store_url || '').replace(
-                /(^\w+:|^)\/\//,
-                '',
-              )}
-            </p>
-          </div>
+    <div 
+      ref={containerRef} 
+      className="bg-[#0f111a] border border-slate-800/80 rounded-2xl h-[500px] w-full relative overflow-hidden flex justify-center items-center p-4 shadow-inner"
+    >
+      <div 
+        style={{ 
+          transform: `scale(${scale})`, 
+          transformOrigin: 'center center',
+          flexShrink: 0
+        }}
+        className="relative mx-auto flex h-[640px] w-[320px] flex-col overflow-hidden rounded-[40px] border-[12px] border-slate-900 bg-slate-950 shadow-2xl transition-transform duration-200 ease-out"
+      >
+        <div className="absolute left-1/2 top-0 z-50 flex h-6 w-32 -translate-x-1/2 transform items-center justify-center rounded-b-2xl bg-slate-900">
+          <div className="mb-1 h-1 w-12 rounded-full bg-slate-800" />
         </div>
 
-        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
-          Loja Ativa
-        </span>
-      </div>
+        <div className="flex items-center justify-between border-b border-slate-100 bg-white px-4 pb-3 pt-8">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">
+              {(generalSettings as any).store_name?.charAt(0) || 'L'}
+            </div>
 
-      <div className="relative flex flex-1 flex-col justify-between overflow-y-auto bg-slate-50 p-4">
-        <div className="space-y-3">
-          <div className="flex h-24 flex-col justify-between rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
-            <div className="h-3 w-2/3 rounded bg-gray-200" />
-            <div className="flex h-8 items-center justify-center rounded-xl bg-violet-100 text-xs font-bold text-violet-600">
-              Ver Novidades
+            <div>
+              <h4 className="text-xs font-bold text-gray-800">
+                {(generalSettings as any).store_name || 'Loja'}
+              </h4>
+
+              <p className="text-[10px] text-gray-400">
+                {((generalSettings as any).store_url || '').replace(
+                  /(^\w+:|^)\/\//,
+                  '',
+                )}
+              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex h-32 flex-col justify-between rounded-2xl border border-slate-100 bg-white p-2 shadow-sm">
-              <div className="h-20 rounded-xl bg-slate-100" />
-              <div className="h-2 w-3/4 rounded bg-gray-200" />
-            </div>
-
-            <div className="flex h-32 flex-col justify-between rounded-2xl border border-slate-100 bg-white p-2 shadow-sm">
-              <div className="h-20 rounded-xl bg-slate-100" />
-              <div className="h-2 w-1/2 rounded bg-gray-200" />
-            </div>
-          </div>
+          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+            Loja Ativa
+          </span>
         </div>
 
-        {(generalSettings as any).stories_enabled && activeStories.length > 0 && (
-          <div className="mt-auto border-t border-slate-100 pt-4">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-              Stories em Destaque
-            </p>
+        <div className="relative flex flex-1 flex-col justify-between overflow-y-auto bg-slate-50 p-4">
+          <div className="space-y-3">
+            <div className="flex h-24 flex-col justify-between rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+              <div className="h-3 w-2/3 rounded bg-gray-200" />
+              <div className="flex h-8 items-center justify-center rounded-xl bg-violet-100 text-xs font-bold text-violet-600">
+                Ver Novidades
+              </div>
+            </div>
 
-            <div className="scrollbar-none flex gap-3 overflow-x-auto pb-2">
-              {activeStories.map(story => {
-                const storyAppearance = resolveAppearanceForStory(
-                  story,
-                  appearances,
-                  generalSettings,
-                );
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex h-32 flex-col justify-between rounded-2xl border border-slate-100 bg-white p-2 shadow-sm">
+                <div className="h-20 rounded-xl bg-slate-100" />
+                <div className="h-2 w-3/4 rounded bg-gray-200" />
+              </div>
 
-                const storyThumb = getVideoThumb(
-                  storyVideosMap.get(story.id)?.[0],
-                );
+              <div className="flex h-32 flex-col justify-between rounded-2xl border border-slate-100 bg-white p-2 shadow-sm">
+                <div className="h-20 rounded-xl bg-slate-100" />
+                <div className="h-2 w-1/2 rounded bg-gray-200" />
+              </div>
+            </div>
+          </div>
 
-                const themeColor =
-                  storyAppearance?.primary_color || '#8B5CF6';
+          {(generalSettings as any).stories_enabled && activeStories.length > 0 && (
+            <div className="mt-auto border-t border-slate-100 pt-4">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                Stories em Destaque
+              </p>
 
-                return (
-                  <button
-                    key={story.id}
-                    onClick={() => handleStoryClick(story)}
-                    className="group flex flex-shrink-0 flex-col items-center gap-1 focus:outline-none"
-                    type="button"
-                  >
-                    <div
-                      className="rounded-full p-[2px] transition-transform duration-300 group-hover:scale-105"
-                      style={{
-                        background: `linear-gradient(45deg, ${themeColor}, #EC4899)`,
-                      }}
+              <div className="scrollbar-none flex gap-3 overflow-x-auto pb-2">
+                {activeStories.map(story => {
+                  const storyAppearance = resolveAppearanceForStory(
+                    story,
+                    appearances,
+                    generalSettings,
+                  );
+
+                  const storyThumb = getVideoThumb(
+                    storyVideosMap.get(story.id)?.[0],
+                  );
+
+                  const themeColor =
+                    storyAppearance?.primary_color || '#8B5CF6';
+
+                  return (
+                    <button
+                      key={story.id}
+                      onClick={() => handleStoryClick(story)}
+                      className="group flex flex-shrink-0 flex-col items-center gap-1 focus:outline-none"
+                      type="button"
                     >
-                      <div className="relative h-14 w-14 overflow-hidden rounded-full border-2 border-white bg-slate-200">
-                        <img
-                          src={storyThumb}
-                          alt={story.title}
-                          className="h-full w-full object-cover"
-                        />
+                      <div
+                        className="rounded-full p-[2px] transition-transform duration-300 group-hover:scale-105"
+                        style={{
+                          background: `linear-gradient(45deg, ${themeColor}, #EC4899)`,
+                        }}
+                      >
+                        <div className="relative h-14 w-14 overflow-hidden rounded-full border-2 border-white bg-slate-200">
+                          <img
+                            src={storyThumb}
+                            alt={story.title}
+                            className="h-full w-full object-cover"
+                          />
 
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                          <Play className="h-4 w-4 fill-white text-white opacity-80" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                            <Play className="h-4 w-4 fill-white text-white opacity-80" />
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <span className="max-w-[60px] truncate text-center text-[9px] font-medium text-gray-700">
-                      {story.title}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {activeStory && mainVideoForActiveStory && (
-        <div className="absolute inset-0 z-50 flex flex-col justify-between bg-black p-4">
-          <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-white/30">
-            <div
-              className="h-full w-2/3 animate-[pulse_1.5s_infinite]"
-              style={{
-                backgroundColor: activeAppearance?.primary_color || '#FFFFFF',
-              }}
-            />
-          </div>
-
-          <div className="mt-2 flex items-center justify-between text-white">
-            <div className="flex items-center gap-2">
-              <div
-                className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                style={{
-                  backgroundColor:
-                    activeAppearance?.primary_color || '#8B5CF6',
-                }}
-              >
-                {(generalSettings as any).store_name?.charAt(0) || 'L'}
+                      <span className="max-w-[60px] truncate text-center text-[9px] font-medium text-gray-700">
+                        {story.title}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
+            </div>
+          )}
+        </div>
 
-              <span className="text-xs font-bold">{activeStory.title}</span>
+        {activeStory && mainVideoForActiveStory && (
+          <div className="absolute inset-0 z-50 flex flex-col justify-between bg-black p-4">
+            <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-white/30">
+              <div
+                className="h-full w-2/3 animate-[pulse_1.5s_infinite]"
+                style={{
+                  backgroundColor: activeAppearance?.primary_color || '#FFFFFF',
+                }}
+              />
             </div>
 
-            <button
-              type="button"
-              onClick={() => setActiveStory(null)}
-              className="rounded-full bg-black/40 p-1 text-white hover:bg-black/60"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="relative my-4 flex flex-1 items-center justify-center overflow-hidden rounded-2xl bg-slate-900">
-<video
-  key={`${mainVideoForActiveStory.id}-${activeAppearance?.autoplay_videos}`}
-  src={getVideoUrl(mainVideoForActiveStory)}
-  className="h-full w-full object-cover"
-  autoPlay={activeAppearance?.autoplay_videos !== false}
-  loop
-  muted
-  playsInline
-/>
-          </div>
-
-          {(activeStory as any).cta_enabled &&
-            (activeStory as any).cta_type !== 'none' && (
-              <div className="pb-4">
-                <button
-                  type="button"
-                  onClick={() => handleCtaClick((activeStory as any).cta_url)}
+            <div className="mt-2 flex items-center justify-between text-white">
+              <div className="flex items-center gap-2">
+                <div
+                  className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
                   style={{
                     backgroundColor:
-                      activeAppearance?.button_color ||
-                      activeAppearance?.primary_color ||
-                      '#8B5CF6',
+                      activeAppearance?.primary_color || '#8B5CF6',
                   }}
-                  className="w-full rounded-xl py-2.5 text-xs font-bold text-white shadow-lg transition-opacity hover:opacity-90"
                 >
-                  {(activeStory as any).cta_text || 'Comprar Agora'}
-                </button>
-              </div>
-            )}
-        </div>
-      )}
+                  {(generalSettings as any).store_name?.charAt(0) || 'L'}
+                </div>
 
-      <div className="absolute bottom-1 left-1/2 h-1 w-32 -translate-x-1/2 transform rounded-full bg-slate-800" />
+                <span className="text-xs font-bold">{activeStory.title}</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActiveStory(null)}
+                className="rounded-full bg-black/40 p-1 text-white hover:bg-black/60"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="relative my-4 flex flex-1 items-center justify-center overflow-hidden rounded-2xl bg-slate-900">
+              <video
+                key={`${mainVideoForActiveStory.id}-${activeAppearance?.autoplay_videos}`}
+                src={getVideoUrl(mainVideoForActiveStory)}
+                className="h-full w-full object-cover"
+                autoPlay={activeAppearance?.autoplay_videos !== false}
+                loop
+                muted
+                playsInline
+              />
+            </div>
+
+            {(activeStory as any).cta_enabled &&
+              (activeStory as any).cta_type !== 'none' && (
+                <div className="pb-4">
+                  <button
+                    type="button"
+                    onClick={() => handleCtaClick((activeStory as any).cta_url)}
+                    style={{
+                      backgroundColor:
+                        activeAppearance?.button_color ||
+                        activeAppearance?.primary_color ||
+                        '#8B5CF6',
+                    }}
+                    className="w-full rounded-xl py-2.5 text-xs font-bold text-white shadow-lg transition-opacity hover:opacity-90"
+                  >
+                    {(activeStory as any).cta_text || 'Comprar Agora'}
+                  </button>
+                </div>
+              )}
+          </div>
+        )}
+
+        <div className="absolute bottom-1 left-1/2 h-1 w-32 -translate-x-1/2 transform rounded-full bg-slate-800" />
+      </div>
     </div>
   );
 };
