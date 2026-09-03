@@ -1613,78 +1613,76 @@ const FloatingPreview = ({
   colors,
   device,
 }: {
-  floating: FloatingConfig;
-  colors: PreviewColors;
-  device: DeviceType;
+  floating: any;
+  colors: any;
+  device: any;
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const vid = videoRef.current;
     if (!vid) return;
-    if (floating.autoplay_videos ?? true) {
+    if (floating?.autoplay_videos ?? true) {
       vid.play().catch(() => {});
     } else {
       vid.pause();
     }
-  }, [floating.autoplay_videos]);
+  }, [floating?.autoplay_videos]);
 
-  const isCircle = floating.shape === 'circle';
-  const isSquare = floating.shape === 'square';
+  const shape = floating?.shape || 'portrait';
+  const isCircle = shape === 'circle';
+  const isSquare = shape === 'square';
   const isMobile = device === 'mobile';
 
   // No mobile, escalamos levemente os tamanhos para que caiba proporcionalmente
   const scale = isMobile ? 0.85 : 1;
-  const baseWidth = safeNumber(parseFloat(floating.width || '80'), 80, 40) * scale;
+  const baseWidth = (Number(floating?.width || 80)) * scale;
 
   // Altura auto-calculada dependendo do formato escolhido
   const baseHeight = (isCircle || isSquare)
     ? baseWidth
-    : floating.shape === 'landscape'
+    : shape === 'landscape'
       ? Math.round(baseWidth * 9 / 16)
       : Math.round(baseWidth * 16 / 9);
 
-  const cardWidth = `${baseWidth}px`;
-  const cardHeight = `${baseHeight}px`;
-  const borderRadius = isCircle ? '50%' : cssSize(floating.border_radius, '12px');
+  // Fallbacks Seguros para Border Radius
+  const rawRadius = floating?.border_radius;
+  const radiusNum = rawRadius !== undefined && rawRadius !== '' ? rawRadius : 12;
+  const borderRadius = isCircle ? '50%' : `${radiusNum}px`;
 
-  // Ajuste na largura da borda (permite valor 0 e corrige bug do branco)
-  const parsedBorderWidth = floating.border_width !== undefined && floating.border_width !== null && floating.border_width !== '' 
-    ? Number(floating.border_width) 
-    : 0;
-
-  const positionStyle: React.CSSProperties = {
-    width: cardWidth,
-    height: cardHeight,
-    borderRadius: borderRadius,
-    borderColor: colors.floatingBorder,
-    borderWidth: `${parsedBorderWidth}px`,
-    borderStyle: parsedBorderWidth > 0 ? 'solid' : 'none',
-  };
+  // Ajuste na largura da borda (permite valor 0 e corrige bug visual)
+  const rawBorderWidth = floating?.border_width ?? floating?.border_style;
+  const parsedBorderWidth = rawBorderWidth !== undefined && rawBorderWidth !== '' ? Number(rawBorderWidth) : 0;
+  
+  // Cor da borda com fallback para cor primária do painel
+  const borderColor = floating?.border_color || colors?.primary || '#0094EB';
 
   // Tratamento de margens proporcionais no mobile para não estourar a tela do mockup
-  const gapBottom = isMobile ? '12px' : cssSize(floating.bottom_spacing, '20px');
-  const gapTop = isMobile ? '12px' : cssSize(floating.top_spacing, '20px');
-  const gapLeft = isMobile ? '12px' : cssSize(floating.left_spacing, '20px');
-  const gapRight = isMobile ? '12px' : cssSize(floating.right_spacing, '20px');
+  const pos = floating?.position || 'fixed_bottom_right';
+  const gapBottom = isMobile ? '12px' : (floating?.bottom_spacing !== undefined ? `${floating.bottom_spacing}px` : '20px');
+  const gapTop = isMobile ? '12px' : (floating?.top_spacing !== undefined ? `${floating.top_spacing}px` : '20px');
+  const gapLeft = isMobile ? '12px' : (floating?.left_spacing !== undefined ? `${floating.left_spacing}px` : '20px');
+  const gapRight = isMobile ? '12px' : (floating?.right_spacing !== undefined ? `${floating.right_spacing}px` : '20px');
 
-  if (floating.position === 'fixed_bottom_right' || floating.position === 'fixed_bottom_left') {
-    positionStyle.bottom = gapBottom;
-  }
-  if (floating.position === 'fixed_top_right' || floating.position === 'fixed_top_left') {
-    positionStyle.top = gapTop;
-  }
-  if (floating.position === 'fixed_bottom_left' || floating.position === 'fixed_top_left') {
-    positionStyle.left = gapLeft;
-  }
-  if (floating.position === 'fixed_bottom_right' || floating.position === 'fixed_top_right') {
-    positionStyle.right = gapRight;
-  }
+  const positionStyle: React.CSSProperties = {
+    width: `${baseWidth}px`,
+    height: `${baseHeight}px`,
+  };
 
-  // Fallbacks para booleanos
-  const showPlay = floating.show_play_button !== false;
-  const showClose = floating.show_close_button === true;
-  const showTooltip = floating.show_tooltip === true;
+  if (pos.includes('bottom')) positionStyle.bottom = gapBottom;
+  if (pos.includes('top')) positionStyle.top = gapTop;
+  if (pos.includes('left')) positionStyle.left = gapLeft;
+  if (pos.includes('right')) positionStyle.right = gapRight;
+
+  // Resolvedor Blindado para Valores Booleanos que vêm do Formulário
+  const resolveBool = (val: any, fallback: boolean) => {
+    if (val === undefined || val === null || val === '') return fallback;
+    return String(val) === 'true' || val === true || val === 1 || val === '1';
+  };
+
+  const showPlay = resolveBool(floating?.show_play_icon ?? floating?.show_play_button, true);
+  const showClose = resolveBool(floating?.show_close_icon ?? floating?.show_close_button ?? floating?.show_close, false);
+  const showTooltip = resolveBool(floating?.show_tooltip ?? floating?.show_cta, false);
 
   return (
     <div
@@ -1692,13 +1690,17 @@ const FloatingPreview = ({
       className={cn(
         "absolute shadow-xl transition-all duration-300 flex items-center justify-center cursor-pointer",
         isCircle ? "aspect-square" : "",
-        "overflow-visible z-10" // Importante: overflow-visible para o X e o Tooltip não serem cortados
+        "overflow-visible z-10" // overflow-visible para o X e o Tooltip não serem cortados
       )}
     >
-      {/* Container interno que corta a imagem/video de acordo com o border radius */}
+      {/* Container interno: A borda fica aqui com box-sizing: border-box */}
       <div 
-        className="w-full h-full relative overflow-hidden bg-slate-950"
-        style={{ borderRadius: borderRadius }}
+        className="w-full h-full relative overflow-hidden bg-slate-950 shadow-sm"
+        style={{ 
+          borderRadius: borderRadius,
+          border: `${parsedBorderWidth}px solid ${borderColor}`,
+          boxSizing: 'border-box'
+        }}
       >
         <video
           ref={videoRef}
@@ -1706,16 +1708,13 @@ const FloatingPreview = ({
           loop
           muted
           playsInline
-          className={cn(
-            "w-full h-full object-cover",
-            floating.object_fit === 'contain' ? "object-contain" :
-            floating.object_fit === 'fill' ? "object-fill" : "object-cover"
-          )}
+          className="w-full h-full pointer-events-none"
+          style={{ objectFit: floating?.object_fit || 'cover' }}
         />
         {/* Indicador de Stories / Play Icon */}
         {showPlay && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-all">
-            <div className="w-6 h-6 rounded-full bg-white/90 shadow-md flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center">
               <Play size={10} className="text-slate-900 fill-slate-900 ml-0.5" />
             </div>
           </div>
@@ -1724,7 +1723,7 @@ const FloatingPreview = ({
 
       {/* Botão de Fechar (X) */}
       {showClose && (
-        <div className="absolute -top-2 -right-2 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center z-20 shadow-sm backdrop-blur-sm">
+        <div className="absolute -top-2 -right-2 w-6 h-6 bg-slate-900 text-white rounded-full flex items-center justify-center z-20 shadow-md border border-slate-700">
           <X size={12} />
         </div>
       )}
@@ -1732,22 +1731,21 @@ const FloatingPreview = ({
       {/* Pílula / CTA (Tooltip) */}
       {showTooltip && (
         <div 
-          className="absolute z-20 bg-white text-slate-900 font-semibold px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap text-[11px]"
+          className="absolute z-20 bg-white text-slate-900 font-semibold px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap text-[12px] border border-slate-100"
           style={{
-            // Posiciona à esquerda ou à direita dependendo de onde o flutuante está na tela
-            ...(floating.position.includes('left') 
-                ? { left: 'calc(100% + 12px)', top: '50%', transform: 'translateY(-50%)' } 
-                : { right: 'calc(100% + 12px)', top: '50%', transform: 'translateY(-50%)' })
+            ...(pos.includes('left') 
+                ? { left: 'calc(100% + 14px)', top: '50%', transform: 'translateY(-50%)' } 
+                : { right: 'calc(100% + 14px)', top: '50%', transform: 'translateY(-50%)' })
           }}
         >
-          {floating.tooltip_text || 'Ver histórias'}
-          {/* Setinha apontando para o flutuante */}
+          {floating?.tooltip_text || 'Ver histórias'}
+          {/* Setinha do Tooltip apontando para o vídeo */}
           <div 
-            className="absolute top-1/2 -translate-y-1/2 w-0 h-0 border-y-[5px] border-y-transparent"
+            className="absolute top-1/2 -translate-y-1/2 w-0 h-0 border-y-[6px] border-y-transparent"
             style={{
-              ...(floating.position.includes('left')
-                ? { left: '-5px', borderRight: '5px solid white' }
-                : { right: '-5px', borderLeft: '5px solid white' })
+              ...(pos.includes('left')
+                ? { left: '-6px', borderRight: '6px solid white' }
+                : { right: '-6px', borderLeft: '6px solid white' })
             }}
           />
         </div>
