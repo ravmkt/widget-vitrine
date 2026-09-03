@@ -2344,8 +2344,6 @@ const GridPreview = ({
   const totalItems = cols * 2; // Mostra duas linhas no desktop
   const items = Array.from({ length: totalItems });
   const shapeRatio = shape === 'landscape' ? (9 / 16) : (16 / 9);
-  const desktopCanvasWidth = 850;
-  const desktopScale = isMobile ? 1 : Math.min(1, desktopCanvasWidth / Math.max(1, cols * 160));
 
   return (
     <div className="w-full py-3 space-y-3">
