@@ -2164,10 +2164,6 @@ export const DynamicCarouselPreview = ({
   );
 };
 
-import React, { useEffect, useRef, useState } from "react";
-import { Play } from "lucide-react";
-// Certifique-se de importar DEMO_PREVIEW_VIDEOS, normalizeWidgetShape, safeNumber, limitNumber etc.
-
 export const GridPreview = ({
   grid,
   colors,
