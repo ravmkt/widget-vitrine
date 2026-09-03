@@ -1675,14 +1675,17 @@ export const FloatingPreview = ({
     return String(val) === 'true' || val === true || val === 1 || val === '1';
   };
 
-  const showPlay = resolveBool(floating?.show_play_icon ?? floating?.show_play_button, true);
-  const showClose = resolveBool(floating?.show_close_icon ?? floating?.show_close_button ?? floating?.show_close, false);
-  const showTooltip = resolveBool(floating?.show_tooltip ?? floating?.show_cta, false);
+  // Toggles de exibição (mais abrangentes para cobrir os nomes do state do seu painel)
+  const showPlay = resolveBool(floating?.show_play_icon ?? floating?.show_play_button ?? floating?.show_play, true);
+  const showClose = resolveBool(floating?.show_close_icon ?? floating?.show_close_button ?? floating?.show_close ?? floating?.close_button, false);
+  const showTooltip = resolveBool(floating?.show_tooltip ?? floating?.show_cta ?? floating?.cta_active, false);
 
-  // Variáveis para a Pílula CPA
-  const cpaText = floating?.cpa_text || floating?.tooltip_text || 'VER VÍDEO';
-  const cpaBgColor = floating?.cpa_bg_color || colors?.primary || '#0094EB';
-  const cpaTextColor = floating?.cpa_text_color || '#FFFFFF';
+  // Variáveis para a Pílula CTA (Corrigidas e mapeadas corretamente)
+  const ctaText = floating?.cta_text ?? floating?.tooltip_text ?? 'VER VÍDEO';
+  const ctaBgColor = floating?.cta_bg_color ?? floating?.tooltip_bg_color ?? colors?.primary ?? '#0094EB';
+  const ctaTextColor = floating?.cta_text_color ?? floating?.tooltip_text_color ?? '#FFFFFF';
+  const ctaFontSize = floating?.cta_font_size ?? floating?.tooltip_font_size ?? 14;
+  const ctaBold = resolveBool(floating?.cta_bold ?? floating?.cta_text_bold ?? floating?.tooltip_bold ?? true, true);
 
   return (
     <div
@@ -1695,7 +1698,7 @@ export const FloatingPreview = ({
     >
       {/* CONTAINER DO VÍDEO */}
       <div 
-        className="w-full h-full relative overflow-hidden bg-slate-950 shadow-sm"
+        className="w-full h-full relative overflow-hidden bg-slate-950 shadow-sm transition-all duration-300"
         style={{ 
           borderRadius: borderRadius,
           border: `${parsedBorderWidth}px solid ${borderColor}`,
@@ -1719,33 +1722,33 @@ export const FloatingPreview = ({
           </div>
         )}
 
-        {/* Botão de Fechar (X) Movido para DENTRO do vídeo conforme print 1 */}
+        {/* Botão de Fechar (X) */}
         {showClose && (
-          <div className="absolute top-2 right-2 w-6 h-6 bg-white text-slate-500 rounded-full flex items-center justify-center z-20 shadow-md">
+          <div className="absolute top-2 right-2 w-6 h-6 bg-white text-slate-500 rounded-full flex items-center justify-center z-20 shadow-md transition-opacity">
             <X size={14} />
           </div>
         )}
       </div>
 
-      {/* CPA - Pílula Vazando (Tooltip) */}
+      {/* CTA - Pílula Vazando (Tooltip) */}
       {showTooltip && (
         <div 
-          className="absolute z-20 shadow-md flex items-center justify-center whitespace-nowrap"
+          className="absolute z-20 shadow-md flex items-center justify-center whitespace-nowrap transition-all duration-300"
           style={{
-            backgroundColor: cpaBgColor,
-            color: cpaTextColor,
+            backgroundColor: ctaBgColor,
+            color: ctaTextColor,
             padding: '8px 16px',
             borderRadius: '24px',
-            fontSize: '14px',
-            fontWeight: 'bold',
+            fontSize: `${ctaFontSize}px`,
+            fontWeight: ctaBold ? 'bold' : 'normal',
             bottom: '12px',
             // Posiciona saindo pra direita (se no lado esquerdo da tela) ou pra esquerda (se lado direito)
             ...(pos.includes('left') 
-                ? { left: 'calc(100% - 20px)' } 
-                : { right: 'calc(100% - 20px)' })
+                ? { left: 'calc(100% - 15px)' } 
+                : { right: 'calc(100% - 15px)' })
           }}
         >
-          {cpaText}
+          {ctaText}
         </div>
       )}
     </div>
