@@ -1754,9 +1754,6 @@ export const FloatingPreview = ({
   );
 };
 
-
-import { Play } from 'lucide-react'; // Certifique-se de importar o ícone caso não esteja
-
 export const CarouselPreview = ({
   carousel,
   colors,
