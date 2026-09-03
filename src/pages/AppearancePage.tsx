@@ -2419,95 +2419,104 @@ const ModalPreview = ({
 
   if (isMobile) {
     return (
-      <div 
-        className="relative w-full h-full overflow-hidden bg-slate-950 flex flex-col justify-between"
-        style={{
-          color: '#FFFFFF',
-          fontFamily: formData.font_family,
-        }}
-      >
-        {/* Vídeo de fundo em Tela Cheia */}
-        <video
-          src={DEMO_PREVIEW_VIDEOS[0]}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 h-full w-full object-cover pointer-events-none"
-        />
+      // Fundo escurecido que representa o restante da tela do celular
+      <div className="relative w-full h-full overflow-hidden bg-slate-950/90 flex items-center justify-center p-4">
         
-        {/* Sombra de leitura superior/inferior */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90 pointer-events-none z-10" />
+        {/* Caixa do Player (ocupando ~85% da tela, com bordas e raio dinâmicos) */}
+        <div 
+          className="relative w-full h-[85%] max-h-[700px] overflow-hidden flex flex-col justify-between shadow-2xl bg-black"
+          style={{
+            color: '#FFFFFF',
+            fontFamily: formData.font_family,
+            borderColor: m.border_color || colors.primary,
+            borderWidth: `${parsedBorderWidth}px`,
+            borderStyle: parsedBorderWidth > 0 ? 'solid' : 'none',
+            borderRadius: m.border_radius ? `${m.border_radius}px` : '1rem', // Aplica o raio da borda!
+          }}
+        >
+          {/* Vídeo de fundo em Tela Cheia dentro da caixa */}
+          <video
+            src={DEMO_PREVIEW_VIDEOS[0]}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
+          />
+          
+          {/* Sombra de leitura superior/inferior */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90 pointer-events-none z-10" />
 
-        {/* Header do Player (Notch Safe) */}
-        <div className="relative z-20 flex items-center justify-between p-3 pt-8">
-          {m.show_title && (
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm" />
-              <div>
-                <h4 className="text-xs font-bold text-white drop-shadow leading-tight">Calça Confort</h4>
-                <p className="text-[9px] text-white/70">Vidlytics Store</p>
+          {/* Header do Player (O pt-8 foi reduzido para pt-3 pois não encosta mais no topo do celular) */}
+          <div className="relative z-20 flex items-center justify-between p-3 pt-3">
+            {m.show_title && (
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm" />
+                <div>
+                  <h4 className="text-xs font-bold text-white drop-shadow leading-tight">Calça Confort</h4>
+                  <p className="text-[9px] text-white/70">Vidlytics Store</p>
+                </div>
               </div>
-            </div>
-          )}
-          <button
-            type="button"
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 transition-colors hover:bg-black/60"
-          >
-            <X size={14} />
-          </button>
-        </div>
-
-        {/* Botões de engajamento na Lateral */}
-        <div className="absolute right-3 bottom-[110px] z-20 flex flex-col items-center gap-3.5">
-          <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
-            <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
-              <Heart size={16} className="text-white fill-white" />
-            </div>
-            <span className="text-[8px] font-semibold mt-0.5 drop-shadow">1.2k</span>
-          </button>
-          <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
-            <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
-              <MessageCircle size={16} className="text-white" />
-            </div>
-            <span className="text-[8px] font-semibold mt-0.5 drop-shadow">48</span>
-          </button>
-          <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
-            <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
-              <Share2 size={16} className="text-white" />
-            </div>
-            <span className="text-[8px] font-semibold mt-0.5 drop-shadow">Enviar</span>
-          </button>
-        </div>
-
-        {/* Rodapé com o Card de Compras do Produto e Linha de Progresso */}
-        <div className="relative z-20 w-full p-3 space-y-2.5">
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 flex items-center gap-2.5 shadow-2xl border border-white/20 text-slate-900 transition hover:scale-[1.01]">
-            <div className="h-11 w-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
-              <img
-                src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=150&q=80"
-                alt="Product"
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h5 className="text-[11px] font-bold text-slate-900 truncate">Calça Confort Premium</h5>
-              <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-[11px] font-black" style={{ color: colors.primary }}>R$ 149,95</span>
-                <span className="text-[9px] text-slate-400 line-through">R$ 199,90</span>
-              </div>
-            </div>
-            <button 
-              className="text-white text-[10px] font-black py-1.5 px-3 rounded-xl transition shrink-0 shadow-sm"
-              style={{ backgroundColor: colors.primary }}
+            )}
+            <button
+              type="button"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 transition-colors hover:bg-black/60"
             >
-              Comprar
+              <X size={14} />
             </button>
           </div>
 
-          {/* Barra de progresso do vídeo */}
-          <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full rounded-full w-2/3" style={{ backgroundColor: colors.primary }} />
+          {/* Botões de engajamento na Lateral */}
+          <div className="absolute right-3 bottom-[110px] z-20 flex flex-col items-center gap-3.5">
+            <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+              <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                <Heart size={16} className="text-white fill-white" />
+              </div>
+              <span className="text-[8px] font-semibold mt-0.5 drop-shadow">1.2k</span>
+            </button>
+            <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+              <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                <MessageCircle size={16} className="text-white" />
+              </div>
+              <span className="text-[8px] font-semibold mt-0.5 drop-shadow">48</span>
+            </button>
+            <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+              <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                <Share2 size={16} className="text-white" />
+              </div>
+              <span className="text-[8px] font-semibold mt-0.5 drop-shadow">Enviar</span>
+            </button>
+          </div>
+
+          {/* Rodapé com o Card de Compras do Produto e Linha de Progresso */}
+          <div className="relative z-20 w-full p-3 space-y-2.5">
+            <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 flex items-center gap-2.5 shadow-2xl border border-white/20 text-slate-900 transition hover:scale-[1.01]">
+              <div className="h-11 w-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
+                <img
+                  src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=150&q=80"
+                  alt="Product"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h5 className="text-[11px] font-bold text-slate-900 truncate">Calça Confort Premium</h5>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-[11px] font-black" style={{ color: colors.primary }}>R$ 149,95</span>
+                  <span className="text-[9px] text-slate-400 line-through">R$ 199,90</span>
+                </div>
+              </div>
+              <button 
+                className="text-white text-[10px] font-black py-1.5 px-3 rounded-xl transition shrink-0 shadow-sm"
+                style={{ backgroundColor: colors.primary }}
+              >
+                Comprar
+              </button>
+            </div>
+
+            {/* Barra de progresso do vídeo */}
+            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full rounded-full w-2/3" style={{ backgroundColor: colors.primary }} />
+            </div>
           </div>
         </div>
       </div>
