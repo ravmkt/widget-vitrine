@@ -2401,7 +2401,7 @@ export const GridPreview = ({
   );
 };
 
-const ModalPreview = ({
+export const ModalPreview = ({
   formData,
   colors,
   isMobile = false,
@@ -2412,17 +2412,31 @@ const ModalPreview = ({
 }) => {
   const { modal_config: m } = formData;
   
-  // Ajuste na largura da borda (permite valor 0 corretamente)
+  // Tratamento da borda do modal
   const parsedBorderWidth = m.border_width !== undefined && m.border_width !== null && m.border_width !== '' 
     ? Number(m.border_width) 
     : 0;
 
+  // Tratamento rigoroso para propriedades do Card do Produto
+  const rawCardBorder = m.product_card_border_width;
+  const parsedCardBorderWidth = rawCardBorder !== undefined && rawCardBorder !== null && rawCardBorder !== '' && !isNaN(Number(rawCardBorder)) ? Number(rawCardBorder) : 0;
+  
+  const getCardStyle = () => ({
+    backgroundColor: m.product_card_bg || 'rgba(255,255,255,0.95)',
+    borderColor: m.product_card_border_color || 'rgba(255,255,255,0.2)',
+    borderWidth: `${parsedCardBorderWidth}px`,
+    borderStyle: parsedCardBorderWidth > 0 ? 'solid' : 'none',
+    borderRadius: m.product_card_border_radius !== undefined ? `${m.product_card_border_radius}px` : '1rem',
+  });
+
+  const getFontSize = (sizeVal: any, defaultSize: number, mobileScale = 1) => {
+    const size = sizeVal !== undefined && sizeVal !== null && sizeVal !== '' ? Number(sizeVal) : defaultSize;
+    return `${size * mobileScale}px`;
+  };
+
   if (isMobile) {
     return (
-      // Fundo escurecido que representa o restante da tela do celular
       <div className="relative w-full h-full overflow-hidden bg-slate-950/90 flex items-center justify-center p-4">
-        
-        {/* Caixa do Player (ocupando ~85% da tela, com bordas e raio dinâmicos) */}
         <div 
           className="relative w-full h-[85%] max-h-[700px] overflow-hidden flex flex-col justify-between shadow-2xl bg-black"
           style={{
@@ -2431,10 +2445,9 @@ const ModalPreview = ({
             borderColor: m.border_color || colors.primary,
             borderWidth: `${parsedBorderWidth}px`,
             borderStyle: parsedBorderWidth > 0 ? 'solid' : 'none',
-            borderRadius: m.border_radius ? `${m.border_radius}px` : '1rem', // Aplica o raio da borda!
+            borderRadius: m.border_radius ? `${m.border_radius}px` : '1rem',
           }}
         >
-          {/* Vídeo de fundo em Tela Cheia dentro da caixa */}
           <video
             src={DEMO_PREVIEW_VIDEOS[0]}
             autoPlay
@@ -2443,11 +2456,9 @@ const ModalPreview = ({
             playsInline
             className="absolute inset-0 h-full w-full object-cover pointer-events-none"
           />
-          
-          {/* Sombra de leitura superior/inferior */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90 pointer-events-none z-10" />
 
-          {/* Header do Player (O pt-8 foi reduzido para pt-3 pois não encosta mais no topo do celular) */}
+          {/* Header do Player */}
           <div className="relative z-20 flex items-center justify-between p-3 pt-3">
             {m.show_title && (
               <div className="flex items-center gap-2">
@@ -2466,54 +2477,83 @@ const ModalPreview = ({
             </button>
           </div>
 
-          {/* Botões de engajamento na Lateral */}
+          {/* Botões de engajamento Lateral */}
           <div className="absolute right-3 bottom-[110px] z-20 flex flex-col items-center gap-3.5">
-            <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
-              <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                <Heart size={16} className="text-white fill-white" />
-              </div>
-              <span className="text-[8px] font-semibold mt-0.5 drop-shadow">1.2k</span>
-            </button>
-            <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
-              <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                <MessageCircle size={16} className="text-white" />
-              </div>
-              <span className="text-[8px] font-semibold mt-0.5 drop-shadow">48</span>
-            </button>
-            <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
-              <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                <Share2 size={16} className="text-white" />
-              </div>
-              <span className="text-[8px] font-semibold mt-0.5 drop-shadow">Enviar</span>
-            </button>
+            {m.show_like_button !== false && (
+              <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+                <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                  <Heart size={16} className="text-white fill-white" />
+                </div>
+                <span className="text-[8px] font-semibold mt-0.5 drop-shadow">1.2k</span>
+              </button>
+            )}
+            {m.show_comments_button !== false && (
+              <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+                <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                  <MessageCircle size={16} className="text-white" />
+                </div>
+                <span className="text-[8px] font-semibold mt-0.5 drop-shadow">48</span>
+              </button>
+            )}
+            {m.show_share_button !== false && (
+              <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+                <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                  <Share2 size={16} className="text-white" />
+                </div>
+                <span className="text-[8px] font-semibold mt-0.5 drop-shadow">Enviar</span>
+              </button>
+            )}
           </div>
 
-          {/* Rodapé com o Card de Compras do Produto e Linha de Progresso */}
+          {/* Rodapé com Card e Linha de Progresso */}
           <div className="relative z-20 w-full p-3 space-y-2.5">
-            <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 flex items-center gap-2.5 shadow-2xl border border-white/20 text-slate-900 transition hover:scale-[1.01]">
-              <div className="h-11 w-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
-                <img
-                  src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=150&q=80"
-                  alt="Product"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h5 className="text-[11px] font-bold text-slate-900 truncate">Calça Confort Premium</h5>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[11px] font-black" style={{ color: colors.primary }}>R$ 149,95</span>
-                  <span className="text-[9px] text-slate-400 line-through">R$ 199,90</span>
-                </div>
-              </div>
-              <button 
-                className="text-white text-[10px] font-black py-1.5 px-3 rounded-xl transition shrink-0 shadow-sm"
-                style={{ backgroundColor: colors.primary }}
+            {m.show_product !== false && (
+              <div 
+                className="backdrop-blur-md p-2.5 flex items-center gap-2.5 shadow-2xl transition hover:scale-[1.01]"
+                style={getCardStyle()}
               >
-                Comprar
-              </button>
-            </div>
+                <div className="h-11 w-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
+                  <img
+                    src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=150&q=80"
+                    alt="Product"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h5 
+                    className="font-bold truncate" 
+                    style={{ 
+                      color: m.product_card_name_color || '#0F172A',
+                      fontSize: getFontSize(m.product_card_name_size, 11)
+                    }}
+                  >
+                    Calça Confort Premium
+                  </h5>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span 
+                      className="font-black" 
+                      style={{ 
+                        color: m.product_card_price_color || colors.primary,
+                        fontSize: getFontSize(m.product_card_price_size, 11)
+                      }}
+                    >
+                      R$ 149,95
+                    </span>
+                    <span className="text-[9px] text-slate-400 line-through">R$ 199,90</span>
+                  </div>
+                </div>
+                <button 
+                  className="text-white text-[10px] font-black py-1.5 px-3 rounded-xl transition shrink-0 shadow-sm"
+                  style={{ 
+                    backgroundColor: m.product_card_button_bg || colors.primary,
+                    color: m.product_card_button_text_color || '#FFFFFF'
+                  }}
+                >
+                  Comprar
+                </button>
+              </div>
+            )}
 
-            {/* Barra de progresso do vídeo */}
             <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
               <div className="h-full rounded-full w-2/3" style={{ backgroundColor: colors.primary }} />
             </div>
@@ -2523,10 +2563,9 @@ const ModalPreview = ({
     );
   }
 
-  // DESKTOP: Player aberto sobre a tela desktop simulada, com overlay escuro e desfoque
+  // DESKTOP: Player simulado
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#0f111a] border border-slate-800/80 rounded-2xl">
-      {/* Esqueleto decorativo de página real por trás do overlay */}
       <div aria-hidden className="absolute inset-0 pointer-events-none select-none px-10 py-8 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="h-3 w-24 rounded-full bg-white/10" />
@@ -2543,7 +2582,6 @@ const ModalPreview = ({
         </div>
       </div>
 
-      {/* Overlay escuro com desfoque: simula o player abrindo no meio da tela do desktop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
         <div
           className="relative h-full max-h-[410px] w-full max-w-[230px] overflow-hidden shadow-2xl shrink-0 bg-slate-900 flex flex-col justify-between"
@@ -2553,10 +2591,10 @@ const ModalPreview = ({
             borderColor: m.border_color || colors.primary,
             borderWidth: `${parsedBorderWidth}px`,
             borderStyle: parsedBorderWidth > 0 ? 'solid' : 'none',
-            borderRadius: cssSize(m.border_radius, '1.25rem'),
+            // Usando cssSize se estiver importado, caso contrário ajuste para: m.border_radius ? `${m.border_radius}px` : '1.25rem'
+            borderRadius: m.border_radius ? `${m.border_radius}px` : '1.25rem',
           }}
         >
-          {/* Vídeo de fundo em Tela Cheia */}
           <video
             src={DEMO_PREVIEW_VIDEOS[0]}
             autoPlay
@@ -2565,11 +2603,9 @@ const ModalPreview = ({
             playsInline
             className="absolute inset-0 h-full w-full object-cover pointer-events-none"
           />
-
-          {/* Sombra de leitura superior/inferior */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90 pointer-events-none z-10" />
 
-          {/* Header do Player Desktop Simulado */}
+          {/* Header */}
           <div className="relative z-20 flex items-center justify-between p-3">
             {m.show_title && (
               <div className="flex items-center gap-1.5">
@@ -2588,54 +2624,84 @@ const ModalPreview = ({
             </button>
           </div>
 
-          {/* Botões de engajamento na Lateral ajustados para Desktop */}
+          {/* Botões Desktop */}
           <div className="absolute right-2.5 bottom-[88px] z-20 flex flex-col items-center gap-2.5">
-            <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
-              <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                <Heart size={13} className="text-white fill-white" />
-              </div>
-              <span className="text-[7px] font-semibold mt-0.5 drop-shadow">1.2k</span>
-            </button>
-            <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
-              <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                <MessageCircle size={13} className="text-white" />
-              </div>
-              <span className="text-[7px] font-semibold mt-0.5 drop-shadow">48</span>
-            </button>
-            <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
-              <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                <Share2 size={13} className="text-white" />
-              </div>
-              <span className="text-[7px] font-semibold mt-0.5 drop-shadow">Enviar</span>
-            </button>
+            {m.show_like_button !== false && (
+              <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+                <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                  <Heart size={13} className="text-white fill-white" />
+                </div>
+                <span className="text-[7px] font-semibold mt-0.5 drop-shadow">1.2k</span>
+              </button>
+            )}
+            {m.show_comments_button !== false && (
+              <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+                <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                  <MessageCircle size={13} className="text-white" />
+                </div>
+                <span className="text-[7px] font-semibold mt-0.5 drop-shadow">48</span>
+              </button>
+            )}
+            {m.show_share_button !== false && (
+              <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+                <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                  <Share2 size={13} className="text-white" />
+                </div>
+                <span className="text-[7px] font-semibold mt-0.5 drop-shadow">Enviar</span>
+              </button>
+            )}
           </div>
 
-          {/* Rodapé com Card de Compras do Produto Compacto e Linha de Progresso */}
+          {/* Card Produto Desktop */}
           <div className="relative z-20 w-full p-2.5 space-y-2">
-            <div className="bg-white/95 backdrop-blur-md rounded-xl p-2 flex items-center gap-2 shadow-2xl border border-white/20 text-slate-900 transition hover:scale-[1.01]">
-              <div className="h-8 w-8 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
-                <img
-                  src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=150&q=80"
-                  alt="Product"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h5 className="text-[9px] font-bold text-slate-900 truncate">Calça Confort Premium</h5>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[9px] font-black" style={{ color: colors.primary }}>R$ 149,95</span>
-                  <span className="text-[7px] text-slate-400 line-through">R$ 199,90</span>
-                </div>
-              </div>
-              <button 
-                className="text-white text-[8px] font-black py-1 px-2 rounded-lg transition shrink-0 shadow-sm"
-                style={{ backgroundColor: colors.primary }}
+            {m.show_product !== false && (
+              <div 
+                className="backdrop-blur-md p-2 flex items-center gap-2 shadow-2xl transition hover:scale-[1.01]"
+                style={getCardStyle()}
               >
-                Comprar
-              </button>
-            </div>
+                <div className="h-8 w-8 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
+                  <img
+                    src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=150&q=80"
+                    alt="Product"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h5 
+                    className="font-bold truncate"
+                    style={{ 
+                      color: m.product_card_name_color || '#0F172A',
+                      // Reduz ligeiramente a fonte no mock de desktop para caber na visualização menor
+                      fontSize: getFontSize(m.product_card_name_size, 9, 0.8) 
+                    }}
+                  >
+                    Calça Confort Premium
+                  </h5>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span 
+                      className="font-black"
+                      style={{ 
+                        color: m.product_card_price_color || colors.primary,
+                        fontSize: getFontSize(m.product_card_price_size, 9, 0.8)
+                      }}
+                    >
+                      R$ 149,95
+                    </span>
+                    <span className="text-[7px] text-slate-400 line-through">R$ 199,90</span>
+                  </div>
+                </div>
+                <button 
+                  className="text-white text-[8px] font-black py-1 px-2 rounded-lg transition shrink-0 shadow-sm"
+                  style={{ 
+                    backgroundColor: m.product_card_button_bg || colors.primary,
+                    color: m.product_card_button_text_color || '#FFFFFF'
+                  }}
+                >
+                  Comprar
+                </button>
+              </div>
+            )}
 
-            {/* Barra de progresso do vídeo */}
             <div className="w-full h-0.5 bg-white/20 rounded-full overflow-hidden">
               <div className="h-full rounded-full w-2/3" style={{ backgroundColor: colors.primary }} />
             </div>
