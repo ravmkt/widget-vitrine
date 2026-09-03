@@ -449,11 +449,14 @@ const limitNumber = (
   return Math.min(max, Math.max(min, parsed));
 };
 
-const toNumberInputValue = (value: unknown) => {
-  if (value === null || value === undefined) return '';
-  const text = String(value).trim();
-  const match = text.match(/-?\d+(\.\d+)?/);
-  return match ? match[0] : '';
+const toNumberInputValue = (value: any) => {
+  // Se for undefined, null, string vazia ou não for um número válido, força o zero
+  if (value === undefined || value === null || value === "" || isNaN(Number(value))) {
+    return 0;
+  }
+  
+  // Retorna o valor numérico limpo
+  return Number(value);
 };
 
 const extractNumericCssSize = (value: unknown, fallback = '0px') => {
