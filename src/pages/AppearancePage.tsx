@@ -1805,13 +1805,19 @@ export const CarouselPreview = ({
     }
   }, [trackIndex, baseIndex, len]);
 
-  const shape = carousel?.shape || 'portrait';
+  // --- CORREÇÃO PRINCIPAL DE LAYOUT ---
+  const cw = containerWidth || (isMobile ? 320 : 850);
+  
+  // TRAVA DE SEGURANÇA: Se o container tem menos de 480px (mockup celular), FORÇA layout mobile, 
+  // mesmo que o componente pai esqueça de passar isMobile={true}.
+  const isMobileView = isMobile || cw <= 480;
+
+  const shape = normalizeWidgetShape(carousel?.shape, 'portrait');
   const isCircle = shape === 'circle';
   const showTitle = carousel?.show_title ?? false;
   const spacingNum = Number(carousel?.spacing ?? carousel?.gap ?? 12) || 0;
   
-  // REGRA DE NEGÓCIO APLICADA: 
-  // No mobile, ignoramos o `visibleItems` do painel e usamos a lógica de 1 card focado.
+  // A quantidade configurada no painel (ex: 4) SÓ afeta o Desktop agora.
   const visibleItemsDesktop = Math.max(1, Number(carousel?.visible_items ?? carousel?.visibleItems ?? 4));
 
   const rawBorderWidth = carousel?.border_width ?? carousel?.border_style;
@@ -1820,12 +1826,10 @@ export const CarouselPreview = ({
   const borderRadiusNum = Number(carousel?.border_radius) || 12;
   const borderRadius = isCircle ? '50%' : `${borderRadiusNum}px`;
 
-  const cw = containerWidth || (isMobile ? 320 : 850);
-  
-  // NO MOBILE: Card ocupa ~60% da tela para sobrar 20% de cada lado (os cards vazando)
-  // NO DESKTOP: Divide a largura total pela quantidade de itens visíveis
-  const baseItemWidth = isMobile
-    ? cw * 0.55 
+  // No Mobile View, o item ocupa exatos 60% da tela. 
+  // Isso garante a matemática perfeita: 1 inteiro central + 2 vazando nas bordas (20% cada).
+  const baseItemWidth = isMobileView
+    ? cw * 0.60 
     : Math.max(40, (cw - (spacingNum * (visibleItemsDesktop - 1))) / visibleItemsDesktop);
 
   const step = baseItemWidth + spacingNum;
@@ -1833,15 +1837,14 @@ export const CarouselPreview = ({
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
-      // No mobile apenas o item EXATAMENTE no centro toca. No desktop tocam os visíveis.
-      const isVisible = isMobile ? (i === trackIndex) : (i >= trackIndex && i < trackIndex + visibleItemsDesktop);
+      const isVisible = isMobileView ? (i === trackIndex) : (i >= trackIndex && i < trackIndex + visibleItemsDesktop);
       if (isVisible && (carousel?.autoplay_videos ?? true)) {
         video.play().catch(() => {});
       } else {
         video.pause();
       }
     });
-  }, [carousel?.autoplay_videos, trackIndex, isMobile, visibleItemsDesktop]);
+  }, [carousel?.autoplay_videos, trackIndex, isMobileView, visibleItemsDesktop]);
 
   const handleDragStart = (clientX: number) => { setNoTransition(true); setDragStartX(clientX); };
   const handleDragMove = (clientX: number) => { if (dragStartX !== null) setDragOffset(clientX - dragStartX); };
@@ -1852,12 +1855,17 @@ export const CarouselPreview = ({
     setDragStartX(null); setDragOffset(0); setNoTransition(false);
   };
 
+  // Cálculo seguro do translateX usando pixels em vez de porcentagem para não quebrar o flex container
+  const transformStyle = isMobileView 
+    ? `translateX(${ (cw / 2) - ((trackIndex * step) + (baseItemWidth / 2)) + dragOffset }px)`
+    : `translateX(${ -(trackIndex * step) + dragOffset }px)`;
+
   return (
     <div className="w-full py-2 flex flex-col space-y-3 select-none overflow-hidden box-border" ref={containerRef}>
       {showTitle && (
         <h4
           style={{ fontSize: `${carousel?.title_font_size || 14}px`, fontWeight: carousel?.title_bold ? 'bold' : 'normal' }}
-          className={cn('tracking-wider w-full px-1', isMobile ? 'text-slate-800' : 'text-slate-100 text-center')}
+          className={cn('tracking-wider w-full px-1', isMobileView ? 'text-slate-800' : 'text-slate-100 text-center')}
         >
           {carousel?.title_text || 'Stories'}
         </h4>
@@ -1877,17 +1885,13 @@ export const CarouselPreview = ({
           className="flex items-start"
           style={{
             gap: `${spacingNum}px`,
-            // Cálculo PERFEITO para centralizar o item ativo no mobile
-            transform: isMobile 
-              ? `translateX(calc(50% - ${trackIndex * step + (baseItemWidth / 2)}px + ${dragOffset}px))`
-              : `translateX(calc(-${trackIndex * step}px + ${dragOffset}px))`,
+            transform: transformStyle,
             transition: noTransition || dragStartX !== null ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
           }}
         >
           {trackVideos.map((videoSrc, i) => {
-            // LÓGICA DE FOCO EXCLUSIVA DO MOBILE
-            const isCenterMobile = isMobile && i === trackIndex;
-            const isInactiveMobile = isMobile && !isCenterMobile;
+            const isCenterMobile = isMobileView && i === trackIndex;
+            const isInactiveMobile = isMobileView && !isCenterMobile;
 
             let cardHeightStr = isCircle || shape === 'square' 
               ? `${baseItemWidth}px` 
@@ -1902,7 +1906,6 @@ export const CarouselPreview = ({
                 style={{ 
                   width: `${baseItemWidth}px`, 
                   gap: '8px',
-                  // Scale reduz os itens laterais. Opacity diminui levemente o destaque
                   transform: isInactiveMobile ? 'scale(0.92)' : 'scale(1)',
                   opacity: isInactiveMobile ? 0.9 : 1
                 }}
@@ -1912,7 +1915,6 @@ export const CarouselPreview = ({
                     width: '100%',
                     height: cardHeightStr,
                     borderRadius,
-                    // Borda só aparece no item ativo
                     border: isInactiveMobile ? `${borderWidth}px solid transparent` : `${borderWidth}px solid ${borderColor}`,
                     boxSizing: 'border-box'
                   }}
@@ -1928,7 +1930,6 @@ export const CarouselPreview = ({
                     className="w-full h-full pointer-events-none"
                   />
                   
-                  {/* Overlay Escuro para os inativos simulando o layout do TikTok/Insta */}
                   {isInactiveMobile && <div className="absolute inset-0 bg-black/60 z-10 transition-colors duration-300" />}
                   
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none" />
@@ -1951,7 +1952,7 @@ export const CarouselPreview = ({
                       borderRadius: `${Number(carousel?.product_card_border_radius ?? 12)}px`,
                       padding: '6px',
                       boxSizing: 'border-box',
-                      filter: isInactiveMobile ? 'grayscale(80%) opacity(70%)' : 'none' // Desfoca o card de produto inativo também
+                      filter: isInactiveMobile ? 'grayscale(80%) opacity(70%)' : 'none'
                     }}
                   >
                     <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-50">
