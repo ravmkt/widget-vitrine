@@ -2474,42 +2474,99 @@ const ModalPreview = ({
 
       {/* Overlay escuro com desfoque: simula o player abrindo no meio da tela do desktop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center">
-      <div
-        className="relative h-[400px] w-[220px] overflow-hidden rounded-[1.25rem] shadow-2xl shrink-0 bg-slate-900"
-        style={{
-          color: '#FFFFFF',
-          fontFamily: formData.font_family,
-          borderColor: m.border_color || colors.primary,
-          borderWidth: `${borderW}px`,
-          borderStyle: borderW > 0 ? 'solid' : 'none',
-          borderRadius: cssSize(m.border_radius, '1.25rem'),
-        }}
-      >
-        <video
-          src={DEMO_PREVIEW_VIDEOS[0]}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 h-full w-full object-cover pointer-events-none"
-        />
+        <div
+          className="relative h-[410px] w-[230px] overflow-hidden shadow-2xl shrink-0 bg-slate-900 flex flex-col justify-between"
+          style={{
+            color: '#FFFFFF',
+            fontFamily: formData.font_family,
+            borderColor: m.border_color || colors.primary,
+            borderWidth: `${borderW}px`,
+            borderStyle: borderW > 0 ? 'solid' : 'none',
+            borderRadius: cssSize(m.border_radius, '1.25rem'),
+          }}
+        >
+          {/* Vídeo de fundo em Tela Cheia */}
+          <video
+            src={DEMO_PREVIEW_VIDEOS[0]}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
+          />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
+          {/* Sombra de leitura superior/inferior */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90 pointer-events-none z-10" />
 
-        <div className="absolute left-3 right-3 top-3 z-20 flex items-center justify-between gap-2">
-          {m.show_title && (
-            <h4 className="line-clamp-1 text-xs font-black text-white drop-shadow">
-              Calça Confort
-            </h4>
-          )}
-          <button
-            type="button"
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/60 bg-black/30 text-white backdrop-blur"
-          >
-            <X size={12} />
-          </button>
+          {/* Header do Player Desktop Simulado */}
+          <div className="relative z-20 flex items-center justify-between p-3">
+            {m.show_title && (
+              <div className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm" />
+                <div className="min-w-0">
+                  <h4 className="text-[10px] font-bold text-white drop-shadow truncate w-24">Calça Confort</h4>
+                  <p className="text-[8px] text-white/70 truncate w-24">Vidlytics Store</p>
+                </div>
+              </div>
+            )}
+            <button
+              type="button"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md"
+            >
+              <X size={12} />
+            </button>
+          </div>
+
+          {/* Botões de engajamento na Lateral (Simulado TikTok/Instagram) ajustados para Desktop */}
+          <div className="absolute right-2.5 bottom-20 z-20 flex flex-col items-center gap-2.5">
+            <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+              <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                <Heart size={13} className="text-white fill-white" />
+              </div>
+              <span className="text-[7px] font-semibold mt-0.5 drop-shadow">1.2k</span>
+            </button>
+            <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+              <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                <MessageCircle size={13} className="text-white" />
+              </div>
+              <span className="text-[7px] font-semibold mt-0.5 drop-shadow">48</span>
+            </button>
+            <button className="flex flex-col items-center text-white hover:scale-105 transition duration-150">
+              <div className="w-7 h-7 rounded-full bg-black/45 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                <Share2 size={13} className="text-white" />
+              </div>
+              <span className="text-[7px] font-semibold mt-0.5 drop-shadow">Enviar</span>
+            </button>
+          </div>
+
+          {/* Rodapé com Card de Compras do Produto Compacto e Linha de Progresso */}
+          <div className="relative z-20 w-full p-2.5 space-y-2">
+            <div className="bg-white/95 backdrop-blur-md rounded-xl p-2 flex items-center gap-2 shadow-2xl border border-white/20 text-slate-900 transition hover:scale-[1.01]">
+              <div className="h-8 w-8 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
+                <img
+                  src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=150&q=80"
+                  alt="Product"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h5 className="text-[9px] font-bold text-slate-900 truncate">Calça Confort Premium</h5>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-[9px] font-black text-[#0091ff]">R$ 149,95</span>
+                  <span className="text-[7px] text-slate-400 line-through">R$ 199,90</span>
+                </div>
+              </div>
+              <button className="bg-[#0091ff] text-white text-[8px] font-black py-1 px-2 rounded-lg hover:bg-[#0070f3] transition shrink-0 shadow-sm shadow-[#0091ff]/10">
+                Comprar
+              </button>
+            </div>
+
+            {/* Barra de progresso do vídeo */}
+            <div className="w-full h-0.5 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full bg-[#0091ff] rounded-full w-2/3" />
+            </div>
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );
