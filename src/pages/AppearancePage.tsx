@@ -1805,11 +1805,14 @@ export const CarouselPreview = ({
     }
   }, [trackIndex, baseIndex, len]);
 
-  const shape = normalizeWidgetShape(carousel?.shape, 'portrait');
+  const shape = carousel?.shape || 'portrait';
   const isCircle = shape === 'circle';
   const showTitle = carousel?.show_title ?? false;
   const spacingNum = Number(carousel?.spacing ?? carousel?.gap ?? 12) || 0;
-  const visibleItems = Math.max(1, Number(carousel?.visible_items ?? carousel?.visibleItems ?? 4));
+  
+  // REGRA DE NEGÓCIO APLICADA: 
+  // No mobile, ignoramos o `visibleItems` do painel e usamos a lógica de 1 card focado.
+  const visibleItemsDesktop = Math.max(1, Number(carousel?.visible_items ?? carousel?.visibleItems ?? 4));
 
   const rawBorderWidth = carousel?.border_width ?? carousel?.border_style;
   const borderWidth = rawBorderWidth !== undefined && rawBorderWidth !== '' ? Number(rawBorderWidth) : 0;
@@ -1818,23 +1821,27 @@ export const CarouselPreview = ({
   const borderRadius = isCircle ? '50%' : `${borderRadiusNum}px`;
 
   const cw = containerWidth || (isMobile ? 320 : 850);
+  
+  // NO MOBILE: Card ocupa ~60% da tela para sobrar 20% de cada lado (os cards vazando)
+  // NO DESKTOP: Divide a largura total pela quantidade de itens visíveis
   const baseItemWidth = isMobile
-    ? cw * 0.6 
-    : Math.max(40, (cw - (spacingNum * (visibleItems - 1))) / visibleItems);
+    ? cw * 0.55 
+    : Math.max(40, (cw - (spacingNum * (visibleItemsDesktop - 1))) / visibleItemsDesktop);
 
   const step = baseItemWidth + spacingNum;
 
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
-      const isVisible = isMobile ? (i === trackIndex) : (i >= trackIndex && i < trackIndex + visibleItems);
+      // No mobile apenas o item EXATAMENTE no centro toca. No desktop tocam os visíveis.
+      const isVisible = isMobile ? (i === trackIndex) : (i >= trackIndex && i < trackIndex + visibleItemsDesktop);
       if (isVisible && (carousel?.autoplay_videos ?? true)) {
         video.play().catch(() => {});
       } else {
         video.pause();
       }
     });
-  }, [carousel?.autoplay_videos, trackIndex, isMobile, visibleItems]);
+  }, [carousel?.autoplay_videos, trackIndex, isMobile, visibleItemsDesktop]);
 
   const handleDragStart = (clientX: number) => { setNoTransition(true); setDragStartX(clientX); };
   const handleDragMove = (clientX: number) => { if (dragStartX !== null) setDragOffset(clientX - dragStartX); };
@@ -1870,18 +1877,23 @@ export const CarouselPreview = ({
           className="flex items-start"
           style={{
             gap: `${spacingNum}px`,
+            // Cálculo PERFEITO para centralizar o item ativo no mobile
             transform: isMobile 
-              ? `translateX(calc(50% - ${trackIndex * step + baseItemWidth / 2}px + ${dragOffset}px))`
+              ? `translateX(calc(50% - ${trackIndex * step + (baseItemWidth / 2)}px + ${dragOffset}px))`
               : `translateX(calc(-${trackIndex * step}px + ${dragOffset}px))`,
             transition: noTransition || dragStartX !== null ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
           }}
         >
           {trackVideos.map((videoSrc, i) => {
-            // LÓGICA DE FOCO NO MOBILE
-            const isCenterMobile = i === trackIndex;
+            // LÓGICA DE FOCO EXCLUSIVA DO MOBILE
+            const isCenterMobile = isMobile && i === trackIndex;
             const isInactiveMobile = isMobile && !isCenterMobile;
 
-            let cardHeightStr = isCircle || shape === 'square' ? `${baseItemWidth}px` : shape === 'landscape' ? `${Math.round(baseItemWidth * (9 / 16))}px` : `${Math.round(baseItemWidth * (16 / 9))}px`;
+            let cardHeightStr = isCircle || shape === 'square' 
+              ? `${baseItemWidth}px` 
+              : shape === 'landscape' 
+                ? `${Math.round(baseItemWidth * (9 / 16))}px` 
+                : `${Math.round(baseItemWidth * (16 / 9))}px`;
 
             return (
               <div
@@ -1890,8 +1902,9 @@ export const CarouselPreview = ({
                 style={{ 
                   width: `${baseItemWidth}px`, 
                   gap: '8px',
-                  transform: isInactiveMobile ? 'scale(0.95)' : 'scale(1)',
-                  opacity: isInactiveMobile ? 0.7 : 1
+                  // Scale reduz os itens laterais. Opacity diminui levemente o destaque
+                  transform: isInactiveMobile ? 'scale(0.92)' : 'scale(1)',
+                  opacity: isInactiveMobile ? 0.9 : 1
                 }}
               >
                 <div
@@ -1899,7 +1912,7 @@ export const CarouselPreview = ({
                     width: '100%',
                     height: cardHeightStr,
                     borderRadius,
-                    // Apenas o central tem borda colorida no mobile
+                    // Borda só aparece no item ativo
                     border: isInactiveMobile ? `${borderWidth}px solid transparent` : `${borderWidth}px solid ${borderColor}`,
                     boxSizing: 'border-box'
                   }}
@@ -1914,8 +1927,9 @@ export const CarouselPreview = ({
                     style={{ objectFit: carousel?.object_fit || 'cover' }}
                     className="w-full h-full pointer-events-none"
                   />
-                  {/* Overlay escuro para os inativos (Design do Print 3) */}
-                  {isInactiveMobile && <div className="absolute inset-0 bg-black/60 z-10" />}
+                  
+                  {/* Overlay Escuro para os inativos simulando o layout do TikTok/Insta */}
+                  {isInactiveMobile && <div className="absolute inset-0 bg-black/60 z-10 transition-colors duration-300" />}
                   
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none" />
                   
@@ -1937,7 +1951,7 @@ export const CarouselPreview = ({
                       borderRadius: `${Number(carousel?.product_card_border_radius ?? 12)}px`,
                       padding: '6px',
                       boxSizing: 'border-box',
-                      filter: isInactiveMobile ? 'grayscale(80%)' : 'none'
+                      filter: isInactiveMobile ? 'grayscale(80%) opacity(70%)' : 'none' // Desfoca o card de produto inativo também
                     }}
                   >
                     <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-50">
