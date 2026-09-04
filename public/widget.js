@@ -5100,7 +5100,7 @@ function centerActiveItem(animate) {
   var containerWidth = trackContainer.offsetWidth;
   var itemCenter = getItemCenter(activeIndex);
   var maxScroll = getMaxScroll();
-  var translate = clamp(containerWidth / 2 - itemCenter, -maxScroll, 0);
+  var translate = clamp(containerWidth / 2 - itemCenter, -maxScroll, Infinity);
   track.style.transition = animate ? 'transform 0.3s ease' : 'none';
   track.style.transform = 'translateX(' + translate + 'px)';
 }

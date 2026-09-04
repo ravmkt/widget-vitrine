@@ -43,10 +43,10 @@ serve(async (req) => {
     const rawOrigin = req.headers.get("origin") || req.headers.get("referer") || "";
 
     // 1. Validação Obrigatória de Origem
-    if (!rawOrigin) {
+    if (!rawOrigin) { rawOrigin = "unknown_origin"; // Evita bloqueio severo por AdBlockers
       return new Response(JSON.stringify({ error: "Acesso negado: Cabeçalho de origem ou referer obrigatório." }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        
+        
       });
     }
 
@@ -57,7 +57,7 @@ serve(async (req) => {
     if (!storeId || !eventType || !ALLOWED_EVENTS.has(eventType)) {
       return new Response(JSON.stringify({ error: "Payload inválido ou tipo de evento não permitido." }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        
       });
     }
 
@@ -78,7 +78,7 @@ serve(async (req) => {
       console.error("[Track Event] Erro de infraestrutura ao buscar store:", storeError);
       return new Response(JSON.stringify({ error: "Erro interno no servidor." }), {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        
       });
     }
 
@@ -108,8 +108,8 @@ serve(async (req) => {
 
     if (!store || evaluateStoreBlock(store)) {
       return new Response(JSON.stringify({ error: "Loja inativa ou com assinatura bloqueada." }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        
+        
       });
     }
 
@@ -129,14 +129,14 @@ serve(async (req) => {
       if (!isAuthorizedDomain) {
         console.warn(`[Track Event] Bloqueado: Origem '${originHost}' não corresponde à loja '${storeHost}'`);
         return new Response(JSON.stringify({ error: "Origem não autorizada para esta loja." }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          
+          
         });
       }
     } catch (_) {
       return new Response(JSON.stringify({ error: "Formato do cabeçalho de origem inválido." }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        
       });
     }
 
@@ -170,26 +170,26 @@ serve(async (req) => {
       console.error("[Track Event] Erro na RPC interna:", rpcError);
       return new Response(JSON.stringify({ error: "Erro interno no servidor." }), {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        
       });
     }
 
     if (allowed === false) {
       return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente mais tarde." }), {
         status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        
       });
     }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      
     });
   } catch (err: any) {
     console.error("[Track Event] Erro fatal não tratado:", err);
     return new Response(JSON.stringify({ error: "Erro interno no servidor." }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      
     });
   }
 });
