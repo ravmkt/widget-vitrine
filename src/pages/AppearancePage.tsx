@@ -2018,25 +2018,19 @@ export const DynamicCarouselPreview = ({
     }
   }, [trackIndex, baseIndex, len]);
 
-  // VARIÁVEIS DE CONFIGURAÇÃO
   const shape = normalizeWidgetShape(carousel?.shape, 'portrait');
   const isCircle = shape === 'circle';
   const spacingNum = Number(carousel?.spacing ?? 8) || 0;
   const visibleItems = Math.max(1, Number(carousel?.visible_items ?? 4));
 
-  // MARGENS (Lidas para garantir alinhamento total)
   const ml = Number(carousel?.margin_left ?? 0);
   const mr = Number(carousel?.margin_right ?? 0);
   const mt = Number(carousel?.margin_top ?? 0);
   const mb = Number(carousel?.margin_bottom ?? 0);
 
   const cw = containerWidth || (isMobile ? 320 : 850);
-  
-  // Largura útil descontando as margens configuradas
   const availableWidth = Math.max(1, cw - ml - mr);
-  
-  // No Desktop: Usa a largura disponível para preencher até as bordas (se as margens forem 0)
-  // No Mobile: Crava em 60% para ver 3 vídeos
+
   const baseItemWidth = isMobile 
     ? cw * 0.6 
     : Math.max(80, (availableWidth - (spacingNum * (visibleItems - 1))) / visibleItems);
@@ -2048,6 +2042,10 @@ export const DynamicCarouselPreview = ({
   const borderColor = carousel?.border_color || colors?.primary || '#0094EB';
   const borderRadiusNum = Number(carousel?.border_radius ?? 12) || 0;
   const borderRadius = isCircle ? '50%' : `${borderRadiusNum}px`;
+
+  // CORREÇÃO: alinhamento do título
+  const titleAlign = carousel?.title_align ?? 'center';
+  const titleJustifyClass = titleAlign === 'left' ? 'text-left' : titleAlign === 'right' ? 'text-right' : 'text-center';
 
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
@@ -2081,7 +2079,7 @@ export const DynamicCarouselPreview = ({
       }}
     >
       {carousel?.show_title && (
-        <div className="w-full px-4 text-center">
+        <div className={cn("w-full px-4", titleJustifyClass)}>
           <h4 
             style={{ fontSize: `${Number(carousel?.title_font_size ?? 14)}px`, fontWeight: carousel?.title_bold ?? true ? 'bold' : 'normal' }} 
             className={isMobile ? 'text-slate-800' : 'text-slate-100 uppercase tracking-wider'}
@@ -2105,24 +2103,23 @@ export const DynamicCarouselPreview = ({
           className="flex items-center"
           style={{
             gap: `${spacingNum}px`,
-            // Desktop alinha à esquerda acompanhando o preenchimento, Mobile mantem foco centrado
-            transform: isMobile 
-              ? `translateX(calc(50% - ${trackIndex * step + baseItemWidth / 2}px + ${dragOffset}px))`
-              : `translateX(calc(-${trackIndex * step}px + ${dragOffset}px))`,
+            // CORREÇÃO: destaque SEMPRE centralizado, tanto mobile quanto desktop
+            transform: `translateX(calc(50% - ${trackIndex * step + baseItemWidth / 2}px + ${dragOffset}px))`,
             transition: noTransition || dragStartX !== null ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
           }}
         >
           {trackVideos.map((videoSrc, i) => {
             const isAct = i === trackIndex;
-            const isInactiveMobile = isMobile && !isAct;
-            
+            // CORREÇÃO: inatividade não depende mais do device
+            const isInactive = !isAct;
+
             let cardHeightStr = isCircle || shape === 'square' ? `${baseItemWidth}px` : shape === 'landscape' ? `${Math.round(baseItemWidth * (9 / 16))}px` : `${Math.round(baseItemWidth * (16 / 9))}px`;
 
-            // Escala só aplica os destaques no Mobile, no desktop estica pra ocupar
+            // CORREÇÃO: ampliação do destaque funciona em mobile E desktop
             let scaleVal = 1;
-            if (isMobile && carousel?.highlight_enlarge_active) {
+            if (carousel?.highlight_enlarge_active) {
               scaleVal = isAct ? 1.05 : 0.95;
-            } else if (isMobile && !isAct) {
+            } else if (!isAct) {
               scaleVal = 0.95;
             }
 
@@ -2137,11 +2134,11 @@ export const DynamicCarouselPreview = ({
                     width: '100%',
                     height: cardHeightStr,
                     borderRadius,
-                    // No mobile inativos perdem a cor real, desktop mantém preenchimento.
-                    border: isInactiveMobile ? `${borderWidth}px solid transparent` : `${borderWidth}px solid ${borderColor}`,
+                    border: isInactive ? `${borderWidth}px solid transparent` : `${borderWidth}px solid ${borderColor}`,
                     boxShadow: isAct && carousel?.highlight_shadow ? '0 12px 28px -5px rgba(0,0,0,0.45)' : 'none',
-                    opacity: isInactiveMobile && carousel?.highlight_desaturate_inactive ? 0.7 : 1,
-                    filter: isInactiveMobile && carousel?.highlight_desaturate_inactive ? 'grayscale(80%)' : 'none',
+                    // CORREÇÃO: desaturação funciona em mobile E desktop
+                    opacity: isInactive && carousel?.highlight_desaturate_inactive ? 0.7 : 1,
+                    filter: isInactive && carousel?.highlight_desaturate_inactive ? 'grayscale(80%)' : 'none',
                     boxSizing: 'border-box'
                   }}
                   className="relative overflow-hidden bg-slate-950 transition-all duration-500 box-border pointer-events-none"
@@ -2155,7 +2152,7 @@ export const DynamicCarouselPreview = ({
                     style={{ objectFit: carousel?.object_fit || 'cover' }}
                     className="w-full h-full"
                   />
-                  {isInactiveMobile && <div className="absolute inset-0 bg-black/60 z-10" />}
+                  {isInactive && <div className="absolute inset-0 bg-black/60 z-10" />}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40" />
                   
                   {isAct && carousel?.show_play_icon !== false && (
@@ -2175,7 +2172,7 @@ export const DynamicCarouselPreview = ({
                       border: `${Number(carousel?.product_card_border_width ?? 1)}px solid ${carousel?.product_card_border_color || '#E2E8F0'}`,
                       borderRadius: `${Number(carousel?.product_card_border_radius ?? 12)}px`,
                       padding: '8px',
-                      filter: isInactiveMobile ? 'grayscale(80%)' : 'none'
+                      filter: isInactive ? 'grayscale(80%)' : 'none'
                     }}
                   >
                     <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
