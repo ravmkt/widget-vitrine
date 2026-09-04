@@ -177,6 +177,10 @@ type DynamicCarouselConfig = Omit<
 
 type GridConfig = {
   visible_items: number;
+  margin_left?: string;
+  margin_right?: string;
+  margin_top?: string;
+  margin_bottom?: string;
   rows: number;
   spacing: number;
   shape: WidgetShape;
