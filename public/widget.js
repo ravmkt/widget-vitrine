@@ -5473,16 +5473,14 @@ card.style.cssText = [
       sendAnalyticsEvent('video_view', item.video ? item.video.id : null, null);
     });
 
-    var borderBoxShadow = hasBorder ? ('inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor) : '';
-
-    card.addEventListener('mouseenter', function () {
-      card.style.transform = 'translateY(-4px)';
-      card.style.boxShadow = borderBoxShadow ? ('0 8px 24px rgba(0,0,0,.15), ' + borderBoxShadow) : '0 8px 24px rgba(0,0,0,.15)';
-    });
-    card.addEventListener('mouseleave', function () {
-      card.style.transform = 'translateY(0)';
-      card.style.boxShadow = borderBoxShadow ? borderBoxShadow : 'none';
-    });
+card.addEventListener('mouseenter', function () {
+  card.style.transform = 'translateY(-4px)';
+  card.style.boxShadow = '0 8px 24px rgba(0,0,0,.15)';
+});
+card.addEventListener('mouseleave', function () {
+  card.style.transform = 'translateY(0)';
+  card.style.boxShadow = 'none';
+});
 
     itemWrapper.appendChild(card);
 
