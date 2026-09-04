@@ -58,6 +58,13 @@ serve(async (req) => {
       });
     }
 
+    const { data: storeSettings } = await supabaseAdmin
+  .from("store_settings")
+  .select("store_url")
+  .eq("store_id", storeId)
+  .limit(1)
+  .maybeSingle();
+
     function evaluateStoreBlock(s: any): boolean {
       if (!s) return true;
       const status = String(s.subscription_status || "").toLowerCase().trim();
