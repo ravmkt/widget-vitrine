@@ -5083,6 +5083,28 @@ track.appendChild(item);
   var currentTranslate = 0;
   var dragStartTranslate = 0;
 
+var activeIndex = 0;
+
+function getItemCenter(idx) {
+  var itemEls = track.children;
+  var pos = 0;
+  for (var i = 0; i < idx; i++) {
+    pos += (itemEls[i] ? itemEls[i].offsetWidth : itemWidthPx) + gapPx;
+  }
+  var activeW = itemEls[idx] ? itemEls[idx].offsetWidth : itemWidthPx;
+  return pos + activeW / 2;
+}
+
+function centerActiveItem(animate) {
+  if (!isMobileDevice) return;
+  var containerWidth = trackContainer.offsetWidth;
+  var itemCenter = getItemCenter(activeIndex);
+  var maxScroll = getMaxScroll();
+  var translate = clamp(containerWidth / 2 - itemCenter, -maxScroll, 0);
+  track.style.transition = animate ? 'transform 0.3s ease' : 'none';
+  track.style.transform = 'translateX(' + translate + 'px)';
+}
+
   function getTranslateX(el) {
     var style = window.getComputedStyle(el);
     var transform = style.transform;
