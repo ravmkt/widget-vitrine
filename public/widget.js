@@ -5070,10 +5070,28 @@ directFrameVid.src = directUrl;
         }
       }
 
-track.appendChild(item);
+      // ... (código existente acima da linha 5073)
+      track.appendChild(item);
     });
   });
-      
+
+  // 👇 INÍCIO DA IMPLEMENTAÇÃO DO LOOP VISUAL (CLONES) 👇
+  var itemsArray = Array.from(track.children);
+  if (itemsArray.length > 0) {
+    // 1. Clona o ÚLTIMO item e insere no COMEÇO (preenche o buraco esquerdo)
+    var cloneLast = itemsArray[itemsArray.length - 1].cloneNode(true);
+    cloneLast.classList.add('vidlytics-clone', 'clone-left');
+    // Para manter a estabilidade de eventos, aplicamos um pointer-events none nos clones 
+    // ou deixamos o clique passar se você usar event delegation no track
+    track.insertBefore(cloneLast, track.firstChild);
+
+    // 2. Clona o PRIMEIRO item (que agora é itemsArray[0]) e insere no FINAL (preenche buraco direito)
+    var cloneFirst = itemsArray[0].cloneNode(true);
+    cloneFirst.classList.add('vidlytics-clone', 'clone-right');
+    track.appendChild(cloneFirst);
+  }
+  // 👆 FIM DA IMPLEMENTAÇÃO 👆
+
   trackContainer.appendChild(track);
   wrapper.appendChild(trackContainer);
   
