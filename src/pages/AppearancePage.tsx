@@ -1611,8 +1611,6 @@ const getShapeLabel = (shape: WidgetShape) => {
 
 // ──────────────────── PREVIEWS (SANDBOX REAL) ────────────────────
 
-// Função utilitária mockada (ajuste conforme o seu arquivo original se necessário)
-
 export const FloatingPreview = ({
   floating,
   colors,
