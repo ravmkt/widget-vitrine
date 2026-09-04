@@ -167,8 +167,6 @@ type DynamicCarouselConfig = Omit<
   product_card_border_radius?: string;
   product_card_name_size?: string;
   product_card_price_size?: string;
-  product_card_button_bg?: string;
-  product_card_button_color?: string;
   title_text?: string;
   title_font_size?: number;
   title_align?: 'left' | 'center' | 'right';
