@@ -466,8 +466,10 @@ const extractNumericCssSize = (value: unknown, fallback = '0px') => {
 };
 
 const formatNumberLikeCurrent = (value: unknown, fallback = '0') => {
-  const numeric = toNumberInputValue(value);
-  return numeric || fallback;
+  if (value === undefined || value === null || value === "" || isNaN(Number(value))) {
+    return fallback;
+  }
+  return String(Number(value));
 };
 
 const getPortraitHeightFromWidth = (width: unknown) => {
