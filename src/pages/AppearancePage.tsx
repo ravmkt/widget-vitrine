@@ -502,7 +502,10 @@ const cssBorder = (borderWidth: string, color: string) => {
 };
 
 const normalizeBorderWidth = (value: unknown, fallback = '0') => {
-  return toNumberInputValue(value) || fallback;
+  if (value === undefined || value === null || value === "" || isNaN(Number(value))) {
+    return `${fallback}px`;
+  }
+  return `${Number(value)}px`;
 };
 
 const normalizeFloatingShapeValues = (
