@@ -5375,7 +5375,6 @@ card.style.cssText = [
         'transform:translateZ(0);',
         '-webkit-transform:translateZ(0);',
         'will-change:transform;',
-        '-webkit-mask-image:-webkit-radial-gradient(white, black);',
         'background:#000;'
       ].join('');
 
