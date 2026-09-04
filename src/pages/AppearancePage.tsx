@@ -2610,21 +2610,7 @@ export const ModalPreview = ({
 // DEPOIS:
 return (
   <div className="relative h-full w-full overflow-hidden bg-[#0f111a] border border-slate-800/80 rounded-2xl">
-    <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="flex items-center justify-between">
-          <div className="h-3 w-24 rounded-full bg-white/10" />
-          <div className="flex items-center gap-3">
-            <div className="h-2 w-12 rounded-full bg-white/10" />
-            <div className="h-2 w-12 rounded-full bg-white/10" />
-            <div className="h-2 w-12 rounded-full bg-white/10" />
-          </div>
-        </div>
-        <div className="mt-4 flex-1 rounded-2xl bg-white/[0.06] border border-white/10 flex flex-col items-center justify-center gap-3">
-          <div className="h-4 w-44 rounded-full bg-white/10" />
-          <div className="h-2.5 w-64 rounded-full bg-white/[0.07]" />
-          <div className="h-2.5 w-52 rounded-full bg-white/[0.07]" />
-        </div>
-      </div>
+      <div className="absolute inset-0 flex items-center justify-center p-4">
 
       <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
         <div
