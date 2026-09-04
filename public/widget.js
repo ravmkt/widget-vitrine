@@ -813,7 +813,7 @@ var spacing = safeInt(rcv('spacing', 'grid_spacing', '16'), 16);
   var marginLeft = toNumber(rcv('margin_left', 'grid_margin_left', '0'), 0);
 var marginRight = toNumber(rcv('margin_right', 'grid_margin_right', '0'), 0);
   var borderColor = rcv('border_color', 'grid_border_color', '#0094EB') || '#0094EB';
-  var borderWidth = safeInt(rcv('border_style', 'grid_border_width', '2'), 2);
+var borderWidth = safeInt(rcv('border_width', 'grid_border_width', '2'), 2);
 
   var rawBorderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
   // Se o formato for círculo, força o border-radius para 50%
