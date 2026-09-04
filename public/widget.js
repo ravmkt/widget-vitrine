@@ -5114,7 +5114,7 @@ directFrameVid.src = directUrl;
   var currentTranslate = 0;
   var dragStartTranslate = 0;
 
-var activeIndex = 0;
+var activeIndex = 1;
 
 function getItemCenter(idx) {
   var itemEls = track.children;
