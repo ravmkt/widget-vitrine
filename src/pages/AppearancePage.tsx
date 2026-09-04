@@ -4110,6 +4110,10 @@ const AppearancePage = () => {
                             <FormField label="Largura (px)"><input type="number" min="20" value={toNumberInputValue(activeGridConfig.width)} onChange={e => updateGridConfig({ width: e.target.value })} className={inputClass} /></FormField>
                             <FormField label="Colunas"><input type="number" min="1" max="10" value={activeGridConfig.visible_items} onChange={e => updateGridConfig({ visible_items: limitNumber(e.target.value, 1, 1, 10) })} className={inputClass} /></FormField>
                             <FormField label="Espaçamento (px)" className="col-span-2"><input type="number" min="0" value={activeGridConfig.spacing} onChange={e => updateGridConfig({ spacing: safeNumber(e.target.value, 0, 0) })} className={inputClass} /></FormField>
+                            <FormField label="Margem Esquerda (px)"><input type="number" min="0" value={toNumberInputValue((activeGridConfig as any).margin_left)} onChange={e => updateGridConfig({ margin_left: e.target.value } as any)} className={inputClass} /></FormField>
+                            <FormField label="Margem Direita (px)"><input type="number" min="0" value={toNumberInputValue((activeGridConfig as any).margin_right)} onChange={e => updateGridConfig({ margin_right: e.target.value } as any)} className={inputClass} /></FormField>
+                            <FormField label="Margem Superior (px)"><input type="number" min="0" value={toNumberInputValue((activeGridConfig as any).margin_top)} onChange={e => updateGridConfig({ margin_top: e.target.value } as any)} className={inputClass} /></FormField>
+                            <FormField label="Margem Inferior (px)"><input type="number" min="0" value={toNumberInputValue((activeGridConfig as any).margin_bottom)} onChange={e => updateGridConfig({ margin_bottom: e.target.value } as any)} className={inputClass} /></FormField>
                           </div>
                           <div className="mt-3 p-2 bg-sky-50 dark:bg-sky-500/5 rounded-xl border border-sky-100 dark:border-sky-500/20">
 <p className="text-[12px] text-white font-medium leading-snug">
