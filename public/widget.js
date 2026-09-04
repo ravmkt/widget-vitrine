@@ -5263,6 +5263,11 @@ function renderGridWidget(container, stories, appearance) {
   var cfg = getGridConfig(appearance);
   var fontFamily = getFontFamily(appearance);
 
+ container.style.marginTop = (cfg.marginTop || 0) + 'px';
+  container.style.marginBottom = (cfg.marginBottom || 0) + 'px';
+  container.style.marginLeft = (cfg.marginLeft || 0) + 'px';
+  container.style.marginRight = (cfg.marginRight || 0) + 'px';
+  
   // --- 1. RENDERIZAR TÍTULO DA VITRINE NO TOPO ---
   if (cfg.showTitle && cfg.titleText) {
     var titleEl = createEl('h2', 'vl-grid-title');
