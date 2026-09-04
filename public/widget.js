@@ -757,7 +757,7 @@ function getCarouselConfig(appearance) {
   return {
     // 1
     shape: shape,
-    itemAspect: aspect,
+aspectRatio: aspect,
     objectFit: objectFit,
     itemWidth: px(itemWidth),
     visibleItems: visibleItems,
@@ -3760,7 +3760,7 @@ return {
   aspectRatio: carouselAspectRatio, // ⬅️ NOVO
   borderRadius: toNumber(rcv('border_radius', '14'), 14),
   bgColor: rcv('bg_color', '#000000') || '#000000',
-  
+
     highlightMode: String(rcv('highlight_mode', 'ring')).trim().toLowerCase(),
     highlightShadow: toBoolean(rcv('highlight_shadow', false), false),
     highlightBorderColor: rcv('border_color', '#0094EB') || '#0094EB',
