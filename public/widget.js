@@ -4148,6 +4148,19 @@ function cloneItemDeeply(original, index, isClone) {
       track.appendChild(card);
     });
 
+    // --- INÍCIO: CLONES PARA LOOP INFINITO ---
+    var itemsArray = Array.from(track.children);
+    if (itemsArray.length > 0) {
+      var cloneLast = itemsArray[itemsArray.length - 1].cloneNode(true);
+      cloneLast.classList.add('vidlytics-clone', 'clone-left');
+      track.insertBefore(cloneLast, track.firstChild);
+
+      var cloneFirst = itemsArray[0].cloneNode(true);
+      cloneFirst.classList.add('vidlytics-clone', 'clone-right');
+      track.appendChild(cloneFirst);
+    }
+    // --- FIM: CLONES PARA LOOP INFINITO ---
+
     viewport.appendChild(track);
     wrapper.appendChild(viewport);
     container.appendChild(wrapper);
