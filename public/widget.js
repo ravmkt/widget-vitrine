@@ -5309,24 +5309,25 @@ gridWrapper.style.cssText = [
       'box-sizing:border-box;'
     ].join('');
 
-    var card = createEl('div', 'vl-grid-card');
-    var hasBorder = cfg.borderWidth > 0;
-    card.style.cssText = [
-      'width:100%;',
-      'aspect-ratio:' + cfg.aspectRatio + ';',
-      'border-radius:' + cfg.borderRadius + ';',
-      'overflow:hidden;',
-      'position:relative;',
-      'background:transparent;',
-      'cursor:pointer;',
-      'transition:transform .2s ease, box-shadow .2s ease, opacity 0.3s ease;',
-      'transform:translateZ(0);',
-      '-webkit-transform:translateZ(0);',
-      'backface-visibility:hidden;',
-      '-webkit-backface-visibility:hidden;',
-      '-webkit-mask-image:-webkit-radial-gradient(white, black);',
-      hasBorder ? ('box-shadow: inset 0 0 0 ' + cfg.borderWidth + 'px ' + cfg.borderColor + ';') : '',
-    ].join('');
+var card = createEl('div', 'vl-grid-card');
+var hasBorder = cfg.borderWidth > 0;
+card.style.cssText = [
+  'width:100%;',
+  'aspect-ratio:' + cfg.aspectRatio + ';',
+  'border-radius:' + cfg.borderRadius + ';',
+  'overflow:hidden;',
+  'position:relative;',
+  'background:transparent;',
+  'cursor:pointer;',
+  'box-sizing:border-box;',
+  'transition:transform .2s ease, box-shadow .2s ease, opacity 0.3s ease;',
+  'transform:translateZ(0);',
+  '-webkit-transform:translateZ(0);',
+  'backface-visibility:hidden;',
+  '-webkit-backface-visibility:hidden;',
+  '-webkit-mask-image:-webkit-radial-gradient(white, black);',
+  hasBorder ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';') : '',
+].join('');
 
     var rawVideoUrl = getVideoUrl(video);
     var thumbUrl = getVideoThumbnail(video) ||
