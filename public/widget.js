@@ -4169,7 +4169,7 @@ sendAnalyticsEvent('product_view', item.id || null, pData.id || null, { storyId:
     container.appendChild(wrapper);
     target.insertAdjacentElement(position, container);
 
-var activeIndex = visibleCount + 1;
+var activeIndex = visibleCount;
 
     function updateViewportPadding() {
       var activeCard = cardEls[activeIndex];
