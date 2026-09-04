@@ -2618,9 +2618,10 @@ export const ModalPreview = ({
   }
 
   // DESKTOP: Player simulado
-  return (
-    <div className="relative h-full w-full overflow-hidden bg-[#0f111a] border border-slate-800/80 rounded-2xl">
-      <div aria-hidden className="absolute inset-0 pointer-events-none select-none px-10 py-8 flex flex-col gap-4">
+// DEPOIS:
+return (
+  <div className="relative h-full w-full overflow-hidden bg-[#0f111a] border border-slate-800/80 rounded-2xl">
+    <div className="absolute inset-0 flex items-center justify-center p-4">
         <div className="flex items-center justify-between">
           <div className="h-3 w-24 rounded-full bg-white/10" />
           <div className="flex items-center gap-3">
