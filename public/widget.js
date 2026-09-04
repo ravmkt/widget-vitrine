@@ -4137,8 +4137,7 @@ sendAnalyticsEvent('product_click', item.id || null, pData.id || null, { storyId
           });
 
           card.appendChild(prodCard);
-          sendAnalyticsEvent('product_view', item.id || null, pData.id || null);
-        }
+sendAnalyticsEvent('product_view', item.id || null, pData.id || null, { storyId: (currentStories[item.storyIndex] || {}).id || null });        }
       }
 
       cardEls.push(card);
