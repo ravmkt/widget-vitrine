@@ -5201,7 +5201,14 @@ function onDragEnd() {
     }, true);
   });
   
-  target.insertAdjacentElement(position, container);
+target.insertAdjacentElement(position, container);
+
+if (isMobileDevice) {
+  requestAnimationFrame(function () {
+    centerActiveItem(false);
+    track.style.transition = 'transform 0.3s ease';
+  });
+}
 }
 
 function renderGridWidget(container, stories, appearance) {
