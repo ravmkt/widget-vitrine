@@ -33,6 +33,7 @@ import {
   PlaySquare,
   Rows3,
   Settings2,
+  ChevronRight,
   Heart,
   MessageCircle,
   ChevronDown,
