@@ -5071,8 +5071,7 @@ directFrameVid.src = directUrl;
             if (productUrl) {
               window.open(productUrl, '_blank');
             }
-            sendAnalyticsEvent('product_click', video ? video.id : null, productData ? productData.id : null);
-          });
+sendAnalyticsEvent('product_click', video ? video.id : null, productData ? productData.id : null, { storyId: story ? story.id : null });          });
 
           // Registra a visualização do produto na vitrine do carrossel
           sendAnalyticsEvent('product_view', video ? video.id : null, productData ? productData.id : null);
