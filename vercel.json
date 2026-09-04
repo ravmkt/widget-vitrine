@@ -4,7 +4,7 @@
     { "source": "/widget.js", "destination": "/widget.js" },
     { "source": "/vidlytics-tracking.js", "destination": "/vidlytics-tracking.js" },
     { "source": "/yampi-tracking.js", "destination": "/yampi-tracking.js" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
