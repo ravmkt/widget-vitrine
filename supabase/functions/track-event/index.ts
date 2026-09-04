@@ -28,15 +28,7 @@ serve(async (req) => {
   }
 
   try {
-    let rawOrigin = req.headers.get("origin") || req.headers.get("referer") || "";
-
-    if (!rawOrigin) { 
-      rawOrigin = "unknown_origin";
-      return new Response(JSON.stringify({ error: "Acesso negado: Cabeçalho de origem ou referer obrigatório." }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } // <- ADICIONADO
-      });
-    }
+    let rawOrigin = req.headers.get("origin") || req.headers.get("referer") || "unknown_origin";
 
     const body = await req.json().catch(() => ({}));
     const { storeId, eventType, videoId, productId, storyId, pageUrl, deviceType, pagePath } = body;
