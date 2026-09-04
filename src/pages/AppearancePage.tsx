@@ -1611,6 +1611,13 @@ const getShapeLabel = (shape: WidgetShape) => {
 
 // ──────────────────── PREVIEWS (SANDBOX REAL) ────────────────────
 
+import { useRef, useEffect } from 'react';
+import { Play, X } from 'lucide-react';
+import { cn } from '@/lib/utils'; // Assumindo que você usa o utilitário cn padrão do shadcn
+
+// Constante de exemplo (caso não esteja importada no seu arquivo)
+const DEMO_PREVIEW_VIDEOS = ['https://demo.vidlytics.com/video.mp4'];
+
 export const FloatingPreview = ({
   floating,
   colors,
@@ -1646,13 +1653,22 @@ export const FloatingPreview = ({
       ? Math.round(baseWidth * 9 / 16)
       : Math.round(baseWidth * 16 / 9);
 
+  // ==========================================
+  // CORREÇÃO: TRATAMENTO ESTRITO DE RAIO E BORDA (ACEITA 0)
+  // ==========================================
   const rawRadius = floating?.border_radius;
-  const radiusNum = rawRadius !== undefined && rawRadius !== '' ? rawRadius : 12;
+  const radiusNum = (rawRadius !== undefined && rawRadius !== null && rawRadius !== '' && !isNaN(Number(rawRadius)))
+    ? Math.max(0, Number(rawRadius)) // Evita números negativos, aceita 0
+    : 12; // Fallback se vier totalmente vazio
+  
   const borderRadius = isCircle ? '50%' : `${radiusNum}px`;
 
-  const rawBorderWidth = floating?.border_width ?? floating?.border_style;
-  const parsedBorderWidth = rawBorderWidth !== undefined && rawBorderWidth !== '' ? Number(rawBorderWidth) : 0;
-  
+  // Removido o fallback para border_style, pois 'solid' gera NaN
+  const rawBorderWidth = floating?.border_width;
+  const parsedBorderWidth = (rawBorderWidth !== undefined && rawBorderWidth !== null && rawBorderWidth !== '' && !isNaN(Number(rawBorderWidth)))
+    ? Math.max(0, Number(rawBorderWidth))
+    : 0;
+
   const borderColor = floating?.border_color || colors?.primary || '#0094EB';
 
   const pos = floating?.position || 'fixed_bottom_right';
@@ -1676,17 +1692,15 @@ export const FloatingPreview = ({
     return String(val) === 'true' || val === true || val === 1 || val === '1';
   };
 
-  // Toggles de exibição com os nomes EXATOS encontrados no seu state
   const showPlay = resolveBool(floating?.show_play_icon, true);
-  const showClose = resolveBool(floating?.allow_close, false); // Correção: allow_close
+  const showClose = resolveBool(floating?.allow_close, false);
   const showTooltip = resolveBool(floating?.show_tooltip ?? floating?.show_cta ?? floating?.cta_active ?? floating?.cta_enabled, false);
 
-  // Variáveis para a Pílula CTA com os nomes EXATOS
   const ctaText = floating?.cta_text ?? 'VER VÍDEO';
   const ctaBgColor = floating?.cta_bg_color ?? colors?.primary ?? '#0094EB';
   const ctaTextColor = floating?.cta_text_color ?? '#FFFFFF';
   const ctaFontSize = floating?.cta_font_size ?? 14;
-  const ctaBold = resolveBool(floating?.cta_is_bold ?? true, true); // Correção: cta_is_bold
+  const ctaBold = resolveBool(floating?.cta_is_bold ?? true, true);
 
   return (
     <div
@@ -1723,7 +1737,6 @@ export const FloatingPreview = ({
           </div>
         )}
 
-        {/* Botão de Fechar (X) mapeado com allow_close */}
         {showClose && (
           <div className="absolute top-2 right-2 w-6 h-6 bg-white text-slate-500 rounded-full flex items-center justify-center z-20 shadow-md transition-opacity">
             <X size={14} />
