@@ -5139,12 +5139,35 @@ function centerActiveItem(animate) {
     track.style.transform = 'translateX(' + newTranslate + 'px)';
   }
 
-  function onDragEnd() {
-    if (!isDragging) return;
-    isDragging = false;
+function onDragEnd() {
+  if (!isDragging) return;
+  isDragging = false;
+  track.style.cursor = 'grab';
+
+  if (isMobileDevice) {
+    var currentTranslateX = getTranslateX(track);
+    var containerWidth = trackContainer.offsetWidth;
+    var itemEls = track.children;
+    var closestIdx = 0;
+    var closestDist = Infinity;
+    var pos = 0;
+    for (var i = 0; i < itemEls.length; i++) {
+      var w = itemEls[i].offsetWidth;
+      var center = pos + w / 2;
+      var translatedCenter = currentTranslateX + center;
+      var dist = Math.abs(translatedCenter - containerWidth / 2);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestIdx = i;
+      }
+      pos += w + gapPx;
+    }
+    activeIndex = closestIdx;
+    centerActiveItem(true);
+  } else {
     track.style.transition = 'transform 0.3s ease';
-    track.style.cursor = 'grab';
   }
+}
 
   track.style.cursor = 'grab';
 
