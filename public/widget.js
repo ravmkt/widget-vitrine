@@ -5296,8 +5296,6 @@ gridWrapper.style.cssText = [
   'max-width:' + (columns * ((cfg.size || 200) + cfg.spacing)) + 'px;',
   'margin-left:auto;',
   'margin-right:auto;',
-  'margin-top:' + (cfg.marginTop || 0) + 'px;',
-  'margin-bottom:' + (cfg.marginBottom || 0) + 'px;',
   'padding:4px;',
 ].join('');
 
