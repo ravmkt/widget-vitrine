@@ -4244,8 +4244,6 @@ const AppearancePage = () => {
                               <FormField label="Cor Título"><ColorInput label="Cor" value={(formData.modal_config as any).product_card_name_color || '#0F172A'} onChange={e => updateModalConfig({ product_card_name_color: e.target.value } as any)} /></FormField>
                               <FormField label="Tamanho Preço"><input type="number" min="8" value={toNumberInputValue((formData.modal_config as any).product_card_price_size)} onChange={e => updateModalConfig({ product_card_price_size: e.target.value } as any)} className={inputClass} /></FormField>
                               <FormField label="Cor Preço"><ColorInput label="Cor" value={(formData.modal_config as any).product_card_price_color || formData.primary_color} onChange={e => updateModalConfig({ product_card_price_color: e.target.value } as any)} /></FormField>
-                              <FormField label="Cor Botão Produto"><ColorInput label="Cor" value={(formData.modal_config as any).product_card_button_bg || formData.primary_color} onChange={e => updateModalConfig({ product_card_button_bg: e.target.value } as any)} /></FormField>
-                              <FormField label="Cor Texto Botão"><ColorInput label="Cor" value={(formData.modal_config as any).product_card_button_color || '#FFFFFF'} onChange={e => updateModalConfig({ product_card_button_color: e.target.value } as any)} /></FormField>
                             </div>
                           )}
                         </AccordionSection>
