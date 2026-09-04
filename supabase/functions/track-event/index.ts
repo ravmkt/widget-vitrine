@@ -93,7 +93,8 @@ serve(async (req) => {
 
     try {
       const originHost = new URL(rawOrigin).hostname.toLowerCase();
-      const storeHost = new URL(store.url.startsWith("http") ? store.url : `https://${store.url}`).hostname.toLowerCase();
+const rawStoreUrl = storeSettings?.store_url || store.url;
+const storeHost = new URL(rawStoreUrl.startsWith("http") ? rawStoreUrl : `https://${rawStoreUrl}`).hostname.toLowerCase();
       const isDevEnvironment = Deno.env.get("ENVIRONMENT") === "development" || Deno.env.get("SUPABASE_URL")?.includes("127.0.0.1");
       const isLocalhostBypass = isDevEnvironment && (originHost === "localhost" || originHost === "127.0.0.1");
       
