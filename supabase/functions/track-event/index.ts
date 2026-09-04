@@ -36,7 +36,7 @@ serve(async (req) => {
     if (!storeId || !eventType || !ALLOWED_EVENTS.has(eventType)) {
       return new Response(JSON.stringify({ error: "Payload inválido ou tipo de evento não permitido." }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } // <- ADICIONADO
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
@@ -52,18 +52,19 @@ serve(async (req) => {
       .maybeSingle();
 
     if (storeError) {
+      console.error("Erro ao buscar store:", storeError);
       return new Response(JSON.stringify({ error: "Erro interno no servidor." }), {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } // <- ADICIONADO
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
     const { data: storeSettings } = await supabaseAdmin
-  .from("store_settings")
-  .select("store_url")
-  .eq("store_id", storeId)
-  .limit(1)
-  .maybeSingle();
+      .from("store_settings")
+      .select("store_url")
+      .eq("store_id", storeId)
+      .limit(1)
+      .maybeSingle();
 
     function evaluateStoreBlock(s: any): boolean {
       if (!s) return true;
@@ -87,14 +88,14 @@ serve(async (req) => {
     if (!store || evaluateStoreBlock(store)) {
       return new Response(JSON.stringify({ error: "Loja inativa ou com assinatura bloqueada." }), {
         status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } // <- ADICIONADO
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
     try {
       const originHost = new URL(rawOrigin).hostname.toLowerCase();
-const rawStoreUrl = storeSettings?.store_url || store.url;
-const storeHost = new URL(rawStoreUrl.startsWith("http") ? rawStoreUrl : `https://${rawStoreUrl}`).hostname.toLowerCase();
+      const rawStoreUrl = storeSettings?.store_url || store.url;
+      const storeHost = new URL(rawStoreUrl.startsWith("http") ? rawStoreUrl : `https://${rawStoreUrl}`).hostname.toLowerCase();
       const isDevEnvironment = Deno.env.get("ENVIRONMENT") === "development" || Deno.env.get("SUPABASE_URL")?.includes("127.0.0.1");
       const isLocalhostBypass = isDevEnvironment && (originHost === "localhost" || originHost === "127.0.0.1");
       
@@ -103,13 +104,13 @@ const storeHost = new URL(rawStoreUrl.startsWith("http") ? rawStoreUrl : `https:
       if (!isAuthorizedDomain) {
         return new Response(JSON.stringify({ error: "Origem não autorizada para esta loja." }), {
           status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" } // <- ADICIONADO
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
     } catch (_) {
       return new Response(JSON.stringify({ error: "Formato do cabeçalho de origem inválido." }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } // <- ADICIONADO
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
@@ -135,27 +136,29 @@ const storeHost = new URL(rawStoreUrl.startsWith("http") ? rawStoreUrl : `https:
     });
 
     if (rpcError) {
+      console.error("Erro no RPC track_widget_event:", rpcError);
       return new Response(JSON.stringify({ error: "Erro interno no servidor." }), {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } // <- ADICIONADO
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
     if (allowed === false) {
       return new Response(JSON.stringify({ error: "Limite de requisições excedido." }), {
         status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } // <- ADICIONADO
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" } // <- ADICIONADO
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   } catch (err: any) {
+    console.error("Erro inesperado em track-event:", err?.message, err?.stack);
     return new Response(JSON.stringify({ error: "Erro interno no servidor." }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" } // <- ADICIONADO
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
 });
