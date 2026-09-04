@@ -3743,6 +3743,10 @@ function getDynamicCarouselConfig(appearance) {
 
   var shape = String(rcv('shape', 'portrait')).trim().toLowerCase();
   if (['square', 'landscape', 'circle'].indexOf(shape) === -1) shape = 'portrait';
+  var carouselAspectRatio = '9/16';
+if (shape === 'square') carouselAspectRatio = '1/1';
+else if (shape === 'landscape') carouselAspectRatio = '16/9';
+else if (shape === 'circle') carouselAspectRatio = '1/1';
 
   // O painel salva a largura da borda em 'border_style' (legado) — aceitar ambas
   var borderWidthNumber = toNumber(firstDefined(rcv('border_width', null), rcv('border_style', null), '0'), 0);
