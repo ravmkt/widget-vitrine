@@ -807,10 +807,12 @@ function getGridConfig(appearance) {
   var sizeNumber = toNumber(rcv('width', 'grid_size', '200'), 200);
   var columns = safeInt(rcv('visible_items', 'grid_columns', '4'), 4);
   var rows = safeInt(rcv('rows', 'grid_rows', '1'), 1);
-  var spacing = safeInt(rcv('spacing', 'grid_spacing', '16'), 16);
+var spacing = safeInt(rcv('spacing', 'grid_spacing', '16'), 16);
+  var marginTop = toNumber(rcv('margin_top', 'grid_margin_top', '0'), 0);
+  var marginBottom = toNumber(rcv('margin_bottom', 'grid_margin_bottom', '0'), 0);
   var borderColor = rcv('border_color', 'grid_border_color', '#0094EB') || '#0094EB';
   var borderWidth = safeInt(rcv('border_style', 'grid_border_width', '2'), 2);
-
+  
   var rawBorderRadius = safeInt(rcv('border_radius', 'grid_border_radius', '12'), 12);
   // Se o formato for círculo, força o border-radius para 50%
   var borderRadius = (shape === 'circle') ? '50%' : (rawBorderRadius + 'px');
