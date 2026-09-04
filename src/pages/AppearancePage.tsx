@@ -2607,13 +2607,11 @@ export const ModalPreview = ({
   }
 
   // DESKTOP: Player simulado
-return (
-  <div className="relative h-full w-full overflow-hidden bg-[#0f111a] border border-slate-800/80 rounded-2xl">
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-[#0f111a] border border-slate-800/80 rounded-2xl">
       <div className="absolute inset-0 flex items-center justify-center p-4">
-
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
         <div
-          className="relative h-full max-h-[410px] w-full max-w-[230px] overflow-hidden shadow-2xl shrink-0 bg-slate-900 flex flex-col justify-between"
+                  className="relative h-full max-h-[410px] w-full max-w-[230px] overflow-hidden shadow-2xl shrink-0 bg-slate-900 flex flex-col justify-between"
           style={{
             color: '#FFFFFF',
             fontFamily: formData.font_family,
