@@ -2326,8 +2326,14 @@ export const GridPreview = ({
           </h4>
         )}
 
-        <div
-          className="grid grid-cols-2 w-full px-2"
+<div
+  style={{
+    marginLeft: `${Number(grid?.margin_left ?? 0)}px`,
+    marginRight: `${Number(grid?.margin_right ?? 0)}px`,
+    marginTop: `${Number(grid?.margin_top ?? 0)}px`,
+    marginBottom: `${Number(grid?.margin_bottom ?? 0)}px`,
+  }}
+  className="grid grid-cols-2 w-full px-2"
           style={{ gap: `${spacing}px` }}
         >
           {items.map((_, i) => (
