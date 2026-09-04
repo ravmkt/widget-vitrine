@@ -1611,13 +1611,6 @@ const getShapeLabel = (shape: WidgetShape) => {
 
 // ──────────────────── PREVIEWS (SANDBOX REAL) ────────────────────
 
-import { useRef, useEffect } from 'react';
-import { Play, X } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Assumindo que você usa o utilitário cn padrão do shadcn
-
-// Constante de exemplo (caso não esteja importada no seu arquivo)
-const DEMO_PREVIEW_VIDEOS = ['https://demo.vidlytics.com/video.mp4'];
-
 export const FloatingPreview = ({
   floating,
   colors,
