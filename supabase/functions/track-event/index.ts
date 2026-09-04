@@ -31,7 +31,7 @@ serve(async (req) => {
     let rawOrigin = req.headers.get("origin") || req.headers.get("referer") || "unknown_origin";
 
     const body = await req.json().catch(() => ({}));
-    const { storeId, eventType, videoId, productId, storyId, pageUrl, deviceType, pagePath } = body;
+    const { storeId, eventType, videoId, productId, storyId, pageUrl, deviceType } = body;
 
     if (!storeId || !eventType || !ALLOWED_EVENTS.has(eventType)) {
       return new Response(JSON.stringify({ error: "Payload inválido ou tipo de evento não permitido." }), {
@@ -41,7 +41,6 @@ serve(async (req) => {
     }
 
     const sanitizedPageUrl = pageUrl ? String(pageUrl).slice(0, 2048) : null;
-    const sanitizedPagePath = pagePath ? String(pagePath).slice(0, 512) : "/";
     const sanitizedDevice = deviceType ? String(deviceType).slice(0, 32) : "desktop";
 
     const { data: store, error: storeError } = await supabaseAdmin
@@ -114,25 +113,19 @@ serve(async (req) => {
       });
     }
 
-    const cfIp = req.headers.get("cf-connecting-ip");
-    const realIp = req.headers.get("x-real-ip");
-    const forwardedFor = req.headers.get("x-forwarded-for");
-    const lastForwardedIp = forwardedFor ? forwardedFor.split(",").map((s) => s.trim()).filter(Boolean).pop() : null;
-    const clientIp = cfIp || realIp || lastForwardedIp || "unknown";
     const userAgent = req.headers.get("user-agent") || "";
-
-    const encoder = new TextEncoder();
-    const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(`${clientIp}-${userAgent}-${storeId}`));
-    const clientHash = Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("").substring(0, 32);
+    const referrer = req.headers.get("referer") || null;
 
     const { data: allowed, error: rpcError } = await supabaseAdmin.rpc("track_widget_event", {
       p_store_id: storeId,
-      p_event_type: eventType,
+      p_story_id: storyId || null,
       p_video_id: videoId || null,
       p_product_id: productId || null,
+      p_event_type: eventType,
+      p_page_url: sanitizedPageUrl,
       p_device_type: sanitizedDevice,
-      p_page_path: sanitizedPagePath,
-      p_client_hash: clientHash,
+      p_browser: userAgent.slice(0, 256),
+      p_referrer: referrer,
     });
 
     if (rpcError) {
@@ -144,8 +137,9 @@ serve(async (req) => {
     }
 
     if (allowed === false) {
-      return new Response(JSON.stringify({ error: "Limite de requisições excedido." }), {
-        status: 429,
+      console.error("track_widget_event retornou false (erro interno silencioso na function do banco).");
+      return new Response(JSON.stringify({ error: "Erro ao registrar evento." }), {
+        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
