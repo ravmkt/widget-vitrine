@@ -709,8 +709,6 @@ const createDefaultDynamicCarouselMobileConfig = (): DynamicCarouselConfig => ({
   highlight_shadow: false,
   highlight_scale_up: false,
   highlight_scale_down_others: false,
-  product_card_button_bg: '#0094EB',
-  product_card_button_color: '#FFFFFF',
   margin_left: '0',
   margin_right: '0',
 });
