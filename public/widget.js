@@ -5279,16 +5279,19 @@ function renderGridWidget(container, stories, appearance) {
   var gapPx = cfg.spacing + 'px';
   var cardMaxWidth = (cfg.size || 200) + 'px';
 
-  var gridWrapper = createEl('div', 'vl-grid-wrapper');
-  gridWrapper.style.cssText = [
-    'display:grid;',
-    'grid-template-columns:repeat(' + columns + ', 1fr);',
-    'gap:' + gapPx + ';',
-    'width:100%;',
-    'max-width:' + (columns * ((cfg.size || 200) + cfg.spacing)) + 'px;',
-    'margin:0 auto;',
-    'padding:4px;',
-  ].join('');
+var gridWrapper = createEl('div', 'vl-grid-wrapper');
+gridWrapper.style.cssText = [
+  'display:grid;',
+  'grid-template-columns:repeat(' + columns + ', 1fr);',
+  'gap:' + gapPx + ';',
+  'width:100%;',
+  'max-width:' + (columns * ((cfg.size || 200) + cfg.spacing)) + 'px;',
+  'margin-left:auto;',
+  'margin-right:auto;',
+  'margin-top:' + (cfg.marginTop || 0) + 'px;',
+  'margin-bottom:' + (cfg.marginBottom || 0) + 'px;',
+  'padding:4px;',
+].join('');
 
   var cardsData = [];
 
