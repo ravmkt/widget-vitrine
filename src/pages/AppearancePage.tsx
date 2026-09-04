@@ -1661,11 +1661,11 @@ export const FloatingPreview = ({
   
   const borderRadius = isCircle ? '50%' : `${radiusNum}px`;
 
-  // Removido o fallback para border_style, pois 'solid' gera NaN
-  const rawBorderWidth = floating?.border_width;
-  const parsedBorderWidth = (rawBorderWidth !== undefined && rawBorderWidth !== null && rawBorderWidth !== '' && !isNaN(Number(rawBorderWidth)))
-    ? Math.max(0, Number(rawBorderWidth))
-    : 0;
+// Removido o fallback para border_style, pois 'solid' gera NaN
+const rawBorderWidth = floating?.border_style;
+const parsedBorderWidth = (rawBorderWidth !== undefined && rawBorderWidth !== null && rawBorderWidth !== '' && !isNaN(Number(rawBorderWidth)))
+  ? Math.max(0, Number(rawBorderWidth))
+  : 0;
 
   const borderColor = floating?.border_color || colors?.primary || '#0094EB';
 
