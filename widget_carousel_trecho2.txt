@@ -1,0 +1,425 @@
+  
+// Items renderizam completamente com suporte robusto a vídeo e imagem
+  stories.forEach(function(story, storyIndex) {
+    var videos = (story.videos || []).filter(Boolean);
+    videos.forEach(function(video, videoIndex) {
+      // 1. Resolução completa e defensiva de URLs
+      var rawVideoUrl = getVideoUrl(video);
+      var thumbUrl = getVideoThumbnail(video) || 
+                     (video && (video.thumbnail_url || video.cover_image_url || video.poster_url || video.image_url)) ||
+                     (story && (story.cover_url || story.thumbnail_url || story.cover || story.thumbnail)) || '';
+      var effectiveMediaUrl = thumbUrl || rawVideoUrl;
+      
+      // 2. Container principal do item em coluna
+      var item = document.createElement('div');
+      item.className = 'vidlytics-carousel-item';
+      item.style.cssText =
+        'flex:0 0 ' + cfg.itemWidth + ' !important;' +
+        'width:' + cfg.itemWidth + ' !important;' +
+        'min-width:' + cfg.itemWidth + ' !important;' +
+        'max-width:' + cfg.itemWidth + ' !important;' +
+        'display:flex !important;' +
+        'flex-direction:column !important;' +
+        'gap:6px !important;' +
+        'background:transparent !important;' +
+        'cursor:pointer !important;';
+
+      // 3. Resolução precisa de bordas e raios (preserva 0 para canto reto)
+      var parsedBorder = parseFloat(cfg.borderWidth);
+      var borderWidthNum = !isNaN(parsedBorder) ? Math.max(0, parsedBorder) : 0;
+
+      var parsedRadius = parseFloat(cfg.itemRadius);
+      var rawRadiusNum = !isNaN(parsedRadius) ? Math.max(0, parsedRadius) : 12;
+
+      var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
+      var innerRadiusCss = (typeof cfg.itemRadius === 'string' && cfg.itemRadius.indexOf('%') !== -1)
+        ? cfg.itemRadius
+        : (innerRadiusVal + 'px');
+
+      // 4. Card visual do vídeo
+      var videoCard = document.createElement('div');
+      var carouselBorderCss = (borderWidthNum > 0)
+        ? ('box-shadow: inset 0 0 0 ' + borderWidthNum + 'px ' + cfg.borderColor + ' !important;')
+        : '';
+
+      videoCard.style.cssText =
+        'width:100% !important;' +
+        'aspect-ratio:' + cfg.itemAspect + ' !important;' +
+        'border-radius:' + cfg.itemRadius + ' !important;' +
+        'overflow:hidden !important;' +
+        'position:relative !important;' +
+        'background:#000 !important;' +
+        'transform:translateZ(0) !important;' +
+        '-webkit-backface-visibility:hidden !important;' +
+        '-webkit-mask-image: -webkit-radial-gradient(white, black) !important;' +
+        carouselBorderCss;
+
+      // 5. Máscara interna para corte perfeito da mídia (Decisão por view_mode)
+      var innerMask = document.createElement('div');
+      innerMask.className = 'vidlytics-carousel-inner-mask';
+      innerMask.style.cssText = [
+        'position:absolute !important;',
+        'inset:' + borderWidthNum + 'px !important;',
+        'overflow:hidden !important;',
+        'border-radius:' + innerRadiusCss + ' !important;',
+        'z-index:1 !important;',
+        'pointer-events:none !important;',
+        'transform:translateZ(0) !important;',
+        '-webkit-transform:translateZ(0) !important;',
+        'background:#000 !important;'
+      ].join('');
+
+      // Modo 'playing' (preview): reproduz vídeo mutado com poster nativo da capa
+      // Modo 'static': renderiza exclusivamente tag <img> da capa
+      if (cfg.carouselPlayMode === 'playing' && rawVideoUrl) {
+        var previewVideo = document.createElement('video');
+        var videoUrlWithFragment = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+
+        previewVideo.preload = 'metadata';
+        previewVideo.muted = true;
+        previewVideo.defaultMuted = true;
+        previewVideo.autoplay = true;
+        previewVideo.loop = true;
+        previewVideo.playsInline = true;
+        previewVideo.setAttribute('playsinline', '');
+        previewVideo.setAttribute('webkit-playsinline', '');
+        previewVideo.setAttribute('muted', '');
+        if (thumbUrl) {
+          previewVideo.poster = thumbUrl;
+        }
+
+        previewVideo.style.cssText =
+          'width:100% !important;' +
+          'height:100% !important;' +
+          'object-fit:' + cfg.objectFit + ' !important;' +
+          'display:block !important;' +
+          'border-radius:' + innerRadiusCss + ' !important;' +
+          '-webkit-backface-visibility:hidden !important;' +
+          'background:#000 !important;';
+
+previewVideo.src = videoUrlWithFragment;
+
+innerMask.appendChild(previewVideo);
+var pvPlayPromise = previewVideo.play();
+if (pvPlayPromise && typeof pvPlayPromise.catch === 'function') {
+  pvPlayPromise.catch(function () {});
+}
+      } else {
+        var displayImgSrc = thumbUrl;
+
+        if (displayImgSrc) {
+          var cardImg = document.createElement('img');
+          cardImg.src = displayImgSrc;
+          cardImg.alt = (story && story.title) || 'Story';
+          cardImg.loading = 'lazy';
+          cardImg.style.cssText =
+            'width:100% !important;' +
+            'height:100% !important;' +
+            'object-fit:' + cfg.objectFit + ' !important;' +
+            'display:block !important;' +
+            'border-radius:' + innerRadiusCss + ' !important;' +
+            '-webkit-backface-visibility:hidden !important;';
+
+          cardImg.onerror = function () {
+            if (rawVideoUrl) {
+              cardImg.style.display = 'none';
+              var fallbackVid = document.createElement('video');
+              var fallbackUrl = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+              fallbackVid.preload = 'metadata';
+              fallbackVid.muted = true;
+              fallbackVid.defaultMuted = true;
+              fallbackVid.playsInline = true;
+              fallbackVid.setAttribute('playsinline', '');
+              fallbackVid.setAttribute('webkit-playsinline', '');
+              fallbackVid.setAttribute('muted', '');
+              fallbackVid.style.cssText =
+                'width:100% !important;' +
+                'height:100% !important;' +
+                'object-fit:' + cfg.objectFit + ' !important;' +
+                'display:block !important;' +
+                'border-radius:' + innerRadiusCss + ' !important;' +
+                '-webkit-backface-visibility:hidden !important;' +
+                'background:#000 !important;';
+fallbackVid.src = fallbackUrl;
+              innerMask.appendChild(fallbackVid);
+            }
+          };
+
+          innerMask.appendChild(cardImg);
+        } else if (rawVideoUrl) {
+          var directFrameVid = document.createElement('video');
+          var directUrl = rawVideoUrl.indexOf('#t=') === -1 ? rawVideoUrl + '#t=0.001' : rawVideoUrl;
+          directFrameVid.preload = 'metadata';
+          directFrameVid.muted = true;
+          directFrameVid.defaultMuted = true;
+          directFrameVid.playsInline = true;
+          directFrameVid.setAttribute('playsinline', '');
+          directFrameVid.setAttribute('webkit-playsinline', '');
+          directFrameVid.setAttribute('muted', '');
+          directFrameVid.style.cssText =
+            'width:100% !important;' +
+            'height:100% !important;' +
+            'object-fit:' + cfg.objectFit + ' !important;' +
+            'display:block !important;' +
+            'border-radius:' + innerRadiusCss + ' !important;' +
+            '-webkit-backface-visibility:hidden !important;' +
+            'background:#000 !important;';
+directFrameVid.src = directUrl;
+          innerMask.appendChild(directFrameVid);
+        }
+      }
+
+      videoCard.appendChild(innerMask);
+
+      // 6. Ícone de Play centralizado
+      if (cfg.showPlayIcon) {
+        var play = document.createElement('div');
+        play.className = 'vidlytics-carousel-play';
+        play.style.cssText =
+          'position:absolute !important;' +
+          'top:50% !important;' +
+          'left:50% !important;' +
+          'transform:translate(-50%,-50%) !important;' +
+          'width:36px !important;' +
+          'height:36px !important;' +
+          'border-radius:50% !important;' +
+          'background:rgba(0,0,0,0.5) !important;' +
+          'display:flex !important;' +
+          'align-items:center !important;' +
+          'justify-content:center !important;' +
+          'z-index:2 !important;';
+        play.innerHTML = '<svg width="14" height="16" viewBox="0 0 14 16" fill="white"><path d="M0 0l14 8-14 8z"/></svg>';
+        videoCard.appendChild(play);
+      }
+      
+      // 7. Título do Item sobreposto
+      if (cfg.showItemTitle && story.title) {
+        var titleOverlay = document.createElement('div');
+        titleOverlay.className = 'vidlytics-carousel-item-title';
+        titleOverlay.textContent = story.title;
+        titleOverlay.style.cssText =
+          'position:absolute !important;' +
+          'bottom:0 !important;' +
+          'left:0 !important;' +
+          'right:0 !important;' +
+          'padding:8px !important;' +
+          'background:linear-gradient(transparent, rgba(0,0,0,0.7)) !important;' +
+          'color:#fff !important;' +
+          'font-size:12px !important;' +
+          'font-weight:600 !important;' +
+          'text-align:left !important;' +
+          'z-index:2 !important;';
+        videoCard.appendChild(titleOverlay);
+      }
+
+      // 8. Evento de clique para abrir Story
+      videoCard.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openStoryModal(storyIndex, videoIndex);
+      });
+
+      item.appendChild(videoCard);
+
+      // 9. Card de produto acoplado
+      if (cfg.showProduct) {
+        var videoProductId = video.product_id || video.productId || null;
+        var productData = videoProductId ? (readProductsData || []).find(function (p) { return idsEqual(p.id, videoProductId); }) : null;
+
+        if (productData) {
+          var productUrl = productData.product_url || productData.url || '';
+          var cardRadiusVal = (cfg.productCardRadius !== undefined && cfg.productCardRadius !== null) ? cfg.productCardRadius : 12;
+
+          var prodCard = document.createElement('div');
+          prodCard.className = 'vidlytics-carousel-product-card';
+          prodCard.style.cssText =
+            'display:flex !important;' +
+            'align-items:center !important;' +
+            'gap:8px !important;' +
+            'padding:6px !important;' +
+            'width:100% !important;' +
+            'background:' + (cfg.productCardBg || '#fff') + ' !important;' +
+            'border-radius:' + cardRadiusVal + 'px !important;' +
+            'border:' + (cfg.productCardBorderWidth !== undefined ? cfg.productCardBorderWidth : 1) + 'px solid ' + (cfg.productCardBorderColor || '#e2e8f0') + ' !important;' +
+            'box-shadow:0 2px 8px rgba(0,0,0,0.04) !important;' +
+            'box-sizing:border-box !important;' +
+            'cursor:pointer !important;' +
+            'text-align:left !important;';
+
+          var prodImgUrl = getThumbnailFromObject(productData) || '';
+          if (prodImgUrl) {
+            var pImg = document.createElement('img');
+            pImg.src = prodImgUrl;
+            pImg.alt = productData.name || 'Produto';
+            pImg.style.cssText =
+              'width:60px !important;' +
+              'height:60px !important;' +
+              'min-width:60px !important;' +
+              'max-width:60px !important;' +
+              'border-radius:6px !important;' +
+              'object-fit:cover !important;' +
+              'background:#f1f5f9 !important;' +
+              'display:block !important;' +
+              'flex-shrink:0 !important;';
+            prodCard.appendChild(pImg);
+          }
+
+          var pInfo = document.createElement('div');
+          pInfo.style.cssText =
+            'flex:1 !important;' +
+            'min-width:0 !important;' +
+            'display:flex !important;' +
+            'flex-direction:column !important;' +
+            'justify-content:center !important;' +
+            'gap:2px !important;';
+
+          var pName = document.createElement('div');
+          pName.textContent = productData.name || 'Produto';
+          pName.style.cssText =
+            'font-size:' + (cfg.productCardNameSize || 11) + 'px !important;' +
+            'font-weight:700 !important;' +
+            'color:' + (cfg.productCardNameColor || '#0f172a') + ' !important;' +
+            'margin:0 !important;' +
+            'line-height:1.25 !important;' +
+            'display:-webkit-box !important;' +
+            '-webkit-line-clamp:2 !important;' +
+            '-webkit-box-orient:vertical !important;' +
+            'overflow:hidden !important;' +
+            'text-overflow:ellipsis !important;' +
+            'white-space:normal !important;' +
+            'width:100% !important;';
+          pInfo.appendChild(pName);
+
+          var pBottomRow = document.createElement('div');
+          pBottomRow.style.cssText =
+            'display:flex !important;' +
+            'align-items:center !important;' +
+            'justify-content:space-between !important;' +
+            'width:100% !important;';
+
+          if (productData.price) {
+            var pPrice = document.createElement('div');
+            pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
+            pPrice.style.cssText =
+              'font-size:' + (cfg.productCardPriceSize || 12) + 'px !important;' +
+              'font-weight:' + (cfg.productCardPriceBold ? '800' : '600') + ' !important;' +
+              'color:' + (cfg.productCardPriceColor || getPrimaryColor(appearance)) + ' !important;';
+            pBottomRow.appendChild(pPrice);
+          }
+
+          var arrowIndicator = document.createElement('div');
+          arrowIndicator.innerHTML = '&rarr;';
+          arrowIndicator.style.cssText =
+            'font-size:13px !important;' +
+            'font-weight:800 !important;' +
+            'color:' + (cfg.productCardPriceColor || getPrimaryColor(appearance)) + ' !important;' +
+            'padding-left:4px !important;' +
+            'flex-shrink:0 !important;';
+          pBottomRow.appendChild(arrowIndicator);
+
+          pInfo.appendChild(pBottomRow);
+          prodCard.appendChild(pInfo);
+
+          prodCard.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (productUrl) {
+              window.open(productUrl, '_blank');
+            }
+            sendAnalyticsEvent('product_click', video ? video.id : null, productData ? productData.id : null);
+          });
+
+          // Registra a visualização do produto na vitrine do carrossel
+          sendAnalyticsEvent('product_view', video ? video.id : null, productData ? productData.id : null);
+
+          item.appendChild(prodCard);
+        }
+      }
+
+track.appendChild(item);
+    });
+  });
+      
+  trackContainer.appendChild(track);
+  wrapper.appendChild(trackContainer);
+  
+  // --- DRAG TO SCROLL ---
+  var isDragging = false;
+  var startX = 0;
+  var currentTranslate = 0;
+  var dragStartTranslate = 0;
+
+  function getTranslateX(el) {
+    var style = window.getComputedStyle(el);
+    var transform = style.transform;
+    if (!transform || transform === 'none') return 0;
+    var matrix = new DOMMatrixReadOnly(transform);
+    return matrix.m41;
+  }
+
+  function getMaxScroll() {
+    var trackWidth = track.scrollWidth;
+    var containerWidth = trackContainer.offsetWidth;
+    return Math.max(0, trackWidth - containerWidth);
+  }
+
+  function clamp(val, min, max) {
+    return Math.min(max, Math.max(min, val));
+  }
+
+  function onDragStart(clientX) {
+    isDragging = true;
+    startX = clientX;
+    dragStartTranslate = getTranslateX(track);
+    track.style.transition = 'none';
+    track.style.cursor = 'grabbing';
+  }
+
+  function onDragMove(clientX) {
+    if (!isDragging) return;
+    var delta = clientX - startX;
+    var maxScroll = getMaxScroll();
+    var newTranslate = clamp(dragStartTranslate + delta, -maxScroll, 0);
+    track.style.transform = 'translateX(' + newTranslate + 'px)';
+  }
+
+  function onDragEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    track.style.transition = 'transform 0.3s ease';
+    track.style.cursor = 'grab';
+  }
+
+  track.style.cursor = 'grab';
+
+  // Mouse events
+  track.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    onDragStart(e.clientX);
+  });
+  window.addEventListener('mousemove', function(e) {
+    onDragMove(e.clientX);
+  });
+  window.addEventListener('mouseup', onDragEnd);
+
+  // Touch events
+  track.addEventListener('touchstart', function(e) {
+    onDragStart(e.touches[0].clientX);
+  }, { passive: true });
+  track.addEventListener('touchmove', function(e) {
+    onDragMove(e.touches[0].clientX);
+  }, { passive: true });
+  track.addEventListener('touchend', onDragEnd);
+
+  // Previne clique acidental durante drag
+  track.querySelectorAll('.vidlytics-carousel-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      var moved = Math.abs(getTranslateX(track) - dragStartTranslate);
+      if (moved > 5) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }, true);
+  });
+  
+  target.insertAdjacentElement(position, container);
+}
+

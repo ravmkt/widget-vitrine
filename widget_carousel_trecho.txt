@@ -1,0 +1,131 @@
+function renderCarouselWidget(targetOrOptions, stories, appearance) {
+  
+  var target, position;
+  
+  // Suporta { target, position } ou elemento/string direto
+  if (targetOrOptions && typeof targetOrOptions === 'object' && targetOrOptions.nodeType !== 1) {
+    target = targetOrOptions.target;
+    position = targetOrOptions.position || 'afterend';
+  } else {
+    target = targetOrOptions;
+    position = 'afterend';
+  }
+  
+  if (typeof target === 'string') {
+    target = document.querySelector(target);
+  }
+  
+  if (!target) {
+    console.warn('[Vidlytics] Target não encontrado para carrossel:', targetOrOptions);
+    return;
+  }
+  
+  // Remove carrossel anterior se existir
+  var existing = target.parentNode ? target.parentNode.querySelector('.vidlytics-carousel-container') : null;
+  if (existing) existing.remove();
+  
+  var cfg = getCarouselConfig(appearance);
+  var primaryColor = getPrimaryColor(appearance);
+  var textColor = getTextColor ? getTextColor(appearance) : '#333';
+  
+  // 1. CONTAINER EXTERNO (Mesma estrutura do Carrossel Dinâmico)
+  var container = document.createElement('div');
+  container.className = 'vidlytics-carousel-container';
+  container.setAttribute('data-vidlytics-widget', 'carousel');
+
+  // Função auxiliar para garantir que as margens tenham "px" sem duplicar
+  var parseMargin = function(val) {
+    if (val === undefined || val === null || val === '') return '0px';
+    var s = String(val).trim();
+    if (s.endsWith('px')) return s;
+    return s + 'px';
+  };
+
+  // Aplica os estilos usando Object.assign (Fórmula idêntica ao dinâmico)
+  Object.assign(container.style, {
+    width: '100%',
+    maxWidth: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'visible',
+    marginTop: parseMargin(cfg.marginTop),
+    marginBottom: parseMargin(cfg.marginBottom),
+    paddingLeft: parseMargin(cfg.marginLeft),
+    paddingRight: parseMargin(cfg.marginRight),
+    boxSizing: 'border-box',
+    fontFamily: appearance.font_family || 'inherit',
+    visibility: 'visible',
+    opacity: '1',
+    position: 'relative',
+    zIndex: '1',
+    background: 'transparent'
+  });
+
+  // 2. WRAPPER INTERNO (Empilha verticalmente o título e os vídeos)
+  var wrapper = document.createElement('div');
+  wrapper.className = 'vidlytics-carousel-wrapper';
+  Object.assign(wrapper.style, {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'visible',
+    background: 'transparent'
+  });
+
+  // Insere o wrapper dentro do container principal
+  container.appendChild(wrapper);
+  
+    // Header
+  if (cfg.showTitle && (cfg.titleText || (stories[0] && stories[0].title))) {
+    var header = document.createElement('div');
+    header.className = 'vidlytics-carousel-header';
+    header.style.cssText =
+      'display:block !important;' +
+      'width:100% !important;' +
+      'margin-bottom:12px !important;' +
+      'text-align:' + cfg.titleAlign + ' !important;';
+
+    var title = document.createElement('h3');
+    title.className = 'vidlytics-carousel-title';
+    title.textContent = cfg.titleText || (stories[0] && stories[0].title);
+    title.style.cssText =
+      'margin:0 !important;' +
+      'display:block !important;' +
+      'font-size:' + cfg.titleFontSize + 'px !important;' +
+      'font-weight:' + (cfg.titleBold ? '700' : '400') + ' !important;' +
+      'color:' + textColor + ' !important;' +
+      'text-align:' + cfg.titleAlign + ' !important;';
+    header.appendChild(title);
+    wrapper.appendChild(header);
+  }
+  
+  // Track container
+  var trackContainer = document.createElement('div');
+  trackContainer.className = 'vidlytics-carousel-track-container';
+
+  var itemWidthPx = parseFloat(cfg.itemWidth) || 120;
+  var gapPx = parseFloat(cfg.itemSpacing) || 8;
+  var visibleItems = cfg.visibleItems || 4;
+
+  var containerWidthPx = (itemWidthPx * visibleItems) + (gapPx * (visibleItems - 1));
+
+  trackContainer.style.cssText =
+    'overflow:hidden !important;' +
+    'position:relative !important;' +
+    'width:' + containerWidthPx + 'px !important;' +
+    'max-width:100% !important;' +
+    'margin:0 auto !important;'; // Opcional: Garante que o trackContainer fique centralizado se o wrapper for maior que ele
+  
+  var track = document.createElement('div');
+  track.className = 'vidlytics-carousel-track';
+  track.style.cssText =
+    'display:flex !important;' +
+    'gap:' + cfg.itemSpacing + ' !important;' +
+    'transition:transform 0.3s ease !important;' +
+    'will-change:transform !important;';
+  track.style.transform = 'translateX(0px)';
+  
