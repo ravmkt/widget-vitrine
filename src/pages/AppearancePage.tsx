@@ -4115,7 +4115,7 @@ const AppearancePage = () => {
                             <FormField label="Espaçamento (px)" className="col-span-2"><input type="number" min="0" value={activeGridConfig.spacing} onChange={e => updateGridConfig({ spacing: safeNumber(e.target.value, 0, 0) })} className={inputClass} /></FormField>
                           </div>
                           <div className="mt-3 p-2 bg-sky-50 dark:bg-sky-500/5 rounded-xl border border-sky-100 dark:border-sky-500/20">
-                            <p className="text-[12px] text-sky-700 font-medium leading-snug">
+<p className="text-[12px] text-white font-medium leading-snug">
                               💡 No mobile, a grade é otimizada para exibir no máximo 2 colunas.
                             </p>
                           </div>
