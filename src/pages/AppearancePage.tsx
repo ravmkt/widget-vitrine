@@ -4053,7 +4053,7 @@ const AppearancePage = () => {
                         <AccordionSection title="4. Destaque de Vídeo" isOpen={activeSection === 'dyn-4'} onToggle={() => setActiveSection(activeSection === 'dyn-4' ? null : 'dyn-4')}>
                           <div className="space-y-3">
                             <FormField label="Intervalo automático (seg)">
-                              <input type="number" min="1" step="0.5" value={activeDynamicCarouselConfig.autoplay_delay ? activeDynamicCarouselConfig.autoplay_delay / 1000 : 5} onChange={e => updateDynamicCarouselConfig({ autoplay_delay: Number(e.target.value) * 1000 })} className={inputClass} />
+                              <input type="number" min="1" step="1" value={activeDynamicCarouselConfig.autoplay_delay ? activeDynamicCarouselConfig.autoplay_delay / 1000 : 5} onChange={e => updateDynamicCarouselConfig({ autoplay_delay: Number(e.target.value) * 1000 })} className={inputClass} />
                             </FormField>
                             <ToggleSwitch label="Aplicar sombra no vídeo" checked={activeDynamicCarouselConfig.highlight_shadow ?? false} onChange={e => updateDynamicCarouselConfig({ highlight_shadow: e.target.checked })} />
                             <ToggleSwitch label="Ampliar vídeo em destaque" checked={activeDynamicCarouselConfig.highlight_enlarge_active ?? false} onChange={e => updateDynamicCarouselConfig({ highlight_enlarge_active: e.target.checked })} />
