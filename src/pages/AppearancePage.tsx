@@ -772,8 +772,6 @@ const createDefaultModalConfig = (): ModalConfig & Record<string, any> => ({
   product_card_name_color: '#0F172A',
   product_card_price_size: '12',
   product_card_price_color: '#0094EB',
-  product_card_button_bg: '#0094EB',
-  product_card_button_color: '#FFFFFF',
 });
 
 const createResponsiveConfig = <T,>(
