@@ -2607,7 +2607,6 @@ export const ModalPreview = ({
   }
 
   // DESKTOP: Player simulado
-// DEPOIS:
 return (
   <div className="relative h-full w-full overflow-hidden bg-[#0f111a] border border-slate-800/80 rounded-2xl">
       <div className="absolute inset-0 flex items-center justify-center p-4">
