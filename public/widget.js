@@ -4700,32 +4700,32 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
   }
   
   // Track container
-var isMobileDevice = getDevice() === 'mobile';
-var containerWidthPx = (itemWidthPx * visibleItems) + (gapPx * (visibleItems - 1));
+  var trackContainer = document.createElement('div');
+  trackContainer.className = 'vidlytics-carousel-track-container';
 
-if (isMobileDevice) {
-  trackContainer.style.cssText =
-    'overflow:hidden !important;' +
-    'position:relative !important;' +
-    'width:100% !important;' +
-    'max-width:100% !important;' +
-    'margin:0 auto !important;';
-} else {
-  trackContainer.style.cssText =
-    'overflow:hidden !important;' +
-    'position:relative !important;' +
-    'width:' + containerWidthPx + 'px !important;' +
-    'max-width:100% !important;' +
-    'margin:0 auto !important;';
-}
+  var itemWidthPx = parseFloat(cfg.itemWidth) || 120;
+  var gapPx = parseFloat(cfg.itemSpacing) || 8;
+  var visibleItems = cfg.visibleItems || 4;
 
-trackContainer.style.cssText =
-  'overflow:hidden !important;' +
-  'position:relative !important;' +
-  'width:' + containerWidthPx + 'px !important;' +
-  'max-width:100% !important;' +
-  'margin:0 auto !important;';
-  
+  var isMobileDevice = getDevice() === 'mobile';
+  var containerWidthPx = (itemWidthPx * visibleItems) + (gapPx * (visibleItems - 1));
+
+  if (isMobileDevice) {
+    trackContainer.style.cssText =
+      'overflow:hidden !important;' +
+      'position:relative !important;' +
+      'width:100% !important;' +
+      'max-width:100% !important;' +
+      'margin:0 auto !important;';
+  } else {
+    trackContainer.style.cssText =
+      'overflow:hidden !important;' +
+      'position:relative !important;' +
+      'width:' + containerWidthPx + 'px !important;' +
+      'max-width:100% !important;' +
+      'margin:0 auto !important;';
+  }
+
   var track = document.createElement('div');
   track.className = 'vidlytics-carousel-track';
   track.style.cssText =
