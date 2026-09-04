@@ -5333,7 +5333,6 @@ card.style.cssText = [
   '-webkit-transform:translateZ(0);',
   'backface-visibility:hidden;',
   '-webkit-backface-visibility:hidden;',
-  '-webkit-mask-image:-webkit-radial-gradient(white, black);',
   hasBorder ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';') : '',
 ].join('');
 
