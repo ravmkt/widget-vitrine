@@ -1939,6 +1939,26 @@ export const CarouselPreview = ({
                   </div>
                 )}
               </div>
+
+              {carousel?.show_product && !isCircle && (
+                <div
+                  className="w-full flex items-center gap-2 transition-all duration-300 overflow-hidden box-border pointer-events-none"
+                  style={{
+                    backgroundColor: carousel?.product_card_bg || '#FFFFFF',
+                    border: `${Number(carousel?.product_card_border_width ?? 1)}px solid ${carousel?.product_card_border_color || '#E2E8F0'}`,
+                    borderRadius: `${Number(carousel?.product_card_border_radius ?? 12)}px`,
+                    padding: '8px',
+                  }}
+                >
+                  <div className="w-8 h-8 rounded bg-slate-100 shrink-0 overflow-hidden border border-slate-100">
+                    <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p style={{ fontSize: `${Number(carousel?.product_card_name_size ?? 9)}px`, color: carousel?.product_card_name_color || '#0F172A' }} className="font-bold truncate">Calça Confort</p>
+                    <p style={{ fontSize: `${Number(carousel?.product_card_price_size ?? 8)}px`, color: carousel?.product_card_price_color || colors?.primary || '#0094EB' }} className="font-black">R$ 149,95</p>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
