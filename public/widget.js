@@ -4133,8 +4133,7 @@ function cloneItemDeeply(original, index, isClone) {
             e.stopPropagation();
             if (pUrl) {
               window.open(pUrl, '_blank');
-              sendAnalyticsEvent('product_click', item.id || null, pData.id || null);
-            }
+sendAnalyticsEvent('product_click', item.id || null, pData.id || null, { storyId: (currentStories[item.storyIndex] || {}).id || null });            }
           });
 
           card.appendChild(prodCard);
