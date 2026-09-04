@@ -3752,14 +3752,15 @@ else if (shape === 'circle') carouselAspectRatio = '1/1';
   var borderWidthNumber = toNumber(firstDefined(rcv('border_width', null), rcv('border_style', null), '0'), 0);
   var highlightBorderWidthNumber = toNumber(firstDefined(rcv('highlight_border_width', null), borderWidthNumber > 0 ? String(borderWidthNumber) : null, '0'), 0);
 
-  return {
-    enabled: enabled,
-    width: toNumber(rcv('width', '160'), 160),
-    spacing: toNumber(rcv('spacing', '14'), 14),
-    shape: shape,
-    borderRadius: toNumber(rcv('border_radius', '14'), 14),
-    bgColor: rcv('bg_color', '#000000') || '#000000',
-
+return {
+  enabled: enabled,
+  width: toNumber(rcv('width', '160'), 160),
+  spacing: toNumber(rcv('spacing', '14'), 14),
+  shape: shape,
+  aspectRatio: carouselAspectRatio, // ⬅️ NOVO
+  borderRadius: toNumber(rcv('border_radius', '14'), 14),
+  bgColor: rcv('bg_color', '#000000') || '#000000',
+  
     highlightMode: String(rcv('highlight_mode', 'ring')).trim().toLowerCase(),
     highlightShadow: toBoolean(rcv('highlight_shadow', false), false),
     highlightBorderColor: rcv('border_color', '#0094EB') || '#0094EB',
