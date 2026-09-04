@@ -732,6 +732,11 @@ const createDefaultGridDesktopConfig = (): GridConfig => ({
   show_title: false,
   autoplay_videos: true,
   sequential_playback: false,
+  margin_left: '0',
+  margin_right: '0',
+  margin_top: '0',
+  margin_bottom: '0',
+
 });
 
 const createDefaultGridMobileConfig = (): GridConfig => ({
