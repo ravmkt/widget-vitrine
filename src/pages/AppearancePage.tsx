@@ -2596,15 +2596,11 @@ export const ModalPreview = ({
                     <span className="text-[9px] text-slate-400 line-through">R$ 199,90</span>
                   </div>
                 </div>
-                <button 
-                  className="text-white text-[10px] font-black py-1.5 px-3 rounded-xl transition shrink-0 shadow-sm"
-                  style={{ 
-                    backgroundColor: m.product_card_button_bg || colors.primary,
-                    color: m.product_card_button_text_color || '#FFFFFF'
-                  }}
-                >
-                  Comprar
-                </button>
+                <ChevronRight
+                  size={20}
+                  className="shrink-0"
+                  style={{ color: m.product_card_price_color || colors.primary }}
+                />
               </div>
             )}
 
