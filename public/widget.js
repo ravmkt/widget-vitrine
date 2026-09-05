@@ -5340,7 +5340,6 @@ gridWrapper.style.cssText = [
       '-webkit-transform:translateZ(0);',
       'backface-visibility:hidden;',
       '-webkit-backface-visibility:hidden;',
-      '-webkit-mask-image:-webkit-radial-gradient(white, black);',
       hasBorder ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';') : '',
     ].join('');
 
@@ -5368,7 +5367,6 @@ gridWrapper.style.cssText = [
         'inset:0px;',
         'overflow:hidden;',
         'border-radius:' + innerRadius + ';',
-        '-webkit-mask-image:-webkit-radial-gradient(white, black);',
         'z-index:1;',
         'pointer-events:none;',
         'transform:translateZ(0);',
