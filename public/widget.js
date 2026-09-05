@@ -5377,7 +5377,7 @@ gridWrapper.style.cssText = [
         var img = createEl('img');
         img.src = thumbUrl || rawVideoUrl;
         img.alt = (video && video.title) || (story && story.title) || 'Story';
-img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;-webkit-backface-visibility:hidden;will-change:transform;';
+img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;';
         img.loading = 'lazy';
 
         img.onerror = function () {
