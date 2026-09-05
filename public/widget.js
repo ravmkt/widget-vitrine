@@ -5338,10 +5338,6 @@ gridWrapper.style.cssText = [
       'cursor:pointer;',
       'box-sizing:border-box;',
       'transition:transform .2s ease, box-shadow .2s ease, opacity 0.3s ease;',
-      'transform:translateZ(0);',
-      '-webkit-transform:translateZ(0);',
-      'backface-visibility:hidden;',
-      '-webkit-backface-visibility:hidden;',
       hasBorder ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';') : '',
     ].join('');
 
@@ -5410,7 +5406,7 @@ img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';dis
               fallbackGridVid.setAttribute('loop', '');
             }
 
-            fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
+            fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;background:#000;';
             fallbackGridVid.src = fallbackGridUrlWithFragment;
 
             if (shouldAutoplay && !cfg.sequentialPlayback) {
@@ -5445,7 +5441,7 @@ img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';dis
           gridVideo.setAttribute('loop', '');
         }
 
-        gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
+        gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;background:#000;';
         gridVideo.src = gridUrlWithFragment;
 
         if (shouldAutoplay && !cfg.sequentialPlayback) {
