@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   var WIDGET_VERSION = '2026.08.31-04';
 
   console.info(
@@ -5320,24 +5320,29 @@ gridWrapper.style.cssText = [
       'box-sizing:border-box;'
     ].join('');
 
-var card = createEl('div', 'vl-grid-card');
-var hasBorder = cfg.borderWidth > 0;
-card.style.cssText = [
-  'width:100%;',
-  'aspect-ratio:' + cfg.aspectRatio + ';',
-  'border-radius:' + cfg.borderRadius + ';',
-  'overflow:hidden;',
-  'position:relative;',
-  'background:transparent;',
-  'cursor:pointer;',
-  'box-sizing:border-box;',
-  'transition:transform .2s ease, box-shadow .2s ease, opacity 0.3s ease;',
-  'transform:translateZ(0);',
-  '-webkit-transform:translateZ(0);',
-  'backface-visibility:hidden;',
-  '-webkit-backface-visibility:hidden;',
-  hasBorder ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';') : '',
-].join('');
+    var hasBorder = cfg.borderWidth > 0;
+    var rNum = parseFloat(cfg.borderRadius) || 0;
+    var bNum = hasBorder ? (parseFloat(cfg.borderWidth) || 0) : 0;
+    var innerRadius = Math.max(0, rNum - bNum) + 'px';
+
+    var card = createEl('div', 'vl-grid-card');
+    card.style.cssText = [
+      'width:100%;',
+      'aspect-ratio:' + cfg.aspectRatio + ';',
+      'border-radius:' + cfg.borderRadius + ';',
+      'overflow:hidden;',
+      'position:relative;',
+      'background:#000;',
+      'cursor:pointer;',
+      'box-sizing:border-box;',
+      'transition:transform .2s ease, box-shadow .2s ease, opacity 0.3s ease;',
+      'transform:translateZ(0);',
+      '-webkit-transform:translateZ(0);',
+      'backface-visibility:hidden;',
+      '-webkit-backface-visibility:hidden;',
+      '-webkit-mask-image:-webkit-radial-gradient(white, black);',
+      hasBorder ? ('border:' + cfg.borderWidth + 'px solid ' + cfg.borderColor + ';') : '',
+    ].join('');
 
     var rawVideoUrl = getVideoUrl(video);
     var thumbUrl = getVideoThumbnail(video) ||
@@ -5362,7 +5367,8 @@ card.style.cssText = [
         'position:absolute;',
         'inset:0px;',
         'overflow:hidden;',
-        'border-radius:inherit;',
+        'border-radius:' + innerRadius + ';',
+        '-webkit-mask-image:-webkit-radial-gradient(white, black);',
         'z-index:1;',
         'pointer-events:none;',
         'transform:translateZ(0);',
