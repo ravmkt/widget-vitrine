@@ -4808,12 +4808,11 @@ function renderCarouselWidget(targetOrOptions, stories, appearance) {
         'position:absolute !important;',
         'inset:' + borderWidthNum + 'px !important;',
         'overflow:hidden !important;',
-        'border-radius:' + innerRadiusCss + ' !important;',
         'z-index:1 !important;',
         'pointer-events:none !important;',
         'transform:translateZ(0) !important;',
         '-webkit-transform:translateZ(0) !important;',
-        'background:#000 !important;'
+        'background:#000 !important;' 
       ].join('');
 
       // Modo 'playing' (preview): reproduz vídeo mutado com poster nativo da capa
