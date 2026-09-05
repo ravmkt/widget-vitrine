@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   var WIDGET_VERSION = '2026.08.31-04';
 
   console.info(
@@ -5358,21 +5358,11 @@ card.style.cssText = [
     if (effectiveMediaUrl) {
       var innerMask = createEl('div', 'vl-grid-img-mask');
 
-      var borderWidthNum = cfg.borderWidth || 0;
-      var rawRadiusNum = parseFloat(cfg.borderRadius);
-      if (isNaN(rawRadiusNum)) {
-        rawRadiusNum = 12;
-      }
-      var innerRadiusVal = Math.max(0, rawRadiusNum - borderWidthNum);
-      var innerRadiusCss = (typeof cfg.borderRadius === 'string' && cfg.borderRadius.indexOf('%') !== -1)
-        ? cfg.borderRadius
-        : (innerRadiusVal + 'px');
-
-      innerMask.style.cssText = [
+            innerMask.style.cssText = [
         'position:absolute;',
-        'inset:' + borderWidthNum + 'px;',
+        'inset:0px;',
         'overflow:hidden;',
-        'border-radius:' + innerRadiusCss + ';',
+        'border-radius:inherit;',
         'z-index:1;',
         'pointer-events:none;',
         'transform:translateZ(0);',
@@ -5412,7 +5402,7 @@ img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';dis
               fallbackGridVid.setAttribute('loop', '');
             }
 
-            fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
+            fallbackGridVid.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
             fallbackGridVid.src = fallbackGridUrlWithFragment;
 
             if (shouldAutoplay && !cfg.sequentialPlayback) {
@@ -5447,7 +5437,7 @@ img.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';dis
           gridVideo.setAttribute('loop', '');
         }
 
-        gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;border-radius:' + innerRadiusCss + ';-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
+        gridVideo.style.cssText = 'width:100%;height:100%;object-fit:' + cfg.objectFit + ';display:block;-webkit-backface-visibility:hidden;background:#000;will-change:transform;';
         gridVideo.src = gridUrlWithFragment;
 
         if (shouldAutoplay && !cfg.sequentialPlayback) {
@@ -6747,3 +6737,5 @@ function initWidget() {
 initWidget();
 
 })();
+
+
