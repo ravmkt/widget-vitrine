@@ -5331,8 +5331,6 @@ gridWrapper.style.cssText = [
       'aspect-ratio:' + cfg.aspectRatio + ';',
       'border-radius:' + cfg.borderRadius + ';',
       'overflow:hidden;',
-      'clip-path:inset(0 round ' + cfg.borderRadius + ');',
-      '-webkit-clip-path:inset(0 round ' + cfg.borderRadius + ');',
       'position:relative;',
       'background:#000;',
       'cursor:pointer;',
