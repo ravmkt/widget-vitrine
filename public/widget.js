@@ -5362,12 +5362,9 @@ gridWrapper.style.cssText = [
         'position:absolute;',
         'inset:0px;',
         'overflow:hidden;',
-        'border-radius:' + innerRadius + ';',
-        'clip-path:inset(0 round ' + innerRadius + ');',
-        '-webkit-clip-path:inset(0 round ' + innerRadius + ');',
         'z-index:1;',
         'pointer-events:none;',
-        'background:#000;'
+        'background:#000;' 
       ].join('');
 
       var shouldAutoplay = !!cfg.autoplayVideos;
