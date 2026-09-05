@@ -5369,9 +5369,6 @@ gridWrapper.style.cssText = [
         '-webkit-clip-path:inset(0 round ' + innerRadius + ');',
         'z-index:1;',
         'pointer-events:none;',
-        'transform:translateZ(0);',
-        '-webkit-transform:translateZ(0);',
-        'will-change:transform;',
         'background:#000;'
       ].join('');
 
