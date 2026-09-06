@@ -115,8 +115,36 @@ export function AppSidebar() {
   useEffect(() => {
     loadStoreData();
 
-    const handleStorageChange = () => loadStoreData();
-    const handleFocus = () => loadStoreData();
+    // Verifica se o usuário atual é Super Admin
+    async function checkSuperAdmin() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_super_admin')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profile?.is_super_admin) {
+          setIsSuperAdmin(true);
+        }
+      } catch (err) {
+        console.error('Erro ao verificar Super Admin:', err);
+      }
+    }
+
+    checkSuperAdmin();
+
+    const handleStorageChange = () => {
+      loadStoreData();
+      checkSuperAdmin();
+    };
+    const handleFocus = () => {
+      loadStoreData();
+      checkSuperAdmin();
+    };
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('focus', handleFocus);
