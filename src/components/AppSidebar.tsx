@@ -11,7 +11,8 @@ import {
   LogOut,
   BarChart3,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  ShieldCheck,
 } from "lucide-react";
 import {
   SidebarContent,
