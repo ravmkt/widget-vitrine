@@ -4,7 +4,6 @@ import { useTenant } from '@/context/TenantContext';
 import { useNavigate } from 'react-router-dom';
 import {
   Store,
-  Users,
   Video,
   Eye,
   CreditCard,
@@ -12,11 +11,12 @@ import {
   ExternalLink,
   ShieldCheck,
   RefreshCw,
-  LogOut,
   ChevronRight,
   TrendingUp,
   Mail,
   MessageCircle,
+  X,
+  Send,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -49,10 +49,16 @@ export default function MasterAdminPage() {
   const { setStoreId } = useTenant();
 
   const [stats, setStats] = useState<OverviewStats | null>(null);
-  const [stores, setStores] = useState<MasterStoreItem[]>([]);
+  const [stores, setStores] = useState<MasterStore[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
+  // Estados do Modal de E-mail
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [emailRecipient, setEmailRecipient] = useState({ name: '', email: '', store: '' });
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
 
   const loadData = async () => {
     setLoading(true);
@@ -89,7 +95,7 @@ export default function MasterAdminPage() {
     loadData();
   };
 
-  // Modo Suporte / Impersonação: Alterna o tenant ativo e redireciona para o dashboard
+  // Modo Suporte / Impersonação
   const handleAccessStore = (storeId: string, storeName: string) => {
     try {
       localStorage.setItem('vidlytics_current_store_id', storeId);
@@ -105,33 +111,59 @@ export default function MasterAdminPage() {
     }
   };
 
-  const handleEmailContact = (ownerEmail: string, ownerName: string, storeName: string) => {
+  // Abre Modal de E-mail interno
+  const handleOpenEmailModal = (ownerEmail: string, ownerName: string, storeName: string) => {
     if (!ownerEmail || ownerEmail === 'Não identificado') {
       toast.error('E-mail do proprietário não encontrado.');
       return;
     }
-    const subject = encodeURIComponent(`Vidlytics - Contato sobre a loja ${storeName}`);
-    const body = encodeURIComponent(
-      `Olá, ${ownerName || 'lojista'}!\n\nTudo bem?\n\nAqui é da equipe Vidlytics. Estamos entrando em contato a respeito da sua loja "${storeName}". Como podemos ajudar com seus stories e conversões hoje?\n\nAbraços,\nEquipe Vidlytics`
+    setEmailRecipient({ name: ownerName, email: ownerEmail, store: storeName });
+    setEmailSubject(`Vidlytics - Contato sobre a loja ${storeName}`);
+    setEmailBody(
+      `Olá, ${ownerName || 'lojista'}!\n\nTudo bem?\n\nAqui é o Rodrigo da equipe Vidlytics. Estamos acompanhando sua loja "${storeName}" e gostaríamos de saber como está sua experiência com os stories e se podemos te ajudar a aumentar suas conversões hoje.\n\nAbraços,\nEquipe Vidlytics`
     );
-    window.open(`mailto:${ownerEmail}?subject=${subject}&body=${body}`, '_blank');
+    setEmailModalOpen(true);
   };
 
-  const handleWhatsAppContact = (ownerName: string, storeName: string) => {
-    const rawNumber = window.prompt(
-      `Digite o WhatsApp de ${ownerName || 'contato'} com DDD (somente números, ex: 11999998888):`
-    );
-    if (!rawNumber) return;
+  // Envio via Gmail Web
+  const handleSendEmailViaGmail = () => {
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+      emailRecipient.email
+    )}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    window.open(gmailUrl, '_blank');
+    setEmailModalOpen(false);
+    toast.success('Gmail aberto para envio!');
+  };
 
-    const cleanNumber = rawNumber.replace(/\D/g, '');
-    if (cleanNumber.length < 10) {
+  // Envio via Cliente Padrão (Mailto)
+  const handleSendEmailClient = () => {
+    const mailtoUrl = `mailto:${emailRecipient.email}?subject=${encodeURIComponent(
+      emailSubject
+    )}&body=${encodeURIComponent(emailBody)}`;
+    window.open(mailtoUrl, '_self');
+    setEmailModalOpen(false);
+  };
+
+  // WhatsApp automático
+  const handleWhatsAppContact = (rawWhatsapp: string | null, ownerName: string, storeName: string) => {
+    let phone = rawWhatsapp ? rawWhatsapp.replace(/\D/g, '') : '';
+
+    if (!phone) {
+      const manualPhone = window.prompt(
+        `A loja "${storeName}" não possui WhatsApp salvo nas configurações.\nDigite o número com DDD (ex: 11999998888):`
+      );
+      if (!manualPhone) return;
+      phone = manualPhone.replace(/\D/g, '');
+    }
+
+    if (phone.length < 10) {
       toast.error('Número de WhatsApp inválido.');
       return;
     }
 
-    const fullPhone = cleanNumber.startsWith('55') ? cleanNumber : `55${cleanNumber}`;
+    const fullPhone = phone.startsWith('55') ? phone : `55${phone}`;
     const text = encodeURIComponent(
-      `Olá, ${ownerName || 'lojista'}! Tudo bem? Aqui é o Rodrigo da Vidlytics. Vi que você administra a loja "${storeName}" na nossa plataforma. Como estão suas vendas com os stories? Precisa de algum suporte?`
+      `Olá, ${ownerName || 'lojista'}! Tudo bem? Aqui é o Rodrigo da Vidlytics. Vi que você administra a loja "${storeName}". Como estão suas conversões com os stories? Precisa de algum suporte?`
     );
 
     window.open(`https://wa.me/${fullPhone}?text=${text}`, '_blank');
@@ -139,8 +171,8 @@ export default function MasterAdminPage() {
 
   return (
     <div className="min-h-screen bg-[#090a0f] text-zinc-100 p-6 md:p-10">
-      {/* Topo / Header */}
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Topo / Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
           <div>
             <div className="flex items-center gap-2">
@@ -341,20 +373,20 @@ export default function MasterAdminPage() {
 
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Botão E-mail */}
+                          {/* Botão E-mail (Abre Modal Interno) */}
                           <button
-                            onClick={() => handleEmailContact(s.owner_email, s.owner_name, s.store_name)}
+                            onClick={() => handleOpenEmailModal(s.owner_email, s.owner_name, s.store_name)}
                             className="inline-flex items-center p-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700 transition"
                             title={`Enviar e-mail para ${s.owner_email}`}
                           >
                             <Mail className="w-3.5 h-3.5" />
                           </button>
 
-                          {/* Botão WhatsApp */}
+                          {/* Botão WhatsApp Direto */}
                           <button
-                            onClick={() => handleWhatsAppContact(s.owner_name, s.store_name)}
+                            onClick={() => handleWhatsAppContact(s.whatsapp_number, s.owner_name, s.store_name)}
                             className="inline-flex items-center p-1.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition"
-                            title={`Abrir WhatsApp com ${s.owner_name}`}
+                            title={s.whatsapp_number ? `WhatsApp: ${s.whatsapp_number}` : 'WhatsApp (não cadastrado)'}
                           >
                             <MessageCircle className="w-3.5 h-3.5" />
                           </button>
@@ -378,6 +410,84 @@ export default function MasterAdminPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal de E-mail */}
+      {emailModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+              <div className="flex items-center gap-2 text-white font-semibold">
+                <Mail className="w-5 h-5 text-blue-400" />
+                <span>Contato via E-mail • {emailRecipient.store}</span>
+              </div>
+              <button
+                onClick={() => setEmailModalOpen(false)}
+                className="text-zinc-400 hover:text-white p-1 rounded-md transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1 font-medium">Destinatário</label>
+                <input
+                  type="text"
+                  disabled
+                  value={`${emailRecipient.name} <${emailRecipient.email}>`}
+                  className="w-full bg-zinc-950/70 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 font-mono text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1 font-medium">Assunto</label>
+                <input
+                  type="text"
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-white outline-none transition"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1 font-medium">Mensagem</label>
+                <textarea
+                  rows={6}
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-white outline-none resize-none transition"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-zinc-800/80">
+              <button
+                type="button"
+                onClick={() => setEmailModalOpen(false)}
+                className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium transition"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSendEmailClient}
+                className="px-3.5 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-sm font-medium transition"
+                title="Abrir no aplicativo de e-mail local"
+              >
+                Outro App
+              </button>
+              <button
+                type="button"
+                onClick={handleSendEmailViaGmail}
+                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition flex items-center gap-1.5 shadow-lg shadow-red-600/20"
+              >
+                <Send className="w-3.5 h-3.5" />
+                Abrir no Gmail
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
