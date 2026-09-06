@@ -104,6 +104,38 @@ export default function MasterAdminPage() {
     }
   };
 
+  const handleEmailContact = (ownerEmail: string, ownerName: string, storeName: string) => {
+    if (!ownerEmail || ownerEmail === 'Não identificado') {
+      toast.error('E-mail do proprietário não encontrado.');
+      return;
+    }
+    const subject = encodeURIComponent(`Vidlytics - Contato sobre a loja ${storeName}`);
+    const body = encodeURIComponent(
+      `Olá, ${ownerName || 'lojista'}!\n\nTudo bem?\n\nAqui é da equipe Vidlytics. Estamos entrando em contato a respeito da sua loja "${storeName}". Como podemos ajudar com seus stories e conversões hoje?\n\nAbraços,\nEquipe Vidlytics`
+    );
+    window.open(`mailto:${ownerEmail}?subject=${subject}&body=${body}`, '_blank');
+  };
+
+  const handleWhatsAppContact = (ownerName: string, storeName: string) => {
+    const rawNumber = window.prompt(
+      `Digite o WhatsApp de ${ownerName || 'contato'} com DDD (somente números, ex: 11999998888):`
+    );
+    if (!rawNumber) return;
+
+    const cleanNumber = rawNumber.replace(/\D/g, '');
+    if (cleanNumber.length < 10) {
+      toast.error('Número de WhatsApp inválido.');
+      return;
+    }
+
+    const fullPhone = cleanNumber.startsWith('55') ? cleanNumber : `55${cleanNumber}`;
+    const text = encodeURIComponent(
+      `Olá, ${ownerName || 'lojista'}! Tudo bem? Aqui é o Rodrigo da Vidlytics. Vi que você administra a loja "${storeName}" na nossa plataforma. Como estão suas vendas com os stories? Precisa de algum suporte?`
+    );
+
+    window.open(`https://wa.me/${fullPhone}?text=${text}`, '_blank');
+  };
+
   return (
     <div className="min-h-screen bg-[#090a0f] text-zinc-100 p-6 md:p-10">
       {/* Topo / Header */}
