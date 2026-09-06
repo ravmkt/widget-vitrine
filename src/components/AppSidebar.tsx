@@ -317,6 +317,42 @@ const isItemActive =
             }}
             className="flex w-full items-center gap-2.5 px-2.5 py-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-500 transition-colors text-sm font-bold overflow-hidden whitespace-nowrap"
           >
+                  {/* Botão Exclusivo Super Admin */}
+        {isSuperAdmin && (
+          <div className="relative group mb-2">
+            <Link
+              to="/master"
+              className={cn(
+                "flex w-full items-center gap-2.5 px-2.5 py-2 rounded-xl transition-all text-sm font-bold overflow-hidden whitespace-nowrap",
+                location.pathname === "/master"
+                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                  : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 border border-emerald-500/20"
+              )}
+            >
+              <ShieldCheck size={18} className="shrink-0 text-emerald-400" />
+              <span
+                className={cn(
+                  "transition-all duration-300 flex items-center justify-between w-full",
+                  isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
+                )}
+              >
+                <span>Master Admin</span>
+                <span className="text-[10px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  God Mode
+                </span>
+              </span>
+            </Link>
+
+            {!isExpanded && (
+              <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
+                <div className="bg-emerald-600 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
+                  Master Admin (God Mode)
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
             <LogOut size={16} className="shrink-0" />
             <span
               className={cn(
