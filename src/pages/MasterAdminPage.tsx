@@ -29,10 +29,11 @@ interface OverviewStats {
   current_month_views: number;
 }
 
-interface MasterStoreItem {
+interface MasterStore {
   store_id: string;
   store_name: string;
   store_slug: string;
+  whatsapp_number: string | null;
   created_at: string;
   owner_name: string;
   owner_email: string;
