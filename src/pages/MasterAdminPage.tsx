@@ -339,14 +339,35 @@ export default function MasterAdminPage() {
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
-                        <button
-                          onClick={() => handleAccessStore(s.store_id, s.store_name)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 text-xs font-medium transition"
-                          title="Entrar na loja em modo suporte"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          Acessar Loja
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Botão E-mail */}
+                          <button
+                            onClick={() => handleEmailContact(s.owner_email, s.owner_name, s.store_name)}
+                            className="inline-flex items-center p-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700 transition"
+                            title={`Enviar e-mail para ${s.owner_email}`}
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Botão WhatsApp */}
+                          <button
+                            onClick={() => handleWhatsAppContact(s.owner_name, s.store_name)}
+                            className="inline-flex items-center p-1.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition"
+                            title={`Abrir WhatsApp com ${s.owner_name}`}
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Botão Acessar Loja (Impersonate) */}
+                          <button
+                            onClick={() => handleAccessStore(s.store_id, s.store_name)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 text-xs font-medium transition"
+                            title="Entrar na loja em modo suporte"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            Acessar Loja
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
