@@ -62,9 +62,11 @@ const menuGroups = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate(); 
   const [storeName, setStoreName] = useState('');
   const [storeLogoUrl, setStoreLogoUrl] = useState('');
   const [planName, setPlanName] = useState('Plano Iniciante');
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const isExpanded = !isCollapsed;
