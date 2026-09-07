@@ -143,6 +143,7 @@ function App() {
         
         <Routes>
           {/* Rotas públicas */}
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
