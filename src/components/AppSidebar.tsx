@@ -345,36 +345,33 @@ const isItemActive =
             }}
             className="flex w-full items-center gap-2.5 px-2.5 py-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-500 transition-colors text-sm font-bold overflow-hidden whitespace-nowrap"
           >
-                  {/* Botão Exclusivo Super Admin */}
+        {/* Botão Compacto GOD MODE */}
         {isSuperAdmin && (
-          <div className="relative group mb-2">
-            <Link
-              to="/master"
+          <div className="relative group mb-1.5 px-1">
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = '/master';
+              }}
               className={cn(
-                "flex w-full items-center gap-2.5 px-2.5 py-2 rounded-xl transition-all text-sm font-bold overflow-hidden whitespace-nowrap",
+                "w-full flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-black tracking-wider transition-all shadow-sm border select-none cursor-pointer",
                 location.pathname === "/master"
-                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                  : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 border border-emerald-500/20"
+                  ? "bg-amber-500 text-black border-amber-400 shadow-amber-500/20"
+                  : "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 hover:text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50"
               )}
             >
-              <ShieldCheck size={18} className="shrink-0 text-emerald-400" />
-              <span
-                className={cn(
-                  "transition-all duration-300 flex items-center justify-between w-full",
-                  isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
-                )}
-              >
-                <span>Master Admin</span>
-                <span className="text-[10px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  God Mode
+              <ShieldCheck size={14} className="shrink-0 text-emerald-400" />
+              {isExpanded && (
+                <span className="uppercase text-[11px] font-black tracking-widest">
+                  GOD MODE
                 </span>
-              </span>
-            </Link>
+              )}
+            </button>
 
             {!isExpanded && (
-              <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
-                <div className="bg-emerald-600 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
-                  Master Admin (God Mode)
+              <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-3">
+                <div className="bg-emerald-600 text-white text-[11px] font-black px-2.5 py-1 rounded-md shadow-xl whitespace-nowrap border border-white/20 flex items-center gap-1 ml-2 animate-in fade-in zoom-in-95 duration-150">
+                  GOD MODE
                 </div>
               </div>
             )}
