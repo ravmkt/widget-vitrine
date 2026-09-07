@@ -284,119 +284,48 @@ const isItemActive =
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-slate-100 dark:border-[#ff7a29]/20 overflow-hidden shrink-0">
-        <div className="relative group mb-3">
-          <Link
-            to="/billing"
-            className={cn(
-              "flex items-center gap-3 min-w-0 p-1.5 -m-1.5 rounded-xl transition-all duration-200 cursor-pointer",
-              location.pathname === "/billing"
-                ? "bg-[#0091ff]/10 dark:bg-[#ff7a29]/10"
-                : "hover:bg-slate-50 dark:hover:bg-[#1a1f35]"
-            )}
-          >
-            <div className="h-9 w-9 rounded-full bg-slate-100 dark:bg-[#1a1f35] border border-slate-200 dark:border-[#ff7a29]/25 flex items-center justify-center text-slate-500 dark:text-slate-400 overflow-hidden shrink-0">
-              {storeLogoUrl ? (
-                <img src={storeLogoUrl} alt={storeName || 'Loja'} className="h-full w-full object-cover" />
-              ) : (
-                <User size={18} />
-              )}
-            </div>
-            <div
-              className={cn(
-                "flex flex-col min-w-0 transition-all duration-300 whitespace-nowrap",
-                isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
-              )}
-            >
-              <span className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-[#0091ff] dark:group-hover:text-[#ff7a29] transition-colors">
-                {storeName || 'Minha Loja'}
-              </span>
-              <span className="text-[10px] font-black text-[#0091ff] dark:text-[#ff7a29] uppercase tracking-wide">
-                {planName}
-              </span>
-            </div>
-          </Link>
-
-          {/* Tooltip flutuante no modo recolhido */}
-          {!isExpanded && (
-            <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-4">
-              <div className="bg-[#0091ff] dark:bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
-                Minha Assinatura / Financeiro
-              </div>
+      <SidebarFooter className="p-3 border-t border-slate-100 dark:border-[#ff7a29]/20 flex flex-col gap-2">
+        {/* Informações da Loja / Perfil */}
+        <div className="flex items-center gap-2.5 px-2 py-1.5 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 shrink-0 border border-slate-700">
+            <User size={16} />
+          </div>
+          {isExpanded && (
+            <div className="flex flex-col min-w-0 overflow-hidden text-left">
+              <span className="text-sm font-semibold text-white truncate">{storeName || 'Minha Loja'}</span>
+              <span className="text-[10px] font-bold text-[#ff7a29] uppercase tracking-wider truncate">{planName}</span>
             </div>
           )}
         </div>
 
-        <div className="relative group">
-          <button
-            onClick={async () => {
-              try {
-                if (supabase) {
-                  await supabase.auth.signOut();
-                }
-              } catch (_) {}
-              try {
-                const theme = localStorage.getItem('app-theme');
-                localStorage.clear();
-                sessionStorage.clear();
-                if (theme) localStorage.setItem('app-theme', theme);
-              } catch (_) {}
-              window.location.href = '/login';
-            }}
-            className="flex w-full items-center gap-2.5 px-2.5 py-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-500 transition-colors text-sm font-bold overflow-hidden whitespace-nowrap"
-          >
-        {/* Botão Compacto GOD MODE */}
+        {/* Botão GOD MODE (Em cima do botão Sair) */}
         {isSuperAdmin && (
-          <div className="relative group mb-1.5 px-1">
-            <button
-              type="button"
-              onClick={() => {
-                window.location.href = '/master';
-              }}
-              className={cn(
-                "w-full flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-black tracking-wider transition-all shadow-sm border select-none cursor-pointer",
-                location.pathname === "/master"
-                  ? "bg-amber-500 text-black border-amber-400 shadow-amber-500/20"
-                  : "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 hover:text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50"
-              )}
-            >
-              <ShieldCheck size={14} className="shrink-0 text-emerald-400" />
-              {isExpanded && (
-                <span className="uppercase text-[11px] font-black tracking-widest">
-                  GOD MODE
-                </span>
-              )}
-            </button>
-
-            {!isExpanded && (
-              <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-3">
-                <div className="bg-emerald-600 text-white text-[11px] font-black px-2.5 py-1 rounded-md shadow-xl whitespace-nowrap border border-white/20 flex items-center gap-1 ml-2 animate-in fade-in zoom-in-95 duration-150">
-                  GOD MODE
-                </div>
-              </div>
+          <button
+            type="button"
+            onClick={() => {
+              window.location.assign('/master');
+            }}
+            className={cn(
+              "w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-black tracking-wider transition-all border cursor-pointer select-none",
+              location.pathname === "/master"
+                ? "bg-emerald-500 text-black border-emerald-400 shadow-md shadow-emerald-500/20"
+                : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50"
             )}
-          </div>
+          >
+            <ShieldCheck size={14} className="shrink-0 text-emerald-400" />
+            {isExpanded && <span className="tracking-widest uppercase text-[10px]">GOD MODE</span>}
+          </button>
         )}
 
-            <LogOut size={16} className="shrink-0" />
-            <span
-              className={cn(
-                "transition-all duration-300",
-                isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
-              )}
-            >
-              Sair do Painel
-            </span>
-          </button>
-
-          {!isExpanded && (
-            <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
-              <div className="bg-[#0091ff] dark:bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 dark:shadow-orange-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
-                Sair do Painel
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Botão Sair */}
+        <button
+          type="button"
+          onClick={handleLogout} // ou a função de logout do seu arquivo
+          className="w-full flex items-center gap-2 py-1.5 px-3 text-xs font-semibold text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+        >
+          <LogOut size={14} className="shrink-0" />
+          {isExpanded && <span>Sair da Plataforma</span>}
+        </button>
       </SidebarFooter>
     </div>
   );
