@@ -1,3 +1,5 @@
+import MasterAdminPage from '@/pages/MasterAdminPage';
+import { MasterAdminRoute } from '@/components/MasterAdminRoute';
 import StoriesWidgetPage from '@/pages/StoriesWidgetPage';
 import StoryDetailsPage from '@/pages/StoryDetailsPage';
 import VideoPerformancePage from '@/pages/VideoPerformancePage';
@@ -186,7 +188,10 @@ function App() {
           <Route path="/suporte" element={<ProtectedRoute><AppLayout><SupportPage /></AppLayout></ProtectedRoute>} />
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+                                  {/* Rota Master Admin (God Mode) */}
+            <Route path="/master" element={<MasterAdminRoute><MasterAdminPage /></MasterAdminRoute>} />
+            <Route path="/admin" element={<Navigate to="/master" replace />} />
+<Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </TenantProvider>
@@ -194,3 +199,4 @@ function App() {
 }
 
 export default App;
+
