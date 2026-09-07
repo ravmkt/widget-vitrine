@@ -8,12 +8,12 @@ import {
   Eye, 
   LogOut, 
   Search, 
-  ExternalLink, 
   History, 
   X, 
   Clock, 
   FileText,
-  AlertCircle
+  AlertCircle,
+  Video
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -25,14 +25,17 @@ interface MasterStats {
 }
 
 interface MasterStore {
-  id: string;
-  name: string;
-  subdomain: string;
-  custom_domain: string | null;
-  plan_tier: string;
+  store_id: string;
+  store_name: string;
+  store_slug: string;
   created_at: string;
-  views_count?: number;
-  owner_email?: string;
+  owner_name: string | null;
+  owner_email: string | null;
+  plan_name: string | null;
+  subscription_status: string | null;
+  current_period_end: string | null;
+  videos_count: number;
+  month_views: number;
 }
 
 interface LogEntry {
@@ -57,71 +60,86 @@ export default function MasterAdminPage() {
 
   useEffect(() => {
     loadMasterData();
-  }, []);
+  }, [searchTerm]);
 
   const loadMasterData = async () => {
     try {
       setLoading(true);
       
-      const { data: statsData } = await supabase.rpc('get_master_overview_stats');
-      if (statsData) setStats(statsData[0] || statsData);
+      // 1. Estatísticas globais
+      const { data: statsData, error: statsError } = await supabase.rpc('get_master_overview_stats');
+      if (statsError) console.error('Erro ao buscar stats:', statsError);
+      if (statsData) setStats(Array.isArray(statsData) ? statsData[0] : statsData);
 
-      const { data: storesData } = await supabase.rpc('get_master_stores_list', {
-        search_query: searchTerm || null,
-        limit_count: 100,
-        offset_count: 0
+      // 2. Lista de lojas com os parâmetros exatos do banco
+      const { data: storesData, error: storesError } = await supabase.rpc('get_master_stores_list', {
+        p_search: searchTerm.trim() || null,
+        p_status: null,
+        p_limit: 100,
+        p_offset: 0
       });
-      if (storesData) setStores(storesData);
+
+      if (storesError) {
+        console.error('Erro ao buscar lojas:', storesError);
+        toast.error('Erro ao listar lojas: ' + storesError.message);
+      } else {
+        setStores(storesData || []);
+      }
     } catch (err: any) {
-      console.error('[MasterAdmin] Erro ao carregar dados:', err);
-      toast.error('Erro ao buscar dados do painel Master');
+      console.error('[MasterAdmin] Erro geral:', err);
+      toast.error('Erro ao carregar dados do painel Master');
     } finally {
       setLoading(false);
     }
   };
 
-  // Função para Deslogar do Master Admin
+  // Logout Master
   const handleMasterLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success('Sessão encerrada.');
+      toast.success('Sessão encerrada com sucesso.');
       navigate('/master/login');
     } catch (err: any) {
       toast.error('Erro ao sair: ' + err.message);
     }
   };
 
-  // Abrir Modal e Buscar Logs da Loja
+  // Abrir Modal e Buscar Histórico de Ações da Loja
   const handleOpenLogs = async (store: MasterStore) => {
     setSelectedStoreForLogs(store);
     setLoadingLogs(true);
     try {
-      // Tenta buscar da tabela audit_logs ou dos stories_events/logs do sistema
-      const { data, error } = await supabase
+      // 1. Tenta buscar da tabela audit_logs (se existir)
+      const { data: auditData, error: auditError } = await supabase
         .from('audit_logs')
         .select('*')
-        .eq('store_id', store.id)
+        .eq('store_id', store.store_id)
         .order('created_at', { ascending: false })
         .limit(30);
 
-      if (error) {
-        // Fallback: se a tabela de audit não existir com esse nome exato, buscamos atualizações gerais da loja
-        const { data: fallbackData } = await supabase
-          .from('stories')
-          .select('id, title, created_at, is_active')
-          .eq('store_id', store.id)
-          .order('created_at', { ascending: false })
-          .limit(20);
+      if (!auditError && auditData && auditData.length > 0) {
+        setStoreLogs(auditData);
+        return;
+      }
 
-        const formatted = (fallbackData || []).map((s: any) => ({
+      // 2. Fallback inteligente: busca histórico de stories criados/alterados
+      const { data: storiesData } = await supabase
+        .from('stories')
+        .select('id, title, created_at, is_active')
+        .eq('store_id', store.store_id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (storiesData && storiesData.length > 0) {
+        const formatted = storiesData.map((s: any) => ({
           id: s.id,
           created_at: s.created_at,
-          action: `Story ${s.is_active ? 'Publicado' : 'Desativado'}: "${s.title}"`,
-          details: s
+          action: `Story ${s.is_active ? 'Ativo' : 'Pausado'}: "${s.title || 'Sem título'}"`,
+          details: { id: s.id, is_active: s.is_active }
         }));
         setStoreLogs(formatted);
       } else {
-        setStoreLogs(data || []);
+        setStoreLogs([]);
       }
     } catch (err) {
       console.error('Erro ao buscar logs:', err);
@@ -130,12 +148,6 @@ export default function MasterAdminPage() {
       setLoadingLogs(false);
     }
   };
-
-  const filteredStores = stores.filter(s => 
-    s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.subdomain?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.owner_email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="min-h-screen bg-[#090a0f] text-zinc-100 p-6 md:p-10 selection:bg-emerald-500 selection:text-black">
@@ -153,7 +165,6 @@ export default function MasterAdminPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Botão Sair da Plataforma */}
             <button
               onClick={handleMasterLogout}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-rose-500/50 hover:bg-rose-500/10 text-zinc-300 hover:text-rose-400 text-sm font-semibold transition duration-200 cursor-pointer"
@@ -222,8 +233,10 @@ export default function MasterAdminPage() {
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-zinc-800 bg-zinc-950/60 text-zinc-400 font-semibold text-[11px] uppercase tracking-wider">
-                    <th className="py-3.5 px-4">Loja</th>
-                    <th className="py-3.5 px-4">Plano</th>
+                    <th className="py-3.5 px-4">Loja / Dono</th>
+                    <th className="py-3.5 px-4">Plano / Status</th>
+                    <th className="py-3.5 px-4">Vídeos</th>
+                    <th className="py-3.5 px-4">Views Mês</th>
                     <th className="py-3.5 px-4">Cadastro</th>
                     <th className="py-3.5 px-4 text-right">Ações</th>
                   </tr>
@@ -231,41 +244,63 @@ export default function MasterAdminPage() {
                 <tbody className="divide-y divide-zinc-800/60">
                   {loading ? (
                     <tr>
-                      <td colSpan={4} className="py-12 text-center text-zinc-500">
+                      <td colSpan={6} className="py-12 text-center text-zinc-500">
                         Carregando lojas...
                       </td>
                     </tr>
-                  ) : filteredStores.length === 0 ? (
+                  ) : stores.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-12 text-center text-zinc-500">
+                      <td colSpan={6} className="py-12 text-center text-zinc-500">
                         Nenhuma loja encontrada.
                       </td>
                     </tr>
                   ) : (
-                    filteredStores.map((store) => (
-                      <tr key={store.id} className="hover:bg-zinc-800/20 transition-colors">
+                    stores.map((store) => (
+                      <tr key={store.store_id} className="hover:bg-zinc-800/20 transition-colors">
                         <td className="py-3.5 px-4">
-                          <div className="font-semibold text-white">{store.name}</div>
-                          <div className="text-xs text-zinc-500">{store.subdomain}.vidlytics.com.br</div>
+                          <div className="font-semibold text-white">{store.store_name}</div>
+                          <div className="text-xs text-zinc-500">{store.store_slug}.vidlytics.com.br</div>
                           {store.owner_email && (
-                            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">{store.owner_email}</div>
+                            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+                              {store.owner_name ? `${store.owner_name} • ` : ''}{store.owner_email}
+                            </div>
                           )}
                         </td>
                         <td className="py-3.5 px-4">
-                          <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase bg-zinc-800 text-zinc-300 border border-zinc-700/60">
-                            {store.plan_tier || 'Trial'}
-                          </span>
+                          <div className="flex flex-col gap-1 items-start">
+                            <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase bg-zinc-800 text-zinc-300 border border-zinc-700/60">
+                              {store.plan_name || 'Trial'}
+                            </span>
+                            {store.subscription_status && (
+                              <span className={`text-[10px] uppercase font-bold tracking-wider ${
+                                store.subscription_status === 'active' ? 'text-emerald-400' : 'text-zinc-500'
+                              }`}>
+                                {store.subscription_status}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-xs text-zinc-300">
+                          <div className="flex items-center gap-1.5">
+                            <Video size={13} className="text-zinc-500" />
+                            <span>{store.videos_count || 0}</span>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-xs text-zinc-300">
+                          <div className="flex items-center gap-1.5">
+                            <Eye size={13} className="text-zinc-500" />
+                            <span>{Number(store.month_views || 0).toLocaleString('pt-BR')}</span>
+                          </div>
                         </td>
                         <td className="py-3.5 px-4 text-xs text-zinc-400">
                           {new Date(store.created_at).toLocaleDateString('pt-BR')}
                         </td>
                         <td className="py-3.5 px-4 text-right space-x-2">
-                          {/* Botão Ver Logs / Auditoria */}
                           <button
                             type="button"
                             onClick={() => handleOpenLogs(store)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-xs font-medium transition cursor-pointer border border-zinc-700/60"
-                            title="Ver histórico de ações e logs"
+                            title="Ver histórico e logs"
                           >
                             <History size={14} className="text-emerald-400" />
                             <span>Logs</span>
@@ -282,12 +317,11 @@ export default function MasterAdminPage() {
 
       </div>
 
-      {/* Modal de Logs / Auditoria da Loja */}
+      {/* Modal de Histórico e Logs */}
       {selectedStoreForLogs && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
             
-            {/* Cabeçalho do Modal */}
             <div className="flex items-center justify-between p-5 border-b border-zinc-800 bg-zinc-950/50">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
@@ -295,7 +329,7 @@ export default function MasterAdminPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white">Histórico e Logs da Loja</h3>
-                  <p className="text-xs text-zinc-400">{selectedStoreForLogs.name} ({selectedStoreForLogs.subdomain})</p>
+                  <p className="text-xs text-zinc-400">{selectedStoreForLogs.store_name} ({selectedStoreForLogs.store_slug})</p>
                 </div>
               </div>
               <button 
@@ -306,7 +340,6 @@ export default function MasterAdminPage() {
               </button>
             </div>
 
-            {/* Conteúdo / Linha do Tempo de Logs */}
             <div className="p-6 overflow-y-auto space-y-3 flex-1">
               {loadingLogs ? (
                 <div className="py-12 text-center text-zinc-500 text-xs">Buscando histórico da loja...</div>
@@ -340,7 +373,6 @@ export default function MasterAdminPage() {
               )}
             </div>
 
-            {/* Rodapé do Modal */}
             <div className="p-4 border-t border-zinc-800 bg-zinc-950/50 flex justify-end">
               <button
                 type="button"
