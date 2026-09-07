@@ -1,3 +1,4 @@
+import LandingPage from './pages/LandingPage';
 import MasterAdminPage from '@/pages/MasterAdminPage';
 import { MasterAdminRoute } from '@/components/MasterAdminRoute';
 import StoriesWidgetPage from '@/pages/StoriesWidgetPage';
