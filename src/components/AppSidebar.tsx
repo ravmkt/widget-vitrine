@@ -298,29 +298,14 @@ const isItemActive =
           )}
         </div>
 
-        {/* Botão GOD MODE (Em cima do botão Sair) */}
-        {isSuperAdmin && (
-          <button
-            type="button"
-            onClick={() => {
-              window.location.assign('/master');
-            }}
-            className={cn(
-              "w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-black tracking-wider transition-all border cursor-pointer select-none",
-              location.pathname === "/master"
-                ? "bg-emerald-500 text-black border-emerald-400 shadow-md shadow-emerald-500/20"
-                : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50"
-            )}
-          >
-            <ShieldCheck size={14} className="shrink-0 text-emerald-400" />
-            {isExpanded && <span className="tracking-widest uppercase text-[10px]">GOD MODE</span>}
-          </button>
-        )}
-
-        {/* Botão Sair */}
+        {/* Botão Sair da Plataforma */}
         <button
           type="button"
-          onClick={handleLogout} // ou a função de logout do seu arquivo
+          onClick={async () => {
+            const { supabase } = await import('@/lib/supabase');
+            await supabase.auth.signOut();
+            window.location.href = '/login';
+          }}
           className="w-full flex items-center gap-2 py-1.5 px-3 text-xs font-semibold text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
         >
           <LogOut size={14} className="shrink-0" />
