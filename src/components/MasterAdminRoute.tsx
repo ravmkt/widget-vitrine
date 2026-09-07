@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 
 interface Props {
@@ -8,52 +7,48 @@ interface Props {
 }
 
 export const MasterAdminRoute = ({ children }: Props) => {
-  const { user, isSuperAdmin: authIsSuperAdmin, loading: authLoading } = useAuth();
-  const [checking, setChecking] = useState(true);
-  const [hasAccess, setHasAccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
-    async function verifyAccess() {
-      if (authLoading) return;
-
-      if (!user) {
-        setHasAccess(false);
-        setChecking(false);
-        return;
-      }
-
-      // Se o AuthContext já confirmou que é super admin
-      if (authIsSuperAdmin) {
-        setHasAccess(true);
-        setChecking(false);
-        return;
-      }
-
-      // Checagem direta de segurança no banco de dados
+    async function checkMasterAccess() {
       try {
+        // Pega a sessão diretamente do storage local sem risco de dessincronização
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user) {
+          setIsAuthenticated(false);
+          setLoading(false);
+          return;
+        }
+
+        setIsAuthenticated(true);
+
+        // Verifica na tabela profiles
         const { data: profile } = await supabase
           .from('profiles')
           .select('is_super_admin')
-          .eq('user_id', user.id)
-          .single();
+          .eq('user_id', session.user.id)
+          .maybeSingle();
 
         if (profile?.is_super_admin) {
-          setHasAccess(true);
+          setIsSuperAdmin(true);
         } else {
-          setHasAccess(false);
+          setIsSuperAdmin(false);
         }
       } catch (err) {
-        console.error('Erro ao checar permissão Master Admin:', err);
-        setHasAccess(false);
+        console.error('Erro na checagem Master Admin:', err);
+        setIsSuperAdmin(false);
       } finally {
-        setChecking(false);
+        setLoading(false);
       }
     }
 
-    verifyAccess();
-  }, [user, authIsSuperAdmin, authLoading]);
+    checkMasterAccess();
+  }, []);
 
-  if (authLoading || checking) {
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-zinc-950">
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-emerald-500" />
@@ -61,11 +56,11 @@ export const MasterAdminRoute = ({ children }: Props) => {
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!hasAccess) {
+  if (!isSuperAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 
