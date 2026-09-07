@@ -90,6 +90,14 @@ const GuestRoute = ({ children }: { children: React.ReactNode }) => {
 
 // ── HomeGuard: redireciona raiz conforme estado do banco ──
 const HomeGuard = () => {
+  const hostname = window.location.hostname.toLowerCase();
+  const isAppSubdomain = hostname.startsWith("app.");
+
+  // Se NÃO for o subdomínio app (ex: vidlytics.com.br ou localhost padrão), exibe a Landing Page
+  if (!isAppSubdomain && hostname !== "localhost") {
+    return <LandingPage />;
+  }
+
   const { user, loading: authLoading } = useAuth();
   const [checking, setChecking] = useState(true);
   const [hasSettings, setHasSettings] = useState(false);
@@ -143,7 +151,6 @@ function App() {
         
         <Routes>
           {/* Rotas públicas */}
-          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
