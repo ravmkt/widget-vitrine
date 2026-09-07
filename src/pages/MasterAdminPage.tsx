@@ -1,493 +1,360 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useTenant } from '@/context/TenantContext';
 import { useNavigate } from 'react-router-dom';
-import {
-  Store,
-  Video,
-  Eye,
-  CreditCard,
-  Search,
-  ExternalLink,
-  ShieldCheck,
-  RefreshCw,
-  ChevronRight,
-  TrendingUp,
-  Mail,
-  MessageCircle,
-  X,
-  Send,
+import { supabase } from '@/lib/supabase';
+import { 
+  Users, 
+  Store, 
+  DollarSign, 
+  Eye, 
+  LogOut, 
+  Search, 
+  ExternalLink, 
+  History, 
+  X, 
+  Clock, 
+  FileText,
+  AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface OverviewStats {
+interface MasterStats {
   total_stores: number;
-  active_subscriptions: number;
-  trialing_subscriptions: number;
-  past_due_subscriptions: number;
-  total_videos: number;
-  current_month_views: number;
+  active_stores: number;
+  total_views: number;
+  total_revenue: number;
 }
 
 interface MasterStore {
-  store_id: string;
-  store_name: string;
-  store_slug: string;
-  whatsapp_number: string | null;
+  id: string;
+  name: string;
+  subdomain: string;
+  custom_domain: string | null;
+  plan_tier: string;
   created_at: string;
-  owner_name: string;
-  owner_email: string;
-  plan_name: string;
-  subscription_status: string;
-  current_period_end: string | null;
-  videos_count: number;
-  month_views: number;
+  views_count?: number;
+  owner_email?: string;
+}
+
+interface LogEntry {
+  id: string;
+  created_at: string;
+  action: string;
+  details?: any;
+  user_email?: string;
 }
 
 export default function MasterAdminPage() {
   const navigate = useNavigate();
-  const { setStoreId } = useTenant();
-
-  const [stats, setStats] = useState<OverviewStats | null>(null);
+  const [stats, setStats] = useState<MasterStats | null>(null);
   const [stores, setStores] = useState<MasterStore[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
 
-  // Estados do Modal de E-mail
-  const [emailModalOpen, setEmailModalOpen] = useState(false);
-  const [emailRecipient, setEmailRecipient] = useState({ name: '', email: '', store: '' });
-  const [emailSubject, setEmailSubject] = useState('');
-  const [emailBody, setEmailBody] = useState('');
+  // Estados do Modal de Logs
+  const [selectedStoreForLogs, setSelectedStoreForLogs] = useState<MasterStore | null>(null);
+  const [storeLogs, setStoreLogs] = useState<LogEntry[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
 
-  const loadData = async () => {
-    setLoading(true);
+  useEffect(() => {
+    loadMasterData();
+  }, []);
+
+  const loadMasterData = async () => {
     try {
-      // 1. Carrega Estatísticas Globais
-      const { data: statsData, error: statsError } = await supabase.rpc('get_master_overview_stats');
-      if (statsError) throw statsError;
-      setStats(statsData);
+      setLoading(true);
+      
+      const { data: statsData } = await supabase.rpc('get_master_overview_stats');
+      if (statsData) setStats(statsData[0] || statsData);
 
-      // 2. Carrega Lojas
-      const { data: storesData, error: storesError } = await supabase.rpc('get_master_stores_list', {
-        p_search: search.trim() ? search.trim() : null,
-        p_status: statusFilter || null,
-        p_limit: 100,
-        p_offset: 0,
+      const { data: storesData } = await supabase.rpc('get_master_stores_list', {
+        search_query: searchTerm || null,
+        limit_count: 100,
+        offset_count: 0
       });
-
-      if (storesError) throw storesError;
-      setStores(storesData || []);
+      if (storesData) setStores(storesData);
     } catch (err: any) {
       console.error('[MasterAdmin] Erro ao carregar dados:', err);
-      toast.error('Erro ao buscar dados do painel Master: ' + (err.message || 'Erro desconhecido'));
+      toast.error('Erro ao buscar dados do painel Master');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, [statusFilter]);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    loadData();
-  };
-
-  // Modo Suporte / Impersonação
-  const handleAccessStore = (storeId: string, storeName: string) => {
+  // Função para Deslogar do Master Admin
+  const handleMasterLogout = async () => {
     try {
-      localStorage.setItem('vidlytics_current_store_id', storeId);
-      localStorage.setItem('current_store_id', storeId);
-      localStorage.setItem('store_id', storeId);
-      if (setStoreId) {
-        setStoreId(storeId);
+      await supabase.auth.signOut();
+      toast.success('Sessão encerrada.');
+      navigate('/master/login');
+    } catch (err: any) {
+      toast.error('Erro ao sair: ' + err.message);
+    }
+  };
+
+  // Abrir Modal e Buscar Logs da Loja
+  const handleOpenLogs = async (store: MasterStore) => {
+    setSelectedStoreForLogs(store);
+    setLoadingLogs(true);
+    try {
+      // Tenta buscar da tabela audit_logs ou dos stories_events/logs do sistema
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .eq('store_id', store.id)
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+      if (error) {
+        // Fallback: se a tabela de audit não existir com esse nome exato, buscamos atualizações gerais da loja
+        const { data: fallbackData } = await supabase
+          .from('stories')
+          .select('id, title, created_at, is_active')
+          .eq('store_id', store.id)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        const formatted = (fallbackData || []).map((s: any) => ({
+          id: s.id,
+          created_at: s.created_at,
+          action: `Story ${s.is_active ? 'Publicado' : 'Desativado'}: "${s.title}"`,
+          details: s
+        }));
+        setStoreLogs(formatted);
+      } else {
+        setStoreLogs(data || []);
       }
-      toast.success(`Acessando ${storeName} em Modo Suporte!`);
-      navigate('/dashboard');
     } catch (err) {
-      toast.error('Não foi possível alternar de loja.');
+      console.error('Erro ao buscar logs:', err);
+      setStoreLogs([]);
+    } finally {
+      setLoadingLogs(false);
     }
   };
 
-  // Abre Modal de E-mail interno
-  const handleOpenEmailModal = (ownerEmail: string, ownerName: string, storeName: string) => {
-    if (!ownerEmail || ownerEmail === 'Não identificado') {
-      toast.error('E-mail do proprietário não encontrado.');
-      return;
-    }
-    setEmailRecipient({ name: ownerName, email: ownerEmail, store: storeName });
-    setEmailSubject(`Vidlytics - Contato sobre a loja ${storeName}`);
-    setEmailBody(
-      `Olá, ${ownerName || 'lojista'}!\n\nTudo bem?\n\nAqui é o Rodrigo da equipe Vidlytics. Estamos acompanhando sua loja "${storeName}" e gostaríamos de saber como está sua experiência com os stories e se podemos te ajudar a aumentar suas conversões hoje.\n\nAbraços,\nEquipe Vidlytics`
-    );
-    setEmailModalOpen(true);
-  };
-
-  // Envio via Gmail Web
-  const handleSendEmailViaGmail = () => {
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
-      emailRecipient.email
-    )}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-    window.open(gmailUrl, '_blank');
-    setEmailModalOpen(false);
-    toast.success('Gmail aberto para envio!');
-  };
-
-  // Envio via Cliente Padrão (Mailto)
-  const handleSendEmailClient = () => {
-    const mailtoUrl = `mailto:${emailRecipient.email}?subject=${encodeURIComponent(
-      emailSubject
-    )}&body=${encodeURIComponent(emailBody)}`;
-    window.open(mailtoUrl, '_self');
-    setEmailModalOpen(false);
-  };
-
-  // WhatsApp automático
-  const handleWhatsAppContact = (rawWhatsapp: string | null, ownerName: string, storeName: string) => {
-    let phone = rawWhatsapp ? rawWhatsapp.replace(/\D/g, '') : '';
-
-    if (!phone) {
-      const manualPhone = window.prompt(
-        `A loja "${storeName}" não possui WhatsApp salvo nas configurações.\nDigite o número com DDD (ex: 11999998888):`
-      );
-      if (!manualPhone) return;
-      phone = manualPhone.replace(/\D/g, '');
-    }
-
-    if (phone.length < 10) {
-      toast.error('Número de WhatsApp inválido.');
-      return;
-    }
-
-    const fullPhone = phone.startsWith('55') ? phone : `55${phone}`;
-    const text = encodeURIComponent(
-      `Olá, ${ownerName || 'lojista'}! Tudo bem? Aqui é o Rodrigo da Vidlytics. Vi que você administra a loja "${storeName}". Como estão suas conversões com os stories? Precisa de algum suporte?`
-    );
-
-    window.open(`https://wa.me/${fullPhone}?text=${text}`, '_blank');
-  };
+  const filteredStores = stores.filter(s => 
+    s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.subdomain?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.owner_email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen bg-[#090a0f] text-zinc-100 p-6 md:p-10">
+    <div className="min-h-screen bg-[#090a0f] text-zinc-100 p-6 md:p-10 selection:bg-emerald-500 selection:text-black">
       <div className="max-w-7xl mx-auto space-y-8">
+        
         {/* Topo / Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <ShieldCheck className="w-3.5 h-3.5" /> VIDLYTICS GOD MODE
-              </span>
-            </div>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              PORTAL GLOBAL DE GESTÃO
+            </span>
             <h1 className="text-3xl font-bold tracking-tight text-white mt-2">Painel Master Admin</h1>
-            <p className="text-sm text-zinc-400 mt-1">
-              Visão consolidada de todas as lojas, assinaturas e infraestrutura em produção.
-            </p>
+            <p className="text-sm text-zinc-400">Visão consolidada de todas as lojas, assinaturas e histórico.</p>
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Botão Sair da Plataforma */}
             <button
-              onClick={() => loadData()}
-              disabled={loading}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-medium transition disabled:opacity-50"
+              onClick={handleMasterLogout}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-rose-500/50 hover:bg-rose-500/10 text-zinc-300 hover:text-rose-400 text-sm font-semibold transition duration-200 cursor-pointer"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Atualizar
-            </button>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0091ff] hover:bg-[#0081e6] text-white text-sm font-medium transition"
-            >
-              Voltar ao Meu Dashboard
-              <ChevronRight className="w-4 h-4" />
+              <LogOut size={16} />
+              <span>Sair da Plataforma</span>
             </button>
           </div>
         </div>
 
-        {/* Cards de Métricas Consolidadas */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div className="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
-              <Store className="w-4 h-4 text-blue-400" /> Total de Lojas
+        {/* Métricas Globais */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 shadow-xl">
+            <div className="flex items-center justify-between text-zinc-400 mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider">Total de Lojas</span>
+              <Store size={18} className="text-emerald-400" />
             </div>
-            <div className="text-2xl font-bold text-white mt-2">{stats?.total_stores ?? '--'}</div>
+            <div className="text-2xl font-bold text-white">{stats?.total_stores || 0}</div>
           </div>
 
-          <div className="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
-              <CreditCard className="w-4 h-4 text-emerald-400" /> Assinaturas Ativas
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 shadow-xl">
+            <div className="flex items-center justify-between text-zinc-400 mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider">Lojas Ativas</span>
+              <Users size={18} className="text-blue-400" />
             </div>
-            <div className="text-2xl font-bold text-emerald-400 mt-2">
-              {stats?.active_subscriptions ?? '--'}
-            </div>
+            <div className="text-2xl font-bold text-white">{stats?.active_stores || 0}</div>
           </div>
 
-          <div className="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
-              <TrendingUp className="w-4 h-4 text-amber-400" /> Em Trial (7 dias)
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 shadow-xl">
+            <div className="flex items-center justify-between text-zinc-400 mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider">Visualizações Globais</span>
+              <Eye size={18} className="text-purple-400" />
             </div>
-            <div className="text-2xl font-bold text-amber-400 mt-2">
-              {stats?.trialing_subscriptions ?? '--'}
-            </div>
+            <div className="text-2xl font-bold text-white">{(stats?.total_views || 0).toLocaleString('pt-BR')}</div>
           </div>
 
-          <div className="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
-              <CreditCard className="w-4 h-4 text-red-400" /> Inadimplentes
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 shadow-xl">
+            <div className="flex items-center justify-between text-zinc-400 mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider">Receita Mensal (MRR)</span>
+              <DollarSign size={18} className="text-emerald-400" />
             </div>
-            <div className="text-2xl font-bold text-red-400 mt-2">
-              {stats?.past_due_subscriptions ?? '--'}
+            <div className="text-2xl font-bold text-emerald-400">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats?.total_revenue || 0)}
             </div>
-          </div>
-
-          <div className="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
-              <Video className="w-4 h-4 text-purple-400" /> Total de Vídeos
-            </div>
-            <div className="text-2xl font-bold text-purple-400 mt-2">{stats?.total_videos ?? '--'}</div>
-          </div>
-
-          <div className="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
-              <Eye className="w-4 h-4 text-cyan-400" /> Views no Mês
-            </div>
-            <div className="text-2xl font-bold text-cyan-400 mt-2">
-              {stats?.current_month_views ? Number(stats.current_month_views).toLocaleString('pt-BR') : '0'}
-            </div>
-          </div>
-        </div>
-
-        {/* Filtros e Busca */}
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-zinc-900/60 p-4 rounded-xl border border-zinc-800">
-          <form onSubmit={handleSearchSubmit} className="relative w-full md:w-96">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nome da loja ou e-mail..."
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-9 pr-4 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
-            />
-          </form>
-
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none"
-            >
-              <option value="">Todos os Status de Cobrança</option>
-              <option value="active">Ativo (Pago)</option>
-              <option value="trialing">Em Trial</option>
-              <option value="past_due">Atrasado / Inadimplente</option>
-              <option value="canceled">Cancelado</option>
-            </select>
           </div>
         </div>
 
         {/* Tabela de Lojas */}
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-900/80 text-zinc-400 font-medium text-xs uppercase tracking-wider">
-                  <th className="py-3.5 px-4">Loja & Dono</th>
-                  <th className="py-3.5 px-4">Plano</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4">Vídeos</th>
-                  <th className="py-3.5 px-4">Views Mês</th>
-                  <th className="py-3.5 px-4">Criada em</th>
-                  <th className="py-3.5 px-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/60">
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="py-12 text-center text-zinc-500">
-                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-zinc-400" />
-                      Carregando ecossistema Vidlytics...
-                    </td>
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <h2 className="text-lg font-bold text-white">Lojas Cadastradas</h2>
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-2.5 text-zinc-500" size={16} />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por nome ou e-mail..."
+                className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+          </div>
+
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-800 bg-zinc-950/60 text-zinc-400 font-semibold text-[11px] uppercase tracking-wider">
+                    <th className="py-3.5 px-4">Loja</th>
+                    <th className="py-3.5 px-4">Plano</th>
+                    <th className="py-3.5 px-4">Cadastro</th>
+                    <th className="py-3.5 px-4 text-right">Ações</th>
                   </tr>
-                ) : stores.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-12 text-center text-zinc-500">
-                      Nenhuma loja encontrada com os filtros atuais.
-                    </td>
-                  </tr>
-                ) : (
-                  stores.map((s) => (
-                    <tr key={s.store_id} className="hover:bg-zinc-800/40 transition">
-                      <td className="py-3.5 px-4">
-                        <div className="font-semibold text-white">{s.store_name}</div>
-                        <div className="text-xs text-zinc-400">
-                          {s.owner_name} • <span className="text-zinc-500">{s.owner_email}</span>
-                        </div>
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        <span className="px-2.5 py-1 rounded bg-zinc-800 text-xs font-medium text-zinc-200 uppercase">
-                          {s.plan_name || 'Free/Trial'}
-                        </span>
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        {s.subscription_status === 'active' && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            Ativo
-                          </span>
-                        )}
-                        {s.subscription_status === 'trialing' && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                            Trial
-                          </span>
-                        )}
-                        {s.subscription_status === 'past_due' && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
-                            Atrasado
-                          </span>
-                        )}
-                        {s.subscription_status === 'canceled' && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">
-                            Cancelado
-                          </span>
-                        )}
-                        {(!s.subscription_status || s.subscription_status === 'nenhum') && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-zinc-800 text-zinc-500 border border-zinc-700">
-                            Sem dados
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="py-3.5 px-4 text-zinc-300 font-mono text-xs">
-                        {s.videos_count} vídeos
-                      </td>
-
-                      <td className="py-3.5 px-4 text-zinc-300 font-mono text-xs">
-                        {Number(s.month_views).toLocaleString('pt-BR')}
-                      </td>
-
-                      <td className="py-3.5 px-4 text-xs text-zinc-400">
-                        {new Date(s.created_at).toLocaleDateString('pt-BR')}
-                      </td>
-
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Botão E-mail (Abre Modal Interno) */}
-                          <button
-                            onClick={() => handleOpenEmailModal(s.owner_email, s.owner_name, s.store_name)}
-                            className="inline-flex items-center p-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700 transition"
-                            title={`Enviar e-mail para ${s.owner_email}`}
-                          >
-                            <Mail className="w-3.5 h-3.5" />
-                          </button>
-
-                          {/* Botão WhatsApp Direto */}
-                          <button
-                            onClick={() => handleWhatsAppContact(s.whatsapp_number, s.owner_name, s.store_name)}
-                            className="inline-flex items-center p-1.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition"
-                            title={s.whatsapp_number ? `WhatsApp: ${s.whatsapp_number}` : 'WhatsApp (não cadastrado)'}
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                          </button>
-
-                          {/* Botão Acessar Loja (Impersonate) */}
-                          <button
-                            onClick={() => handleAccessStore(s.store_id, s.store_name)}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 text-xs font-medium transition"
-                            title="Entrar na loja em modo suporte"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            Acessar Loja
-                          </button>
-                        </div>
+                </thead>
+                <tbody className="divide-y divide-zinc-800/60">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={4} className="py-12 text-center text-zinc-500">
+                        Carregando lojas...
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : filteredStores.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-12 text-center text-zinc-500">
+                        Nenhuma loja encontrada.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredStores.map((store) => (
+                      <tr key={store.id} className="hover:bg-zinc-800/20 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <div className="font-semibold text-white">{store.name}</div>
+                          <div className="text-xs text-zinc-500">{store.subdomain}.vidlytics.com.br</div>
+                          {store.owner_email && (
+                            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">{store.owner_email}</div>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase bg-zinc-800 text-zinc-300 border border-zinc-700/60">
+                            {store.plan_tier || 'Trial'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-xs text-zinc-400">
+                          {new Date(store.created_at).toLocaleDateString('pt-BR')}
+                        </td>
+                        <td className="py-3.5 px-4 text-right space-x-2">
+                          {/* Botão Ver Logs / Auditoria */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenLogs(store)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-xs font-medium transition cursor-pointer border border-zinc-700/60"
+                            title="Ver histórico de ações e logs"
+                          >
+                            <History size={14} className="text-emerald-400" />
+                            <span>Logs</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
+
       </div>
 
-      {/* Modal de E-mail */}
-      {emailModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-              <div className="flex items-center gap-2 text-white font-semibold">
-                <Mail className="w-5 h-5 text-blue-400" />
-                <span>Contato via E-mail • {emailRecipient.store}</span>
+      {/* Modal de Logs / Auditoria da Loja */}
+      {selectedStoreForLogs && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+            
+            {/* Cabeçalho do Modal */}
+            <div className="flex items-center justify-between p-5 border-b border-zinc-800 bg-zinc-950/50">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
+                  <FileText size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Histórico e Logs da Loja</h3>
+                  <p className="text-xs text-zinc-400">{selectedStoreForLogs.name} ({selectedStoreForLogs.subdomain})</p>
+                </div>
               </div>
-              <button
-                onClick={() => setEmailModalOpen(false)}
-                className="text-zinc-400 hover:text-white p-1 rounded-md transition"
+              <button 
+                onClick={() => setSelectedStoreForLogs(null)}
+                className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X size={20} />
               </button>
             </div>
 
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-zinc-400 block mb-1 font-medium">Destinatário</label>
-                <input
-                  type="text"
-                  disabled
-                  value={`${emailRecipient.name} <${emailRecipient.email}>`}
-                  className="w-full bg-zinc-950/70 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 font-mono text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-zinc-400 block mb-1 font-medium">Assunto</label>
-                <input
-                  type="text"
-                  value={emailSubject}
-                  onChange={(e) => setEmailSubject(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-white outline-none transition"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-zinc-400 block mb-1 font-medium">Mensagem</label>
-                <textarea
-                  rows={6}
-                  value={emailBody}
-                  onChange={(e) => setEmailBody(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-white outline-none resize-none transition"
-                />
-              </div>
+            {/* Conteúdo / Linha do Tempo de Logs */}
+            <div className="p-6 overflow-y-auto space-y-3 flex-1">
+              {loadingLogs ? (
+                <div className="py-12 text-center text-zinc-500 text-xs">Buscando histórico da loja...</div>
+              ) : storeLogs.length === 0 ? (
+                <div className="py-12 text-center text-zinc-500 text-xs flex flex-col items-center gap-2">
+                  <AlertCircle size={24} className="text-zinc-600" />
+                  <span>Nenhum log ou alteração registrada para esta loja até o momento.</span>
+                </div>
+              ) : (
+                storeLogs.map((log) => (
+                  <div key={log.id} className="p-3.5 bg-zinc-950/60 border border-zinc-800/80 rounded-xl text-xs space-y-1">
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span className="font-semibold text-emerald-400">{log.action}</span>
+                      <span className="inline-flex items-center gap-1 text-[11px] text-zinc-500">
+                        <Clock size={12} />
+                        {new Date(log.created_at).toLocaleString('pt-BR')}
+                      </span>
+                    </div>
+                    {log.user_email && (
+                      <div className="text-[11px] text-zinc-400">
+                        Por: <span className="font-mono text-zinc-300">{log.user_email}</span>
+                      </div>
+                    )}
+                    {log.details && (
+                      <pre className="text-[10px] bg-black/40 p-2 rounded border border-zinc-800/60 overflow-x-auto text-zinc-400 mt-1">
+                        {JSON.stringify(log.details, null, 2)}
+                      </pre>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-zinc-800/80">
+            {/* Rodapé do Modal */}
+            <div className="p-4 border-t border-zinc-800 bg-zinc-950/50 flex justify-end">
               <button
                 type="button"
-                onClick={() => setEmailModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium transition"
+                onClick={() => setSelectedStoreForLogs(null)}
+                className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition cursor-pointer"
               >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleSendEmailClient}
-                className="px-3.5 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-sm font-medium transition"
-                title="Abrir no aplicativo de e-mail local"
-              >
-                Outro App
-              </button>
-              <button
-                type="button"
-                onClick={handleSendEmailViaGmail}
-                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition flex items-center gap-1.5 shadow-lg shadow-red-600/20"
-              >
-                <Send className="w-3.5 h-3.5" />
-                Abrir no Gmail
+                Fechar
               </button>
             </div>
+
           </div>
         </div>
       )}
+
     </div>
   );
 }
