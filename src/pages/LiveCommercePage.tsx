@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { 
-  Radio, Play, Square, ExternalLink, Check, ShoppingBag, 
+  Radio, Play, Share2, Square, ExternalLink, Check, ShoppingBag, 
   Sparkles, AlertCircle, RefreshCw, Pin, Clock, Tag, 
   Users, Video, UploadCloud, Calendar
 } from "lucide-react";
 import { toast } from "sonner";
+import { ShareLiveModal } from "@/components/live/ShareLiveModal";
 import { useNavigate } from "react-router-dom";
 
 interface Product {
@@ -70,6 +71,7 @@ export function LiveCommercePage() {
   const [extractedVideoId, setExtractedVideoId] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
   const [showCountdown, setShowCountdown] = useState(true);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscount, setCouponDiscount] = useState("");
   const [teaserVideoUrl, setTeaserVideoUrl] = useState("");
@@ -434,6 +436,15 @@ export function LiveCommercePage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShareModalOpen(true)}
+            className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
+          >
+            <Share2 className="h-4 w-4" />
+            Divulgar / Convidar
+          </Button>
           {isLiveNow ? (
             <Badge className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 flex items-center gap-2 animate-pulse shadow-lg shadow-rose-500/20">
               <span className="h-2 w-2 rounded-full bg-white animate-ping" />
@@ -866,6 +877,14 @@ export function LiveCommercePage() {
           </Card>
         </div>
       </div>
+      {/* Modal de Divulgação e Convite para Co-Hosts */}
+      <ShareLiveModal
+        open={shareModalOpen}
+        onOpenChange={setShareModalOpen}
+        liveTitle={title}
+        youtubeVideoId={extractedVideoId}
+        isLiveNow={Boolean(isLiveNow)}
+      />
     </div>
   );
 }
