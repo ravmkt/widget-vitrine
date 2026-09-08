@@ -20,6 +20,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import IntegrationPage from "@/pages/IntegrationPage";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
+import MasterLoginPage from "@/pages/MasterLoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import StoriesPage from "@/pages/StoriesPage";
 import VideoGalleryPage from "@/pages/VideoGalleryPage";
@@ -152,6 +153,7 @@ function App() {
         <Routes>
           {/* Rotas públicas */}
           <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+          <Route path="/master/login" element={<MasterLoginPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
           <Route path="/api/auth/instagram/callback" element={<InstagramCallback />} />
