@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, Video } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 import {
   Eye,
   MousePointerClick,
@@ -13,6 +14,7 @@ import {
   Clock,
   Play,
   Share2,
+  Check,
   ArrowRight,
   Plus,
   Trash2,
@@ -76,6 +78,8 @@ const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [storeName, setStoreName] = useState<string>('');
+  const [referralCode, setReferralCode] = useState<string>('');
+  const [copiedReferral, setCopiedReferral] = useState(false);
   const [appEnabled, setAppEnabled] = useState<boolean>(true); // Controle de status do App (widget_enabled)
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsInterval>('30');
   const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -181,6 +185,7 @@ const DashboardPage: React.FC = () => {
           console.error('[DashboardPage] Falha ao carregar dados da loja:', storeRes.reason);
         }
         setStoreName(storeData.name || '');
+        setReferralCode(storeData.referral_code || '');
 
         let trialDays: number | null = null;
         if (storeData.subscription_status === 'trialing' && storeData.trial_ends_at) {
@@ -325,6 +330,36 @@ const DashboardPage: React.FC = () => {
       isMounted = false;
     };
   }, [storeId, authLoading]);
+
+  // Função para copiar o link de indicação
+  const handleCopyReferral = async () => {
+    const code = referralCode || storeId;
+    const referralUrl = `${window.location.origin}/register?ref=${code}`;
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(referralUrl);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = referralUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+
+      setCopiedReferral(true);
+      toast.success('Link de indicação copiado para a área de transferência!');
+      setTimeout(() => setCopiedReferral(false), 2000);
+    } catch (err) {
+      console.error('[DashboardPage] Falha ao copiar link de indicação:', err);
+      toast.error('Não foi possível copiar o link automaticamente.');
+    }
+  };
 
   // 2. Carregamento Isolado do Filtro de Métricas
   useEffect(() => {
@@ -941,14 +976,34 @@ const DashboardPage: React.FC = () => {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => alert('Link de indicação copiado para a área de transferência!')}
-            className="mt-5 w-full bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white font-black py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <Share2 size={14} className="!text-white shrink-0" />
-            <span className="!text-white font-black">Copiar Meu Link de Indicação</span>
-          </button>
+          <div className="mt-5 space-y-2.5">
+            <button
+              type="button"
+              onClick={handleCopyReferral}
+              className="w-full bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white font-black py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {copiedReferral ? (
+                <>
+                  <Check size={14} className="!text-white shrink-0 stroke-[3]" />
+                  <span className="!text-white font-black">Link Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 size={14} className="!text-white shrink-0" />
+                  <span className="!text-white font-black">Copiar Meu Link de Indicação</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('/indica-e-ganha')}
+              className="w-full text-center text-xs font-bold text-slate-500 hover:text-[#0091ff] dark:text-[#8a90a0] dark:hover:text-[#ff7a29] transition-colors py-1 cursor-pointer flex items-center justify-center gap-1 group"
+            >
+              <span>Acessar painel de indicações</span>
+              <span className="transition-transform group-hover:translate-x-0.5">&rarr;</span>
+            </button>
+          </div>
         </div>
       </div>
 
