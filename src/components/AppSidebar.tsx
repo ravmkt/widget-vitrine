@@ -12,7 +12,7 @@ import {
   BarChart3,
   PanelLeftClose,
   PanelLeftOpen,
-  ShieldCheck,
+  CreditCard,
   Gift,
 } from "lucide-react";
 import {
@@ -26,12 +26,9 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate } from 'react-router-dom';
-import { Ruler } from 'lucide-react';
-import { Link, useLocation } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { signOut } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabase } from "@/lib/supabase";
 
 // Estrutura de navegação por grupos (Métricas, Operação e Ajustes)
 const menuGroups = [
@@ -57,6 +54,7 @@ const menuGroups = [
     items: [
       { title: "Aparência", url: "/aparencia", icon: Palette },
       { title: "Instalação", url: "/integration", icon: Code },
+      { title: "Assinatura", url: "/billing", icon: CreditCard },
       { title: "Configurações", url: "/settings", icon: Settings },
     ],
   },
@@ -67,8 +65,8 @@ export function AppSidebar() {
   const navigate = useNavigate(); 
   const [storeName, setStoreName] = useState('');
   const [storeLogoUrl, setStoreLogoUrl] = useState('');
-  const [planName, setPlanName] = useState('Plano Iniciante');
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+  const [planName, setPlanName] = useState('Plano Starter');
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const isExpanded = !isCollapsed;
@@ -77,18 +75,16 @@ export function AppSidebar() {
     try {
       if (!supabase) return;
 
-      // 1. Prioriza o usuário autenticado na sessão atual (isolamento multi-tenant seguro)
       const { data: userData } = await supabase.auth.getUser();
       const user = userData?.user;
 
       if (!user) {
         setStoreName('');
         setStoreLogoUrl('');
-        setPlanName('Plano Iniciante');
+        setPlanName('Plano Starter');
         return;
       }
 
-      // 2. Busca a loja vinculada estritamente ao owner_user_id logado
       const { data: userStore } = await supabase
         .from('stores')
         .select('id, name, logo_url, plan_id, plans(name)')
@@ -107,7 +103,7 @@ export function AppSidebar() {
       } else {
         setStoreName('Minha Loja');
         setStoreLogoUrl('');
-        setPlanName('Plano Iniciante');
+        setPlanName('Plano Starter');
       }
     } catch (err) {
       console.error('Erro ao carregar dados da loja no AppSidebar:', err);
@@ -117,7 +113,6 @@ export function AppSidebar() {
   useEffect(() => {
     loadStoreData();
 
-    // Verifica se o usuário atual é Super Admin
     async function checkSuperAdmin() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -191,13 +186,13 @@ export function AppSidebar() {
           )}
         </div>
 
-        {/* Botão de Recolher / Expandir Destacado */}
+        {/* Botão de Recolher / Expandir */}
         <div className="relative group">
           <button
             type="button"
             onClick={() => setIsCollapsed(!isCollapsed)}
             className={cn(
-              "flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition-all shadow-sm w-full",
+              "flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition-all shadow-sm w-full cursor-pointer",
               isExpanded
                 ? "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#1a1f35] dark:text-slate-200"
                 : "bg-[#0091ff] dark:bg-[#ff7a29] text-white hover:bg-[#0070f3] dark:hover:bg-[#e05e10] shadow-blue-500/20"
@@ -213,7 +208,6 @@ export function AppSidebar() {
             )}
           </button>
 
-          {/* Tooltip flutuante adaptável ao tema */}
           {!isExpanded && (
             <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-3">
               <div className="bg-[#0091ff] dark:bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
@@ -235,16 +229,18 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu className="gap-1.5">
                 {group.items.map((item) => {
-const isItemActive =
-  location.pathname === item.url ||
-  (item.url === "/produtos" && location.pathname === "/medidas");
+                  const isItemActive =
+                    location.pathname === item.url ||
+                    (item.url === "/billing" && location.pathname === "/plans") ||
+                    (item.url === "/produtos" && location.pathname === "/medidas");
+
                   return (
                     <SidebarMenuItem key={item.title} className="relative group">
                       <SidebarMenuButton 
                         asChild 
                         isActive={isItemActive}
                         className={cn(
-                          "h-11 rounded-xl px-3.5 transition-all duration-200 font-black overflow-hidden",
+                          "h-11 rounded-xl px-3.5 transition-all duration-200 font-black overflow-hidden cursor-pointer",
                           isItemActive 
                             ? "!bg-[#0091ff] dark:!bg-[#ff7a29] !text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 hover:!bg-[#0091ff] dark:hover:!bg-[#ff7a29]" 
                             : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1a1f35]/80 hover:text-slate-900 dark:hover:text-white"
@@ -269,7 +265,6 @@ const isItemActive =
                         </Link>
                       </SidebarMenuButton>
 
-                      {/* Tooltip flutuante no modo recolhido (Azul no Light / Laranja no Dark) */}
                       {!isExpanded && (
                         <div className="fixed left-20 hidden group-hover:flex items-center z-[999999] pointer-events-none transform -translate-y-full mt-5">
                           <div className="bg-[#0091ff] dark:bg-[#ff7a29] text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xl shadow-blue-500/40 dark:shadow-orange-500/50 whitespace-nowrap border border-white/20 flex items-center gap-1.5 ml-2 animate-in fade-in zoom-in-95 duration-150">
@@ -287,20 +282,33 @@ const isItemActive =
       </SidebarContent>
 
       <SidebarFooter className="p-3 border-t border-slate-100 dark:border-[#ff7a29]/20 flex flex-col gap-2">
-        {/* Informações da Loja / Perfil */}
+        {/* Informações da Loja / Perfil -> Agora redireciona diretamente para /billing */}
         <button
           type="button"
           onClick={() => navigate('/billing')}
-          className="flex items-center gap-2.5 px-2 py-1.5 min-w-0 w-full rounded-xl hover:bg-slate-800/60 dark:hover:bg-[#ff7a29]/10 transition-colors text-left group cursor-pointer"
+          className={cn(
+            "flex items-center gap-2.5 px-2.5 py-2 min-w-0 w-full rounded-xl transition-all text-left group cursor-pointer border",
+            location.pathname === '/billing' || location.pathname === '/plans'
+              ? "bg-blue-50/80 dark:bg-[#ff7a29]/15 border-blue-200 dark:border-[#ff7a29]/30"
+              : "hover:bg-slate-100 dark:hover:bg-[#1a1f35]/80 border-transparent"
+          )}
           title="Gerenciar assinatura e planos"
         >
-          <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 shrink-0 border border-slate-700 group-hover:border-[#ff7a29]/50 transition-colors">
-            <User size={16} />
+          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 shrink-0 border border-slate-200 dark:border-slate-700 group-hover:border-[#0091ff] dark:group-hover:border-[#ff7a29]/50 transition-colors">
+            {storeLogoUrl ? (
+              <img src={storeLogoUrl} alt={storeName} className="w-full h-full rounded-full object-cover" />
+            ) : (
+              <User size={16} />
+            )}
           </div>
           {isExpanded && (
-            <div className="flex flex-col min-w-0 overflow-hidden text-left">
-              <span className="text-sm font-semibold text-white truncate group-hover:text-slate-200 transition-colors">{storeName || 'Minha Loja'}</span>
-              <span className="text-[10px] font-bold text-[#ff7a29] uppercase tracking-wider truncate">{planName}</span>
+            <div className="flex flex-col min-w-0 overflow-hidden text-left flex-1">
+              <span className="text-xs font-black text-slate-800 dark:text-white truncate group-hover:text-[#0091ff] dark:group-hover:text-[#ff7a29] transition-colors">
+                {storeName || 'Minha Loja'}
+              </span>
+              <span className="text-[10px] font-bold text-[#0091ff] dark:text-[#ff7a29] uppercase tracking-wider truncate">
+                {planName}
+              </span>
             </div>
           )}
         </button>
@@ -313,7 +321,7 @@ const isItemActive =
             await supabase.auth.signOut();
             window.location.href = '/login';
           }}
-          className="w-full flex items-center gap-2 py-1.5 px-3 text-xs font-semibold text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+          className="w-full flex items-center gap-2 py-1.5 px-3 text-xs font-semibold text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
         >
           <LogOut size={14} className="shrink-0" />
           {isExpanded && <span>Sair da Plataforma</span>}
@@ -322,4 +330,3 @@ const isItemActive =
     </div>
   );
 }
-
