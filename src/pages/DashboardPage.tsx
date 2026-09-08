@@ -671,9 +671,16 @@ const DashboardPage: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start flex-1">
           <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <MetricCard title="Visualizações" value={dashboardMetrics.views.toLocaleString()} icon={Eye} />
-            <MetricCard title="Cliques em CTA" value={dashboardMetrics.ctaClicks.toLocaleString()} icon={MousePointerClick} />
-            <MetricCard title="Conversões" value={dashboardMetrics.conversions.toLocaleString()} icon={CheckCircle2} isConversion />
+            <div className="col-span-1 sm:col-span-2">
+              <MetricCard
+                title="Receita Gerada"
+                value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(dashboardMetrics.revenue || 0)}
+                icon={DollarSign}
+              />
+            </div>
+            <MetricCard title="Visualizações" value={dashboardMetrics.views.toLocaleString('pt-BR')} icon={Eye} />
+            <MetricCard title="Cliques em CTA" value={dashboardMetrics.ctaClicks.toLocaleString('pt-BR')} icon={MousePointerClick} />
+            <MetricCard title="Conversões" value={dashboardMetrics.conversions.toLocaleString('pt-BR')} icon={CheckCircle2} />
             <MetricCard title="CTR Médio" value={`${dashboardMetrics.ctr.toFixed(1).replace('.', ',')}%`} icon={MousePointerClick} />
           </div>
 
