@@ -382,6 +382,8 @@ export default function MasterAdminPage() {
                     <th className="py-3.5 px-4">Status</th>
                     <th className="py-3.5 px-4 text-center">Stories</th>
                     <th className="py-3.5 px-4 text-center">Views (Mês)</th>
+                    <th className="py-3.5 px-4 text-right">Vendas Stories</th>
+                    <th className="py-3.5 px-4 text-center">Indicações (10%)</th>
                     <th className="py-3.5 px-4 text-center">Ações</th>
                   </tr>
                 </thead>
