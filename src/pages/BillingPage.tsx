@@ -9,6 +9,8 @@ import {
   HardDrive, 
   Eye, 
   FileCode,
+  Video,
+  Radio,
   Save,
   Loader2,
   AlertTriangle,
@@ -17,16 +19,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
+import { PLAN_LIMITS } from '@/lib/plans';
 import { showSuccess, showError } from '@/utils/toast';
-
-// 🎯 MATRIZ OFICIAL DE LIMITES DOS PLANOS VIDLYTICS
-const PLAN_LIMITS: Record<string, { views: number; pages: number; storage: number }> = {
-  'iniciante': { views: 5000, pages: 50, storage: 1073741824 }, // 1GB
-  'pro': { views: 20000, pages: 200, storage: 5368709120 }, // 5GB
-  'avançado': { views: 50000, pages: 500, storage: 21474836480 }, // 20GB
-  'avancado': { views: 50000, pages: 500, storage: 21474836480 },
-  'enterprise': { views: 100000, pages: 1000, storage: 107374182400 }, // 100GB
-};
 
 export function BillingPage() {
   const navigate = useNavigate();
@@ -41,15 +35,20 @@ export function BillingPage() {
   const [plan, setPlan] = useState<any>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
 
-  // Consumo Real vs Limites (Iniciam com os fallbacks do Iniciante)
+  // Consumo Real vs Limites (Iniciam com os fallbacks do Starter)
   const [storageUsedBytes, setStorageUsedBytes] = useState<number>(0);
-  const [storageLimitBytes, setStorageLimitBytes] = useState<number>(1073741824); // 1 GB
+  const [storageLimitBytes, setStorageLimitBytes] = useState<number>(5368709120); // 5 GB
 
   const [viewsUsed, setViewsUsed] = useState<number>(0);
   const [viewsLimit, setViewsLimit] = useState<number>(5000); // 5k
 
   const [pagesUsed, setPagesUsed] = useState<number>(0);
-  const [pagesLimit, setPagesLimit] = useState<number>(50); // 50
+  const [pagesLimit, setPagesLimit] = useState<number>(2); // 2
+
+  const [videosUsed, setVideosUsed] = useState<number>(0);
+  const [videosLimit, setVideosLimit] = useState<number>(10); // 10
+
+  const [allowsLive, setAllowsLive] = useState<boolean>(false);
 
   // Formulário de Dados Fiscais
   const [fiscalData, setFiscalData] = useState({
@@ -163,38 +162,55 @@ export function BillingPage() {
         }
 
         // 🚀 RESOLUÇÃO DOS LIMITES REAIS E COMPATIBILIDADE COM A TABELA DE PREÇOS
-        let currentPlanName = 'iniciante';
-        if (resolvedPlan?.name) {
-          currentPlanName = resolvedPlan.name.toLowerCase().trim();
+        let currentPlanKey = 'starter';
+        if (resolvedPlan?.slug) {
+          currentPlanKey = resolvedPlan.slug.toLowerCase().trim();
+        } else if (resolvedPlan?.name) {
+          currentPlanKey = resolvedPlan.name.toLowerCase().trim();
         }
 
         // Carrega os limites oficiais estipulados para o plano
-        const officialLimits = PLAN_LIMITS[currentPlanName] || PLAN_LIMITS['iniciante'];
+        const officialLimits = PLAN_LIMITS[currentPlanKey] || PLAN_LIMITS['starter'];
 
-        // Se houver uma customização maior cadastrada diretamente na tabela 'stores', nós mantemos.
-        // Caso contrário, forçamos os limites oficiais do plano (ex: 5.000 views para o Iniciante)
         const dbStorageLimit = Number(storeRow?.storage_limit_bytes || resolvedPlan?.storage_limit_bytes || 0);
         const dbViewsLimit = Number(storeRow?.views_limit || resolvedPlan?.views_limit || 0);
         const dbPagesLimit = Number(storeRow?.pages_limit || resolvedPlan?.pages_limit || 0);
+        const dbVideosLimit = Number(resolvedPlan?.videos_limit || officialLimits.videos || 10);
 
         setStorageLimitBytes(dbStorageLimit > officialLimits.storage ? dbStorageLimit : officialLimits.storage);
         setViewsLimit(dbViewsLimit > officialLimits.views ? dbViewsLimit : officialLimits.views);
         setPagesLimit(dbPagesLimit > officialLimits.pages ? dbPagesLimit : officialLimits.pages);
+        setVideosLimit(dbVideosLimit);
+        setAllowsLive(Boolean(resolvedPlan?.allows_live ?? officialLimits.allowsLive));
 
         // 📊 CONTADOR DE PÁGINAS ATIVAS EM TEMPO REAL
         try {
-          const { count, error: pageCountErr } = await supabase
+          const { count: pagesCount } = await supabase
             .from('pages')
             .select('*', { count: 'exact', head: true })
             .eq('store_id', activeStoreId);
-          
-          if (!pageCountErr && count !== null) {
-            setPagesUsed(count);
+
+          if (pagesCount !== null) {
+            setPagesUsed(pagesCount);
           } else if (storeRow?.pages_used !== undefined) {
             setPagesUsed(Number(storeRow.pages_used || 0));
           }
         } catch (err) {
           console.error('[Billing] Erro ao contar páginas ativas:', err);
+        }
+
+        // 📊 CONTADOR DE VÍDEOS ATIVOS EM TEMPO REAL
+        try {
+          const { count: videosCount } = await supabase
+            .from('videos')
+            .select('*', { count: 'exact', head: true })
+            .eq('store_id', activeStoreId);
+
+          if (videosCount !== null) {
+            setVideosUsed(videosCount);
+          }
+        } catch (err) {
+          console.error('[Billing] Erro ao contar vídeos:', err);
         }
 
         // 4. Busca Histórico de Faturas
@@ -278,10 +294,16 @@ export function BillingPage() {
 
   const pagesPct = useMemo(() => {
     if (!pagesLimit || pagesLimit === 0) return 0;
+    if (pagesLimit >= 9999) return 0;
     return Math.min(100, Number(((pagesUsed / pagesLimit) * 100).toFixed(1)));
   }, [pagesUsed, pagesLimit]);
 
-  // Utilitário de formatação visual condicional das cores com base na régua de uso
+  const videosPct = useMemo(() => {
+    if (!videosLimit || videosLimit === 0) return 0;
+    return Math.min(100, Number(((videosUsed / videosLimit) * 100).toFixed(1)));
+  }, [videosUsed, videosLimit]);
+
+  // Utilitário de formatação visual condicional das cores
   const getResourceVisuals = (pct: number) => {
     if (pct >= 90) {
       return {
@@ -307,6 +329,7 @@ export function BillingPage() {
   const storageVisuals = getResourceVisuals(storagePct);
   const viewsVisuals = getResourceVisuals(viewsPct);
   const pagesVisuals = getResourceVisuals(pagesPct);
+  const videosVisuals = getResourceVisuals(videosPct);
 
   if (loading) {
     return (
@@ -421,13 +444,26 @@ export function BillingPage() {
             </div>
 
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              {plan?.name ? `Plano ${plan.name}` : 'Plano Iniciante'}
+              {plan?.name ? `Plano ${plan.name}` : 'Plano Starter'}
             </h2>
             <div className="mt-2 flex items-baseline gap-1">
               <span className="text-3xl font-black text-[#0091ff] dark:text-[#ff7a29] tracking-tight">
-                R$ {plan?.price_cents !== undefined ? (plan.price_cents / 100).toFixed(2).replace('.', ',') : '59,00'}
+                R$ {plan?.price_cents !== undefined ? (plan.price_cents / 100).toFixed(2).replace('.', ',') : '67,00'}
               </span>
               <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">/mês</span>
+            </div>
+
+            {/* Selo de Live Commerce no card do plano */}
+            <div className="mt-3">
+              {allowsLive ? (
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/50 dark:border-rose-800/40 px-2.5 py-1 rounded-full">
+                  <Radio size={12} className="animate-pulse" /> Live Commerce Habilitado
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400 dark:text-[#8a90a0]">
+                  Live Commerce não disponível neste plano
+                </span>
+              )}
             </div>
 
             <p className="mt-3 text-xs font-medium text-slate-500 dark:text-[#c0c5d4] leading-relaxed">
@@ -465,7 +501,7 @@ export function BillingPage() {
           </div>
         </div>
 
-        {/* Card: Consumo de Recursos (Destaque Proporcional) */}
+        {/* Card: Consumo de Recursos */}
         <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 shadow-sm md:col-span-2 flex flex-col justify-between space-y-5">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
             <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
@@ -476,7 +512,7 @@ export function BillingPage() {
             </span>
           </div>
 
-          {/* 1. Armazenamento com Barra e Fonte Ampliada */}
+          {/* 1. Armazenamento */}
           <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -504,7 +540,6 @@ export function BillingPage() {
               </div>
             </div>
 
-            {/* Barra de Progresso Condicional */}
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-[#1a1f35] p-0.5 border border-transparent dark:border-white/5">
               <div
                 className={cn("h-full rounded-full transition-all duration-700 animate-shimmer", storageVisuals.barBg)}
@@ -513,39 +548,29 @@ export function BillingPage() {
             </div>
           </div>
 
-          {/* 2 e 3. Cards de Métricas Secundárias Reestruturados (Barras Proporcionais e Limites Sincronizados) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          {/* 2. Grid de Métricas Secundárias: Views, Vídeos e Páginas */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
             
             {/* Views Proporcionais */}
-            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-5 space-y-3">
+            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-4 space-y-2.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 shrink-0">
-                    <Eye size={16} />
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 shrink-0">
+                    <Eye size={15} />
                   </div>
                   <div>
-                    <span className="text-xs font-black text-slate-900 dark:text-white block">
-                      Limite de Views
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0]">
-                      Visualizações exibidas
-                    </span>
+                    <span className="text-xs font-black text-slate-900 dark:text-white block">Views</span>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-sm font-black text-slate-900 dark:text-white block">
-                    {viewsUsed.toLocaleString('pt-BR')}
-                    <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]"> / {viewsLimit.toLocaleString('pt-BR')}</span>
-                  </span>
-                  <span className={cn("text-sm font-black tracking-tight block", viewsVisuals.text)}>
-                    {viewsPct}% utilizado
+                  <span className="text-xs font-black text-slate-900 dark:text-white block">
+                    {viewsUsed.toLocaleString('pt-BR')} / {viewsLimit.toLocaleString('pt-BR')}
                   </span>
                 </div>
               </div>
 
-              {/* Barra de Progresso das Views */}
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-[#1a1f35] p-0.5 border border-transparent dark:border-white/5">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-[#1a1f35]">
                 <div
                   className={cn("h-full rounded-full transition-all duration-700", viewsVisuals.barBg)}
                   style={{ width: `${Math.max(1, viewsPct)}%` }}
@@ -553,51 +578,68 @@ export function BillingPage() {
               </div>
             </div>
 
-            {/* Páginas Ativas Proporcionais */}
-            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-5 space-y-3">
+            {/* Vídeos Ativos */}
+            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-4 space-y-2.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-pink-50 dark:bg-pink-950/40 text-pink-500 shrink-0">
-                    <FileCode size={16} />
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-500 shrink-0">
+                    <Video size={15} />
                   </div>
                   <div>
-                    <span className="text-xs font-black text-slate-900 dark:text-white block">
-                      Páginas Ativas
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0]">
-                      Lojas e subpáginas configuradas
-                    </span>
+                    <span className="text-xs font-black text-slate-900 dark:text-white block">Vídeos</span>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-sm font-black text-slate-900 dark:text-white block">
-                    {pagesUsed}
-                    <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]"> / {pagesLimit}</span>
-                  </span>
-                  <span className={cn("text-sm font-black tracking-tight block", pagesVisuals.text)}>
-                    {pagesPct}% utilizado
+                  <span className="text-xs font-black text-slate-900 dark:text-white block">
+                    {videosUsed} / {videosLimit}
                   </span>
                 </div>
               </div>
 
-              {/* Barra de Progresso das Páginas */}
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-[#1a1f35] p-0.5 border border-transparent dark:border-white/5">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-[#1a1f35]">
+                <div
+                  className={cn("h-full rounded-full transition-all duration-700", videosVisuals.barBg)}
+                  style={{ width: `${Math.max(1, videosPct)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Páginas Ativas */}
+            <div className="rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-[#111524]/70 p-4 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-pink-50 dark:bg-pink-950/40 text-pink-500 shrink-0">
+                    <FileCode size={15} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-slate-900 dark:text-white block">Páginas</span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-xs font-black text-slate-900 dark:text-white block">
+                    {pagesUsed} / {pagesLimit >= 9999 ? '∞' : pagesLimit}
+                  </span>
+                </div>
+              </div>
+
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-[#1a1f35]">
                 <div
                   className={cn("h-full rounded-full transition-all duration-700", pagesVisuals.barBg)}
-                  style={{ width: `${Math.max(1, pagesPct)}%` }}
+                  style={{ width: pagesLimit >= 9999 ? '10%' : `${Math.max(1, pagesPct)}%` }}
                 />
               </div>
             </div>
 
           </div>
 
-          {/* ── BANNERS DE UPGRADE AUTOMÁTICOS (REGRAS DE CONVERSÃO/UPSYLL) ── */}
-          {(storagePct >= 70 || viewsPct >= 70 || pagesPct >= 70) && (
+          {/* Banner de Upgrade */}
+          {(storagePct >= 70 || viewsPct >= 70 || pagesPct >= 70 || videosPct >= 70) && (
             <div
               className={cn(
                 'flex items-start gap-3 rounded-2xl p-4 text-xs font-bold leading-relaxed border animate-fade-in',
-                (storagePct >= 90 || viewsPct >= 90 || pagesPct >= 90)
+                (storagePct >= 90 || viewsPct >= 90 || pagesPct >= 90 || videosPct >= 90)
                   ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400 border-rose-500/20'
                   : 'bg-orange-50 text-orange-600 dark:bg-orange-950/30 dark:text-orange-400 border-orange-500/20'
               )}
@@ -605,7 +647,7 @@ export function BillingPage() {
               <AlertTriangle size={18} className="shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <p>
-                  {(storagePct >= 90 || viewsPct >= 90 || pagesPct >= 90)
+                  {(storagePct >= 90 || viewsPct >= 90 || pagesPct >= 90 || videosPct >= 90)
                     ? 'Limite Crítico Atingido! Você alcançou 90% ou mais de seus recursos disponíveis. Faça um upgrade agora para garantir a continuidade dos vídeos na sua loja.'
                     : 'Atenção! Você atingiu 70% ou mais de seus limites em uso. Considere fazer um upgrade de plano para evitar bloqueios.'}
                 </p>
