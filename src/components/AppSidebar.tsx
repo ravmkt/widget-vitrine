@@ -40,6 +40,7 @@ const menuGroups = [
     items: [
       { title: "Visão Geral", url: "/dashboard", icon: LayoutDashboard },
       { title: "Resultados", url: "/videos/performance", icon: BarChart3 },
+      { title: "Indica & Ganha", url: "/indica-e-ganha", icon: Gift },
     ],
   },
   {
