@@ -430,7 +430,7 @@ export default function MasterAdminPage() {
                         <td className="py-3.5 px-4">
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                              store.subscription_status === 'ACTIVE'
+store.subscription_status?.toLowerCase() === 'active'
                                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                                 : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
                             }`}
