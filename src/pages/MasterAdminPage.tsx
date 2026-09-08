@@ -455,6 +455,32 @@ export default function MasterAdminPage() {
                           </span>
                         </td>
 
+                        {/* Vendas geradas pelos Stories */}
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="font-semibold text-emerald-400 text-xs">
+                            {Number(store.stories_sales_revenue || 0).toLocaleString('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL',
+                            })}
+                          </div>
+                          <span className="text-[10px] text-zinc-500">rastreado</span>
+                        </td>
+
+                        {/* Indicações & Comissão de 10% */}
+                        <td className="py-3.5 px-4 text-center">
+                          <div className="inline-flex flex-col items-center">
+                            <span className="text-xs font-semibold text-zinc-200">
+                              {store.referrals_count || 0} {store.referrals_count === 1 ? 'loja' : 'lojas'}
+                            </span>
+                            <span className="text-[11px] text-amber-400 font-medium">
+                              {Number(store.commission_earned || 0).toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL',
+                              })}
+                            </span>
+                          </div>
+                        </td>
+
                         {/* Contato & Ações */}
                         <td className="py-3.5 px-4 text-center">
                           <div className="flex items-center justify-center gap-1.5">
