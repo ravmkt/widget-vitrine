@@ -4,6 +4,7 @@ import { MasterAdminRoute } from '@/components/MasterAdminRoute';
 import StoriesWidgetPage from '@/pages/StoriesWidgetPage';
 import StoryDetailsPage from '@/pages/StoryDetailsPage';
 import VideoPerformancePage from '@/pages/VideoPerformancePage';
+import { IndicaGanhaPage } from '@/pages/IndicaGanhaPage';
 import React, { useEffect, useState } from "react";
 import {
   BrowserRouter,
