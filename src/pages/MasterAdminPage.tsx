@@ -436,7 +436,7 @@ store.subscription_status?.toLowerCase() === 'active'
                             }`}
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                            {store.subscription_status === 'ACTIVE' ? 'Ativo' : 'Em Trial / Pendente'}
+{store.subscription_status?.toLowerCase() === 'active' ? 'Ativo' : 'Em Trial / Pendente'}
                           </span>
                         </td>
 
