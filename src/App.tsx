@@ -5,6 +5,7 @@ import StoriesWidgetPage from '@/pages/StoriesWidgetPage';
 import StoryDetailsPage from '@/pages/StoryDetailsPage';
 import VideoPerformancePage from '@/pages/VideoPerformancePage';
 import { IndicaGanhaPage } from '@/pages/IndicaGanhaPage';
+import { LiveCommercePage } from '@/pages/LiveCommercePage';
 import React, { useEffect, useState } from "react";
 import {
   BrowserRouter,
@@ -172,6 +173,7 @@ function App() {
           <Route path="/stories/preview/:id" element={<ProtectedRoute><StoryPreviewPage /></ProtectedRoute>} />
           <Route path="/stories/:id" element={<ProtectedRoute><AppLayout><StoryDetailsPage /></AppLayout></ProtectedRoute>} /> 
           <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/live-commerce" element={<ProtectedRoute><AppLayout><LiveCommercePage /></AppLayout></ProtectedRoute>} />
 
           {/* ── Vídeos (rotas específicas ANTES das genéricas) ── */}
           <Route path="/videos/performance" element={<ProtectedRoute><AppLayout><PerformancePage /></AppLayout></ProtectedRoute>} />
@@ -212,4 +214,7 @@ function App() {
 }
 
 export default App;
+
+
+
 

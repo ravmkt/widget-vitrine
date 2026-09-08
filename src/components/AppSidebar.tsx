@@ -14,6 +14,7 @@ import {
   PanelLeftOpen,
   CreditCard,
   Gift,
+  Radio,
 } from "lucide-react";
 import {
   SidebarContent,
@@ -44,6 +45,7 @@ const menuGroups = [
     label: "OPERAÇÃO",
     items: [
       { title: "Stories", url: "/stories", icon: PlayCircle },
+      { title: "Live Shopping", url: "/live-commerce", icon: Radio },
       { title: "Biblioteca", url: "/armazenamento", icon: Library },
       { title: "Produtos", url: "/produtos", icon: ShoppingCart },
       { title: "Comentários", url: "/comentarios", icon: MessageSquare },
@@ -330,3 +332,5 @@ export function AppSidebar() {
     </div>
   );
 }
+
+
