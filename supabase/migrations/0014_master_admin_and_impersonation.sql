@@ -94,6 +94,8 @@ end;
 $$;
 
 -- 6. RPC: Lista de Lojas com dados consolidados para a tabela Master
+drop function if exists public.get_master_stores_list(text, text, int, int) cascade;
+drop function if exists public.get_master_stores_list cascade;
 create or replace function public.get_master_stores_list(
   p_search text default null,
   p_status text default null,
@@ -154,3 +156,4 @@ begin
   limit p_limit offset p_offset;
 end;
 $$;
+

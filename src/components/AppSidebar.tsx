@@ -288,17 +288,22 @@ const isItemActive =
 
       <SidebarFooter className="p-3 border-t border-slate-100 dark:border-[#ff7a29]/20 flex flex-col gap-2">
         {/* Informações da Loja / Perfil */}
-        <div className="flex items-center gap-2.5 px-2 py-1.5 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 shrink-0 border border-slate-700">
+        <button
+          type="button"
+          onClick={() => navigate('/plans')}
+          className="flex items-center gap-2.5 px-2 py-1.5 min-w-0 w-full rounded-xl hover:bg-slate-800/60 dark:hover:bg-[#ff7a29]/10 transition-colors text-left group cursor-pointer"
+          title="Gerenciar assinatura e planos"
+        >
+          <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 shrink-0 border border-slate-700 group-hover:border-[#ff7a29]/50 transition-colors">
             <User size={16} />
           </div>
           {isExpanded && (
             <div className="flex flex-col min-w-0 overflow-hidden text-left">
-              <span className="text-sm font-semibold text-white truncate">{storeName || 'Minha Loja'}</span>
+              <span className="text-sm font-semibold text-white truncate group-hover:text-slate-200 transition-colors">{storeName || 'Minha Loja'}</span>
               <span className="text-[10px] font-bold text-[#ff7a29] uppercase tracking-wider truncate">{planName}</span>
             </div>
           )}
-        </div>
+        </button>
 
         {/* Botão Sair da Plataforma */}
         <button
@@ -317,3 +322,4 @@ const isItemActive =
     </div>
   );
 }
+

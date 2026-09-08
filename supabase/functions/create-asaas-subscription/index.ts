@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     const user = userData.user;
 
     // 2. Ler o body da requisição
-    const { plan_id, store_id, billing_type } = await req.json();
+    const { plan_id, store_id, billing_type, billing_cycle = "monthly" } = await req.json();
 
     if (!plan_id || !store_id) {
       return new Response(
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 5. Buscar dados fiscais: primeiro em billing_info, senão em profiles
+    // 5. Buscar dados fiscais
     let document: string | null = null;
     let phone: string | null = null;
     let name: string | null = null;
@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 5.1 Normalização do CPF/CNPJ
+    // Normalização do CPF/CNPJ
     let cleanDoc = document.replace(/\D/g, "");
     if (cleanDoc.length <= 11) {
       cleanDoc = cleanDoc.padStart(11, "0");
@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
     // 6. Buscar ou criar o customer no Asaas
     const { data: storeRow } = await supabaseAdmin
       .from("stores")
-      .select("asaas_customer_id")
+      .select("id, asaas_customer_id, trial_ends_at, created_at")
       .eq("id", store_id)
       .single();
 
@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      console.log("[ASAAS] Disparando criação de customer:", customerPayload);
+      console.log("[ASAAS] Criando customer:", customerPayload);
 
       const customerResponse = await fetch(`${ASAAS_BASE_URL}/customers`, {
         method: "POST",
@@ -192,17 +192,35 @@ Deno.serve(async (req) => {
         .eq("id", store_id);
     }
 
-    // 7. Criar a assinatura no Asaas
-    const cycle = plan.billing_cycle === "yearly" ? "YEARLY" : "MONTHLY";
-    const nextDueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    // 7. Configuração do Ciclo e Primeiro Vencimento (Trial de 7 dias)
+    const effectiveCycle = billing_cycle === "yearly" ? "YEARLY" : "MONTHLY";
+    
+    // Calcula nextDueDate baseado no trial restante da loja ou 7 dias
+    let daysUntilDue = 7;
+    if (storeRow?.trial_ends_at) {
+      const trialEnd = new Date(storeRow.trial_ends_at).getTime();
+      const now = Date.now();
+      const remainingDays = Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24));
+      if (remainingDays > 0) {
+        daysUntilDue = Math.max(remainingDays, 1);
+      }
+    }
+
+    const nextDueDate = new Date(Date.now() + daysUntilDue * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+    // Cálculo do valor com desconto para ciclo anual (20% off) se selecionado
+    let finalValue = plan.price_cents / 100;
+    if (effectiveCycle === "YEARLY") {
+      finalValue = (plan.price_cents * 12 * 0.8) / 100;
+    }
 
     const subscriptionPayload = {
       customer: asaasCustomerId,
       billingType: billing_type || "UNDEFINED",
-      value: plan.price_cents / 100,
+      value: finalValue,
       nextDueDate,
-      cycle,
-      description: `Assinatura ${plan.name} - Vidlytics`,
+      cycle: effectiveCycle,
+      description: `Assinatura ${plan.name} (${effectiveCycle === "YEARLY" ? "Anual" : "Mensal"}) - Vidlytics`,
       externalReference: store_id,
     };
 
@@ -235,7 +253,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 8. Salvar a subscription local
+    // 8. Salvar ou atualizar a subscription local
     const { data: newSubscription, error: insertError } = await supabaseAdmin
       .from("subscriptions")
       .insert({
@@ -253,7 +271,7 @@ Deno.serve(async (req) => {
       console.error("Erro ao salvar subscription local:", insertError);
     }
 
-    // 9. Buscar a primeira invoice gerada para obter a invoice_url
+    // 9. Buscar invoice URL
     let invoiceUrl = subscriptionData.invoiceUrl || null;
 
     if (!invoiceUrl) {
@@ -266,7 +284,7 @@ Deno.serve(async (req) => {
         const paymentsData = paymentsText ? JSON.parse(paymentsText) : {};
         invoiceUrl = paymentsData?.data?.[0]?.invoiceUrl || paymentsData?.data?.[0]?.bankSlipUrl || null;
       } catch {
-        console.warn("[ASAAS] Não foi possível parsear lista de pagamentos:", paymentsText);
+        console.warn("[ASAAS] Não foi possível parsear pagamentos:", paymentsText);
       }
     }
 
