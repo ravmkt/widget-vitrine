@@ -8,10 +8,8 @@ import {
   Users, 
   TrendingUp, 
   DollarSign, 
-  Calendar, 
   Clock, 
   CheckCircle2, 
-  HelpCircle,
   Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -93,41 +91,53 @@ export const IndicaGanhaPage = () => {
   });
 
   return (
-    <div className="space-y-8 p-6 max-w-7xl mx-auto">
-      {/* Banner de Destaque */}
-      <div className="relative overflow-hidden rounded-3xl bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 p-8 text-white shadow-xl">
+    <div className="space-y-6 p-6 sm:p-8 max-w-7xl mx-auto">
+      {/* Cabeçalho Padrão (igual a Produtos) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Indica & Ganha
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Indique outros lojistas para o Vidlytics e receba 10% de comissão recorrente todo mês.
+          </p>
+        </div>
+      </div>
+
+      {/* Banner de Destaque com gradiente garantido e legibilidade impecável */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 dark:from-blue-700 dark:via-indigo-800 dark:to-slate-900 p-6 sm:p-8 text-white shadow-sm border border-blue-500/20">
         <div className="relative z-10 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold tracking-wide uppercase mb-4">
-            <Sparkles size={14} className="text-amber-300" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-bold tracking-wider uppercase mb-3 text-white">
+            <Sparkles size={13} className="text-amber-300" />
             Programa de Parceiros Vidlytics
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
             Ganhe 10% Recorrente em Cada Indicação
-          </h1>
-          <p className="mt-3 text-sm sm:text-base text-blue-100 leading-relaxed">
+          </h2>
+          <p className="mt-2 text-sm text-blue-50 leading-relaxed max-w-2xl">
             Indique outros lojistas para o Vidlytics. Enquanto a loja indicada mantiver a assinatura ativa, você recebe <strong>10% todo mês</strong> sobre o valor do plano contratado — inclusive se ela fizer upgrade!
           </p>
 
           {/* Área de Compartilhamento do Link */}
           <div className="mt-6 flex flex-col sm:flex-row items-center gap-3">
-            <div className="flex-1 w-full flex items-center bg-zinc-950/40 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2.5 text-xs font-mono text-zinc-200">
+            <div className="flex-1 w-full flex items-center bg-black/25 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 text-xs font-mono text-white">
               <span className="truncate">{referralUrl || 'Carregando seu link...'}</span>
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
               <button
                 onClick={handleCopyLink}
                 disabled={!referralUrl}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white text-blue-900 font-bold text-xs hover:bg-blue-50 transition cursor-pointer shadow-md"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-900 font-bold text-xs hover:bg-slate-100 transition-colors cursor-pointer shadow-xs"
               >
-                {copied ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
+                {copied ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
                 {copied ? 'Copiado!' : 'Copiar Link'}
               </button>
               <button
                 onClick={handleShareWhatsApp}
                 disabled={!referralUrl}
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 transition cursor-pointer shadow-md"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 transition-colors cursor-pointer shadow-xs"
               >
-                <Share2 size={16} />
+                <Share2 size={15} />
                 WhatsApp
               </button>
             </div>
@@ -135,45 +145,45 @@ export const IndicaGanhaPage = () => {
         </div>
       </div>
 
-      {/* Cards de Métricas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Cards de Métricas / KPIs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Lojas Indicadas */}
-        <div className="bg-white dark:bg-[#1a1f35] rounded-2xl border border-slate-200 dark:border-zinc-800 p-5 shadow-xs">
-          <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Total Indicados</span>
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+        <div className="bg-white dark:bg-[#111625] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs transition-colors">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Total Indicados</span>
+            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#0091ff]">
               <Users size={18} />
             </div>
           </div>
           <div className="text-2xl font-black text-slate-900 dark:text-white">
             {loading ? '...' : data?.total_referrals || 0}
           </div>
-          <span className="text-xs text-zinc-500 mt-1 block">Lojas cadastradas via seu link</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">Lojas cadastradas via seu link</span>
         </div>
 
         {/* Assinantes Ativos */}
-        <div className="bg-white dark:bg-[#1a1f35] rounded-2xl border border-slate-200 dark:border-zinc-800 p-5 shadow-xs">
-          <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Lojas Ativas</span>
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+        <div className="bg-white dark:bg-[#111625] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs transition-colors">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Lojas Ativas</span>
+            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 size={18} />
             </div>
           </div>
-          <div className="text-2xl font-black text-emerald-500">
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
             {loading ? '...' : data?.active_subscribers || 0}
           </div>
-          <span className="text-xs text-zinc-500 mt-1 block">Gerando comissão recorrente</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">Gerando comissão recorrente</span>
         </div>
 
         {/* Previsão do Próximo Ciclo */}
-        <div className="bg-white dark:bg-[#1a1f35] rounded-2xl border border-slate-200 dark:border-zinc-800 p-5 shadow-xs">
-          <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Próximo Ciclo (10%)</span>
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+        <div className="bg-white dark:bg-[#111625] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs transition-colors">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Próximo Ciclo (10%)</span>
+            <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <Clock size={18} />
             </div>
           </div>
-          <div className="text-2xl font-black text-amber-500">
+          <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
             {loading
               ? '...'
               : (data?.monthly_recurring_earnings || 0).toLocaleString('pt-BR', {
@@ -181,14 +191,14 @@ export const IndicaGanhaPage = () => {
                   currency: 'BRL',
                 })}
           </div>
-          <span className="text-xs text-zinc-500 mt-1 block">Previsão recorrente mensal</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">Previsão recorrente mensal</span>
         </div>
 
         {/* Total Acumulado */}
-        <div className="bg-white dark:bg-[#1a1f35] rounded-2xl border border-slate-200 dark:border-zinc-800 p-5 shadow-xs">
-          <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Total Acumulado</span>
-            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500">
+        <div className="bg-white dark:bg-[#111625] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs transition-colors">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Total Acumulado</span>
+            <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400">
               <TrendingUp size={18} />
             </div>
           </div>
@@ -200,22 +210,22 @@ export const IndicaGanhaPage = () => {
                   currency: 'BRL',
                 })}
           </div>
-          <span className="text-xs text-zinc-500 mt-1 block">Receita de parcerias</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">Receita total de parcerias</span>
         </div>
       </div>
 
       {/* Relatório Detalhado de Indicados */}
-      <div className="bg-white dark:bg-[#1a1f35] rounded-3xl border border-slate-200 dark:border-zinc-800 overflow-hidden shadow-xs">
-        <div className="p-6 border-b border-slate-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#111625] rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+        <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Lojas que Você Indicou</h2>
-            <p className="text-xs text-zinc-400 mt-0.5">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Lojas que Você Indicou</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Acompanhe em tempo real o status de adesão e seu retorno financeiro.
             </p>
           </div>
 
           {/* Filtro de Período */}
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl text-xs font-semibold">
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/60 p-1 rounded-xl text-xs font-semibold">
             {[
               { label: 'Tudo', value: 'all' },
               { label: '7 dias', value: '7d' },
@@ -226,10 +236,10 @@ export const IndicaGanhaPage = () => {
               <button
                 key={f.value}
                 onClick={() => setPeriodFilter(f.value as any)}
-                className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   periodFilter === f.value
-                    ? 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-white shadow-xs'
-                    : 'text-zinc-500 hover:text-zinc-300'
+                    ? 'bg-white dark:bg-slate-700 text-[#0091ff] dark:text-white shadow-xs font-bold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {f.label}
@@ -241,7 +251,7 @@ export const IndicaGanhaPage = () => {
         {/* Tabela de Indicados */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-zinc-900/50 text-zinc-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-zinc-800">
+            <thead className="bg-slate-50/75 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="py-3.5 px-6">Loja Indicada</th>
                 <th className="py-3.5 px-6">Data de Cadastro</th>
@@ -250,16 +260,16 @@ export const IndicaGanhaPage = () => {
                 <th className="py-3.5 px-6 text-right">Sua Comissão Mensal</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-zinc-800/60 text-zinc-300">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-zinc-500">
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
                     Carregando dados dos indicados...
                   </td>
                 </tr>
               ) : filteredReferrals.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-zinc-500">
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
                     Nenhuma loja indicada neste período. Compartilhe seu link acima para começar a faturar!
                   </td>
                 </tr>
@@ -267,24 +277,24 @@ export const IndicaGanhaPage = () => {
                 filteredReferrals.map((item) => {
                   const isActive = item.status?.toLowerCase() === 'active';
                   return (
-                    <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/20 transition-colors">
+                    <tr key={item.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="py-4 px-6 font-semibold text-slate-900 dark:text-white">
                         {item.store_name}
                       </td>
-                      <td className="py-4 px-6 text-zinc-400">
+                      <td className="py-4 px-6 text-slate-500 dark:text-slate-400">
                         {new Date(item.created_at).toLocaleDateString('pt-BR')}
                       </td>
                       <td className="py-4 px-6">
-                        <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700">
+                        <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           {item.plan_name}
                         </span>
                       </td>
                       <td className="py-4 px-6">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${
                             isActive
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
+                              : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30'
                           }`}
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-current" />
@@ -293,15 +303,15 @@ export const IndicaGanhaPage = () => {
                       </td>
                       <td className="py-4 px-6 text-right font-bold text-slate-900 dark:text-white">
                         {isActive ? (
-                          <span className="text-emerald-400 text-sm">
+                          <span className="text-emerald-600 dark:text-emerald-400 text-sm">
                             +{item.monthly_commission.toLocaleString('pt-BR', {
                               style: 'currency',
                               currency: 'BRL',
                             })}
-                            <span className="text-[10px] text-zinc-500 font-normal"> /mês</span>
+                            <span className="text-[10px] text-slate-400 font-normal"> /mês</span>
                           </span>
                         ) : (
-                          <span className="text-zinc-500 text-xs">Aguardando ativação</span>
+                          <span className="text-slate-400 text-xs font-normal">Aguardando ativação</span>
                         )}
                       </td>
                     </tr>
