@@ -290,7 +290,7 @@ const isItemActive =
         {/* Informações da Loja / Perfil */}
         <button
           type="button"
-          onClick={() => navigate('/plans')}
+          onClick={() => navigate('/billing')}
           className="flex items-center gap-2.5 px-2 py-1.5 min-w-0 w-full rounded-xl hover:bg-slate-800/60 dark:hover:bg-[#ff7a29]/10 transition-colors text-left group cursor-pointer"
           title="Gerenciar assinatura e planos"
         >
