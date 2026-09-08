@@ -13,6 +13,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ShieldCheck,
+  Gift,
 } from "lucide-react";
 import {
   SidebarContent,
