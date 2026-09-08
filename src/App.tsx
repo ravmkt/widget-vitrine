@@ -165,6 +165,7 @@ function App() {
 
           {/* Dashboard */}
           <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
+<Route path="/indica-e-ganha" element={<ProtectedRoute><AppLayout><IndicaGanhaPage /></AppLayout></ProtectedRoute>} />
 
           {/* ── Stories (rotas específicas ANTES da genérica) ── */}
           <Route path="/stories/widget" element={<ProtectedRoute><AppLayout><StoriesWidgetPage /></AppLayout></ProtectedRoute>} />
