@@ -36,14 +36,18 @@ interface MasterStore {
   store_name: string;
   store_slug: string;
   created_at: string;
-  owner_name: string | null;
-  owner_email: string | null;
-  owner_phone?: string | null;
-  plan_name: string | null;
-  subscription_status: string | null;
-  current_period_end: string | null;
+  owner_name: string;
+  owner_email: string;
+  owner_phone?: string;
+  plan_name: string;
+  plan_price?: number;
+  subscription_status: string;
+  current_period_end?: string;
   videos_count: number;
   month_views: number;
+  stories_sales_revenue?: number;
+  referrals_count?: number;
+  commission_earned?: number;
 }
 
 interface FriendlyLog {
