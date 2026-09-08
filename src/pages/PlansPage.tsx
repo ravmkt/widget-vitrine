@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Check, 
   ArrowLeft, 
-  Loader2 
+  Loader2,
+  Radio,
+  Video,
+  Sparkles
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -73,10 +76,11 @@ export function PlansPage() {
             }
           }
 
-          // 3. Busca todos os planos cadastrados ordenados por preço (independente de loja)
+          // 3. Busca apenas os planos ativos ordenados por preço
           const { data: plansData, error: plansErr } = await supabase
             .from('plans')
             .select('*')
+            .eq('is_active', true)
             .order('price_cents', { ascending: true });
 
           if (plansErr) throw plansErr;
@@ -126,7 +130,6 @@ export function PlansPage() {
     targetPlan: any, 
     billingType: 'PIX' | 'BOLETO' | 'CREDIT_CARD' | 'UNDEFINED' = 'UNDEFINED'
   ) => {
-    console.log('🔥 handleSelectPlan CHAMADO', targetPlan.id, 'Ciclo:', billingCycle);
     if (!storeId || !supabase) return;
     if (targetPlan.id === currentPlanId) return;
 
@@ -148,14 +151,13 @@ export function PlansPage() {
           plan_id: targetPlan.id,
           store_id: storeId,
           billing_type: billingType,
-          billing_cycle: billingCycle.toUpperCase() // Passa 'MONTHLY', 'SEMIANNUAL' ou 'ANNUAL'
+          billing_cycle: billingCycle.toUpperCase()
         },
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
 
-      // Extrai a resposta mesmo em caso de erro HTTP 400
       let responseBody = data;
       if (error && (error as any).context) {
         try {
@@ -163,7 +165,6 @@ export function PlansPage() {
         } catch (_) {}
       }
 
-      // Tratamento de Dados Fiscais Pendentes
       if (responseBody?.error === 'DADOS_FISCAIS_OBRIGATORIOS') {
         showWarning(responseBody.message || 'Preencha seus dados de faturamento (CPF/CNPJ) antes de assinar.');
         navigate('/billing');
@@ -192,8 +193,8 @@ export function PlansPage() {
 
   const formatSize = (bytes: number): string => {
     if (!bytes || bytes === 0) return '0 GB';
-    const gb = bytes / (1024 * 1024 * 1024);
-    return `${gb}GB`;
+    const gb = Math.round(bytes / (1024 * 1024 * 1024));
+    return `${gb} GB`;
   };
 
   if (loading) {
@@ -280,28 +281,31 @@ export function PlansPage() {
         </div>
       </div>
 
-      {/* ── GRID DE CARDS MODULARES DE PLANOS ── */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 pt-4 items-stretch">
-        {plans.map((p, idx) => {
+      {/* ── GRID DE CARDS: 3 COLUNAS OFICIAIS (STARTER, PRO, SCALE) ── */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 pt-4 items-stretch max-w-6xl mx-auto">
+        {plans.map((p) => {
           const isCurrent = p.id === currentPlanId;
           const isUpdating = updatingPlanId === p.id;
-          const isPopular = p.is_popular || p.slug === 'nivel_2' || idx === 1;
+          const isPopular = p.is_popular || p.slug === 'pro';
+          const allowsLive = Boolean(p.allows_live);
+          const isPagesUnlimited = Number(p.pages_limit) >= 9999;
+          const videosLimit = p.videos_limit || (p.slug === 'scale' ? 100 : p.slug === 'pro' ? 30 : 10);
 
-          // Calcula os valores com desconto com base no ciclo selecionado
+          // Calcula os valores com base no ciclo selecionado
           const priceDetails = calculatePrice(p.price_cents, billingCycle);
 
           return (
             <div
               key={p.id}
               className={cn(
-                "relative flex flex-col justify-between rounded-2xl border bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1.5 shadow-sm",
+                "relative flex flex-col justify-between rounded-3xl border bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 transition-all duration-300 hover:-translate-y-1.5 shadow-sm",
                 isPopular
                   ? "border-[#0091ff] dark:border-[#ff7a29]/70 shadow-lg shadow-blue-500/10 dark:shadow-[0_12px_35px_rgba(255,122,41,0.22)] ring-1 ring-[#0091ff]/30 dark:ring-[#ff7a29]/30"
                   : "border-slate-200 dark:border-orange-500/15 dark:hover:border-orange-500/35 dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.1)]",
                 isCurrent && "bg-slate-50/70 dark:bg-[#1a1f35]/95"
               )}
             >
-              {/* Badge Arredondado "Mais Popular" Dual-Theme */}
+              {/* Badge "Mais Popular" */}
               {isPopular && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#0091ff] dark:bg-[#ff7a29] px-3.5 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md shadow-blue-500/30 dark:shadow-orange-500/40">
                   Mais Popular
@@ -310,7 +314,7 @@ export function PlansPage() {
               
               <div>
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
                     {p.name}
                   </h3>
                   {isCurrent && (
@@ -328,7 +332,6 @@ export function PlansPage() {
                     <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">/mês</span>
                   </div>
                   
-                  {/* Informativo de Cobrança do Ciclo Selecionado */}
                   {billingCycle !== 'monthly' ? (
                     <span className="text-[10px] font-bold text-emerald-500 mt-1">
                       Cobrado R$ {priceDetails.total.toFixed(2).replace('.', ',')} {priceDetails.text}mente
@@ -340,32 +343,67 @@ export function PlansPage() {
                   )}
                 </div>
 
-                {/* Lista de Recursos com Checkmark Dual-Theme */}
+                {/* Lista de Recursos */}
                 <div className="mt-6 space-y-3.5 border-t border-slate-100 dark:border-white/5 pt-5">
                   <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shrink-0 shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shrink-0">
                       <Check size={11} className="text-white stroke-[3]" />
                     </div>
                     <span><strong className="text-slate-900 dark:text-white">{(p.views_limit / 1000).toFixed(0)}k</strong> visualizações/mês</span>
                   </div>
 
                   <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shrink-0 shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shrink-0">
                       <Check size={11} className="text-white stroke-[3]" />
                     </div>
-                    <span><strong className="text-slate-900 dark:text-white">{p.pages_limit}</strong> páginas ativas</span>
+                    <span><strong className="text-slate-900 dark:text-white">{videosLimit}</strong> vídeos ativos</span>
                   </div>
 
                   <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shrink-0 shadow-xs shadow-blue-500/20 dark:shadow-orange-500/30">
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shrink-0">
                       <Check size={11} className="text-white stroke-[3]" />
                     </div>
-                    <span><strong className="text-slate-900 dark:text-white">{formatSize(p.storage_limit_bytes)}</strong> armazenamento</span>
+                    <span>
+                      {isPagesUnlimited ? (
+                        <strong className="text-slate-900 dark:text-white">Páginas ativas ilimitadas</strong>
+                      ) : (
+                        <>Até <strong className="text-slate-900 dark:text-white">{p.pages_limit}</strong> páginas instaladas</>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-[#c0c5d4]">
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shrink-0">
+                      <Check size={11} className="text-white stroke-[3]" />
+                    </div>
+                    <span><strong className="text-slate-900 dark:text-white">{formatSize(p.storage_limit_bytes)}</strong> de armazenamento</span>
+                  </div>
+
+                  {/* Recurso Live Commerce */}
+                  <div className={cn(
+                    "flex items-center gap-2.5 text-xs font-bold rounded-xl p-2 transition-colors",
+                    allowsLive 
+                      ? "bg-rose-50/70 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-200/50 dark:border-rose-800/30"
+                      : "text-slate-400 dark:text-slate-600"
+                  )}>
+                    {allowsLive ? (
+                      <>
+                        <Radio size={14} className="text-rose-500 animate-pulse shrink-0" />
+                        <span className="font-black">Live Commerce incluso</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-4 h-4 rounded-full flex items-center justify-center bg-slate-200 dark:bg-white/10 text-slate-400 shrink-0">
+                          <span className="text-[10px] leading-none">✕</span>
+                        </div>
+                        <span>Sem Live Commerce</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Botão de Ação Dual-Theme */}
+              {/* Botão de Ação */}
               <div className="mt-8 pt-4 border-t border-slate-100 dark:border-white/5">
                 <button
                   type="button"
