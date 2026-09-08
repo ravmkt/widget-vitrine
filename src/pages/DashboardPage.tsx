@@ -1,12 +1,10 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, Video } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import {
   Eye,
-  MousePointerClick,
-  CheckCircle2,
   Calendar,
   DollarSign,
   HardDrive,
@@ -20,23 +18,18 @@ import {
   Trash2,
   Pencil,
   Video as VideoIcon,
-  Package,
-  Ruler,
   Settings,
   Palette,
   Star,
-  MessageCircle,
   Power,
   Upload,
   Code2,
   Activity,
+  TrendingUp,
+  Sparkles,
+  ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ptBR } from 'date-fns/locale';
-import CustomDialog from '@/components/CustomDialog';
-import { DayPicker } from 'react-day-picker';
-import 'react-day-picker/dist/style.css';
-import { getDashboardMetrics, getVideoMetricsRows, type AnalyticsInterval } from '@/lib/analytics';
 import { useTenant } from '@/context/TenantContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -70,41 +63,20 @@ interface ActivityLog {
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  
-  // 🛡️ Hooks de Contexto e Autenticação no Escopo Principal
+
+  // 🛡️ Hooks de Contexto e Autenticação
   const { storeId } = useTenant();
   const { loading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
-  const [metricsLoading, setMetricsLoading] = useState(false);
   const [storeName, setStoreName] = useState<string>('');
   const [referralCode, setReferralCode] = useState<string>('');
   const [copiedReferral, setCopiedReferral] = useState(false);
-  const [appEnabled, setAppEnabled] = useState<boolean>(true); // Controle de status do App (widget_enabled)
-  const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsInterval>('30');
-  const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
-    from: undefined,
-    to: undefined,
-  });
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [dashboardMetrics, setDashboardMetrics] = useState({
-    views: 0,
-    plays: 0,
-    pauses: 0,
-    clicks: 0,
-    ctaClicks: 0,
-    productClicks: 0,
-    whatsappClicks: 0,
-    likes: 0,
-    shares: 0,
-    comments: 0,
-    closes: 0,
-    conversions: 0,
-    ctr: 0,
-    revenue: 0,
-  });
-  const [topVideos, setTopVideos] = useState<any[]>([]);
+  const [appEnabled, setAppEnabled] = useState<boolean>(true);
+
+  // Métricas financeiras
+  const [videoRevenue, setVideoRevenue] = useState<number>(0);
+  const [referralEarnings, setReferralEarnings] = useState<number>(0);
 
   const [usage, setUsage] = useState<StoreUsageData>({
     planName: 'Starter',
@@ -120,8 +92,8 @@ const DashboardPage: React.FC = () => {
   });
 
   const [activities, setActivities] = useState<ActivityLog[]>([]);
-  
-  // ── Checklist Inicial Reorganizado (6 Passos) ──
+
+  // ── Checklist Inicial (6 Passos) ──
   const [checklist, setChecklist] = useState<ChecklistItem[]>([
     { id: 'settings', title: 'Configurações da loja', description: 'Preencha os dados cadastrais, e-mail e integre seu canal de WhatsApp.', route: '/settings', completed: false },
     { id: 'integration', title: 'Instalação do script', description: 'Copie e instale o script de embed nas plataformas ou via GTM.', route: '/integration', completed: false },
@@ -131,9 +103,7 @@ const DashboardPage: React.FC = () => {
     { id: 'appearance', title: 'Configurar a aparência', description: 'Personalize cores, fontes, bordas e botões do player de stories.', route: '/appearance', completed: false },
   ]);
 
-  const activeInterval = useMemo(() => selectedPeriod, [selectedPeriod]);
-
-  // 1. Carregamento Estrutural da Loja (Protegido contra Race Condition de Auth)
+  // Carregamento Estrutural da Loja e Métricas
   useEffect(() => {
     if (!storeId || authLoading) return;
     let isMounted = true;
@@ -145,7 +115,6 @@ const DashboardPage: React.FC = () => {
         const now = new Date();
         const currentMonth = now.toISOString().slice(0, 7);
 
-        // Execução resiliente com Promise.allSettled + Adição de consulta de store_settings
         const results = await Promise.allSettled([
           db.videos.getAll(storeId), // [0]
           supabase.from('stores').select('*, plans(*)').eq('id', storeId).single(), // [1]
@@ -154,8 +123,10 @@ const DashboardPage: React.FC = () => {
           supabase.from('stories').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [4]
           supabase.from('appearances').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [5]
           supabase.from('display_locations').select('id', { count: 'exact', head: true }).eq('store_id', storeId), // [6]
-          supabase.from('activity_logs').select('*').eq('store_id', storeId).order('created_at', { ascending: false }).limit(15), // [7] (Buscando da tabela activity_logs)
+          supabase.from('activity_logs').select('*').eq('store_id', storeId).order('created_at', { ascending: false }).limit(15), // [7]
           supabase.from('store_settings').select('*').eq('store_id', storeId).maybeSingle(), // [8]
+          supabase.from('referral_rewards').select('amount').eq('referrer_store_id', storeId).eq('status', 'paid'), // [9]
+          supabase.from('video_events').select('order_value').eq('store_id', storeId).eq('event_type', 'conversion'), // [10]
         ]);
 
         if (!isMounted) return;
@@ -170,20 +141,15 @@ const DashboardPage: React.FC = () => {
           locationsRes,
           eventsRes,
           settingsRes,
+          referralRes,
+          conversionsRes,
         ] = results;
 
         // 1. Vídeos
         const fetchedVideos: Video[] = videosRes.status === 'fulfilled' ? videosRes.value : [];
-        if (videosRes.status === 'rejected') {
-          console.error('[DashboardPage] Falha ao carregar vídeos:', videosRes.reason);
-        }
-        setVideos(fetchedVideos);
 
         // 2. Loja
         const storeData = storeRes.status === 'fulfilled' ? storeRes.value.data || {} : {};
-        if (storeRes.status === 'rejected') {
-          console.error('[DashboardPage] Falha ao carregar dados da loja:', storeRes.reason);
-        }
         setStoreName(storeData.name || '');
         setReferralCode(storeData.referral_code || '');
 
@@ -195,33 +161,20 @@ const DashboardPage: React.FC = () => {
 
         // 3. Quotas e Contadores
         const usageData = usageCounterRes.status === 'fulfilled' ? usageCounterRes.value.data || {} : {};
-        if (usageCounterRes.status === 'rejected') {
-          console.error('[DashboardPage] Falha ao carregar usage_counters:', usageCounterRes.reason);
-        }
-
-        // Tipagem flexível para evitar erros de compilação estrita
         const storeDataObj = storeData as any;
         const planData = storeDataObj.plans || {};
 
-        // 1. Consumo de Armazenamento Real convertido para MB (Igual à página de Storage)
-        const realStorageUsedBytes = storeDataObj.storage_used_bytes !== null && storeDataObj.storage_used_bytes !== undefined 
-          ? Number(storeDataObj.storage_used_bytes) 
+        const realStorageUsedBytes = storeDataObj.storage_used_bytes !== null && storeDataObj.storage_used_bytes !== undefined
+          ? Number(storeDataObj.storage_used_bytes)
           : 0;
         const realStorageUsedMB = Number((realStorageUsedBytes / (1024 * 1024)).toFixed(1));
 
-        // 2. Limite de Armazenamento do Plano Real convertido para MB (Fallback para 1GB caso não definido)
-        const realStorageLimitBytes = storeDataObj.storage_limit_bytes 
-          ? Number(storeDataObj.storage_limit_bytes) 
+        const realStorageLimitBytes = storeDataObj.storage_limit_bytes
+          ? Number(storeDataObj.storage_limit_bytes)
           : (planData.storage_limit_bytes ? Number(planData.storage_limit_bytes) : 1024 * 1024 * 1024);
         const realStorageLimitMB = Number((realStorageLimitBytes / (1024 * 1024)).toFixed(0));
 
-        // 3. Páginas com vídeos ativas
         const pagesCount = locationsRes.status === 'fulfilled' ? locationsRes.value.count || 0 : 0;
-        if (locationsRes.status === 'rejected') {
-          console.error('[DashboardPage] Falha ao carregar display_locations:', locationsRes.reason);
-        }
-
-        // 4. Limites Dinâmicos do Plano Real (com fallbacks seguros para Starter)
         const resolvedViewsLimit = storeDataObj.views_limit || planData.views_limit || 10000;
         const resolvedPagesLimit = storeDataObj.pages_limit || planData.pages_limit || 5;
         const resolvedPlanName = planData.name || storeDataObj.plan_tier || 'Starter';
@@ -239,38 +192,18 @@ const DashboardPage: React.FC = () => {
           pagesLimit: resolvedPagesLimit,
         });
 
-        // 4. Feed de Eventos de Log
+        // 4. Feed de Eventos
         const fetchedEvents = eventsRes.status === 'fulfilled' ? eventsRes.value.data || [] : [];
-        if (eventsRes.status === 'rejected') {
-          console.error('[DashboardPage] Falha ao carregar activity_logs:', eventsRes.reason);
-        }
         setActivities(fetchedEvents);
 
-        // 5. Checklist Dinâmico e Reordenado
+        // 5. Checklist
         const productsCount = productsRes.status === 'fulfilled' ? productsRes.value.count || 0 : 0;
-        if (productsRes.status === 'rejected') {
-          console.error('[DashboardPage] Falha ao carregar products:', productsRes.reason);
-        }
-
         const storiesCount = storiesRes.status === 'fulfilled' ? storiesRes.value.count || 0 : 0;
-        if (storiesRes.status === 'rejected') {
-          console.error('[DashboardPage] Falha ao carregar stories:', storiesRes.reason);
-        }
-
         const appearanceCount = appearanceRes.status === 'fulfilled' ? appearanceRes.value.count || 0 : 0;
-        if (appearanceRes.status === 'rejected') {
-          console.error('[DashboardPage] Falha ao carregar appearances:', appearanceRes.reason);
-        }
-
-        // 6. Configurações da Loja & Ativação do App (Filtro corrigido de app_enabled para widget_enabled)
         const settingsData = settingsRes.status === 'fulfilled' ? settingsRes.value.data || {} : {};
-        const isAppActive = settingsData.widget_enabled !== false; // Fallback ativo se não especificado
-        setAppEnabled(isAppActive);
+        setAppEnabled(settingsData.widget_enabled !== false);
 
-        // Validação de Configurações salvas
         const hasSettingsSaved = settingsRes.status === 'fulfilled' && !!settingsRes.value.data && !!settingsRes.value.data.store_name;
-
-        // Validação de Instalação do Script (widget ativo com views ou locais de exibição cadastrados)
         const isIntegrationCompleted = pagesCount > 0 || (usageData && (usageData.views_count || 0) > 0);
 
         setChecklist([
@@ -317,8 +250,20 @@ const DashboardPage: React.FC = () => {
             completed: appearanceCount > 0,
           },
         ]);
+
+        // 6. Faturamento com indicações
+        if (referralRes.status === 'fulfilled' && referralRes.value.data) {
+          const totalRef = referralRes.value.data.reduce((acc: number, item: any) => acc + (Number(item.amount) || 0), 0);
+          setReferralEarnings(totalRef);
+        }
+
+        // 7. Faturamento de vendas dos vídeos
+        if (conversionsRes.status === 'fulfilled' && conversionsRes.value.data) {
+          const totalConv = conversionsRes.value.data.reduce((acc: number, item: any) => acc + (Number(item.order_value) || 0), 0);
+          setVideoRevenue(totalConv);
+        }
       } catch (err) {
-        console.error('[DashboardPage] Erro crítico ao carregar estrutura da dashboard:', err);
+        console.error('[DashboardPage] Erro ao carregar dados:', err);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -331,7 +276,6 @@ const DashboardPage: React.FC = () => {
     };
   }, [storeId, authLoading]);
 
-  // Função para copiar o link de indicação
   const handleCopyReferral = async () => {
     const code = referralCode || storeId;
     const referralUrl = `${window.location.origin}/register?ref=${code}`;
@@ -353,43 +297,12 @@ const DashboardPage: React.FC = () => {
       }
 
       setCopiedReferral(true);
-      toast.success('Link de indicação copiado para a área de transferência!');
+      toast.success('Link de indicação copiado!');
       setTimeout(() => setCopiedReferral(false), 2000);
-    } catch (err) {
-      console.error('[DashboardPage] Falha ao copiar link de indicação:', err);
+    } catch {
       toast.error('Não foi possível copiar o link automaticamente.');
     }
   };
-
-  // 2. Carregamento Isolado do Filtro de Métricas
-  useEffect(() => {
-    if (!storeId || authLoading) return;
-    let isMounted = true;
-
-    const updateMetricsOnly = async () => {
-      try {
-        setMetricsLoading(true);
-        const [metrics, rows] = await Promise.all([
-          getDashboardMetrics(storeId, activeInterval, customRange),
-          getVideoMetricsRows(storeId, videos, activeInterval, customRange),
-        ]);
-
-        if (!isMounted) return;
-        setDashboardMetrics(metrics);
-        setTopVideos([...rows].sort((a, b) => b.metrics.views - a.metrics.views).slice(0, 5));
-      } catch (err) {
-        console.error('[DashboardPage] Erro ao atualizar métricas:', err);
-      } finally {
-        if (isMounted) setMetricsLoading(false);
-      }
-    };
-
-    updateMetricsOnly();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [storeId, authLoading, activeInterval, customRange, videos]);
 
   const calcPercent = (current: number, max: number) => {
     if (!max || max <= 0) return 0;
@@ -404,12 +317,11 @@ const DashboardPage: React.FC = () => {
   const checklistPercent = Math.round((completedSteps / checklist.length) * 100);
 
   const getBarColor = (pct: number) => {
-    if (pct >= 90) return '!bg-[#ef4444]'; // Ultrapassou 90% -> Vermelho
-    if (pct >= 75) return '!bg-[#ff7a29]'; // Ultrapassou 75% -> Laranja
-    return '!bg-[#22c55e]'; // Padrão normal -> Verde
+    if (pct >= 90) return '!bg-[#ef4444]';
+    if (pct >= 75) return '!bg-[#ff7a29]';
+    return '!bg-[#22c55e]';
   };
 
-  // ── Mapeamento de ícones e labels do Log do Painel (códigos novos + textos legados) ──
   const CHIP = {
     emerald: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30',
     rose: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30',
@@ -421,75 +333,44 @@ const DashboardPage: React.FC = () => {
   };
 
   const ACTION_META: Record<string, { Icon: any; label: string; chip: string }> = {
-    // 🎬 Vídeos
     'video.created': { Icon: Plus, label: 'Vídeo criado', chip: CHIP.emerald },
     'video.updated': { Icon: Pencil, label: 'Vídeo atualizado', chip: CHIP.blue },
     'video.deleted': { Icon: Trash2, label: 'Vídeo excluído', chip: CHIP.rose },
-    // 📱 Stories
     'story.created': { Icon: Plus, label: 'Story criado', chip: CHIP.emerald },
     'story.updated': { Icon: Pencil, label: 'Story editado', chip: CHIP.violet },
     'story.deleted': { Icon: Trash2, label: 'Story excluído', chip: CHIP.rose },
     'story.activated': { Icon: Power, label: 'Story ativado', chip: CHIP.emerald },
     'story.deactivated': { Icon: Power, label: 'Story desativado', chip: CHIP.slate },
-    // 🛍️ Produtos
     'product.created': { Icon: Plus, label: 'Produto criado', chip: CHIP.emerald },
     'product.updated': { Icon: Pencil, label: 'Produto atualizado', chip: CHIP.blue },
     'product.activated': { Icon: Power, label: 'Produto ativado', chip: CHIP.emerald },
     'product.deactivated': { Icon: Power, label: 'Produto desativado', chip: CHIP.slate },
     'product.deleted': { Icon: Trash2, label: 'Produto excluído', chip: CHIP.rose },
     'product.imported': { Icon: Upload, label: 'Produtos importados', chip: CHIP.emerald },
-    // 📏 Medidas
     'model.created': { Icon: Plus, label: 'Medida criada', chip: CHIP.emerald },
     'model.updated': { Icon: Pencil, label: 'Medida atualizada', chip: CHIP.blue },
     'model.deleted': { Icon: Trash2, label: 'Medida excluída', chip: CHIP.rose },
-    // ⚙️ Configurações
     'settings.saved': { Icon: Settings, label: 'Configurações salvas', chip: CHIP.amber },
-    // 🎨 Aparências
     'appearance.created': { Icon: Plus, label: 'Aparência criada', chip: CHIP.emerald },
     'appearance.updated': { Icon: Palette, label: 'Aparência atualizada', chip: CHIP.cyan },
     'appearance.default': { Icon: Star, label: 'Aparência definida como padrão', chip: CHIP.amber },
     'appearance.deleted': { Icon: Trash2, label: 'Aparência excluída', chip: CHIP.rose },
-    // 💬 Comentários
-    'comment.deleted': { Icon: Trash2, label: 'Comentário excluído', chip: CHIP.rose },
-    // 💾 Armazenamento
-    'storage.file_deleted': { Icon: HardDrive, label: 'Arquivo excluído do armazenamento', chip: CHIP.rose },
+    'storage.file_deleted': { Icon: HardDrive, label: 'Arquivo excluído', chip: CHIP.rose },
   };
 
-  // Helper: resolve ícone + label da atividade (códigos novos ou textos legados antigos)
   const getActivityMeta = (action: string, details: string = '') => {
     const known = ACTION_META[action];
     if (known) return known;
-
-    // Fallback heurístico para registros antigos em texto livre
     const act = action.toLowerCase();
     const det = details.toLowerCase();
     const isDelete = act.includes('exclu') || act.includes('remov') || det.includes('exclui') || det.includes('remov');
-    const isInsert = act.includes('enviado') || act.includes('criado') || act.includes('import') || det.includes('adicionado') || det.includes('criado');
+    const isInsert = act.includes('enviado') || act.includes('criado') || act.includes('import') || det.includes('adicionado');
 
-    if (act.includes('vídeo') || act.includes('video') || act.includes('import')) {
-      if (isDelete) return { Icon: Trash2, label: 'Vídeo excluído', chip: CHIP.rose };
-      if (isInsert) return { Icon: VideoIcon, label: 'Vídeo criado', chip: CHIP.emerald };
-      return { Icon: VideoIcon, label: 'Vídeo atualizado', chip: CHIP.blue };
-    }
-    if (act.includes('storie') || act.includes('coleção') || act.includes('grupo') || act.includes('layout')) {
-      if (isDelete) return { Icon: Trash2, label: 'Story excluído', chip: CHIP.rose };
-      if (isInsert) return { Icon: Plus, label: 'Story criado', chip: CHIP.emerald };
-      return { Icon: Pencil, label: 'Story editado', chip: CHIP.violet };
-    }
-    if (act.includes('aparência') || act.includes('design') || act.includes('player') || act.includes('personaliz')) {
-      if (isDelete) return { Icon: Trash2, label: 'Aparência excluída', chip: CHIP.rose };
-      if (isInsert) return { Icon: Palette, label: 'Aparência criada', chip: CHIP.emerald };
-      return { Icon: Palette, label: 'Aparência atualizada', chip: CHIP.cyan };
-    }
-    if (act.includes('config') || act.includes('loja') || act.includes('whatsapp')) {
-      return { Icon: Settings, label: 'Configurações salvas', chip: CHIP.amber };
-    }
-    if (act.includes('script') || act.includes('embed') || act.includes('integra') || act.includes('widget')) {
-      return { Icon: Code2, label: 'Integração', chip: CHIP.blue };
-    }
-    if (act.includes('plan') || act.includes('assinatura') || act.includes('fatura')) {
-      return { Icon: Star, label: 'Plano', chip: CHIP.emerald };
-    }
+    if (act.includes('vídeo') || act.includes('video')) return { Icon: isDelete ? Trash2 : VideoIcon, label: isDelete ? 'Vídeo excluído' : 'Vídeo atualizado', chip: isDelete ? CHIP.rose : CHIP.emerald };
+    if (act.includes('storie') || act.includes('coleção')) return { Icon: isDelete ? Trash2 : Plus, label: isDelete ? 'Story excluído' : 'Story criado', chip: isDelete ? CHIP.rose : CHIP.violet };
+    if (act.includes('aparência') || act.includes('design')) return { Icon: Palette, label: 'Aparência atualizada', chip: CHIP.cyan };
+    if (act.includes('config')) return { Icon: Settings, label: 'Configurações salvas', chip: CHIP.amber };
+    if (act.includes('script') || act.includes('embed')) return { Icon: Code2, label: 'Integração', chip: CHIP.blue };
     if (isDelete) return { Icon: Trash2, label: 'Item excluído', chip: CHIP.rose };
     return { Icon: Activity, label: action || 'Atividade', chip: CHIP.slate };
   };
@@ -498,19 +379,17 @@ const DashboardPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <div className="w-10 h-10 border-4 border-[#0091ff] dark:border-[#ff7a29] border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-sm font-semibold text-slate-500 dark:text-[#c0c5d4]">Atualizando visão geral...</p>
+        <p className="text-sm font-semibold text-slate-500 dark:text-[#c0c5d4]">Carregando visão geral...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-8 animate-fade-in font-sans text-slate-900 dark:text-[#e8ecf4] min-h-screen -m-6 p-6 sm:p-8 bg-transparent dark:bg-[radial-gradient(ellipse_at_top,_#1a1f3a_0%,_#0f1220_55%,_#0a0e1a_100%)]">
-      
-      {/* ── 1. HEADER (Grid de 2 Colunas: Boas Vindas + Card de Status do App) ── */}
+
+      {/* ── 1. HEADER (Boas Vindas sem subtítulo longo + Card Status do App) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-orange-500/15 shadow-sm dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
-        
-        {/* Coluna 1: Boas vindas e Plano */}
-        <div className="lg:col-span-2 flex flex-col justify-center space-y-4">
+        <div className="lg:col-span-2 flex flex-col justify-center space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-black uppercase tracking-wider text-[#0091ff] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
               Plano {usage.planName}
@@ -530,13 +409,10 @@ const DashboardPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Olá, {storeName || 'seja bem-vindo(a)'}
             </h1>
-            <p className="text-sm text-slate-500 dark:text-[#c0c5d4] mt-1.5 font-medium leading-relaxed">
-              Visão Geral — Acompanhe o consumo do plano, performance dos vídeos e configuração da sua loja.
-            </p>
           </div>
         </div>
 
-        {/* Coluna 2: Card Exclusivo e Chamativo de Status do Aplicativo */}
+        {/* Card de Status do App */}
         <div className="lg:col-span-1 flex items-stretch">
           {appEnabled ? (
             <div className="w-full bg-emerald-500/[0.04] dark:bg-emerald-500/[0.02] border-2 border-emerald-500/25 rounded-[1.8rem] p-5 flex flex-col justify-center space-y-2.5 transition-all shadow-[0_4px_20px_rgba(16,185,129,0.06)] dark:shadow-[0_4px_25px_rgba(16,185,129,0.02)]">
@@ -567,10 +443,69 @@ const DashboardPage: React.FC = () => {
             </div>
           )}
         </div>
-
       </div>
 
-      {/* ── 2. CONSUMO DO PLANO ── */}
+      {/* ── 2. CARDS DE FATURAMENTO (INDICAÇÕES & VENDAS DOS VÍDEOS) ── */}
+      <div>
+        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-3 px-1">
+          Resultados Financeiros
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Card Faturamento com Indicações */}
+          <div
+            onClick={() => navigate('/indica-e-ganha')}
+            className="cursor-pointer bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between group"
+          >
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">
+                  Faturamento com Indicações
+                </span>
+                <span className="text-[10px] font-black uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+                  Comissões
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(referralEarnings)}
+              </h2>
+              <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] group-hover:text-[#0091ff] dark:group-hover:text-[#ff7a29] transition-colors flex items-center gap-1">
+                Ver detalhes no Indica & Ganha &rarr;
+              </p>
+            </div>
+            <div className="w-13 h-13 rounded-2xl flex items-center justify-center bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 shrink-0">
+              <DollarSign size={26} className="stroke-[2.5]" />
+            </div>
+          </div>
+
+          {/* Card Faturamento de Vendas dos Vídeos */}
+          <div
+            onClick={() => navigate('/videos/performance')}
+            className="cursor-pointer bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between group"
+          >
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">
+                  Vendas Vindas dos Vídeos
+                </span>
+                <span className="text-[10px] font-black uppercase bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] px-2 py-0.5 rounded-full border border-blue-200 dark:border-orange-500/30">
+                  Conversões
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(videoRevenue)}
+              </h2>
+              <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] group-hover:text-[#0091ff] dark:group-hover:text-[#ff7a29] transition-colors flex items-center gap-1">
+                Acompanhar métricas de performance &rarr;
+              </p>
+            </div>
+            <div className="w-13 h-13 rounded-2xl flex items-center justify-center bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] shrink-0">
+              <TrendingUp size={26} className="stroke-[2.5]" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. CONSUMO DO PLANO ── */}
       <div>
         <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-3 px-1">
           Consumo do Plano
@@ -580,7 +515,7 @@ const DashboardPage: React.FC = () => {
           <div className="bg-white dark:bg-[#1a1f35]/70 dark:backdrop-blur-md p-5 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">Visualizações</span>
-              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29]">
                 <Eye size={16} />
               </div>
             </div>
@@ -591,7 +526,7 @@ const DashboardPage: React.FC = () => {
               <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">de {usage.viewsLimit.toLocaleString('pt-BR')}</span>
             </div>
             <div className="w-full h-2.5 bg-slate-100 dark:bg-[#111524] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
-              <div className={`h-full ${getBarColor(viewsPercent)} rounded-full transition-all duration-500 animate-shimmer`} style={{ width: `${viewsPercent}%` }} />
+              <div className={`h-full ${getBarColor(viewsPercent)} rounded-full transition-all duration-500`} style={{ width: `${viewsPercent}%` }} />
             </div>
             <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-[#c0c5d4]">
               <span>Quota do mês</span>
@@ -603,7 +538,7 @@ const DashboardPage: React.FC = () => {
           <div className="bg-white dark:bg-[#1a1f35]/70 dark:backdrop-blur-md p-5 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">Armazenamento</span>
-              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29]">
                 <HardDrive size={16} />
               </div>
             </div>
@@ -614,7 +549,7 @@ const DashboardPage: React.FC = () => {
               <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">de {(usage.storageLimitMB / 1024).toFixed(0)} GB</span>
             </div>
             <div className="w-full h-2.5 bg-slate-100 dark:bg-[#111524] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
-              <div className={`h-full ${getBarColor(storagePercent)} rounded-full transition-all duration-500 animate-shimmer`} style={{ width: `${storagePercent}%` }} />
+              <div className={`h-full ${getBarColor(storagePercent)} rounded-full transition-all duration-500`} style={{ width: `${storagePercent}%` }} />
             </div>
             <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-[#c0c5d4]">
               <span>Vídeos na nuvem</span>
@@ -626,7 +561,7 @@ const DashboardPage: React.FC = () => {
           <div className="bg-white dark:bg-[#1a1f35]/70 dark:backdrop-blur-md p-5 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">Páginas com Vídeos</span>
-              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29]">
                 <FileText size={16} />
               </div>
             </div>
@@ -635,7 +570,7 @@ const DashboardPage: React.FC = () => {
               <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">de {usage.pagesLimit} ativas</span>
             </div>
             <div className="w-full h-2.5 bg-slate-100 dark:bg-[#111524] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
-              <div className={`h-full ${getBarColor(pagesPercent)} rounded-full transition-all duration-500 animate-shimmer`} style={{ width: `${pagesPercent}%` }} />
+              <div className={`h-full ${getBarColor(pagesPercent)} rounded-full transition-all duration-500`} style={{ width: `${pagesPercent}%` }} />
             </div>
             <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-[#c0c5d4]">
               <span>Locais de exibição</span>
@@ -643,11 +578,11 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Card Próximo Vencimento */}
+          {/* Card Ciclo da Conta */}
           <div className="bg-white dark:bg-[#1a1f35]/70 dark:backdrop-blur-md p-5 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 space-y-3 flex flex-col justify-between">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">Ciclo da Conta</span>
-              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] dark:shadow-[0_0_10px_rgba(255,122,41,0.2)]">
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29]">
                 <Clock size={16} />
               </div>
             </div>
@@ -665,130 +600,42 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 3. DESEMPENHO DOS VÍDEOS ── */}
-      <div
-        className={cn(
-          'bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6 transition-opacity duration-200 flex flex-col',
-          metricsLoading && 'opacity-60 pointer-events-none'
-        )}
-      >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-5">
-          <div>
-            <h2 className="text-lg font-black text-slate-800 dark:text-white">Desempenho dos Vídeos</h2>
-            <p className="text-xs text-slate-500 dark:text-[#c0c5d4]">
-              Métricas consolidadas de engajamento e conversão.
+      {/* ── 4. CARD DE DIVULGAÇÃO DE OUTROS PRODUTOS E SERVIÇOS ── */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 sm:p-8 text-white shadow-lg border border-blue-400/30">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-black uppercase tracking-wider text-white border border-white/20">
+              <Sparkles size={14} className="text-amber-300" />
+              Ecossistema Loja Lucrativa
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+              Turbine sua operação com nossas soluções e serviços parceiros
+            </h3>
+            <p className="text-xs sm:text-sm text-blue-100 font-medium leading-relaxed">
+              Descubra ferramentas especializadas para checkout de alta conversão, automações de vendas, temas exclusivos e consultoria estratégica para escalar o seu e-commerce.
             </p>
           </div>
 
-          <div className="flex bg-slate-100 dark:bg-[#111524] p-1.5 rounded-2xl gap-1 shadow-inner border border-transparent dark:border-white/5">
-            {[
-              { id: 'today', label: 'Hoje' },
-              { id: '7', label: '7 dias' },
-              { id: '30', label: '30 dias' },
-              { id: 'custom', label: 'Personalizado', icon: Calendar },
-            ].map((p) => (
-              <button
-                key={p.id}
-                onClick={() => (p.id === 'custom' ? setIsCalendarOpen(true) : setSelectedPeriod(p.id as AnalyticsInterval))}
-                className={cn(
-                  'px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5',
-                  selectedPeriod === p.id
-                    ? 'bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md dark:shadow-[0_0_12px_rgba(255,122,41,0.4)]'
-                    : 'text-slate-500 dark:text-[#8a90a0] hover:text-slate-800 dark:hover:text-white'
-                )}
-              >
-                {p.icon && <p.icon size={13} />}
-                {p.label}
-              </button>
-            ))}
+          <div className="flex-shrink-0 flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <a
+              href="https://sistemalojalucrativa.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 bg-white text-slate-900 hover:bg-slate-100 font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md hover:scale-105"
+            >
+              Conhecer Soluções
+              <ExternalLink size={14} />
+            </a>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start flex-1">
-          <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="col-span-1 sm:col-span-2">
-              <MetricCard
-                title="Receita Gerada"
-                value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(dashboardMetrics.revenue || 0)}
-                icon={DollarSign}
-              />
-            </div>
-            <MetricCard title="Visualizações" value={dashboardMetrics.views.toLocaleString('pt-BR')} icon={Eye} />
-            <MetricCard title="Cliques em CTA" value={dashboardMetrics.ctaClicks.toLocaleString('pt-BR')} icon={MousePointerClick} />
-            <MetricCard title="Conversões" value={dashboardMetrics.conversions.toLocaleString('pt-BR')} icon={CheckCircle2} />
-            <MetricCard title="CTR Médio" value={`${dashboardMetrics.ctr.toFixed(1).replace('.', ',')}%`} icon={MousePointerClick} />
-          </div>
-
-          <div className="lg:col-span-6 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-white/5 lg:pl-8 flex flex-col justify-between h-full min-h-[280px]">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
-                  Top Vídeos Mais Assistidos
-                </h4>
-              </div>
-
-              {topVideos.length === 0 ? (
-                <div className="text-center py-10 text-slate-400 dark:text-[#8a90a0] text-xs font-semibold">
-                  Nenhum vídeo registrado no período selecionado.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {topVideos.map((item, i) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-[#111524]/70 border border-slate-100 dark:border-white/5 hover:border-[#0091ff]/40 dark:hover:border-[#ff7a29]/40 transition-all"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="w-6 h-6 rounded-full bg-slate-200 dark:bg-[#1a1f35] text-slate-700 dark:text-[#c0c5d4] text-xs font-black flex items-center justify-center flex-shrink-0">
-                          {i + 1}
-                        </span>
-                        <div className="h-10 w-10 rounded-xl bg-slate-200 dark:bg-[#1a1f35] overflow-hidden shrink-0">
-                          {item.thumbnail_url ? (
-                            <img src={item.thumbnail_url} alt={item.title} className="h-full w-full object-cover" />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center text-xs">🎬</div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-black text-slate-800 dark:text-white truncate max-w-[140px] sm:max-w-[200px]">
-                            {item.title}
-                          </p>
-                          <span className="text-[10px] font-black text-slate-400 dark:text-[#8a90a0]">RANK #{i + 1}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-5 text-right flex-shrink-0">
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 dark:text-[#8a90a0] uppercase">Views</p>
-                          <p className="text-xs font-black text-slate-900 dark:text-white">{item.metrics?.views?.toLocaleString() || 0}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 dark:text-[#8a90a0] uppercase">CTR</p>
-                          <p className="text-xs font-black text-slate-900 dark:text-white">{item.metrics?.ctr ? `${item.metrics.ctr.toFixed(1).replace('.', ',')}%` : '0,0%'}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Botão Relatório ── */}
-        <div className="flex justify-end mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
-          <button
-            onClick={() => navigate('/videos/performance')}
-            className="bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white font-black py-2.5 px-6 rounded-full text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 dark:shadow-orange-500/30 flex items-center gap-2 cursor-pointer"
-          >
-            Ver Relatório Completo
-            <ArrowRight size={14} className="stroke-[2.5]" />
-          </button>
-        </div>
+        {/* Efeito sutil de brilho no fundo */}
+        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      {/* ── 4 & 5. CHECKLIST REORGANIZADO + LOG DE ATIVIDADES RECENTES ── */}
+      {/* ── 5. CHECKLIST REORGANIZADO + LOG DE ATIVIDADES RECENTES ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+        {/* Checklist */}
         <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/5 pb-5 mb-5">
@@ -802,20 +649,20 @@ const DashboardPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-2.5">
                 <div className="w-24 h-2.5 bg-slate-100 dark:bg-[#111524] rounded-full overflow-hidden p-0.5 border border-transparent dark:border-white/5">
-                  <div 
+                  <div
                     className={cn(
-                      "h-full rounded-full transition-all duration-500 animate-shimmer",
-                      checklistPercent === 100 
-                        ? "!bg-[#22c55e]" 
+                      "h-full rounded-full transition-all duration-500",
+                      checklistPercent === 100
+                        ? "!bg-[#22c55e]"
                         : "!bg-[#0091ff] dark:!bg-[#ff7a29]"
-                    )} 
-                    style={{ width: `${checklistPercent}%` }} 
+                    )}
+                    style={{ width: `${checklistPercent}%` }}
                   />
                 </div>
                 <span className={cn(
                   "text-xs font-black",
-                  checklistPercent === 100 
-                    ? "text-[#22c55e]" 
+                  checklistPercent === 100
+                    ? "text-[#22c55e]"
                     : "text-[#0091ff] dark:text-[#ff7a29]"
                 )}>
                   {checklistPercent}%
@@ -872,7 +719,7 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Atividade Recente (Transformada em Audit Log de Ações do Lojista) */}
+        {/* Atividade Recente */}
         <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col justify-between">
           <div>
             <div className="border-b border-slate-100 dark:border-white/5 pb-5 mb-5">
@@ -897,18 +744,13 @@ const DashboardPage: React.FC = () => {
                   return (
                     <div key={ev.id} className="py-3.5 flex items-start justify-between gap-3 text-xs animate-fade-in">
                       <div className="flex items-start gap-3 min-w-0">
-                        <span className={cn(
-                          'h-8 w-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5',
-                          meta.chip
-                        )}>
+                        <span className={cn('h-8 w-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5', meta.chip)}>
                           <MetaIcon size={14} className="stroke-[2.5]" />
                         </span>
                         <div className="min-w-0">
                           <span className="font-bold text-slate-700 dark:text-[#e8ecf4] block leading-snug">
                             {meta.label}
-                            {ev.details && (
-                              <span className="text-slate-900 dark:text-white">: {ev.details}</span>
-                            )}
+                            {ev.details && <span className="text-slate-900 dark:text-white">: {ev.details}</span>}
                           </span>
                           <p className="text-[10px] text-slate-400 dark:text-[#8a90a0] mt-0.5 font-medium">
                             {new Date(ev.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} às {new Date(ev.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -924,7 +766,7 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 6 & 7. SEÇÃO INFERIOR ── */}
+      {/* ── 6. ACADEMY & INDIQUE E GANHE ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
         {/* Academy */}
         <div className="lg:col-span-7 bg-white dark:bg-[#1a1f35]/75 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 p-6 sm:p-7 rounded-2xl shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_30px_rgba(255,122,41,0.1)] transition-all duration-300 flex flex-col md:flex-row items-center gap-5">
@@ -949,7 +791,7 @@ const DashboardPage: React.FC = () => {
               Como dobrar suas conversões com vídeos em 3 passos
             </h4>
             <p className="text-xs text-slate-500 dark:text-[#c0c5d4] font-medium leading-relaxed">
-              Aprenda as melhores práticas de positioning e gatilhos de CTA para aumentar as vendas da sua loja.
+              Aprenda as melhores práticas de posicionamento e gatilhos de CTA para aumentar as vendas da sua loja.
             </p>
           </div>
         </div>
@@ -1006,55 +848,8 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* DIALOG DE DATA PERSONALIZADA */}
-      <CustomDialog
-        isOpen={isCalendarOpen}
-        type="form"
-        title="Período Personalizado"
-        maxWidth="max-w-md"
-        onCancel={() => setIsCalendarOpen(false)}
-        onConfirm={() => {
-          if (customRange.from && customRange.to) {
-            setSelectedPeriod('custom');
-            setIsCalendarOpen(false);
-          }
-        }}
-        confirmText="Aplicar Filtro"
-      >
-        <div className="flex flex-col items-center">
-          <DayPicker
-            mode="range"
-            selected={customRange}
-            onSelect={(r) => setCustomRange({ from: r?.from, to: r?.to })}
-            locale={ptBR}
-            className="border-none"
-            modifiersStyles={{ selected: { backgroundColor: '#0094EB', color: 'white' } }}
-          />
-        </div>
-      </CustomDialog>
     </div>
   );
 };
-
-interface MetricCardProps {
-  title: string;
-  value: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-  isConversion?: boolean;
-  isRevenue?: boolean;
-}
-
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon: Icon }) => (
-  <div className="bg-white dark:bg-[#1a1f35]/90 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-[1.8rem] p-5 shadow-sm hover:shadow-md dark:hover:shadow-[0_8px_20px_rgba(255,122,41,0.15)] hover:-translate-y-1 transition-all duration-300 group">
-    <div className="flex items-start justify-between mb-3">
-      <div className="w-11 h-11 rounded-2xl transition-all duration-300 group-hover:scale-110 flex items-center justify-center bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-[0_0_15px_rgba(255,122,41,0.45)] shrink-0">
-        <Icon size={20} className="!text-white stroke-[2.5]" />
-      </div>
-    </div>
-    <p className="text-[10px] font-black text-slate-400 dark:text-[#8a90a0] uppercase tracking-widest mb-1">{title}</p>
-    <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{value}</h2>
-  </div>
-);
 
 export default DashboardPage;
