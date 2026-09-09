@@ -285,17 +285,31 @@ const SettingsPage = () => {
     fetchSectors();
   }, [settings?.store_id, tenantStoreId]);
 
+  // Valida se a string parece um domínio real (precisa ter pelo menos um ponto, ex: loja.com)
+  const isValidWebDomain = (val: string): boolean => {
+    const clean = val.replace(/^https?:\/\//i, '').replace(/\/+$/, '').trim();
+    return clean.includes('.') && clean.length >= 4;
+  };
+
   const formatStoreUrl = (url: string | null): string => {
     if (!url) return "";
-    let trimmed = url.trim().toLowerCase();
+    let trimmed = url.trim();
     if (trimmed === "") return "";
-    if (!/^https?:\/\//.test(trimmed)) {
+
+    // Remove barras no final
+    trimmed = trimmed.replace(/\/+$/, '');
+
+    // Se não tiver protocolo, adiciona https://
+    if (!/^https?:\/\//i.test(trimmed)) {
       trimmed = `https://${trimmed}`;
     }
-    if (trimmed.endsWith("/")) {
-      trimmed = trimmed.slice(0, -1);
+
+    // Se o usuário digitou http://, atualizamos com segurança para https://
+    if (trimmed.startsWith('http://')) {
+      trimmed = `https://${trimmed.slice(7)}`;
     }
-    return trimmed;
+
+    return trimmed.toLowerCase();
   };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
