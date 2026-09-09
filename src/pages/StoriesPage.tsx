@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTenant } from '@/context/TenantContext'; 
+import { useTenant } from '@/context/TenantContext';
 import { db, resolveStoreId, Story } from '@/lib/db';
 import { logPanelActivity } from '@/lib/activityLog';
 import {
@@ -24,20 +24,18 @@ import { cn } from '@/lib/utils';
 
 const StoriesPage = () => {
   const navigate = useNavigate();
-  const { currentStore } = useTenant(); 
+  const { currentStore } = useTenant();
 
   const [stories, setStories] = useState<Story[]>([]);
   const [videoCounts, setVideoCounts] = useState<Record<string, number>>({});
   const [locations, setLocations] = useState<Record<string, string>>({});
-  const [pageRules, setPageRules] = useState<Record<string, string>>({}); 
+  const [pageRules, setPageRules] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [currentStoreId, setCurrentStoreId] = useState<string>('');
   const [storeRealUrl, setStoreRealUrl] = useState('');
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<
-    'all' | 'active' | 'inactive'
-  >('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -312,7 +310,7 @@ const StoriesPage = () => {
 
       setStories(prev => prev.filter(s => s.id !== deleteModal.storyId));
 
-      showSuccess('Story removido permanentemente.');
+      showSuccess('Story removido com sucesso.');
 
       setDeleteModal(prev => ({ ...prev, isOpen: false }));
     } catch (e) {
@@ -324,205 +322,171 @@ const StoriesPage = () => {
   const getFormatIcon = (format: string) => {
     switch (format) {
       case 'floating_widget':
-        return <MousePointer2 size={16} />;
+        return <MousePointer2 size={14} />;
       case 'carousel':
       case 'dynamic_carousel':
-        return <Layout size={16} />;
+        return <Layout size={14} />;
       case 'grid':
-        return <Layers size={16} />;
+        return <Layers size={14} />;
       default:
-        return <PlayCircle size={16} />;
+        return <PlayCircle size={14} />;
     }
   };
-
-  const getTypeBadgeClass = () =>
-    'inline-flex h-7 items-center justify-center gap-1.5 rounded-full border border-sky-500/10 bg-sky-500/5 px-3.5 text-xs font-bold text-sky-400 whitespace-nowrap';
-
-  const getLocalBadgeClass = () =>
-    'inline-flex h-7 items-center justify-center rounded-full border border-slate-800 bg-slate-900/50 px-3.5 text-xs font-bold text-muted-foreground whitespace-nowrap';
 
   if (loading) return null;
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20 font-sans text-foreground">
-      {/* HEADER DA PÁGINA */}
+    <div className="space-y-8 animate-fade-in pb-20 font-sans">
+      {/* ── CABEÇALHO DA PÁGINA ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-foreground tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Stories
           </h1>
-          <p className="text-muted-foreground font-medium mt-1">
-            Gerencie as configurações de exibição e agrupamento de vídeos.
+          <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-[#c0c5d4] leading-relaxed">
+            Gerencie as configurações de exibição e agrupamento de vídeos na sua loja.
           </p>
         </div>
 
-        <button
-          onClick={() => navigate('/stories/new')}
-          className="bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-blue-500/10 dark:shadow-orange-500/10 transition-all flex items-center gap-2 cursor-pointer"
-        >
-          <Plus size={18} /> Novo Story
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => navigate('/stories/new')}
+            className="flex items-center gap-2 rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all cursor-pointer"
+          >
+            <Plus size={16} className="!text-white stroke-[2.5]" />
+            Novo Story
+          </button>
+        </div>
       </div>
 
-      {/* ── CARD PRINCIPAL UNIFICADO PREMIUM (Tema Escuro + rounded-2xl) ── */}
-      <div className="bg-muted border border-border rounded-2xl shadow-2xl overflow-hidden">
-        
-        {/* BARRA DE FILTROS E BUSCA INTERNA DO CARD */}
-        <div className="p-6 pb-4 flex flex-col md:flex-row gap-4 justify-between items-center border-b border-border">
+      {/* ── CARD PRINCIPAL UNIFICADO ── */}
+      <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl overflow-hidden shadow-sm p-6 sm:p-8 space-y-6">
+
+        {/* BARRA INTERNA DE FILTROS E BUSCA */}
+        <div className="flex flex-col lg:flex-row gap-4 justify-between items-center border-b border-slate-100 dark:border-white/5 pb-5">
           <div className="relative flex-1 w-full">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
-              size={18}
-            />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8a90a0]" size={18} />
             <input
               type="text"
-              placeholder="Pesquisar por nome, tipo ou local..."
+              placeholder="Buscar por nome do story..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-muted border border-border rounded-2xl text-sm font-bold text-foreground placeholder-muted-foreground outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29] transition-all"
+              className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#111524] pl-12 pr-4 py-3.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus:bg-white dark:focus:bg-[#111524]"
             />
           </div>
 
-          {/* BOTÕES DE FILTRO PREMIUM (Azul light / Laranja dark ativo) */}
-          <div className="flex gap-2 w-full md:w-auto shrink-0">
-            {(['all', 'active', 'inactive'] as const).map(status => (
-              <button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                className={cn(
-                  'px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border text-center flex-1 md:flex-initial cursor-pointer',
-                  filterStatus === status
-                    ? 'bg-[#0091ff] border-[#0091ff] dark:bg-[#ff7a29] dark:border-[#ff7a29] text-white shadow-lg shadow-blue-500/15 dark:shadow-orange-500/15'
-                    : 'bg-muted border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/70',
-                )}
-              >
-                {status === 'all'
-                  ? 'Todos'
-                  : status === 'active'
-                    ? 'Ativos'
-                    : 'Inativos'}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full lg:w-auto">
+            <select
+              value={filterStatus}
+              onChange={e => setFilterStatus(e.target.value as any)}
+              className="bg-[#F8FAFC] dark:bg-[#111524] border border-transparent dark:border-white/5 rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0] outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] cursor-pointer w-full sm:w-auto hover:bg-slate-100 dark:hover:bg-white/5"
+            >
+              <option value="all">Todos Status</option>
+              <option value="active">Ativos</option>
+              <option value="inactive">Desativados</option>
+            </select>
           </div>
         </div>
 
-        {/* TABELA DE STORIES NO ESTILO DO PRINT DE VÍDEOS */}
+        {/* ── BARRA INTERNA DE CONTAGEM E RESUMO ── */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#F8FAFC] dark:bg-[#111524]/40 rounded-2xl p-4 border border-slate-100 dark:border-white/5">
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0]">
+              {filteredStories.length} {filteredStories.length === 1 ? 'story encontrado' : 'stories encontrados'}
+            </p>
+          </div>
+        </div>
+
+        {/* TABELA DE STORIES */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full table-fixed text-left border-collapse">
             <thead>
-              <tr className="bg-muted/40 border-b border-border">
+              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#111524]/50 text-[10px] font-black uppercase text-slate-400 dark:text-[#8a90a0] tracking-widest">
                 <th
                   onClick={() => handleSort('nome')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest hover:text-foreground transition-colors"
+                  className="cursor-pointer select-none px-6 py-4 text-left rounded-l-2xl w-56"
                 >
-                  <span className="inline-flex items-center gap-1">
-                    Story / Nome{' '}
+                  <div className="flex items-center gap-1.5">
+                    <span>Story / Nome</span>
                     {sortColumn === 'nome' &&
-                      (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ) : (
-                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ))}
-                  </span>
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
                 </th>
 
                 <th
                   onClick={() => handleSort('tipo')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest hover:text-foreground transition-colors"
+                  className="cursor-pointer select-none px-4 py-4 text-center w-36"
                 >
-                  <span className="inline-flex items-center gap-1">
-                    Tipo{' '}
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span>Tipo</span>
                     {sortColumn === 'tipo' &&
-                      (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ) : (
-                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ))}
-                  </span>
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
                 </th>
 
                 <th
                   onClick={() => handleSort('videos')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center hover:text-foreground transition-colors"
+                  className="cursor-pointer select-none px-4 py-4 text-center w-28"
                 >
-                  <span className="inline-flex items-center gap-1 justify-center">
-                    Vídeos{' '}
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span>Vídeos</span>
                     {sortColumn === 'videos' &&
-                      (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ) : (
-                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ))}
-                  </span>
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
                 </th>
 
                 <th
                   onClick={() => handleSort('local')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest hover:text-foreground transition-colors"
+                  className="cursor-pointer select-none px-4 py-4 text-center w-40"
                 >
-                  <span className="inline-flex items-center gap-1">
-                    Localização{' '}
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span>Localização</span>
                     {sortColumn === 'local' &&
-                      (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ) : (
-                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ))}
-                  </span>
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
                 </th>
 
                 <th
                   onClick={() => handleSort('visualizacoes')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center hover:text-foreground transition-colors"
+                  className="cursor-pointer select-none px-4 py-4 text-center w-32"
                 >
-                  <span className="inline-flex items-center gap-1 justify-center">
-                    Visualizações{' '}
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span>Visualizações</span>
                     {sortColumn === 'visualizacoes' &&
-                      (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ) : (
-                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ))}
-                  </span>
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
                 </th>
 
                 <th
                   onClick={() => handleSort('cliques')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center hover:text-foreground transition-colors"
+                  className="cursor-pointer select-none px-4 py-4 text-center w-32"
                 >
-                  <span className="inline-flex items-center gap-1 justify-center">
-                    CTR / Cliques{' '}
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span>CTR / Cliques</span>
                     {sortColumn === 'cliques' &&
-                      (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ) : (
-                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ))}
-                  </span>
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
                 </th>
 
                 <th
                   onClick={() => handleSort('status')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center hover:text-foreground transition-colors"
+                  className="cursor-pointer select-none px-4 py-4 text-center w-32"
                 >
-                  <span className="inline-flex items-center gap-1 justify-center">
-                    Status{' '}
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span>Status</span>
                     {sortColumn === 'status' &&
-                      (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ) : (
-                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
-                      ))}
-                  </span>
+                      (sortDirection === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                  </div>
                 </th>
 
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center">
+                <th className="px-6 py-4 text-center w-32 rounded-r-2xl">
                   Ações
                 </th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-white/[0.03]">
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {sortedStories.map(story => {
                 const views =
                   (story as any).views_count ??
@@ -545,100 +509,96 @@ const StoriesPage = () => {
                 return (
                   <tr
                     key={story.id}
-                    className="hover:bg-white/[0.015] border-b border-border/50 transition-colors align-middle"
+                    className="hover:bg-slate-50/60 dark:hover:bg-white/[0.02] transition-colors"
                   >
-                    {/* COLUNA 1 - NOME */}
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center text-[#0091ff] dark:text-[#ff7a29] shrink-0 shadow-inner">
+                    {/* NOME */}
+                    <td className="px-6 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-[#111524] border border-slate-200 dark:border-white/10 flex items-center justify-center text-[#0091ff] dark:text-[#ff7a29] shrink-0">
                           {getFormatIcon(story.format)}
                         </div>
-
                         <div className="min-w-0">
-                          <h3 className="text-sm font-black text-foreground truncate max-w-[200px] uppercase tracking-wide">
+                          <p className="font-black text-xs text-slate-800 dark:text-[#e8ecf4] truncate max-w-[180px]" title={story.title}>
                             {story.title}
-                          </h3>
+                          </p>
                           <span className={cn(
-                            "text-xs font-bold block mt-0.5",
-                            active ? "text-emerald-500" : "text-rose-500"
+                            "text-[10px] font-bold block mt-0.5",
+                            active ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"
                           )}>
-                            {active ? 'Ativo' : 'Inativo'}
+                            {active ? 'Ativo' : 'Desativado'}
                           </span>
                         </div>
                       </div>
                     </td>
 
-                    {/* COLUNA 2 - TIPO */}
-                    <td className="px-6 py-5">
-                      <span className={getTypeBadgeClass()}>
-                        {getFormatIcon(story.format)}{' '}
-                        {getFormatLabel(story.format)}
+                    {/* TIPO */}
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-[#111524] text-slate-700 dark:text-[#c0c5d4] text-[11px] font-bold border border-slate-200/60 dark:border-white/5">
+                        <span className="text-[#0091ff] dark:text-[#ff7a29]">{getFormatIcon(story.format)}</span>
+                        <span>{getFormatLabel(story.format)}</span>
                       </span>
                     </td>
 
-                    {/* COLUNA 3 - NÚMERO DE VÍDEOS */}
-                    <td className="px-6 py-5 text-center font-black text-foreground text-sm">
+                    {/* VÍDEOS */}
+                    <td className="px-4 py-3.5 text-center font-mono font-black text-xs text-slate-900 dark:text-white">
                       {videoCounts[story.id] || 0}
                     </td>
 
-                    {/* COLUNA 4 - LOCALIZAÇÃO */}
-                    <td className="px-6 py-5">
+                    {/* LOCALIZAÇÃO */}
+                    <td className="px-4 py-3.5 text-center">
                       <span
-                        className={getLocalBadgeClass()}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-[#111524] text-slate-700 dark:text-[#c0c5d4] text-[11px] font-bold border border-slate-200/60 dark:border-white/5 max-w-[150px] truncate"
                         title={pageRules[story.id] || 'Todas as Páginas'}
                       >
-                        {pageRules[story.id] || 'Todas as Páginas'}
+                        <span className="truncate">{pageRules[story.id] || 'Todas as Páginas'}</span>
                       </span>
                     </td>
 
-                    {/* COLUNA 5 - VISUALIZAÇÕES */}
-                    <td className="px-6 py-5 text-center font-black text-foreground text-sm">
+                    {/* VISUALIZAÇÕES */}
+                    <td className="px-4 py-3.5 text-center font-mono font-black text-xs text-slate-900 dark:text-white">
                       {views}
                     </td>
 
-                    {/* COLUNA 6 - CTR / CLIQUES */}
-                    <td className="px-6 py-5 text-center">
-                      <div className="flex flex-col items-center justify-center gap-1">
+                    {/* CTR / CLIQUES */}
+                    <td className="px-4 py-3.5 text-center">
+                      <div className="flex flex-col items-center justify-center gap-0.5">
                         <span className={cn(
-                          "px-2.5 py-0.5 text-xs font-black rounded-full border",
-                          ctr === 0 
-                            ? "bg-rose-500/10 text-rose-500 border-rose-500/20" 
-                            : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          "px-2 py-0.5 text-[10px] font-black rounded-full border",
+                          ctr === 0
+                            ? "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/40"
+                            : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/40"
                         )}>
                           {ctr.toFixed(1)}%
                         </span>
-                        <span className="text-[10px] text-muted-foreground font-bold">
+                        <span className="text-[10px] text-slate-400 dark:text-[#8a90a0] font-bold">
                           {clicks} cliques
                         </span>
                       </div>
                     </td>
 
-                    {/* COLUNA 7 - STATUS (Toggle interativo) */}
-                    <td className="px-6 py-5 text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleStatus(story)}
-                        className={cn(
-                          'inline-flex h-7 items-center justify-center rounded-full px-4 text-[10px] font-black uppercase tracking-wider border transition-all mx-auto cursor-pointer',
-                          active
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                            : 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20',
-                        )}
-                        title={
-                          active
-                            ? 'Clique para desativar'
-                            : 'Clique para ativar'
-                        }
-                      >
-                        {active ? 'ATIVO' : 'INATIVO'}
-                      </button>
+                    {/* STATUS */}
+                    <td className="px-4 py-3.5 text-center">
+                      <div className="flex items-center justify-center text-center w-full">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(story)}
+                          className={cn(
+                            'inline-flex h-7 w-[100px] items-center justify-center rounded-xl px-2.5 text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all',
+                            active
+                              ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/40 hover:bg-emerald-100'
+                              : 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/40 hover:bg-rose-100'
+                          )}
+                        >
+                          {active ? 'ATIVO' : 'DESATIVADO'}
+                        </button>
+                      </div>
                     </td>
 
-                    {/* COLUNA 8 - AÇÕES */}
-                    <td className="px-6 py-5 text-center">
-                      <div className="flex justify-center gap-1">
-                        {/* 1. Preview */}
+                    {/* AÇÕES */}
+                    <td className="px-6 py-3.5 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
                         <button
+                          type="button"
                           onClick={() => {
                             window.open(
                               `/stories/preview/${story.id}`,
@@ -646,47 +606,53 @@ const StoriesPage = () => {
                               'noopener,noreferrer',
                             );
                           }}
-                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all cursor-pointer"
-                          title="Preview Story"
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+                          title="Visualizar preview"
                         >
-                          <Eye size={16} />
+                          <Eye size={15} />
                         </button>
 
-                        {/* 2. Editar */}
                         <button
+                          type="button"
                           onClick={() => navigate(`/stories/${story.id}`)}
-                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all cursor-pointer"
-                          title="Editar Story"
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+                          title="Editar story"
                         >
-                          <Edit3 size={16} />
+                          <Edit3 size={15} />
                         </button>
 
-                        {/* 3. Excluir */}
                         <button
+                          type="button"
                           onClick={() => handleDeleteClick(story)}
-                          className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
-                          title="Excluir Story"
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
+                          title="Excluir story"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>
                   </tr>
                 );
               })}
+
+              {filteredStories.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <PlayCircle size={40} className="text-slate-300 dark:text-slate-600" />
+                      <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Nenhum Story encontrado</p>
+                      <p className="text-xs text-slate-400 dark:text-[#8a90a0]">
+                        {searchTerm || filterStatus !== 'all'
+                          ? 'Tente ajustar os filtros acima.'
+                          : 'Clique em "Novo Story" para cadastrar seu primeiro story.'}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-
-        {/* FEEDBACK CASO NÃO EXISTAM STORIES */}
-        {filteredStories.length === 0 && (
-          <div className="p-16 text-center border-t border-border bg-slate-50 dark:bg-[#14192a]/50">
-            <PlayCircle size={48} className="mx-auto text-slate-600 dark:text-muted-foreground mb-4 animate-pulse" />
-            <p className="text-muted-foreground font-bold">
-              Nenhum Story encontrado.
-            </p>
-          </div>
-        )}
       </div>
 
       <ConfirmDeleteDialog
