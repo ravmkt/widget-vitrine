@@ -358,7 +358,7 @@ const StoriesPage = () => {
 
         <button
           onClick={() => navigate('/stories/new')}
-          className="bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-orange-500/10 transition-all flex items-center gap-2 cursor-pointer"
+          className="bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-blue-500/10 dark:shadow-orange-500/10 transition-all flex items-center gap-2 cursor-pointer"
         >
           <Plus size={18} /> Novo Story
         </button>
@@ -383,7 +383,7 @@ const StoriesPage = () => {
             />
           </div>
 
-          {/* BOTÕES DE FILTRO PREMIUM (Laranja ativo / Escuro inativo) */}
+          {/* BOTÕES DE FILTRO PREMIUM (Azul light / Laranja dark ativo) */}
           <div className="flex gap-2 w-full md:w-auto shrink-0">
             {(['all', 'active', 'inactive'] as const).map(status => (
               <button
@@ -419,9 +419,9 @@ const StoriesPage = () => {
                     Story / Nome{' '}
                     {sortColumn === 'nome' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#ff7a29]" />
+                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} className="text-[#ff7a29]" />
+                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
@@ -434,9 +434,9 @@ const StoriesPage = () => {
                     Tipo{' '}
                     {sortColumn === 'tipo' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#ff7a29]" />
+                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} className="text-[#ff7a29]" />
+                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
@@ -449,9 +449,9 @@ const StoriesPage = () => {
                     Vídeos{' '}
                     {sortColumn === 'videos' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#ff7a29]" />
+                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} className="text-[#ff7a29]" />
+                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
@@ -464,9 +464,9 @@ const StoriesPage = () => {
                     Localização{' '}
                     {sortColumn === 'local' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#ff7a29]" />
+                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} className="text-[#ff7a29]" />
+                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
@@ -479,9 +479,9 @@ const StoriesPage = () => {
                     Visualizações{' '}
                     {sortColumn === 'visualizacoes' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#ff7a29]" />
+                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} className="text-[#ff7a29]" />
+                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
@@ -494,9 +494,9 @@ const StoriesPage = () => {
                     CTR / Cliques{' '}
                     {sortColumn === 'cliques' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#ff7a29]" />
+                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} className="text-[#ff7a29]" />
+                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
@@ -509,9 +509,9 @@ const StoriesPage = () => {
                     Status{' '}
                     {sortColumn === 'status' &&
                       (sortDirection === 'asc' ? (
-                        <ChevronUp size={12} className="text-[#ff7a29]" />
+                        <ChevronUp size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ) : (
-                        <ChevronDown size={12} className="text-[#ff7a29]" />
+                        <ChevronDown size={12} className="text-[#0091ff] dark:text-[#ff7a29]" />
                       ))}
                   </span>
                 </th>
@@ -547,11 +547,10 @@ const StoriesPage = () => {
                     key={story.id}
                     className="hover:bg-white/[0.015] border-b border-border/50 transition-colors align-middle"
                   >
-                    {/* COLUNA 1 - NOME (No formato do print com thumbnail/ícone, título e status embaixo) */}
+                    {/* COLUNA 1 - NOME */}
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
-                        {/* Thumbnail Fictício do Story baseado no Formato */}
-                        <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center text-[#ff7a29] shrink-0 shadow-inner">
+                        <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center text-[#0091ff] dark:text-[#ff7a29] shrink-0 shadow-inner">
                           {getFormatIcon(story.format)}
                         </div>
 
@@ -597,7 +596,7 @@ const StoriesPage = () => {
                       {views}
                     </td>
 
-                    {/* COLUNA 6 - CTR / CLIQUES (Com badge vermelha do print para 0.0% e verde para melhor) */}
+                    {/* COLUNA 6 - CTR / CLIQUES */}
                     <td className="px-6 py-5 text-center">
                       <div className="flex flex-col items-center justify-center gap-1">
                         <span className={cn(
@@ -681,7 +680,7 @@ const StoriesPage = () => {
 
         {/* FEEDBACK CASO NÃO EXISTAM STORIES */}
         {filteredStories.length === 0 && (
-          <div className="p-16 text-center border-t border-border bg-[#14192a]/50">
+          <div className="p-16 text-center border-t border-border bg-slate-50 dark:bg-[#14192a]/50">
             <PlayCircle size={48} className="mx-auto text-slate-600 dark:text-muted-foreground mb-4 animate-pulse" />
             <p className="text-muted-foreground font-bold">
               Nenhum Story encontrado.
