@@ -379,7 +379,7 @@ const StoriesPage = () => {
               placeholder="Pesquisar por nome, tipo ou local..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-muted border border-border rounded-2xl text-sm font-bold text-foreground placeholder-muted-foreground outline-none focus:border-[#ff7a29] transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-muted border border-border rounded-2xl text-sm font-bold text-foreground placeholder-muted-foreground outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29] transition-all"
             />
           </div>
 
