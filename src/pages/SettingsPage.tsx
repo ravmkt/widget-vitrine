@@ -85,8 +85,6 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoplay: true,
   muted_by_default: true,
   show_video_controls: false,
-  store_public_id: '',
-  public_live_key: '',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
