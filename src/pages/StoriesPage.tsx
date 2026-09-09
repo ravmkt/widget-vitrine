@@ -358,7 +358,7 @@ const StoriesPage = () => {
 
         <button
           onClick={() => navigate('/stories/new')}
-          className="bg-[#ff7a29] hover:bg-[#e05e10] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-orange-500/10 transition-all flex items-center gap-2 cursor-pointer"
+          className="bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-orange-500/10 transition-all flex items-center gap-2 cursor-pointer"
         >
           <Plus size={18} /> Novo Story
         </button>
