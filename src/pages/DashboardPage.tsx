@@ -53,6 +53,7 @@ interface ChecklistItem {
   description: string;
   route: string;
   completed: boolean;
+  percent?: number;
 }
 
 interface ActivityLog {
