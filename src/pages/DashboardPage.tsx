@@ -230,23 +230,29 @@ const DashboardPage: React.FC = () => {
         const hasContactEmail = Boolean(settingsData?.contact_email && settingsData.contact_email.trim().length > 3);
         const hasPlatform = Boolean(settingsData?.platform && settingsData.platform !== 'none' && settingsData.platform.trim().length > 0);
         const hasSector = Boolean(storeData?.sector_id || storeData?.sector);
-        
+
         // WhatsApp: se estiver ativo, precisa ter ao menos 8 dígitos numéricos
-        const hasWhatsapp = settingsData?.whatsapp_enabled === false 
-          ? true 
+        const hasWhatsapp = settingsData?.whatsapp_enabled === false
+          ? true
           : Boolean(settingsData?.whatsapp_number && settingsData.whatsapp_number.replace(/\D/g, '').length >= 8);
 
-        // O checklist só considera concluído se TODOS os dados essenciais estiverem preenchidos
-        const hasSettingsSaved = hasStoreName && hasContactEmail && hasPlatform && hasSector && hasWhatsapp;
+        // Percentual granular: cada campo essencial vale igualmente
+        const settingsChecks = [hasStoreName, hasContactEmail, hasPlatform, hasSector, hasWhatsapp];
+        const settingsPercent = Math.round(
+          (settingsChecks.filter(Boolean).length / settingsChecks.length) * 100,
+        );
+        const hasSettingsSaved = settingsPercent === 100;
 
         // Lista dinâmica dos campos pendentes para orientar o lojista
         const missingSettings: string[] = [];
+        if (!hasStoreName) missingSettings.push('Nome da loja');
+        if (!hasContactEmail) missingSettings.push('E-mail de contato');
         if (!hasPlatform) missingSettings.push('Plataforma');
         if (!hasSector) missingSettings.push('Setor');
         if (!hasWhatsapp) missingSettings.push('WhatsApp');
 
         const settingsDescription = !hasSettingsSaved && missingSettings.length > 0
-          ? `Pendente: configure ${missingSettings.join(', ')}.`
+          ? `${settingsPercent}% concluído — pendente: ${missingSettings.join(', ')}.`
           : 'Preencha os dados cadastrais, e-mail e integre seu canal de WhatsApp.';
 
         const isIntegrationCompleted = pagesCount > 0 || (usageData && (usageData.views_count || 0) > 0);
