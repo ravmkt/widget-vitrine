@@ -271,7 +271,6 @@ export interface GeneralSettings {
   updated_at?: string;
   whatsapp_button_enabled?: boolean;
   pause_on_invisible?: boolean;
-  public_installation_key?: string;
   widget_enabled?: boolean;
   default_template?: string;
   whatsapp_enabled?: boolean;
