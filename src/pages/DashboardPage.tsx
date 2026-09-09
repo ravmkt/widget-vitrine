@@ -129,7 +129,7 @@ const DashboardPage: React.FC = () => {
           supabase.from('activity_logs').select('*').eq('store_id', storeId).order('created_at', { ascending: false }).limit(15), // [7]
           supabase.from('store_settings').select('*').eq('store_id', storeId).maybeSingle(), // [8]
           supabase.from('referral_rewards').select('amount').eq('referrer_store_id', storeId).eq('status', 'paid'), // [9]
-          supabase.from('video_events').select('order_value').eq('store_id', storeId).eq('event_type', 'conversion'), // [10]
+          supabase.from('conversions').select('order_value, status, created_at').eq('store_id', storeId), // [10]
         ]);
 
         if (!isMounted) return;
