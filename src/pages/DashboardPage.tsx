@@ -763,50 +763,69 @@ const DashboardPage: React.FC = () => {
             </div>
 
             <div className="flex flex-col space-y-3">
-              {checklist.map((item, index) => (
-                <div
-                  key={item.id}
-                  onClick={() => navigate(item.route)}
-                  className={cn(
-                    'flex items-start gap-3.5 p-3.5 rounded-2xl border transition-all cursor-pointer group',
-                    item.completed
-                      ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-800/30'
-                      : 'bg-slate-50/70 dark:bg-[#111524]/60 border-slate-200 dark:border-white/5 hover:bg-white dark:hover:bg-[#1a1f35] hover:border-[#0091ff] dark:hover:border-[#ff7a29] hover:shadow-md'
-                  )}
-                >
+              {checklist.map((item, index) => {
+                const pct = item.percent ?? (item.completed ? 100 : 0);
+                const isPartial = !item.completed && pct > 0;
+
+                return (
                   <div
+                    key={item.id}
+                    onClick={() => navigate(item.route)}
                     className={cn(
-                      'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-sm transition-all',
+                      'flex items-start gap-3.5 p-3.5 rounded-2xl border transition-all cursor-pointer group',
                       item.completed
-                        ? 'bg-emerald-500 text-white shadow-sm font-black'
-                        : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0091ff] dark:group-hover:border-[#ff7a29]'
+                        ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-800/30'
+                        : isPartial
+                        ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-300/70 dark:border-amber-700/40 hover:shadow-md'
+                        : 'bg-slate-50/70 dark:bg-[#111524]/60 border-slate-200 dark:border-white/5 hover:bg-white dark:hover:bg-[#1a1f35] hover:border-[#0091ff] dark:hover:border-[#ff7a29] hover:shadow-md'
                     )}
                   >
-                    {item.completed ? '✓' : index + 1}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3
-                        className={cn(
-                          'text-xs font-black',
-                          item.completed
-                            ? 'text-emerald-950 dark:text-emerald-300 line-through opacity-80'
-                            : 'text-slate-900 dark:text-white group-hover:text-[#0091ff] dark:group-hover:text-[#ff7a29]'
-                        )}
-                      >
-                        {item.title}
-                      </h3>
-                      <span className="text-[11px] font-bold text-[#0091ff] dark:text-[#ff7a29] opacity-0 group-hover:opacity-100 transition-opacity">
-                        Configurar &rarr;
-                      </span>
+                    <div
+                      className={cn(
+                        'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-sm transition-all',
+                        item.completed
+                          ? 'bg-emerald-500 text-white shadow-sm font-black'
+                          : isPartial
+                          ? 'bg-amber-500 text-white shadow-sm'
+                          : 'border-2 border-slate-300 dark:border-slate-600 text-slate-400 group-hover:border-[#0091ff] dark:group-hover:border-[#ff7a29]'
+                      )}
+                    >
+                      {item.completed ? '✓' : isPartial ? <AlertTriangle size={14} className="stroke-[2.5]" /> : index + 1}
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-[#8a90a0] mt-0.5 font-medium leading-relaxed truncate">
-                      {item.description}
-                    </p>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3
+                          className={cn(
+                            'text-xs font-black flex items-center gap-1.5',
+                            item.completed
+                              ? 'text-emerald-950 dark:text-emerald-300 line-through opacity-80'
+                              : isPartial
+                              ? 'text-amber-800 dark:text-amber-300'
+                              : 'text-slate-900 dark:text-white group-hover:text-[#0091ff] dark:group-hover:text-[#ff7a29]'
+                          )}
+                        >
+                          {item.title}
+                          {isPartial && (
+                            <span className="text-[10px] font-black uppercase bg-amber-500 text-white px-1.5 py-0.5 rounded-full">
+                              {pct}%
+                            </span>
+                          )}
+                        </h3>
+                        <span className="text-[11px] font-bold text-[#0091ff] dark:text-[#ff7a29] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                          Configurar &rarr;
+                        </span>
+                      </div>
+                      <p className={cn(
+                        "text-[11px] mt-0.5 font-medium leading-relaxed truncate",
+                        isPartial ? "text-amber-700 dark:text-amber-400" : "text-slate-500 dark:text-[#8a90a0]"
+                      )}>
+                        {item.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
