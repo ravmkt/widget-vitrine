@@ -683,7 +683,6 @@ store_settings: [
   'updated_at', 'whatsapp_button_enabled', 'pause_on_invisible',
       'public_installation_key', 'widget_enabled', 'default_template',
     'whatsapp_enabled', 'whatsapp_message_template', 'pause_on_leave',
-    'store_public_id', 'public_live_key',
   ],
   appearances: [
     'id', 'store_id', 'created_at', 'updated_at',
