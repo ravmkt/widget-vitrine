@@ -47,11 +47,26 @@ export default function SupportPage() {
         .maybeSingle();
 
       const hasStoreName = !!(store && store.name && store.name !== 'Minha Loja');
+      const storeId = store?.id;
+
+      // Sem loja vinculada ainda: encerra com checklist zerado (evita contagem global)
+      if (!storeId) {
+        setChecklist({
+          storeConfigured: false,
+          scriptInstalled: false,
+          productsLinked: false,
+          videosUploaded: false,
+          collectionsCreated: false,
+          appearanceConfigured: false,
+        });
+        return;
+      }
 
       // 2. Checa se existem Stories/Vídeos criados para validar passos de conteúdo
       const { count: storiesCount } = await supabase
         .from('stories')
-        .select('id', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true })
+        .eq('store_id', storeId);
 
       const hasStories = (storiesCount ?? 0) > 0;
 
@@ -60,7 +75,8 @@ export default function SupportPage() {
       try {
         const { count: productsCount } = await supabase
           .from('products')
-          .select('id', { count: 'exact', head: true });
+          .select('id', { count: 'exact', head: true })
+          .eq('store_id', storeId);
         hasProducts = (productsCount ?? 0) > 0;
       } catch (e) {
         // Fallback seguro caso a tabela de produtos tenha restrições de RLS temporárias
@@ -245,8 +261,8 @@ export default function SupportPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {steps.map((step) => (
-              <div 
-                key={step.id} 
+              <div
+                key={step.id}
                 onClick={() => navigate(step.link)}
                 className="flex items-start gap-4 p-4 rounded-2xl border border-slate-100 dark:border-[#ff7a29]/20 bg-slate-50/50 dark:bg-[#111524]/50 hover:bg-slate-50 dark:hover:bg-[#111524] hover:border-slate-200 transition-all cursor-pointer group"
               >
