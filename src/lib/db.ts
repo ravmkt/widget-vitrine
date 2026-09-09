@@ -354,7 +354,6 @@ const DEFAULT_store_settings: GeneralSettings = {
   show_video_controls: false,
   whatsapp_button_enabled: true,
   pause_on_invisible: true,
-  public_installation_key: 'pub_live_vitrine_video_001',
   widget_enabled: true,
   default_template: 'minimalista',
   whatsapp_enabled: true,
