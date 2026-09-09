@@ -28,6 +28,7 @@ import {
   TrendingUp,
   Sparkles,
   ExternalLink,
+  Store as StoreIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTenant } from '@/context/TenantContext';
