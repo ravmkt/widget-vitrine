@@ -3,8 +3,7 @@ import { resolveStoreId, isValidUuid } from '@/lib/db';
 
 /**
  * Códigos de ações do Log do Painel (Visão Geral → Atividade Recente).
- * Setores: loja, vídeos, stories, produtos, medidas, configurações, aparências,
- * comentários e armazenamento.
+ * Monitora tudo o que o usuário faz na loja em linguagem amigável.
  */
 export type ActivityAction =
   // 🏪 Loja
