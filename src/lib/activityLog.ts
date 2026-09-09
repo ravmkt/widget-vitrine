@@ -3,10 +3,13 @@ import { resolveStoreId, isValidUuid } from '@/lib/db';
 
 /**
  * Códigos de ações do Log do Painel (Visão Geral → Atividade Recente).
- * Setores: vídeos, stories, produtos, medidas, configurações, aparências,
+ * Setores: loja, vídeos, stories, produtos, medidas, configurações, aparências,
  * comentários e armazenamento.
  */
 export type ActivityAction =
+  // 🏪 Loja
+  | 'store.created'
+  | 'store.updated'
   // 🎬 Vídeos
   | 'video.created'
   | 'video.updated'
@@ -44,9 +47,9 @@ export type ActivityAction =
  * Registra uma atividade do lojista no log do painel.
  * Falhas são silenciosas (apenas warn no console) para nunca travar a ação do usuário.
  *
- * @param action  Código da ação (ex.: 'video.deleted')
- * @param target  Nome específico do item afetado (ex.: 'Jaqueta Jeans')
- * @param explicitStoreId  Opcional: store_id já resolvido pela página chamadora
+ * @param action Código da ação (ex.: 'video.created')
+ * @param target Nome específico do item afetado (ex.: 'Vestido Floral Verão')
+ * @param explicitStoreId Opcional: store_id já resolvido pela página chamadora
  */
 export async function logPanelActivity(
   action: ActivityAction,
