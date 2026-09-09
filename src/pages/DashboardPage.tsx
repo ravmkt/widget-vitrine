@@ -264,6 +264,7 @@ const DashboardPage: React.FC = () => {
             description: settingsDescription,
             route: '/settings',
             completed: hasSettingsSaved,
+            percent: settingsPercent,
           },
           {
             id: 'integration',
@@ -272,6 +273,7 @@ const DashboardPage: React.FC = () => {
             route: '/integration',
             completed: isIntegrationCompleted,
           },
+
           {
             id: 'products',
             title: 'Vincular os produtos',
