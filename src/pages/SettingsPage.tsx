@@ -867,59 +867,6 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* ── 4. SEGURANÇA & API KEYS ── */}
-        <div className="rounded-2xl border border-slate-200 dark:border-orange-500/15 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md shadow-sm p-6 sm:p-8 space-y-5">
-          <div className="border-b border-slate-100 dark:border-white/5 pb-4">
-            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              4. Segurança & API
-            </h2>
-            <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] mt-0.5">
-              Credenciais e chaves públicas de integração do widget na loja.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
-              Token Público / Live Key
-            </Label>
-            <div className="flex items-center gap-2.5">
-              <Input
-                type="text"
-                value={settings?.public_live_key ?? ''}
-                readOnly
-                className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-mono text-slate-600 dark:text-slate-300 break-all"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  navigator.clipboard.writeText(settings?.public_live_key ?? '');
-                  toast.success('Token copiado');
-                }}
-                className="rounded-xl border-slate-200 dark:border-white/10 hover:border-[#0091ff] dark:hover:border-[#ff7a29] text-slate-600 dark:text-slate-300 hover:text-[#0091ff] dark:hover:text-[#ff7a29]"
-                title="Copiar token"
-              >
-                <Copy size={16} />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  const k = 'pub_live_' + Math.random().toString(36).substr(2, 24);
-                  setSettings(prev => ({ ...prev, public_live_key: k }));
-                  toast.success('Token regenerado');
-                }}
-                className="rounded-xl border-slate-200 dark:border-white/10 hover:border-[#0091ff] dark:hover:border-amber-500 text-[#0091ff] dark:text-amber-500"
-                title="Regenerar token"
-              >
-                <RefreshCw size={16} />
-              </Button>
-            </div>
-          </div>
-        </div>
-        
         {/* ── BOTÃO SALVAR PRIMÁRIO NO RODAPÉ ── */}
         <div className="flex justify-end pt-4">
           <Button
