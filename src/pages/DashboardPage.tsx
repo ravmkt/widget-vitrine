@@ -224,14 +224,13 @@ const DashboardPage: React.FC = () => {
         const settingsData = settingsRes.status === 'fulfilled' ? settingsRes.value.data || {} : {};
         setAppEnabled(settingsData.widget_enabled !== false);
 
-        // Critério real de configurações preenchidas pelo lojista:
-        // WhatsApp cadastrado, e-mail de contato salvo ou URL da loja preenchida
-        const hasSettingsSaved =
-          settingsRes.status === 'fulfilled' &&
-          !!settingsData &&
-          (Boolean(settingsData.whatsapp_number?.trim()) ||
-            Boolean(settingsData.contact_email?.trim()) ||
-            Boolean(settingsData.store_url?.trim()));
+        // O checklist só considera concluído se:
+        // 1. O lojista salvou expressamente suas preferências (log 'settings.saved') OU
+        // 2. Ele cadastrou seu WhatsApp de atendimento (campo essencial não gerado por padrão)
+        const hasExplicitSettingsLog = fetchedEvents.some((ev: any) => ev.action === 'settings.saved');
+        const hasWhatsapp = Boolean(settingsData?.whatsapp_number && settingsData.whatsapp_number.trim().length >= 8);
+
+        const hasSettingsSaved = hasExplicitSettingsLog || hasWhatsapp;
 
         const isIntegrationCompleted = pagesCount > 0 || (usageData && (usageData.views_count || 0) > 0);
 
