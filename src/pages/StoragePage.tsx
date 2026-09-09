@@ -1326,7 +1326,7 @@ export default function StoragePage() {
             onClick={() => setShowUrlModal(true)}
             className="flex items-center gap-2 rounded-2xl border border-border bg-muted px-4 py-3 text-xs font-black uppercase tracking-wider text-muted-foreground shadow-sm hover:border-purple-500 hover:text-purple-400 transition-all cursor-pointer"
           >
-            <Link size={15} className="text-[#ff7a29]" />
+            <Link size={15} className="text-[#0091ff] dark:text-[#ff7a29]" />
             URL Externa
           </button>
 
@@ -1335,7 +1335,7 @@ export default function StoragePage() {
             type="button"
             disabled={uploading}
             onClick={handleTriggerUpload}
-            className="flex items-center gap-2 rounded-2xl bg-[#ff7a29] hover:bg-[#e05e10] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/10 transition-all disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-2 rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/10 dark:shadow-orange-500/10 transition-all disabled:opacity-50 cursor-pointer"
           >
             <UploadCloud size={16} className={cn("!text-white stroke-[2.5]", uploading && "animate-bounce")} />
             {uploading ? 'Enviando...' : 'Fazer Upload'}
@@ -1351,14 +1351,14 @@ export default function StoragePage() {
         const currentColorHex = isCritical
           ? '#ef4444'
           : isWarning
-            ? '#ff7a29'
+            ? 'var(--brand-warning, #0091ff)'
             : '#22c55e';
 
         return (
           <div className="rounded-2xl border border-border bg-muted p-6 sm:p-7 shadow-2xl space-y-4">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ff7a29] text-white shadow-md shadow-orange-500/20 transition-transform hover:scale-105 shrink-0">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/20 transition-transform hover:scale-105 shrink-0">
                   <HardDrive size={22} className="!text-white stroke-[2.5]" />
                 </div>
                 <div>
@@ -1366,7 +1366,7 @@ export default function StoragePage() {
                     <h3 className="text-base font-black text-foreground uppercase tracking-tight">
                       {planName}
                     </h3>
-                    <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-black uppercase text-[#ff7a29] border border-border">
+                    <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-black uppercase text-[#0091ff] dark:text-[#ff7a29] border border-border">
                       {formatSize(maxLimitBytes)} Limite
                     </span>
                   </div>
@@ -1381,18 +1381,22 @@ export default function StoragePage() {
                   <button
                     type="button"
                     onClick={() => showSuccess('Redirecionando para a página de planos...')}
-                    style={{ backgroundColor: currentColorHex }}
-                    className="flex items-center gap-1.5 rounded-2xl px-4 py-2 text-xs font-black text-foreground shadow-md transition-all hover:opacity-90"
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-2xl px-4 py-2 text-xs font-black text-white shadow-md transition-all hover:opacity-90",
+                      isCritical ? "bg-rose-500" : "bg-[#0091ff] dark:bg-[#ff7a29]"
+                    )}
                   >
-                    <Sparkles size={14} className="!text-foreground" />
+                    <Sparkles size={14} className="!text-white" />
                     Faça Upgrade
                   </button>
                 )}
 
                 <div>
                   <span 
-                    style={{ color: currentColorHex }}
-                    className="text-2xl font-black tracking-tight block"
+                    className={cn(
+                      "text-2xl font-black tracking-tight block",
+                      isCritical ? "text-rose-500" : isWarning ? "text-[#0091ff] dark:text-[#ff7a29]" : "text-emerald-500"
+                    )}
                   >
                     {usedPercentage}%
                   </span>
@@ -1409,7 +1413,7 @@ export default function StoragePage() {
                   'flex items-center gap-2 rounded-2xl p-3 text-xs font-bold',
                   isCritical
                     ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                    : 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+                    : 'bg-blue-500/10 text-[#0091ff] border border-blue-500/20 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20'
                 )}
               >
                 <AlertTriangle size={16} className="shrink-0" />
@@ -1424,11 +1428,11 @@ export default function StoragePage() {
             {/* Barra de Progresso */}
             <div className="h-3 w-full overflow-hidden rounded-full bg-muted p-0.5 border border-border">
               <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${usedPercentage}%`,
-                  backgroundColor: currentColorHex,
-                }}
+                className={cn(
+                  "h-full rounded-full transition-all duration-500",
+                  isCritical ? "bg-rose-500" : isWarning ? "bg-[#0091ff] dark:bg-[#ff7a29]" : "bg-emerald-500"
+                )}
+                style={{ width: `${usedPercentage}%` }}
               />
             </div>
           </div>
@@ -1587,7 +1591,7 @@ export default function StoragePage() {
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Pesquisar pelo nome do arquivo..."
-              className="w-full rounded-2xl border border-border bg-muted pl-12 pr-4 py-3.5 text-xs font-bold text-foreground placeholder-muted-foreground outline-none transition focus:border-[#ff7a29] transition-all"
+              className="w-full rounded-2xl border border-border bg-muted pl-12 pr-4 py-3.5 text-xs font-bold text-foreground placeholder-muted-foreground outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] transition-all"
             />
           </div>
 
@@ -1598,7 +1602,7 @@ export default function StoragePage() {
               className={cn(
                 "rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer border border-transparent",
                 selectedType === 'all'
-                  ? "bg-[#ff7a29] text-white shadow-lg shadow-orange-500/15"
+                  ? "bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-lg shadow-blue-500/15 dark:shadow-orange-500/15"
                   : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
               )}
             >
@@ -1610,7 +1614,7 @@ export default function StoragePage() {
               className={cn(
                 "flex items-center justify-center gap-1.5 rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer border border-transparent",
                 selectedType === 'video'
-                  ? "bg-[#ff7a29] text-white shadow-lg shadow-orange-500/15"
+                  ? "bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-lg shadow-blue-500/15 dark:shadow-orange-500/15"
                   : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
               )}
             >
@@ -1623,7 +1627,7 @@ export default function StoragePage() {
               className={cn(
                 "flex items-center justify-center gap-1.5 rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer border border-transparent",
                 selectedType === 'image'
-                  ? "bg-[#ff7a29] text-white shadow-lg shadow-orange-500/15"
+                  ? "bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-lg shadow-blue-500/15 dark:shadow-orange-500/15"
                   : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
               )}
             >
@@ -1698,12 +1702,12 @@ export default function StoragePage() {
                       </div>
                     </td>
                     
-                    {/* COLUNA 2: NOME (Título + Tipo com tag de hospedagem em laranja) */}
+                    {/* COLUNA 2: NOME (Título + Tipo com tag de hospedagem) */}
                     <td className="px-6 py-3.5 max-w-xs truncate">
                       <span className="text-xs font-black text-foreground block truncate" title={file.name}>
                         {file.name}
                       </span>
-                      <span className="text-[10px] font-bold text-[#ff7a29] uppercase tracking-wider">
+                      <span className="text-[10px] font-bold text-[#0091ff] dark:text-[#ff7a29] uppercase tracking-wider">
                         {file.type === 'image'
                           ? 'Imagem (Hospedada)'
                           : file.sizeInBytes === 0
@@ -1858,7 +1862,7 @@ export default function StoragePage() {
                   value={externalUrl}
                   onChange={(e) => setExternalUrl(e.target.value)}
                   placeholder="https://pinterest.com/pin/... ou YouTube / Link direto"
-                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground placeholder-muted-foreground outline-none focus:border-[#ff7a29]"
+                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground placeholder-muted-foreground outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
                 />
               </div>
               
@@ -1871,7 +1875,7 @@ export default function StoragePage() {
                   value={externalTitle}
                   onChange={(e) => setExternalTitle(e.target.value)}
                   placeholder="Ex: REEL_PROMO_LANCAMENTO.mp4"
-                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground placeholder-muted-foreground outline-none focus:border-[#ff7a29]"
+                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground placeholder-muted-foreground outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
                 />
               </div>
 
@@ -1882,7 +1886,7 @@ export default function StoragePage() {
                 <select
                   value={selectedProductId}
                   onChange={(e) => setSelectedProductId(e.target.value)}
-                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:border-[#ff7a29]"
+                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
                 >
                   <option value="" className="bg-muted">Sem produto vinculado</option>
                   {productsList.map((prod) => (
@@ -1900,7 +1904,7 @@ export default function StoragePage() {
                 <select
                   value={selectedModelId}
                   onChange={(e) => setSelectedModelId(e.target.value)}
-                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:border-[#ff7a29]"
+                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
                 >
                   <option value="" className="bg-muted">Sem modelo de medidas vinculado</option>
                   {sizingModelsList.map((model) => (
@@ -1922,7 +1926,7 @@ export default function StoragePage() {
                 <button
                   type="submit"
                   disabled={savingUrl}
-                  className="rounded-2xl bg-[#ff7a29] hover:bg-[#e05e10] px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all disabled:opacity-50 cursor-pointer"
+                  className="rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {savingUrl ? 'Salvando...' : 'Cadastrar Mídia'}
                 </button>
@@ -1943,7 +1947,7 @@ export default function StoragePage() {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-[#ff7a29]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 dark:bg-orange-500/10 text-[#0091ff] dark:text-[#ff7a29]">
                   <Eye size={18} />
                 </div>
                 <div>
@@ -2026,7 +2030,7 @@ export default function StoragePage() {
               <button
                 type="button"
                 onClick={() => setPreviewMedia(null)}
-                className="w-full rounded-2xl bg-[#ff7a29] hover:bg-[#e05e10] py-3 text-xs font-black text-white shadow-md hover:scale-[1.01] transition-all cursor-pointer text-center uppercase tracking-wider"
+                className="w-full rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] py-3 text-xs font-black text-white shadow-md hover:scale-[1.01] transition-all cursor-pointer text-center uppercase tracking-wider"
               >
                 Fechar
               </button>
