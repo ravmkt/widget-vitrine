@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { db } from '@/lib/db';
 import { logPanelActivity } from '@/lib/activityLog';
@@ -175,7 +177,7 @@ const generateVideoThumbnail = (file: File): Promise<Blob> => {
 const generateVideoThumbnailFromUrl = (url: string): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
-    video.crossOrigin = 'anonymous'; 
+    video.crossOrigin = 'anonymous';
     video.preload = 'auto';
     video.muted = true;
     video.playsInline = true;
@@ -277,7 +279,7 @@ interface StorageItem {
   canDelete: boolean;
 }
 
-const PLAN_LIMIT_BYTES = 500 * 1024 * 1024; 
+const PLAN_LIMIT_BYTES = 500 * 1024 * 1024;
 
 const SocialIcons = {
   Instagram: () => (
@@ -298,8 +300,8 @@ export default function StoragePage() {
   const [loading, setLoading] = useState(true);
   const [instagramVideos, setInstagramVideos] = useState<InstagramMedia[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(false);
-  const [tiktokVideos, setTikTokVideos] = useState<any[]>([]); 
-  const [loadingTikTok, setLoadingTikTok] = useState(false); 
+  const [tiktokVideos, setTikTokVideos] = useState<any[]>([]);
+  const [loadingTikTok, setLoadingTikTok] = useState(false);
   const [storeId, setStoreId] = useState<string | null>(null);
   const [planName, setPlanName] = useState<string>('Plano Iniciante');
   const [serverStorageUsedBytes, setServerStorageUsedBytes] = useState<number | null>(null);
@@ -317,7 +319,7 @@ export default function StoragePage() {
   const [selectedModelId, setSelectedModelId] = useState('');
   const [sizingModelsList, setSizingModelsList] = useState<any[]>([]);
   const [savingUrl, setSavingUrl] = useState(false);
-  
+
   const [deleteFileConfirm, setDeleteFileConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const [previewMedia, setPreviewMedia] = useState<{
@@ -402,7 +404,7 @@ export default function StoragePage() {
           return part;
         }
       }
-      
+
       const urlParams = new URLSearchParams(window.location.search);
       const urlStoreId = urlParams.get('store_id') || urlParams.get('storeId');
       if (urlStoreId) {
@@ -823,7 +825,7 @@ export default function StoragePage() {
         active: true,
         created_at: new Date().toISOString(),
       };
-      
+
       if (supabase) {
         const { error } = await supabase.from('videos').insert([payload]);
         if (error) throw error;
@@ -996,7 +998,7 @@ export default function StoragePage() {
             const validVideoUrl = sanitizeUrl(vid.video_url);
             const rawThumb = sanitizeUrl(vid.thumbnail_url);
 
-            const isFileImage = /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(validVideoUrl) || 
+            const isFileImage = /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(validVideoUrl) ||
                                 /\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(vid.title || '') ||
                                 vid.source_type === 'image' ||
                                 vid.video_source_type === 'image';
@@ -1017,23 +1019,23 @@ export default function StoragePage() {
             const isHostedOnPlatform = videoUrlStr.includes('supabase');
             const isExternalUrl = isExplicitUrlType || (!isHostedOnPlatform && videoUrlStr.startsWith('http'));
 
-            const videoBytes = isExternalUrl 
-              ? 0 
-              : (vid.file_size && Number(vid.file_size) > 0 
-                  ? Number(vid.file_size) 
+            const videoBytes = isExternalUrl
+              ? 0
+              : (vid.file_size && Number(vid.file_size) > 0
+                  ? Number(vid.file_size)
                   : 20971520);
 
             const isThumbHosted = rawThumb && rawThumb.includes('supabase');
             const thumbnailBytes = isThumbHosted
-              ? (vid.thumbnail_file_size && Number(vid.thumbnail_file_size) > 0 
-                  ? Number(vid.thumbnail_file_size) 
+              ? (vid.thumbnail_file_size && Number(vid.thumbnail_file_size) > 0
+                  ? Number(vid.thumbnail_file_size)
                   : 150 * 1024)
               : 0;
 
             const totalMediaBytes = videoBytes + thumbnailBytes;
 
-            const formattedDate = vid.created_at 
-              ? new Date(vid.created_at).toLocaleDateString('pt-BR') 
+            const formattedDate = vid.created_at
+              ? new Date(vid.created_at).toLocaleDateString('pt-BR')
               : 'Hoje';
 
             const resolvedProductName = vid.products?.name || vid.product_name || vid.product?.name || vid.product?.title || undefined;
@@ -1246,7 +1248,7 @@ export default function StoragePage() {
 
       showSuccess('Arquivo removido com sucesso!');
       logPanelActivity('storage.file_deleted', name);
-      setDeleteFileConfirm(null); 
+      setDeleteFileConfirm(null);
       await loadAccountStorageData();
     } catch (err) {
       console.error('Erro ao excluir arquivo:', err);
@@ -1255,15 +1257,15 @@ export default function StoragePage() {
   };
 
   return (
-    <div className="animate-fade-in space-y-8 pb-20 font-sans text-foreground">
+    <div className="animate-fade-in space-y-8 pb-20 font-sans">
       {/* ── CABEÇALHO DA PÁGINA ── */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Biblioteca
           </h1>
-          <p className="mt-1 text-sm font-medium text-muted-foreground leading-relaxed">
-            Gerencie os vídeos e imagens hospedados no seu plano e monitore o uso de espaço.
+          <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-[#c0c5d4] leading-relaxed">
+            Gerencie os vídeos e imagens hospedados no seu plano e monitore o consumo de espaço.
           </p>
         </div>
 
@@ -1283,7 +1285,7 @@ export default function StoragePage() {
               "flex items-center gap-2 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-wider transition-all border shadow-sm cursor-pointer",
               connectedPlatforms.includes('instagram')
                 ? "border-pink-500/40 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white shadow-pink-500/20 hover:opacity-95"
-                : "border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                : "border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#111524] text-slate-600 dark:text-[#8a90a0] hover:text-slate-900 dark:hover:text-white"
             )}
           >
             <SocialIcons.Instagram />
@@ -1305,7 +1307,7 @@ export default function StoragePage() {
               "flex items-center gap-2 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-wider transition-all border shadow-sm cursor-pointer",
               connectedPlatforms.includes('tiktok')
                 ? "border-slate-700 bg-black text-white shadow-slate-900/40 hover:bg-slate-950"
-                : "border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                : "border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#111524] text-slate-600 dark:text-[#8a90a0] hover:text-slate-900 dark:hover:text-white"
             )}
           >
             <SocialIcons.TikTok />
@@ -1324,7 +1326,7 @@ export default function StoragePage() {
           <button
             type="button"
             onClick={() => setShowUrlModal(true)}
-            className="flex items-center gap-2 rounded-2xl border border-border bg-muted px-4 py-3 text-xs font-black uppercase tracking-wider text-muted-foreground shadow-sm hover:border-purple-500 hover:text-purple-400 transition-all cursor-pointer"
+            className="flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#111524] px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-600 dark:text-[#8a90a0] shadow-sm hover:border-[#0091ff] dark:hover:border-[#ff7a29] hover:text-[#0091ff] dark:hover:text-[#ff7a29] transition-all cursor-pointer"
           >
             <Link size={15} className="text-[#0091ff] dark:text-[#ff7a29]" />
             URL Externa
@@ -1335,7 +1337,7 @@ export default function StoragePage() {
             type="button"
             disabled={uploading}
             onClick={handleTriggerUpload}
-            className="flex items-center gap-2 rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/10 dark:shadow-orange-500/10 transition-all disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-2 rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 dark:shadow-orange-500/30 hover:scale-[1.02] transition-all disabled:opacity-50 cursor-pointer"
           >
             <UploadCloud size={16} className={cn("!text-white stroke-[2.5]", uploading && "animate-bounce")} />
             {uploading ? 'Enviando...' : 'Fazer Upload'}
@@ -1348,14 +1350,8 @@ export default function StoragePage() {
         const isCritical = usedPercentage >= 90;
         const isWarning = usedPercentage >= 70 && usedPercentage < 90;
 
-        const currentColorHex = isCritical
-          ? '#ef4444'
-          : isWarning
-            ? 'var(--brand-warning, #0091ff)'
-            : '#22c55e';
-
         return (
-          <div className="rounded-2xl border border-border bg-muted p-6 sm:p-7 shadow-2xl space-y-4">
+          <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl p-6 sm:p-7 shadow-sm space-y-4">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-md shadow-blue-500/20 dark:shadow-orange-500/20 transition-transform hover:scale-105 shrink-0">
@@ -1363,15 +1359,15 @@ export default function StoragePage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black text-foreground uppercase tracking-tight">
+                    <h3 className="text-base font-black text-slate-800 dark:text-white uppercase tracking-tight">
                       {planName}
                     </h3>
-                    <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-black uppercase text-[#0091ff] dark:text-[#ff7a29] border border-border">
+                    <span className="rounded-full bg-slate-100 dark:bg-[#111524] px-2.5 py-0.5 text-[10px] font-black uppercase text-[#0091ff] dark:text-[#ff7a29] border border-slate-200/60 dark:border-white/5">
                       {formatSize(maxLimitBytes)} Limite
                     </span>
                   </div>
-                  <p className="text-xs font-medium text-muted-foreground mt-0.5">
-                    Uso atual: <strong className="text-foreground">{formatSize(totalUsedBytes)}</strong> de {formatSize(maxLimitBytes)}
+                  <p className="text-xs font-bold text-slate-500 dark:text-[#8a90a0] mt-0.5">
+                    Uso atual: <strong className="text-slate-800 dark:text-white">{formatSize(totalUsedBytes)}</strong> de {formatSize(maxLimitBytes)}
                   </p>
                 </div>
               </div>
@@ -1382,7 +1378,7 @@ export default function StoragePage() {
                     type="button"
                     onClick={() => showSuccess('Redirecionando para a página de planos...')}
                     className={cn(
-                      "flex items-center gap-1.5 rounded-2xl px-4 py-2 text-xs font-black text-white shadow-md transition-all hover:opacity-90",
+                      "flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-white shadow-md transition-all hover:opacity-90 cursor-pointer",
                       isCritical ? "bg-rose-500" : "bg-[#0091ff] dark:bg-[#ff7a29]"
                     )}
                   >
@@ -1392,15 +1388,15 @@ export default function StoragePage() {
                 )}
 
                 <div>
-                  <span 
+                  <span
                     className={cn(
-                      "text-2xl font-black tracking-tight block",
+                      "text-2xl font-black tracking-tight block font-mono",
                       isCritical ? "text-rose-500" : isWarning ? "text-[#0091ff] dark:text-[#ff7a29]" : "text-emerald-500"
                     )}
                   >
                     {usedPercentage}%
                   </span>
-                  <span className="block text-[11px] font-bold text-muted-foreground">
+                  <span className="block text-[11px] font-bold text-slate-400 dark:text-[#8a90a0]">
                     Espaço Consumido
                   </span>
                 </div>
@@ -1410,10 +1406,10 @@ export default function StoragePage() {
             {(isWarning || isCritical) && (
               <div
                 className={cn(
-                  'flex items-center gap-2 rounded-2xl p-3 text-xs font-bold',
+                  'flex items-center gap-2 rounded-xl p-3 text-xs font-bold',
                   isCritical
-                    ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                    : 'bg-blue-500/10 text-[#0091ff] border border-blue-500/20 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20'
+                    ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40'
+                    : 'bg-blue-50 dark:bg-orange-950/40 text-[#0091ff] dark:text-orange-400 border border-blue-200/60 dark:border-orange-500/20'
                 )}
               >
                 <AlertTriangle size={16} className="shrink-0" />
@@ -1426,7 +1422,7 @@ export default function StoragePage() {
             )}
 
             {/* Barra de Progresso */}
-            <div className="h-3 w-full overflow-hidden rounded-full bg-muted p-0.5 border border-border">
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#111524] p-0.5 border border-slate-200/50 dark:border-white/5">
               <div
                 className={cn(
                   "h-full rounded-full transition-all duration-500",
@@ -1441,20 +1437,20 @@ export default function StoragePage() {
 
       {/* Seção de Vídeos Importados do Instagram */}
       {connectedPlatforms.includes('instagram') && activePlatformTab === 'instagram' && (
-        <div className="rounded-2xl border border-pink-500/20 bg-muted p-6 shadow-2xl space-y-4 animate-in fade-in duration-300">
+        <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-pink-500/20 rounded-2xl p-6 shadow-sm space-y-4 animate-in fade-in duration-300">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-black text-foreground flex items-center gap-2">
+            <h2 className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
               <Instagram className="h-5 w-5 text-pink-500" />
               Reels da sua Conta do Instagram
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-muted-foreground">
+              <span className="text-xs font-bold text-slate-500 dark:text-[#8a90a0]">
                 {instagramVideos.length} mídias encontradas
               </span>
               <button
                 type="button"
                 onClick={() => setActivePlatformTab('none')}
-                className="rounded-xl p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="rounded-xl p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-700 dark:hover:text-white"
                 title="Fechar gaveta"
               >
                 <X size={16} />
@@ -1463,15 +1459,15 @@ export default function StoragePage() {
           </div>
 
           {loadingVideos ? (
-            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-muted border border-border">
-              <span className="text-xs font-bold text-muted-foreground">Carregando mídias do Instagram...</span>
+            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-[#F8FAFC] dark:bg-[#111524] border border-slate-200 dark:border-white/5">
+              <span className="text-xs font-bold text-slate-500 dark:text-[#8a90a0]">Carregando mídias do Instagram...</span>
             </div>
           ) : instagramVideos.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {instagramVideos.map((video) => (
                 <div
                   key={video.id}
-                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-border hover:border-pink-500 transition-all duration-300 shadow-sm"
+                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 dark:border-white/10 hover:border-pink-500 transition-all duration-300 shadow-sm"
                 >
                   <img
                     src={video.thumbnail_url || video.media_url}
@@ -1481,12 +1477,12 @@ export default function StoragePage() {
                     className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
-                  
+
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
                     <button
                       type="button"
                       onClick={() => handleImportAndEditInstagramVideo(video)}
-                      className="flex items-center gap-1.5 rounded-xl bg-pink-600 px-3 py-2 text-[10px] font-black text-foreground shadow-lg hover:bg-pink-700 transition-all transform hover:scale-105"
+                      className="flex items-center gap-1.5 rounded-xl bg-pink-600 px-3 py-2 text-[10px] font-black text-white shadow-lg hover:bg-pink-700 transition-all transform hover:scale-105"
                     >
                       <Sparkles size={12} />
                       Usar & Editar
@@ -1494,7 +1490,7 @@ export default function StoragePage() {
                   </div>
 
                   {video.caption && (
-                    <p className="absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-bold text-foreground line-clamp-2 leading-tight pointer-events-none">
+                    <p className="absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-bold text-white line-clamp-2 leading-tight pointer-events-none">
                       {video.caption}
                     </p>
                   )}
@@ -1502,29 +1498,29 @@ export default function StoragePage() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-muted border border-border text-center">
-              <p className="text-xs font-bold text-muted-foreground">Nenhum Reels ou vídeo encontrado nesta conta do Instagram.</p>
+            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#F8FAFC] dark:bg-[#111524] border border-slate-200 dark:border-white/5 text-center">
+              <p className="text-xs font-bold text-slate-500 dark:text-[#8a90a0]">Nenhum Reels ou vídeo encontrado nesta conta do Instagram.</p>
             </div>
           )}
         </div>
       )}
-      
+
       {/* Seção de Vídeos Importados do TikTok */}
       {connectedPlatforms.includes('tiktok') && activePlatformTab === 'tiktok' && (
-        <div className="rounded-2xl border border-border bg-muted p-6 shadow-2xl space-y-4 animate-in fade-in duration-300">
+        <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm space-y-4 animate-in fade-in duration-300">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-black text-foreground flex items-center gap-2">
-              <div className="text-foreground"><SocialIcons.TikTok /></div>
+            <h2 className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
+              <div className="text-slate-900 dark:text-white"><SocialIcons.TikTok /></div>
               Vídeos da sua Conta do TikTok
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-muted-foreground">
+              <span className="text-xs font-bold text-slate-500 dark:text-[#8a90a0]">
                 {tiktokVideos.length} mídias encontradas
               </span>
               <button
                 type="button"
                 onClick={() => setActivePlatformTab('none')}
-                className="rounded-xl p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="rounded-xl p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-700 dark:hover:text-white"
                 title="Fechar gaveta"
               >
                 <X size={16} />
@@ -1533,15 +1529,15 @@ export default function StoragePage() {
           </div>
 
           {loadingTikTok ? (
-            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-muted border border-border">
-              <span className="text-xs font-bold text-muted-foreground">Carregando mídias do TikTok...</span>
+            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-[#F8FAFC] dark:bg-[#111524] border border-slate-200 dark:border-white/5">
+              <span className="text-xs font-bold text-slate-500 dark:text-[#8a90a0]">Carregando mídias do TikTok...</span>
             </div>
           ) : tiktokVideos.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {tiktokVideos.map((video) => (
                 <div
                   key={video.id}
-                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-border hover:border-slate-400 transition-all duration-300 shadow-sm"
+                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 dark:border-white/10 hover:border-slate-400 transition-all duration-300 shadow-sm"
                 >
                   <img
                     src={video.cover_image_url || video.thumbnail_url || video.video_url}
@@ -1551,7 +1547,7 @@ export default function StoragePage() {
                     className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
-                  
+
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
                     <button
                       type="button"
@@ -1564,7 +1560,7 @@ export default function StoragePage() {
                   </div>
 
                   {(video.title || video.description) && (
-                    <p className="absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-bold text-foreground line-clamp-2 leading-tight pointer-events-none">
+                    <p className="absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-bold text-white line-clamp-2 leading-tight pointer-events-none">
                       {video.title || video.description}
                     </p>
                   )}
@@ -1572,38 +1568,38 @@ export default function StoragePage() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-muted border border-border text-center">
-              <p className="text-xs font-bold text-muted-foreground">Nenhum vídeo encontrado nesta conta do TikTok.</p>
+            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#F8FAFC] dark:bg-[#111524] border border-slate-200 dark:border-white/5 text-center">
+              <p className="text-xs font-bold text-slate-500 dark:text-[#8a90a0]">Nenhum vídeo encontrado nesta conta do TikTok.</p>
             </div>
           )}
         </div>
       )}
 
       {/* ── CARD PRINCIPAL UNIFICADO PREMIUM (Tabela e Busca) ── */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-muted shadow-2xl p-6 sm:p-8 space-y-6">
-        
+      <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl overflow-hidden shadow-sm p-6 sm:p-8 space-y-6">
+
         {/* BARRA INTERNA DE FILTROS E BUSCA */}
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-center border-b border-border pb-5">
+        <div className="flex flex-col lg:flex-row gap-4 justify-between items-center border-b border-slate-100 dark:border-white/5 pb-5">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8a90a0]" size={18} />
             <input
               type="text"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Pesquisar pelo nome do arquivo..."
-              className="w-full rounded-2xl border border-border bg-muted pl-12 pr-4 py-3.5 text-xs font-bold text-foreground placeholder-muted-foreground outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] transition-all"
+              className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#111524] pl-12 pr-4 py-3.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus:bg-white dark:focus:bg-[#111524]"
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full lg:w-auto">
             <button
               type="button"
               onClick={() => setSelectedType('all')}
               className={cn(
-                "rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer border border-transparent",
+                "rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wider transition-all text-center flex-1 sm:flex-initial cursor-pointer border",
                 selectedType === 'all'
-                  ? "bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-lg shadow-blue-500/15 dark:shadow-orange-500/15"
-                  : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                  ? "bg-[#0091ff] border-[#0091ff] dark:bg-[#ff7a29] dark:border-[#ff7a29] text-white shadow-lg shadow-blue-500/15 dark:shadow-orange-500/15"
+                  : "bg-[#F8FAFC] dark:bg-[#111524] border-transparent dark:border-white/5 text-slate-500 dark:text-[#8a90a0] hover:bg-slate-100 dark:hover:bg-white/5"
               )}
             >
               Todos
@@ -1612,10 +1608,10 @@ export default function StoragePage() {
               type="button"
               onClick={() => setSelectedType('video')}
               className={cn(
-                "flex items-center justify-center gap-1.5 rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer border border-transparent",
+                "flex items-center justify-center gap-1.5 rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wider transition-all text-center flex-1 sm:flex-initial cursor-pointer border",
                 selectedType === 'video'
-                  ? "bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-lg shadow-blue-500/15 dark:shadow-orange-500/15"
-                  : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                  ? "bg-[#0091ff] border-[#0091ff] dark:bg-[#ff7a29] dark:border-[#ff7a29] text-white shadow-lg shadow-blue-500/15 dark:shadow-orange-500/15"
+                  : "bg-[#F8FAFC] dark:bg-[#111524] border-transparent dark:border-white/5 text-slate-500 dark:text-[#8a90a0] hover:bg-slate-100 dark:hover:bg-white/5"
               )}
             >
               <FileVideo size={14} />
@@ -1625,10 +1621,10 @@ export default function StoragePage() {
               type="button"
               onClick={() => setSelectedType('image')}
               className={cn(
-                "flex items-center justify-center gap-1.5 rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer border border-transparent",
+                "flex items-center justify-center gap-1.5 rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wider transition-all text-center flex-1 sm:flex-initial cursor-pointer border",
                 selectedType === 'image'
-                  ? "bg-[#0091ff] dark:bg-[#ff7a29] text-white shadow-lg shadow-blue-500/15 dark:shadow-orange-500/15"
-                  : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                  ? "bg-[#0091ff] border-[#0091ff] dark:bg-[#ff7a29] dark:border-[#ff7a29] text-white shadow-lg shadow-blue-500/15 dark:shadow-orange-500/15"
+                  : "bg-[#F8FAFC] dark:bg-[#111524] border-transparent dark:border-white/5 text-slate-500 dark:text-[#8a90a0] hover:bg-slate-100 dark:hover:bg-white/5"
               )}
             >
               <FileImage size={14} />
@@ -1636,44 +1632,60 @@ export default function StoragePage() {
             </button>
           </div>
         </div>
-        
-        {/* Tabela de Mídias */}
+
+        {/* ── BARRA INTERNA DE CONTAGEM E RESUMO ── */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#F8FAFC] dark:bg-[#111524]/40 rounded-2xl p-4 border border-slate-100 dark:border-white/5">
+          <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-[#8a90a0]">
+            {filteredFiles.length} {filteredFiles.length === 1 ? 'mídia listada' : 'mídias listadas'}
+          </p>
+        </div>
+
+        {/* TABELA DE MÍDIAS */}
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
+          <table className="w-full table-fixed text-left border-collapse">
             <thead>
-              <tr className="border-b border-border bg-muted/40 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                <th className="px-6 py-4 rounded-l-2xl">Mídia</th>
-                <th className="px-6 py-4">Nome do Arquivo</th>
-                <th className="px-6 py-4">Produto</th>
-                <th className="px-6 py-4 text-center">Story Vinculado</th>
-                <th className="px-6 py-4 text-center">Tamanho</th>
-                <th className="px-6 py-4 text-center">Status</th>
-                <th className="px-6 py-4 text-right rounded-r-2xl">Ações</th>
+              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#111524]/50 text-[10px] font-black uppercase text-slate-400 dark:text-[#8a90a0] tracking-widest">
+                <th className="px-6 py-4 rounded-l-2xl w-24">Mídia</th>
+                <th className="px-6 py-4 text-left w-56">Nome do Arquivo</th>
+                <th className="px-6 py-4 text-left w-48">Produto</th>
+                <th className="px-4 py-4 text-center w-40">Story Vinculado</th>
+                <th className="px-4 py-4 text-center w-28">Tamanho</th>
+                <th className="px-4 py-4 text-center w-32">Status</th>
+                <th className="px-6 py-4 text-center rounded-r-2xl w-32">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.03]">
+
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-muted-foreground">
+                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-400 dark:text-[#8a90a0]">
                     Carregando mídias da sua conta...
                   </td>
                 </tr>
               ) : filteredFiles.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-muted-foreground">
-                    Nenhum arquivo encontrado no seu armazenamento.
+                  <td colSpan={7} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <FileVideo size={40} className="text-slate-300 dark:text-slate-600" />
+                      <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Nenhum arquivo encontrado</p>
+                      <p className="text-xs text-slate-400 dark:text-[#8a90a0]">
+                        {searchTerm || selectedType !== 'all'
+                          ? 'Tente ajustar os termos de pesquisa ou o tipo selecionado.'
+                          : 'Clique em "Fazer Upload" ou "URL Externa" para adicionar suas primeiras mídias.'}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 filteredFiles.map(file => (
-                  <tr key={file.id} className="transition-colors hover:bg-white/[0.015] border-b border-border/50">
-                    {/* COLUNA 1: MÍDIA (Thumb circular/quadrada com curvatura) */}
+                  <tr key={file.id} className="hover:bg-slate-50/60 dark:hover:bg-white/[0.02] transition-colors">
+                    {/* COLUNA 1: MÍDIA */}
                     <td className="px-6 py-3.5">
-                      <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-white/10 bg-muted shadow-xs flex items-center justify-center shrink-0">
+                      <div className="relative h-11 w-11 overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#111524] flex items-center justify-center shrink-0">
                         {file.thumbnailUrl || (file.type === 'image' && file.fileUrl) ? (
-                          <img 
-                            src={file.thumbnailUrl || file.fileUrl} 
-                            alt={file.name} 
+                          <img
+                            src={file.thumbnailUrl || file.fileUrl}
+                            alt={file.name}
                             referrerPolicy="no-referrer"
                             className="relative z-10 h-full w-full object-cover"
                             onError={(e) => {
@@ -1696,18 +1708,18 @@ export default function StoragePage() {
                               <FileVideo size={16} />
                             </div>
                           ) : (
-                            <FileImage size={16} className="text-muted-foreground" />
+                            <FileImage size={16} className="text-slate-400 dark:text-[#8a90a0]" />
                           )}
                         </div>
                       </div>
                     </td>
-                    
-                    {/* COLUNA 2: NOME (Título + Tipo com tag de hospedagem) */}
-                    <td className="px-6 py-3.5 max-w-xs truncate">
-                      <span className="text-xs font-black text-foreground block truncate" title={file.name}>
+
+                    {/* COLUNA 2: NOME */}
+                    <td className="px-6 py-3.5">
+                      <span className="text-xs font-black text-slate-800 dark:text-[#e8ecf4] block truncate max-w-[200px]" title={file.name}>
                         {file.name}
                       </span>
-                      <span className="text-[10px] font-bold text-[#0091ff] dark:text-[#ff7a29] uppercase tracking-wider">
+                      <span className="text-[10px] font-bold text-[#0091ff] dark:text-[#ff7a29] uppercase tracking-wider block mt-0.5">
                         {file.type === 'image'
                           ? 'Imagem (Hospedada)'
                           : file.sizeInBytes === 0
@@ -1719,11 +1731,11 @@ export default function StoragePage() {
                     {/* COLUNA 3: PRODUTO */}
                     <td className="px-6 py-3.5">
                       {file.productName ? (
-                        <div 
-                          className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/50 p-1.5 pr-3 shadow-xs"
+                        <div
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-[#111524] p-1.5 pr-3"
                           title={file.productName}
                         >
-                          <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-muted">
+                          <div className="relative h-6 w-6 shrink-0 overflow-hidden rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35]">
                             {file.productImageUrl ? (
                               <img
                                 src={file.productImageUrl}
@@ -1735,56 +1747,57 @@ export default function StoragePage() {
                                 }}
                               />
                             ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-muted text-[10px] font-black text-muted-foreground">
+                              <div className="flex h-full w-full items-center justify-center text-[10px] font-black text-slate-500">
                                 {file.productName.charAt(0).toUpperCase()}
                               </div>
                             )}
                           </div>
-                          <span className="max-w-[120px] truncate text-[11px] font-bold text-slate-300">
+                          <span className="max-w-[120px] truncate text-[11px] font-bold text-slate-700 dark:text-slate-300">
                             {file.productName}
                           </span>
                         </div>
                       ) : (
-                        <span className="inline-flex items-center rounded-xl bg-muted px-2.5 py-1 text-[10px] font-bold text-muted-foreground border border-transparent">
+                        <span className="inline-flex items-center rounded-xl bg-slate-100 dark:bg-[#111524] px-2.5 py-1 text-[10px] font-bold text-slate-400 dark:text-[#8a90a0]">
                           Sem produto
                         </span>
                       )}
                     </td>
 
-                    {/* COLUNA 4: STORY VINCULADO (Centralizado) */}
-                    <td className="px-6 py-3.5 text-center">
+                    {/* COLUNA 4: STORY VINCULADO */}
+                    <td className="px-4 py-3.5 text-center">
                       {file.storyTitle ? (
-                        <span 
-                          className="inline-flex items-center gap-1 rounded-xl bg-[#0091ff]/10 border border-[#0091ff]/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#0091ff] shadow-xs"
+                        <span
+                          className="inline-flex items-center gap-1 rounded-xl bg-blue-50 dark:bg-[#111524] border border-blue-200/50 dark:border-orange-500/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#0091ff] dark:text-[#ff7a29] max-w-[140px] truncate"
+                          title={file.storyTitle}
                         >
-                          {file.storyTitle}
+                          <span className="truncate">{file.storyTitle}</span>
                         </span>
                       ) : (
-                        <span className="text-xs font-bold text-muted-foreground">—</span>
+                        <span className="text-xs font-bold text-slate-400 dark:text-[#8a90a0]">—</span>
                       )}
                     </td>
 
-                    {/* COLUNA 5: TAMANHO (Centralizado) */}
-                    <td className="px-6 py-3.5 text-center font-mono text-xs font-black text-foreground">
+                    {/* COLUNA 5: TAMANHO */}
+                    <td className="px-4 py-3.5 text-center font-mono text-xs font-black text-slate-900 dark:text-white">
                       {formatSize(file.sizeInBytes)}
                     </td>
 
-                    {/* COLUNA 6: STATUS (Centralizado) */}
-                    <td className="px-6 py-3.5 text-center">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-400">
+                    {/* COLUNA 6: STATUS */}
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                         <CheckCircle2 size={11} className="stroke-[2.5]" />
                         Disponível
                       </span>
                     </td>
 
                     {/* COLUNA 7: AÇÕES */}
-                    <td className="px-6 py-3.5 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                    <td className="px-6 py-3.5 text-center">
+                      <div className="flex items-center justify-center gap-1">
                         {file.type === 'video' && (
                           <button
                             type="button"
                             onClick={() => window.location.href = `/videos/${file.id}/edit`}
-                            className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
+                            className="p-1.5 rounded-xl text-slate-400 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
                             title="Editar vínculos do vídeo"
                           >
                             <Pencil size={15} />
@@ -1793,7 +1806,7 @@ export default function StoragePage() {
                         <button
                           type="button"
                           onClick={() => handlePreviewMedia(file)}
-                          className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
                           title="Visualizar mídia"
                         >
                           <Eye size={15} />
@@ -1801,7 +1814,7 @@ export default function StoragePage() {
                         <button
                           type="button"
                           onClick={() => handleDownloadFile(file.fileUrl || file.thumbnailUrl, file.name)}
-                          className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-[#0091ff] dark:hover:text-[#ff7a29] hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
                           title="Baixar arquivo"
                         >
                           <Download size={15} />
@@ -1809,7 +1822,7 @@ export default function StoragePage() {
                         <button
                           type="button"
                           onClick={() => triggerDeleteConfirm(file.id, file.name)}
-                          className="p-1.5 rounded-xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer"
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
                           title="Excluir arquivo"
                         >
                           <Trash2 size={15} />
@@ -1823,21 +1836,21 @@ export default function StoragePage() {
           </table>
         </div>
       </div>
-      
+
       {/* Modal de Cadastro por URL Externa */}
       {showUrlModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-muted p-6 shadow-2xl space-y-6">
-            <div className="flex items-center justify-between border-b border-border pb-4">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] p-6 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 dark:bg-orange-500/10 text-[#0091ff] dark:text-[#ff7a29]">
                   <Link size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-foreground">
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
                     Adicionar Vídeo por URL
                   </h3>
-                  <p className="text-xs font-medium text-muted-foreground">
+                  <p className="text-xs font-semibold text-slate-400 dark:text-[#8a90a0]">
                     Insira links do Pinterest, YouTube, Panda Video, Bunny CDN ou link direto.
                   </p>
                 </div>
@@ -1845,7 +1858,7 @@ export default function StoragePage() {
               <button
                 type="button"
                 onClick={() => setShowUrlModal(false)}
-                className="rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-700 dark:hover:text-white cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1853,7 +1866,7 @@ export default function StoragePage() {
 
             <form onSubmit={handleSaveExternalUrl} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Link / URL Externa do Vídeo <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -1862,12 +1875,12 @@ export default function StoragePage() {
                   value={externalUrl}
                   onChange={(e) => setExternalUrl(e.target.value)}
                   placeholder="https://pinterest.com/pin/... ou YouTube / Link direto"
-                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground placeholder-muted-foreground outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
+                  className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#111524] px-4 py-3 text-xs font-bold text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-[#8a90a0] outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
                 />
               </div>
-              
+
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Título ou Identificação da Mídia
                 </label>
                 <input
@@ -1875,22 +1888,22 @@ export default function StoragePage() {
                   value={externalTitle}
                   onChange={(e) => setExternalTitle(e.target.value)}
                   placeholder="Ex: REEL_PROMO_LANCAMENTO.mp4"
-                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground placeholder-muted-foreground outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
+                  className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#111524] px-4 py-3 text-xs font-bold text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-[#8a90a0] outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Vincular a um Produto (Opcional)
                 </label>
                 <select
                   value={selectedProductId}
                   onChange={(e) => setSelectedProductId(e.target.value)}
-                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
+                  className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#111524] px-4 py-3 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
                 >
-                  <option value="" className="bg-muted">Sem produto vinculado</option>
+                  <option value="">Sem produto vinculado</option>
                   {productsList.map((prod) => (
-                    <option key={prod.id} value={prod.id} className="bg-muted">
+                    <option key={prod.id} value={prod.id}>
                       {prod.title || prod.name}
                     </option>
                   ))}
@@ -1898,35 +1911,35 @@ export default function StoragePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Vincular a um Modelo de Medidas (Opcional)
                 </label>
                 <select
                   value={selectedModelId}
                   onChange={(e) => setSelectedModelId(e.target.value)}
-                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
+                  className="w-full rounded-xl border border-slate-200 dark:border-white/5 bg-[#F8FAFC] dark:bg-[#111524] px-4 py-3 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29]"
                 >
-                  <option value="" className="bg-muted">Sem modelo de medidas vinculado</option>
+                  <option value="">Sem modelo de medidas vinculado</option>
                   {sizingModelsList.map((model) => (
-                    <option key={model.id} value={model.id} className="bg-muted">
+                    <option key={model.id} value={model.id}>
                       {model.name || model.title || `Modelo ${model.id.slice(0, 6)}`}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-white/5">
                 <button
                   type="button"
                   onClick={() => setShowUrlModal(false)}
-                  className="rounded-2xl px-4 py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-[#8a90a0] dark:hover:text-white transition-all cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingUrl}
-                  className="rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all disabled:opacity-50 cursor-pointer"
+                  className="rounded-xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {savingUrl ? 'Salvando...' : 'Cadastrar Mídia'}
                 </button>
@@ -1936,25 +1949,25 @@ export default function StoragePage() {
         </div>
       )}
 
-      {/* ── MODAL DE PREVIEW DA MÍDIA (rounded-2xl) ── */}
+      {/* ── MODAL DE PREVIEW DA MÍDIA ── */}
       {previewMedia && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div className={cn(
-            "relative w-full rounded-2xl border border-white/10 bg-muted p-6 sm:p-8 shadow-2xl flex flex-col max-h-[92vh] transition-all duration-300",
+            "relative w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1a1f35] p-6 sm:p-8 shadow-2xl flex flex-col max-h-[92vh] transition-all duration-300",
             previewMedia.type === 'image' ? 'max-w-3xl' : 'max-w-[400px]'
           )}>
-            
+
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 dark:bg-orange-500/10 text-[#0091ff] dark:text-[#ff7a29]">
                   <Eye size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-black text-foreground truncate max-w-[200px] sm:max-w-xs" title={previewMedia.name}>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-xs" title={previewMedia.name}>
                     {previewMedia.name}
                   </h3>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-[#8a90a0] uppercase tracking-widest">
                     Visualização de Mídia
                   </p>
                 </div>
@@ -1962,7 +1975,7 @@ export default function StoragePage() {
               <button
                 type="button"
                 onClick={() => setPreviewMedia(null)}
-                className="rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
+                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-700 dark:hover:text-white transition-all cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -2026,11 +2039,11 @@ export default function StoragePage() {
             </div>
 
             {/* Rodapé */}
-            <div className="flex items-center justify-stretch gap-3 mt-4 pt-4 border-t border-border">
+            <div className="flex items-center justify-stretch gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
               <button
                 type="button"
                 onClick={() => setPreviewMedia(null)}
-                className="w-full rounded-2xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] py-3 text-xs font-black text-white shadow-md hover:scale-[1.01] transition-all cursor-pointer text-center uppercase tracking-wider"
+                className="w-full rounded-xl bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] py-3 text-xs font-black text-white shadow-md hover:scale-[1.01] transition-all cursor-pointer text-center uppercase tracking-wider"
               >
                 Fechar
               </button>
@@ -2040,7 +2053,7 @@ export default function StoragePage() {
         </div>
       )}
 
-      {/* ── MODAL DE CONFIRMAÇÃO DE EXCLUSÃO DE MÍDIA PERSONALIZADO (PADRÃO DO SISTEMA) ── */}
+      {/* ── MODAL DE CONFIRMAÇÃO DE EXCLUSÃO DE MÍDIA ── */}
       <CustomDialog
         isOpen={!!deleteFileConfirm}
         type="form"
@@ -2051,18 +2064,16 @@ export default function StoragePage() {
         confirmText="Excluir"
       >
         <div className="space-y-6 py-2">
-          {/* Ícone de Atenção centralizado grande */}
           <div className="flex justify-center">
             <div className="p-4 bg-amber-500/[0.03] rounded-full border border-amber-500/10">
               <AlertTriangle className="h-12 w-12 text-amber-500 stroke-[1.5]" />
             </div>
           </div>
 
-          {/* Caixa de Alerta amarela estilizada */}
           <div className="flex items-start gap-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] p-4 text-left">
             <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-xs font-bold text-amber-300 leading-relaxed">
-              Esta ação é irreversível. O item <span className="text-[#ff7a29]">"{deleteFileConfirm?.name}"</span> será removido permanentemente.
+            <p className="text-xs font-bold text-amber-600 dark:text-amber-300 leading-relaxed">
+              Esta ação é irreversível. O item <span className="text-[#0091ff] dark:text-[#ff7a29]">"{deleteFileConfirm?.name}"</span> será removido permanentemente.
             </p>
           </div>
         </div>
