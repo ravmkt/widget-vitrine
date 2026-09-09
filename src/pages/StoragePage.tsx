@@ -1255,14 +1255,14 @@ export default function StoragePage() {
   };
 
   return (
-    <div className="animate-fade-in space-y-8 pb-20 font-sans text-white">
+    <div className="animate-fade-in space-y-8 pb-20 font-sans text-foreground">
       {/* ── CABEÇALHO DA PÁGINA ── */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-white">
+          <h1 className="text-3xl font-black tracking-tight text-foreground">
             Biblioteca
           </h1>
-          <p className="mt-1 text-sm font-medium text-slate-400 leading-relaxed">
+          <p className="mt-1 text-sm font-medium text-muted-foreground leading-relaxed">
             Gerencie os vídeos e imagens hospedados no seu plano e monitore o uso de espaço.
           </p>
         </div>
@@ -1283,7 +1283,7 @@ export default function StoragePage() {
               "flex items-center gap-2 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-wider transition-all border shadow-sm cursor-pointer",
               connectedPlatforms.includes('instagram')
                 ? "border-pink-500/40 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white shadow-pink-500/20 hover:opacity-95"
-                : "border-white/5 bg-[#171c30] text-slate-400 hover:text-white hover:bg-[#1e253c]"
+                : "border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
             )}
           >
             <SocialIcons.Instagram />
@@ -1305,7 +1305,7 @@ export default function StoragePage() {
               "flex items-center gap-2 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-wider transition-all border shadow-sm cursor-pointer",
               connectedPlatforms.includes('tiktok')
                 ? "border-slate-700 bg-black text-white shadow-slate-900/40 hover:bg-slate-950"
-                : "border-white/5 bg-[#171c30] text-slate-400 hover:text-white hover:bg-[#1e253c]"
+                : "border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
             )}
           >
             <SocialIcons.TikTok />
@@ -1324,7 +1324,7 @@ export default function StoragePage() {
           <button
             type="button"
             onClick={() => setShowUrlModal(true)}
-            className="flex items-center gap-2 rounded-2xl border border-white/5 bg-[#171c30] px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-400 shadow-sm hover:border-purple-500 hover:text-purple-400 transition-all cursor-pointer"
+            className="flex items-center gap-2 rounded-2xl border border-border bg-muted px-4 py-3 text-xs font-black uppercase tracking-wider text-muted-foreground shadow-sm hover:border-purple-500 hover:text-purple-400 transition-all cursor-pointer"
           >
             <Link size={15} className="text-[#ff7a29]" />
             URL Externa
@@ -1355,7 +1355,7 @@ export default function StoragePage() {
             : '#22c55e';
 
         return (
-          <div className="rounded-2xl border border-white/5 bg-[#111524] p-6 sm:p-7 shadow-2xl space-y-4">
+          <div className="rounded-2xl border border-border bg-muted p-6 sm:p-7 shadow-2xl space-y-4">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ff7a29] text-white shadow-md shadow-orange-500/20 transition-transform hover:scale-105 shrink-0">
@@ -1363,15 +1363,15 @@ export default function StoragePage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black text-white uppercase tracking-tight">
+                    <h3 className="text-base font-black text-foreground uppercase tracking-tight">
                       {planName}
                     </h3>
-                    <span className="rounded-full bg-[#171c30] px-2.5 py-0.5 text-[10px] font-black uppercase text-[#ff7a29] border border-white/5">
+                    <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-black uppercase text-[#ff7a29] border border-border">
                       {formatSize(maxLimitBytes)} Limite
                     </span>
                   </div>
-                  <p className="text-xs font-medium text-slate-400 mt-0.5">
-                    Uso atual: <strong className="text-white">{formatSize(totalUsedBytes)}</strong> de {formatSize(maxLimitBytes)}
+                  <p className="text-xs font-medium text-muted-foreground mt-0.5">
+                    Uso atual: <strong className="text-foreground">{formatSize(totalUsedBytes)}</strong> de {formatSize(maxLimitBytes)}
                   </p>
                 </div>
               </div>
@@ -1382,9 +1382,9 @@ export default function StoragePage() {
                     type="button"
                     onClick={() => showSuccess('Redirecionando para a página de planos...')}
                     style={{ backgroundColor: currentColorHex }}
-                    className="flex items-center gap-1.5 rounded-2xl px-4 py-2 text-xs font-black text-white shadow-md transition-all hover:opacity-90"
+                    className="flex items-center gap-1.5 rounded-2xl px-4 py-2 text-xs font-black text-foreground shadow-md transition-all hover:opacity-90"
                   >
-                    <Sparkles size={14} className="!text-white" />
+                    <Sparkles size={14} className="!text-foreground" />
                     Faça Upgrade
                   </button>
                 )}
@@ -1396,7 +1396,7 @@ export default function StoragePage() {
                   >
                     {usedPercentage}%
                   </span>
-                  <span className="block text-[11px] font-bold text-slate-500">
+                  <span className="block text-[11px] font-bold text-muted-foreground">
                     Espaço Consumido
                   </span>
                 </div>
@@ -1422,7 +1422,7 @@ export default function StoragePage() {
             )}
 
             {/* Barra de Progresso */}
-            <div className="h-3 w-full overflow-hidden rounded-full bg-[#171c30] p-0.5 border border-white/5">
+            <div className="h-3 w-full overflow-hidden rounded-full bg-muted p-0.5 border border-border">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
@@ -1437,20 +1437,20 @@ export default function StoragePage() {
 
       {/* Seção de Vídeos Importados do Instagram */}
       {connectedPlatforms.includes('instagram') && activePlatformTab === 'instagram' && (
-        <div className="rounded-2xl border border-pink-500/20 bg-[#111524] p-6 shadow-2xl space-y-4 animate-in fade-in duration-300">
+        <div className="rounded-2xl border border-pink-500/20 bg-muted p-6 shadow-2xl space-y-4 animate-in fade-in duration-300">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-black text-white flex items-center gap-2">
+            <h2 className="text-base font-black text-foreground flex items-center gap-2">
               <Instagram className="h-5 w-5 text-pink-500" />
               Reels da sua Conta do Instagram
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-slate-400">
+              <span className="text-xs font-bold text-muted-foreground">
                 {instagramVideos.length} mídias encontradas
               </span>
               <button
                 type="button"
                 onClick={() => setActivePlatformTab('none')}
-                className="rounded-xl p-1 text-slate-400 hover:bg-white/5 hover:text-white"
+                className="rounded-xl p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                 title="Fechar gaveta"
               >
                 <X size={16} />
@@ -1459,15 +1459,15 @@ export default function StoragePage() {
           </div>
 
           {loadingVideos ? (
-            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-[#171c30] border border-white/5">
-              <span className="text-xs font-bold text-slate-500">Carregando mídias do Instagram...</span>
+            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-muted border border-border">
+              <span className="text-xs font-bold text-muted-foreground">Carregando mídias do Instagram...</span>
             </div>
           ) : instagramVideos.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {instagramVideos.map((video) => (
                 <div
                   key={video.id}
-                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-white/5 hover:border-pink-500 transition-all duration-300 shadow-sm"
+                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-border hover:border-pink-500 transition-all duration-300 shadow-sm"
                 >
                   <img
                     src={video.thumbnail_url || video.media_url}
@@ -1482,7 +1482,7 @@ export default function StoragePage() {
                     <button
                       type="button"
                       onClick={() => handleImportAndEditInstagramVideo(video)}
-                      className="flex items-center gap-1.5 rounded-xl bg-pink-600 px-3 py-2 text-[10px] font-black text-white shadow-lg hover:bg-pink-700 transition-all transform hover:scale-105"
+                      className="flex items-center gap-1.5 rounded-xl bg-pink-600 px-3 py-2 text-[10px] font-black text-foreground shadow-lg hover:bg-pink-700 transition-all transform hover:scale-105"
                     >
                       <Sparkles size={12} />
                       Usar & Editar
@@ -1490,7 +1490,7 @@ export default function StoragePage() {
                   </div>
 
                   {video.caption && (
-                    <p className="absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-bold text-white line-clamp-2 leading-tight pointer-events-none">
+                    <p className="absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-bold text-foreground line-clamp-2 leading-tight pointer-events-none">
                       {video.caption}
                     </p>
                   )}
@@ -1498,8 +1498,8 @@ export default function StoragePage() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#171c30] border border-white/5 text-center">
-              <p className="text-xs font-bold text-slate-500">Nenhum Reels ou vídeo encontrado nesta conta do Instagram.</p>
+            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-muted border border-border text-center">
+              <p className="text-xs font-bold text-muted-foreground">Nenhum Reels ou vídeo encontrado nesta conta do Instagram.</p>
             </div>
           )}
         </div>
@@ -1507,20 +1507,20 @@ export default function StoragePage() {
       
       {/* Seção de Vídeos Importados do TikTok */}
       {connectedPlatforms.includes('tiktok') && activePlatformTab === 'tiktok' && (
-        <div className="rounded-2xl border border-white/5 bg-[#111524] p-6 shadow-2xl space-y-4 animate-in fade-in duration-300">
+        <div className="rounded-2xl border border-border bg-muted p-6 shadow-2xl space-y-4 animate-in fade-in duration-300">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-black text-white flex items-center gap-2">
-              <div className="text-white"><SocialIcons.TikTok /></div>
+            <h2 className="text-base font-black text-foreground flex items-center gap-2">
+              <div className="text-foreground"><SocialIcons.TikTok /></div>
               Vídeos da sua Conta do TikTok
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-slate-400">
+              <span className="text-xs font-bold text-muted-foreground">
                 {tiktokVideos.length} mídias encontradas
               </span>
               <button
                 type="button"
                 onClick={() => setActivePlatformTab('none')}
-                className="rounded-xl p-1 text-slate-400 hover:bg-white/5 hover:text-white"
+                className="rounded-xl p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                 title="Fechar gaveta"
               >
                 <X size={16} />
@@ -1529,15 +1529,15 @@ export default function StoragePage() {
           </div>
 
           {loadingTikTok ? (
-            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-[#171c30] border border-white/5">
-              <span className="text-xs font-bold text-slate-500">Carregando mídias do TikTok...</span>
+            <div className="flex min-h-[160px] items-center justify-center rounded-2xl bg-muted border border-border">
+              <span className="text-xs font-bold text-muted-foreground">Carregando mídias do TikTok...</span>
             </div>
           ) : tiktokVideos.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {tiktokVideos.map((video) => (
                 <div
                   key={video.id}
-                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-white/5 hover:border-slate-400 transition-all duration-300 shadow-sm"
+                  className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-slate-900 border border-border hover:border-slate-400 transition-all duration-300 shadow-sm"
                 >
                   <img
                     src={video.cover_image_url || video.thumbnail_url || video.video_url}
@@ -1560,7 +1560,7 @@ export default function StoragePage() {
                   </div>
 
                   {(video.title || video.description) && (
-                    <p className="absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-bold text-white line-clamp-2 leading-tight pointer-events-none">
+                    <p className="absolute bottom-2.5 left-2.5 right-2.5 text-[10px] font-bold text-foreground line-clamp-2 leading-tight pointer-events-none">
                       {video.title || video.description}
                     </p>
                   )}
@@ -1568,26 +1568,26 @@ export default function StoragePage() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#171c30] border border-white/5 text-center">
-              <p className="text-xs font-bold text-slate-500">Nenhum vídeo encontrado nesta conta do TikTok.</p>
+            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-muted border border-border text-center">
+              <p className="text-xs font-bold text-muted-foreground">Nenhum vídeo encontrado nesta conta do TikTok.</p>
             </div>
           )}
         </div>
       )}
 
       {/* ── CARD PRINCIPAL UNIFICADO PREMIUM (Tabela e Busca) ── */}
-      <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#111524] shadow-2xl p-6 sm:p-8 space-y-6">
+      <div className="overflow-hidden rounded-2xl border border-border bg-muted shadow-2xl p-6 sm:p-8 space-y-6">
         
         {/* BARRA INTERNA DE FILTROS E BUSCA */}
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-center border-b border-white/5 pb-5">
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-center border-b border-border pb-5">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
             <input
               type="text"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Pesquisar pelo nome do arquivo..."
-              className="w-full rounded-2xl border border-white/5 bg-[#171c30] pl-12 pr-4 py-3.5 text-xs font-bold text-white placeholder-slate-500 outline-none transition focus:border-[#ff7a29] transition-all"
+              className="w-full rounded-2xl border border-border bg-muted pl-12 pr-4 py-3.5 text-xs font-bold text-foreground placeholder-muted-foreground outline-none transition focus:border-[#ff7a29] transition-all"
             />
           </div>
 
@@ -1599,7 +1599,7 @@ export default function StoragePage() {
                 "rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer border border-transparent",
                 selectedType === 'all'
                   ? "bg-[#ff7a29] text-white shadow-lg shadow-orange-500/15"
-                  : "bg-[#171c30] text-slate-400 hover:text-white hover:bg-[#1e253c]"
+                  : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
               )}
             >
               Todos
@@ -1611,7 +1611,7 @@ export default function StoragePage() {
                 "flex items-center justify-center gap-1.5 rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer border border-transparent",
                 selectedType === 'video'
                   ? "bg-[#ff7a29] text-white shadow-lg shadow-orange-500/15"
-                  : "bg-[#171c30] text-slate-400 hover:text-white hover:bg-[#1e253c]"
+                  : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
               )}
             >
               <FileVideo size={14} />
@@ -1624,7 +1624,7 @@ export default function StoragePage() {
                 "flex items-center justify-center gap-1.5 rounded-2xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all text-center flex-1 md:flex-initial cursor-pointer border border-transparent",
                 selectedType === 'image'
                   ? "bg-[#ff7a29] text-white shadow-lg shadow-orange-500/15"
-                  : "bg-[#171c30] text-slate-400 hover:text-white hover:bg-[#1e253c]"
+                  : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
               )}
             >
               <FileImage size={14} />
@@ -1637,7 +1637,7 @@ export default function StoragePage() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-white/5 bg-[#171c30]/40 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <tr className="border-b border-border bg-muted/40 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 <th className="px-6 py-4 rounded-l-2xl">Mídia</th>
                 <th className="px-6 py-4">Nome do Arquivo</th>
                 <th className="px-6 py-4">Produto</th>
@@ -1650,22 +1650,22 @@ export default function StoragePage() {
             <tbody className="divide-y divide-white/[0.03]">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-muted-foreground">
                     Carregando mídias da sua conta...
                   </td>
                 </tr>
               ) : filteredFiles.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-slate-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-bold text-muted-foreground">
                     Nenhum arquivo encontrado no seu armazenamento.
                   </td>
                 </tr>
               ) : (
                 filteredFiles.map(file => (
-                  <tr key={file.id} className="transition-colors hover:bg-white/[0.015] border-b border-white/[0.02]">
+                  <tr key={file.id} className="transition-colors hover:bg-white/[0.015] border-b border-border/50">
                     {/* COLUNA 1: MÍDIA (Thumb circular/quadrada com curvatura) */}
                     <td className="px-6 py-3.5">
-                      <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-white/10 bg-[#171c30] shadow-xs flex items-center justify-center shrink-0">
+                      <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-white/10 bg-muted shadow-xs flex items-center justify-center shrink-0">
                         {file.thumbnailUrl || (file.type === 'image' && file.fileUrl) ? (
                           <img 
                             src={file.thumbnailUrl || file.fileUrl} 
@@ -1692,7 +1692,7 @@ export default function StoragePage() {
                               <FileVideo size={16} />
                             </div>
                           ) : (
-                            <FileImage size={16} className="text-slate-500" />
+                            <FileImage size={16} className="text-muted-foreground" />
                           )}
                         </div>
                       </div>
@@ -1700,7 +1700,7 @@ export default function StoragePage() {
                     
                     {/* COLUNA 2: NOME (Título + Tipo com tag de hospedagem em laranja) */}
                     <td className="px-6 py-3.5 max-w-xs truncate">
-                      <span className="text-xs font-black text-white block truncate" title={file.name}>
+                      <span className="text-xs font-black text-foreground block truncate" title={file.name}>
                         {file.name}
                       </span>
                       <span className="text-[10px] font-bold text-[#ff7a29] uppercase tracking-wider">
@@ -1716,10 +1716,10 @@ export default function StoragePage() {
                     <td className="px-6 py-3.5">
                       {file.productName ? (
                         <div 
-                          className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-[#171c30]/50 p-1.5 pr-3 shadow-xs"
+                          className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/50 p-1.5 pr-3 shadow-xs"
                           title={file.productName}
                         >
-                          <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#111524]">
+                          <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-muted">
                             {file.productImageUrl ? (
                               <img
                                 src={file.productImageUrl}
@@ -1731,7 +1731,7 @@ export default function StoragePage() {
                                 }}
                               />
                             ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-[#171c30] text-[10px] font-black text-slate-500">
+                              <div className="flex h-full w-full items-center justify-center bg-muted text-[10px] font-black text-muted-foreground">
                                 {file.productName.charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -1741,7 +1741,7 @@ export default function StoragePage() {
                           </span>
                         </div>
                       ) : (
-                        <span className="inline-flex items-center rounded-xl bg-[#171c30] px-2.5 py-1 text-[10px] font-bold text-slate-500 border border-transparent">
+                        <span className="inline-flex items-center rounded-xl bg-muted px-2.5 py-1 text-[10px] font-bold text-muted-foreground border border-transparent">
                           Sem produto
                         </span>
                       )}
@@ -1756,12 +1756,12 @@ export default function StoragePage() {
                           {file.storyTitle}
                         </span>
                       ) : (
-                        <span className="text-xs font-bold text-slate-500">—</span>
+                        <span className="text-xs font-bold text-muted-foreground">—</span>
                       )}
                     </td>
 
                     {/* COLUNA 5: TAMANHO (Centralizado) */}
-                    <td className="px-6 py-3.5 text-center font-mono text-xs font-black text-white">
+                    <td className="px-6 py-3.5 text-center font-mono text-xs font-black text-foreground">
                       {formatSize(file.sizeInBytes)}
                     </td>
 
@@ -1780,7 +1780,7 @@ export default function StoragePage() {
                           <button
                             type="button"
                             onClick={() => window.location.href = `/videos/${file.id}/edit`}
-                            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                            className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
                             title="Editar vínculos do vídeo"
                           >
                             <Pencil size={15} />
@@ -1789,7 +1789,7 @@ export default function StoragePage() {
                         <button
                           type="button"
                           onClick={() => handlePreviewMedia(file)}
-                          className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                          className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
                           title="Visualizar mídia"
                         >
                           <Eye size={15} />
@@ -1797,7 +1797,7 @@ export default function StoragePage() {
                         <button
                           type="button"
                           onClick={() => handleDownloadFile(file.fileUrl || file.thumbnailUrl, file.name)}
-                          className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                          className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
                           title="Baixar arquivo"
                         >
                           <Download size={15} />
@@ -1805,7 +1805,7 @@ export default function StoragePage() {
                         <button
                           type="button"
                           onClick={() => triggerDeleteConfirm(file.id, file.name)}
-                          className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer"
+                          className="p-1.5 rounded-xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer"
                           title="Excluir arquivo"
                         >
                           <Trash2 size={15} />
@@ -1823,17 +1823,17 @@ export default function StoragePage() {
       {/* Modal de Cadastro por URL Externa */}
       {showUrlModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#111524] p-6 shadow-2xl space-y-6">
-            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-muted p-6 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400">
                   <Link size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-white">
+                  <h3 className="text-lg font-black text-foreground">
                     Adicionar Vídeo por URL
                   </h3>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Insira links do Pinterest, YouTube, Panda Video, Bunny CDN ou link direto.
                   </p>
                 </div>
@@ -1841,7 +1841,7 @@ export default function StoragePage() {
               <button
                 type="button"
                 onClick={() => setShowUrlModal(false)}
-                className="rounded-xl p-2 text-slate-400 hover:bg-white/5 hover:text-white cursor-pointer"
+                className="rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1858,7 +1858,7 @@ export default function StoragePage() {
                   value={externalUrl}
                   onChange={(e) => setExternalUrl(e.target.value)}
                   placeholder="https://pinterest.com/pin/... ou YouTube / Link direto"
-                  className="w-full rounded-2xl border border-white/5 bg-[#171c30] px-4 py-2.5 text-xs font-bold text-white placeholder-slate-500 outline-none focus:border-[#ff7a29]"
+                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground placeholder-muted-foreground outline-none focus:border-[#ff7a29]"
                 />
               </div>
               
@@ -1871,7 +1871,7 @@ export default function StoragePage() {
                   value={externalTitle}
                   onChange={(e) => setExternalTitle(e.target.value)}
                   placeholder="Ex: REEL_PROMO_LANCAMENTO.mp4"
-                  className="w-full rounded-2xl border border-white/5 bg-[#171c30] px-4 py-2.5 text-xs font-bold text-white placeholder-slate-500 outline-none focus:border-[#ff7a29]"
+                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground placeholder-muted-foreground outline-none focus:border-[#ff7a29]"
                 />
               </div>
 
@@ -1882,11 +1882,11 @@ export default function StoragePage() {
                 <select
                   value={selectedProductId}
                   onChange={(e) => setSelectedProductId(e.target.value)}
-                  className="w-full rounded-2xl border border-white/5 bg-[#171c30] px-4 py-2.5 text-xs font-bold text-white outline-none focus:border-[#ff7a29]"
+                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:border-[#ff7a29]"
                 >
-                  <option value="" className="bg-[#111524]">Sem produto vinculado</option>
+                  <option value="" className="bg-muted">Sem produto vinculado</option>
                   {productsList.map((prod) => (
-                    <option key={prod.id} value={prod.id} className="bg-[#111524]">
+                    <option key={prod.id} value={prod.id} className="bg-muted">
                       {prod.title || prod.name}
                     </option>
                   ))}
@@ -1900,22 +1900,22 @@ export default function StoragePage() {
                 <select
                   value={selectedModelId}
                   onChange={(e) => setSelectedModelId(e.target.value)}
-                  className="w-full rounded-2xl border border-white/5 bg-[#171c30] px-4 py-2.5 text-xs font-bold text-white outline-none focus:border-[#ff7a29]"
+                  className="w-full rounded-2xl border border-border bg-muted px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:border-[#ff7a29]"
                 >
-                  <option value="" className="bg-[#111524]">Sem modelo de medidas vinculado</option>
+                  <option value="" className="bg-muted">Sem modelo de medidas vinculado</option>
                   {sizingModelsList.map((model) => (
-                    <option key={model.id} value={model.id} className="bg-[#111524]">
+                    <option key={model.id} value={model.id} className="bg-muted">
                       {model.name || model.title || `Modelo ${model.id.slice(0, 6)}`}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setShowUrlModal(false)}
-                  className="rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-400 hover:text-white transition-all cursor-pointer"
+                  className="rounded-2xl px-4 py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -1936,21 +1936,21 @@ export default function StoragePage() {
       {previewMedia && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div className={cn(
-            "relative w-full rounded-2xl border border-white/10 bg-[#111524] p-6 sm:p-8 shadow-2xl flex flex-col max-h-[92vh] transition-all duration-300",
+            "relative w-full rounded-2xl border border-white/10 bg-muted p-6 sm:p-8 shadow-2xl flex flex-col max-h-[92vh] transition-all duration-300",
             previewMedia.type === 'image' ? 'max-w-3xl' : 'max-w-[400px]'
           )}>
             
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
+            <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-[#ff7a29]">
                   <Eye size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-black text-white truncate max-w-[200px] sm:max-w-xs" title={previewMedia.name}>
+                  <h3 className="text-sm sm:text-base font-black text-foreground truncate max-w-[200px] sm:max-w-xs" title={previewMedia.name}>
                     {previewMedia.name}
                   </h3>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     Visualização de Mídia
                   </p>
                 </div>
@@ -1958,7 +1958,7 @@ export default function StoragePage() {
               <button
                 type="button"
                 onClick={() => setPreviewMedia(null)}
-                className="rounded-xl p-2 text-slate-400 hover:bg-white/5 hover:text-white transition-all cursor-pointer"
+                className="rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -2022,7 +2022,7 @@ export default function StoragePage() {
             </div>
 
             {/* Rodapé */}
-            <div className="flex items-center justify-stretch gap-3 mt-4 pt-4 border-t border-white/5">
+            <div className="flex items-center justify-stretch gap-3 mt-4 pt-4 border-t border-border">
               <button
                 type="button"
                 onClick={() => setPreviewMedia(null)}

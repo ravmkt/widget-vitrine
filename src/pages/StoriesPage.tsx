@@ -339,19 +339,19 @@ const StoriesPage = () => {
     'inline-flex h-7 items-center justify-center gap-1.5 rounded-full border border-sky-500/10 bg-sky-500/5 px-3.5 text-xs font-bold text-sky-400 whitespace-nowrap';
 
   const getLocalBadgeClass = () =>
-    'inline-flex h-7 items-center justify-center rounded-full border border-slate-800 bg-slate-900/50 px-3.5 text-xs font-bold text-slate-400 whitespace-nowrap';
+    'inline-flex h-7 items-center justify-center rounded-full border border-slate-800 bg-slate-900/50 px-3.5 text-xs font-bold text-muted-foreground whitespace-nowrap';
 
   if (loading) return null;
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20 font-sans text-white">
+    <div className="space-y-8 animate-fade-in pb-20 font-sans text-foreground">
       {/* HEADER DA PÁGINA */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">
+          <h1 className="text-3xl font-black text-foreground tracking-tight">
             Stories
           </h1>
-          <p className="text-slate-400 font-medium mt-1">
+          <p className="text-muted-foreground font-medium mt-1">
             Gerencie as configurações de exibição e agrupamento de vídeos.
           </p>
         </div>
@@ -365,13 +365,13 @@ const StoriesPage = () => {
       </div>
 
       {/* ── CARD PRINCIPAL UNIFICADO PREMIUM (Tema Escuro + rounded-2xl) ── */}
-      <div className="bg-[#111524] border border-white/5 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="bg-muted border border-border rounded-2xl shadow-2xl overflow-hidden">
         
         {/* BARRA DE FILTROS E BUSCA INTERNA DO CARD */}
-        <div className="p-6 pb-4 flex flex-col md:flex-row gap-4 justify-between items-center border-b border-white/5">
+        <div className="p-6 pb-4 flex flex-col md:flex-row gap-4 justify-between items-center border-b border-border">
           <div className="relative flex-1 w-full">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
               size={18}
             />
             <input
@@ -379,7 +379,7 @@ const StoriesPage = () => {
               placeholder="Pesquisar por nome, tipo ou local..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-[#171c30] border border-white/5 rounded-2xl text-sm font-bold text-white placeholder-slate-500 outline-none focus:border-[#ff7a29] transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-muted border border-border rounded-2xl text-sm font-bold text-foreground placeholder-muted-foreground outline-none focus:border-[#ff7a29] transition-all"
             />
           </div>
 
@@ -393,7 +393,7 @@ const StoriesPage = () => {
                   'px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border text-center flex-1 md:flex-initial cursor-pointer',
                   filterStatus === status
                     ? 'bg-[#ff7a29] border-[#ff7a29] text-white shadow-lg shadow-orange-500/15'
-                    : 'bg-[#171c30] border-transparent text-slate-400 hover:text-white hover:bg-[#1e253c]',
+                    : 'bg-muted border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/70',
                 )}
               >
                 {status === 'all'
@@ -410,10 +410,10 @@ const StoriesPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#171c30]/40 border-b border-white/5">
+              <tr className="bg-muted/40 border-b border-border">
                 <th
                   onClick={() => handleSort('nome')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest hover:text-white transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest hover:text-foreground transition-colors"
                 >
                   <span className="inline-flex items-center gap-1">
                     Story / Nome{' '}
@@ -428,7 +428,7 @@ const StoriesPage = () => {
 
                 <th
                   onClick={() => handleSort('tipo')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest hover:text-white transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest hover:text-foreground transition-colors"
                 >
                   <span className="inline-flex items-center gap-1">
                     Tipo{' '}
@@ -443,7 +443,7 @@ const StoriesPage = () => {
 
                 <th
                   onClick={() => handleSort('videos')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-white transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center hover:text-foreground transition-colors"
                 >
                   <span className="inline-flex items-center gap-1 justify-center">
                     Vídeos{' '}
@@ -458,7 +458,7 @@ const StoriesPage = () => {
 
                 <th
                   onClick={() => handleSort('local')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest hover:text-white transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest hover:text-foreground transition-colors"
                 >
                   <span className="inline-flex items-center gap-1">
                     Localização{' '}
@@ -473,7 +473,7 @@ const StoriesPage = () => {
 
                 <th
                   onClick={() => handleSort('visualizacoes')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-white transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center hover:text-foreground transition-colors"
                 >
                   <span className="inline-flex items-center gap-1 justify-center">
                     Visualizações{' '}
@@ -488,7 +488,7 @@ const StoriesPage = () => {
 
                 <th
                   onClick={() => handleSort('cliques')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-white transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center hover:text-foreground transition-colors"
                 >
                   <span className="inline-flex items-center gap-1 justify-center">
                     CTR / Cliques{' '}
@@ -503,7 +503,7 @@ const StoriesPage = () => {
 
                 <th
                   onClick={() => handleSort('status')}
-                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center hover:text-white transition-colors"
+                  className="cursor-pointer select-none whitespace-nowrap px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center hover:text-foreground transition-colors"
                 >
                   <span className="inline-flex items-center gap-1 justify-center">
                     Status{' '}
@@ -516,7 +516,7 @@ const StoriesPage = () => {
                   </span>
                 </th>
 
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center">
                   Ações
                 </th>
               </tr>
@@ -545,18 +545,18 @@ const StoriesPage = () => {
                 return (
                   <tr
                     key={story.id}
-                    className="hover:bg-white/[0.015] border-b border-white/[0.02] transition-colors align-middle"
+                    className="hover:bg-white/[0.015] border-b border-border/50 transition-colors align-middle"
                   >
                     {/* COLUNA 1 - NOME (No formato do print com thumbnail/ícone, título e status embaixo) */}
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
                         {/* Thumbnail Fictício do Story baseado no Formato */}
-                        <div className="w-12 h-12 rounded-xl bg-[#1a1f35] border border-white/5 flex items-center justify-center text-[#ff7a29] shrink-0 shadow-inner">
+                        <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center text-[#ff7a29] shrink-0 shadow-inner">
                           {getFormatIcon(story.format)}
                         </div>
 
                         <div className="min-w-0">
-                          <h3 className="text-sm font-black text-white truncate max-w-[200px] uppercase tracking-wide">
+                          <h3 className="text-sm font-black text-foreground truncate max-w-[200px] uppercase tracking-wide">
                             {story.title}
                           </h3>
                           <span className={cn(
@@ -578,7 +578,7 @@ const StoriesPage = () => {
                     </td>
 
                     {/* COLUNA 3 - NÚMERO DE VÍDEOS */}
-                    <td className="px-6 py-5 text-center font-black text-white text-sm">
+                    <td className="px-6 py-5 text-center font-black text-foreground text-sm">
                       {videoCounts[story.id] || 0}
                     </td>
 
@@ -593,7 +593,7 @@ const StoriesPage = () => {
                     </td>
 
                     {/* COLUNA 5 - VISUALIZAÇÕES */}
-                    <td className="px-6 py-5 text-center font-black text-white text-sm">
+                    <td className="px-6 py-5 text-center font-black text-foreground text-sm">
                       {views}
                     </td>
 
@@ -608,7 +608,7 @@ const StoriesPage = () => {
                         )}>
                           {ctr.toFixed(1)}%
                         </span>
-                        <span className="text-[10px] text-slate-500 font-bold">
+                        <span className="text-[10px] text-muted-foreground font-bold">
                           {clicks} cliques
                         </span>
                       </div>
@@ -647,7 +647,7 @@ const StoriesPage = () => {
                               'noopener,noreferrer',
                             );
                           }}
-                          className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all cursor-pointer"
+                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all cursor-pointer"
                           title="Preview Story"
                         >
                           <Eye size={16} />
@@ -656,7 +656,7 @@ const StoriesPage = () => {
                         {/* 2. Editar */}
                         <button
                           onClick={() => navigate(`/stories/${story.id}`)}
-                          className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all cursor-pointer"
+                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all cursor-pointer"
                           title="Editar Story"
                         >
                           <Edit3 size={16} />
@@ -665,7 +665,7 @@ const StoriesPage = () => {
                         {/* 3. Excluir */}
                         <button
                           onClick={() => handleDeleteClick(story)}
-                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
+                          className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
                           title="Excluir Story"
                         >
                           <Trash2 size={16} />
@@ -681,9 +681,9 @@ const StoriesPage = () => {
 
         {/* FEEDBACK CASO NÃO EXISTAM STORIES */}
         {filteredStories.length === 0 && (
-          <div className="p-16 text-center border-t border-white/5 bg-[#14192a]/50">
-            <PlayCircle size={48} className="mx-auto text-slate-600 dark:text-slate-400 mb-4 animate-pulse" />
-            <p className="text-slate-400 font-bold">
+          <div className="p-16 text-center border-t border-border bg-[#14192a]/50">
+            <PlayCircle size={48} className="mx-auto text-slate-600 dark:text-muted-foreground mb-4 animate-pulse" />
+            <p className="text-muted-foreground font-bold">
               Nenhum Story encontrado.
             </p>
           </div>
