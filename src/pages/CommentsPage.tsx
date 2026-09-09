@@ -172,25 +172,6 @@ showSuccess(
     }
   };
 
-  /*
-   * Verifica a sessão atual do usuário.
-   * O userId é obtido automaticamente da sessão autenticada.
-   */
-  useEffect(() => {
-    const verificarSessao = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-
-      console.log("[CommentsPage] userId:", user?.id ?? null);
-      console.log("[CommentsPage] usuário autenticado:", user);
-      console.log("[CommentsPage] erro de autenticação:", error);
-    };
-
-    verificarSessao();
-  }, []);
-
   const normalizeStatus = (status?: string) => {
     const value = String(status || "")
       .toLowerCase()
@@ -1127,3 +1108,5 @@ return (
 };
 
 export default CommentsPage;
+
+

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
-import { showSuccess, showError, showWarning } from '@/lib/toast';
+import { showSuccess, showError, showWarning } from '@/utils/toast';
 
 type BillingCycle = 'monthly' | 'semiannual' | 'annual';
 

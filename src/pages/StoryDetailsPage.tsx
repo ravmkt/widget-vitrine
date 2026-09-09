@@ -386,8 +386,6 @@ const newRelations: StoryVideo[] = validSelectedVideoIds.map((videoId, index) =>
 }));
 
 // ðŸ” DEBUG
-console.log('newRelations:', JSON.stringify(newRelations));
-console.log('typeof is_cover[0]:', typeof newRelations[0]?.is_cover);
       await replaceStoryRelations('story_videos', finalStoreId, savedStory.id, newRelations);
       await saveLocationsAndRules(savedStory.id, finalStoreId);
       logPanelActivity(isCreate ? 'story.created' : 'story.updated', formData.title.trim(), finalStoreId);
@@ -486,9 +484,6 @@ const polling = setInterval(async () => {
       `https://wznvecurmisgoaijykbt.supabase.co/functions/v1/widget-selector?token=${encodeURIComponent(token)}`
     );
     const result = await response.json();
-    
-    // ✅ DEBUG (remova depois)
-    console.log('[Vidlytics Debug Polling]', result);
 
     // Busca o seletor em diferentes formatos de resposta
     const data = result.data;
@@ -1088,3 +1083,4 @@ const SelectorModal = () => {
 };
 
 export default StoryDetailsPage;
+
