@@ -143,8 +143,6 @@ const appSettingsToGeneralSettings = (
   autoplay: app.autoplay,
   muted_by_default: app.muted_by_default,
   show_video_controls: app.show_video_controls,
-  store_public_id: app.store_public_id || '',
-  public_live_key: app.public_live_key || '',
 });
 
 // Helper para converter a string de ícone vinda do banco em Componente SVG
