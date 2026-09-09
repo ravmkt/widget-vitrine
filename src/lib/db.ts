@@ -360,8 +360,6 @@ const DEFAULT_store_settings: GeneralSettings = {
   whatsapp_message_template:
     'Olá! Tenho interesse nesse produto que vi no vídeo: {{story_title}}',
   pause_on_leave: true,
-  store_public_id: `store_${DEFAULT_STORE_ID}`,
-  public_live_key: `pub_live_${Math.random().toString(36).substring(2, 26)}`,
 };
 
 const DEFAULT_APPEARANCES: Appearance[] = [
