@@ -224,13 +224,29 @@ const DashboardPage: React.FC = () => {
         const settingsData = settingsRes.status === 'fulfilled' ? settingsRes.value.data || {} : {};
         setAppEnabled(settingsData.widget_enabled !== false);
 
-        // O checklist só considera concluído se:
-        // 1. O lojista salvou expressamente suas preferências (log 'settings.saved') OU
-        // 2. Ele cadastrou seu WhatsApp de atendimento (campo essencial não gerado por padrão)
-        const hasExplicitSettingsLog = fetchedEvents.some((ev: any) => ev.action === 'settings.saved');
-        const hasWhatsapp = Boolean(settingsData?.whatsapp_number && settingsData.whatsapp_number.trim().length >= 8);
+        // 5. Checklist — Verificação estrita de completude das Configurações
+        const hasStoreName = Boolean(storeData?.name && storeData.name.trim().length > 0);
+        const hasContactEmail = Boolean(settingsData?.contact_email && settingsData.contact_email.trim().length > 3);
+        const hasPlatform = Boolean(settingsData?.platform && settingsData.platform !== 'none' && settingsData.platform.trim().length > 0);
+        const hasSector = Boolean(storeData?.sector_id || storeData?.sector);
+        
+        // WhatsApp: se estiver ativo, precisa ter ao menos 8 dígitos numéricos
+        const hasWhatsapp = settingsData?.whatsapp_enabled === false 
+          ? true 
+          : Boolean(settingsData?.whatsapp_number && settingsData.whatsapp_number.replace(/\D/g, '').length >= 8);
 
-        const hasSettingsSaved = hasExplicitSettingsLog || hasWhatsapp;
+        // O checklist só considera concluído se TODOS os dados essenciais estiverem preenchidos
+        const hasSettingsSaved = hasStoreName && hasContactEmail && hasPlatform && hasSector && hasWhatsapp;
+
+        // Lista dinâmica dos campos pendentes para orientar o lojista
+        const missingSettings: string[] = [];
+        if (!hasPlatform) missingSettings.push('Plataforma');
+        if (!hasSector) missingSettings.push('Setor');
+        if (!hasWhatsapp) missingSettings.push('WhatsApp');
+
+        const settingsDescription = !hasSettingsSaved && missingSettings.length > 0
+          ? `Pendente: configure ${missingSettings.join(', ')}.`
+          : 'Preencha os dados cadastrais, e-mail e integre seu canal de WhatsApp.';
 
         const isIntegrationCompleted = pagesCount > 0 || (usageData && (usageData.views_count || 0) > 0);
 
@@ -238,7 +254,7 @@ const DashboardPage: React.FC = () => {
           {
             id: 'settings',
             title: 'Configurações da loja',
-            description: 'Preencha os dados cadastrais, e-mail e integre seu canal de WhatsApp.',
+            description: settingsDescription,
             route: '/settings',
             completed: hasSettingsSaved,
           },
