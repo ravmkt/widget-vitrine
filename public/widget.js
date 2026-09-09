@@ -1831,7 +1831,35 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     }
     sendAnalyticsEvent._lastSent[throttleKey] = throttleNow;
 
-    try {
+      // Vidlytics: Atribuição entre subdomínios (ex: useanny.com -> seguro.useanny.com)
+      try {
+        var hName = window.location.hostname || '';
+        var rootDom = '';
+        if (hName && hName !== 'localhost' && !/^(\d{1,3}\.){3}\d{1,3}$/.test(hName)) {
+          var hParts = hName.split('.');
+          if (hParts.length >= 2) rootDom = '; domain=.' + hParts.slice(-2).join('.');
+        }
+        var expDays = 30;
+        var expDate = new Date();
+        expDate.setTime(expDate.getTime() + (expDays * 864e5));
+        var expStr = '; expires=' + expDate.toUTCString() + '; path=/' + rootDom + '; SameSite=Lax';
+
+        var vlyVisitor = localStorage.getItem('vly_visitor_id');
+        if (!vlyVisitor) {
+          vlyVisitor = 'vly_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+        }
+        document.cookie = 'vly_visitor_id=' + encodeURIComponent(vlyVisitor) + expStr;
+        localStorage.setItem('vly_visitor_id', vlyVisitor);
+
+        if (videoId) {
+          document.cookie = 'vly_video_id=' + encodeURIComponent(videoId) + expStr;
+          localStorage.setItem('vly_video_id', videoId);
+        }
+        if (productId) {
+          document.cookie = 'vly_product_id=' + encodeURIComponent(productId) + expStr;
+          localStorage.setItem('vly_product_id', productId);
+        }
+      } catch (_) {}
 
       function cleanUuid(val) {
         if (!val) return null;
