@@ -57,8 +57,6 @@ interface AppSettings {
   autoplay: boolean;
   muted_by_default: boolean;
   show_video_controls: boolean;
-  store_public_id: string | null;
-  public_live_key: string | null;
   created_at: string;
   updated_at: string;
 }
