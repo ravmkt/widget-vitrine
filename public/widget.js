@@ -1819,7 +1819,7 @@ function applyHostPosition(host, appearance) {
     }
   }
 
-function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
+  function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
 
     // Throttle: evita reenviar o mesmo evento para o mesmo vídeo em menos de 4s
@@ -1831,6 +1831,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
     }
     sendAnalyticsEvent._lastSent[throttleKey] = throttleNow;
 
+    try {
       // Vidlytics: Atribuição entre subdomínios (ex: useanny.com -> seguro.useanny.com)
       try {
         var hName = window.location.hostname || '';
