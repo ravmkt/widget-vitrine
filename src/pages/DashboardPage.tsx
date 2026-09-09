@@ -241,29 +241,12 @@ const DashboardPage: React.FC = () => {
           settingsData.whatsapp_number.replace(/\D/g, '').length >= 8
         );
 
-        // Chaves de integração do widget (segurança/API)
-        const hasApiKeys = Boolean(
-          (settingsData?.public_installation_key && settingsData.public_installation_key.trim().length > 0) ||
-          (settingsData?.public_live_key && settingsData.public_live_key.trim().length > 0)
-        );
-
-        // Percentual granular: cada campo essencial vale igualmente
-        const settingsChecks = [
-          hasStoreName,
-          hasContactEmail,
-          hasPlatform,
-          hasSector,
-          hasLogo,
-          hasStoreUrl,
-          hasWhatsapp,
-          hasApiKeys,
-        ];
+        const settingsChecks = [hasStoreName, hasContactEmail, hasPlatform, hasSector, hasLogo, hasStoreUrl, hasWhatsapp];
         const settingsPercent = Math.round(
           (settingsChecks.filter(Boolean).length / settingsChecks.length) * 100,
         );
         const hasSettingsSaved = settingsPercent === 100;
 
-        // Lista dinâmica dos campos pendentes para orientar o lojista
         const missingSettings: string[] = [];
         if (!hasStoreName) missingSettings.push('Nome da loja');
         if (!hasContactEmail) missingSettings.push('E-mail de contato');
@@ -272,7 +255,6 @@ const DashboardPage: React.FC = () => {
         if (!hasLogo) missingSettings.push('Logotipo');
         if (!hasStoreUrl) missingSettings.push('URL da loja');
         if (!hasWhatsapp) missingSettings.push('WhatsApp');
-        if (!hasApiKeys) missingSettings.push('Chaves de integração (API)');
 
         const settingsDescription = !hasSettingsSaved && missingSettings.length > 0
           ? `${settingsPercent}% concluído — pendente: ${missingSettings.join(', ')}.`
