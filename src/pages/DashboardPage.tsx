@@ -231,14 +231,33 @@ const DashboardPage: React.FC = () => {
         const hasContactEmail = Boolean(settingsData?.contact_email && settingsData.contact_email.trim().length > 3);
         const hasPlatform = Boolean(settingsData?.platform && settingsData.platform !== 'none' && settingsData.platform.trim().length > 0);
         const hasSector = Boolean(storeData?.sector_id || storeData?.sector);
+        const hasLogo = Boolean(settingsData?.logo_url && settingsData.logo_url.trim().length > 0);
+        const hasStoreUrl = Boolean(settingsData?.store_url && settingsData.store_url.trim().length > 0);
 
-        // WhatsApp: se estiver ativo, precisa ter ao menos 8 dígitos numéricos
-        const hasWhatsapp = settingsData?.whatsapp_enabled === false
-          ? true
-          : Boolean(settingsData?.whatsapp_number && settingsData.whatsapp_number.replace(/\D/g, '').length >= 8);
+        // WhatsApp agora é OBRIGATÓRIO: precisa estar habilitado E com número válido
+        const hasWhatsapp = Boolean(
+          settingsData?.whatsapp_enabled === true &&
+          settingsData?.whatsapp_number &&
+          settingsData.whatsapp_number.replace(/\D/g, '').length >= 8
+        );
+
+        // Chaves de integração do widget (segurança/API)
+        const hasApiKeys = Boolean(
+          (settingsData?.public_installation_key && settingsData.public_installation_key.trim().length > 0) ||
+          (settingsData?.public_live_key && settingsData.public_live_key.trim().length > 0)
+        );
 
         // Percentual granular: cada campo essencial vale igualmente
-        const settingsChecks = [hasStoreName, hasContactEmail, hasPlatform, hasSector, hasWhatsapp];
+        const settingsChecks = [
+          hasStoreName,
+          hasContactEmail,
+          hasPlatform,
+          hasSector,
+          hasLogo,
+          hasStoreUrl,
+          hasWhatsapp,
+          hasApiKeys,
+        ];
         const settingsPercent = Math.round(
           (settingsChecks.filter(Boolean).length / settingsChecks.length) * 100,
         );
@@ -250,7 +269,10 @@ const DashboardPage: React.FC = () => {
         if (!hasContactEmail) missingSettings.push('E-mail de contato');
         if (!hasPlatform) missingSettings.push('Plataforma');
         if (!hasSector) missingSettings.push('Setor');
+        if (!hasLogo) missingSettings.push('Logotipo');
+        if (!hasStoreUrl) missingSettings.push('URL da loja');
         if (!hasWhatsapp) missingSettings.push('WhatsApp');
+        if (!hasApiKeys) missingSettings.push('Chaves de integração (API)');
 
         const settingsDescription = !hasSettingsSaved && missingSettings.length > 0
           ? `${settingsPercent}% concluído — pendente: ${missingSettings.join(', ')}.`
