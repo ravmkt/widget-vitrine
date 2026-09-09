@@ -392,7 +392,7 @@ const StoriesPage = () => {
                 className={cn(
                   'px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border text-center flex-1 md:flex-initial cursor-pointer',
                   filterStatus === status
-                    ? 'bg-[#ff7a29] border-[#ff7a29] text-white shadow-lg shadow-orange-500/15'
+                    ? 'bg-[#0091ff] border-[#0091ff] dark:bg-[#ff7a29] dark:border-[#ff7a29] text-white shadow-lg shadow-blue-500/15 dark:shadow-orange-500/15'
                     : 'bg-muted border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/70',
                 )}
               >
