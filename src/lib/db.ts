@@ -277,8 +277,6 @@ export interface GeneralSettings {
   whatsapp_enabled?: boolean;
   whatsapp_message_template?: string;
   pause_on_leave?: boolean;
-  store_public_id?: string;
-  public_live_key?: string;
 }
 
 export interface Store {
