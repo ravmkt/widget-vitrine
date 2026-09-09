@@ -194,7 +194,27 @@ const DashboardPage: React.FC = () => {
         });
 
         // 4. Feed de Eventos
-        const fetchedEvents = eventsRes.status === 'fulfilled' ? eventsRes.value.data || [] : [];
+        let fetchedEvents = eventsRes.status === 'fulfilled' ? eventsRes.value.data || [] : [];
+
+        // Marco Zero: se não houver atividades registradas ou se não houver o evento inicial de criação,
+        // garantimos a exibição elegante de "Loja criada com sucesso" com a data/hora real de criação da loja
+        const storeCreatedAt = storeData?.created_at || new Date().toISOString();
+        const hasCreationLog = fetchedEvents.some((ev: any) => ev.action === 'store.created');
+
+        if (!hasCreationLog) {
+          fetchedEvents = [
+            ...fetchedEvents,
+            {
+              id: 'initial-store-creation',
+              store_id: storeId,
+              user_id: null,
+              action: 'store.created',
+              details: storeData?.name || 'Conta Vidlytics ativada',
+              created_at: storeCreatedAt,
+            },
+          ].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        }
+
         setActivities(fetchedEvents);
 
         // 5. Checklist
@@ -204,7 +224,15 @@ const DashboardPage: React.FC = () => {
         const settingsData = settingsRes.status === 'fulfilled' ? settingsRes.value.data || {} : {};
         setAppEnabled(settingsData.widget_enabled !== false);
 
-        const hasSettingsSaved = settingsRes.status === 'fulfilled' && !!settingsRes.value.data && !!settingsRes.value.data.store_name;
+        // Critério real de configurações preenchidas pelo lojista:
+        // WhatsApp cadastrado, e-mail de contato salvo ou URL da loja preenchida
+        const hasSettingsSaved =
+          settingsRes.status === 'fulfilled' &&
+          !!settingsData &&
+          (Boolean(settingsData.whatsapp_number?.trim()) ||
+            Boolean(settingsData.contact_email?.trim()) ||
+            Boolean(settingsData.store_url?.trim()));
+
         const isIntegrationCompleted = pagesCount > 0 || (usageData && (usageData.views_count || 0) > 0);
 
         setChecklist([
