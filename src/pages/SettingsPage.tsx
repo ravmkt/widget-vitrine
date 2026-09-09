@@ -27,7 +27,7 @@ import { toast } from 'sonner';
 import { 
   ShoppingBag, Sparkles, Cpu, Home, Activity, Trophy, 
   Baby, PawPrint, Coffee, Gem, Palette, Globe,
-  
+  Loader2, Save, Sun, Moon, CheckCircle2, Image, X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '@/context/TenantContext';
