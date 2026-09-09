@@ -676,6 +676,7 @@ store_settings: [
   'muted_by_default', 'show_video_controls', 'created_at',
   'updated_at', 'whatsapp_button_enabled', 'pause_on_invisible',
     'whatsapp_enabled', 'whatsapp_message_template', 'pause_on_leave',
+    'widget_enabled', 'default_template',
   ],
   appearances: [
     'id', 'store_id', 'created_at', 'updated_at',
