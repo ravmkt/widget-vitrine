@@ -30,6 +30,9 @@ import {
   ExternalLink,
   Store as StoreIcon,
   AlertTriangle,
+  ShoppingBag,
+  Hourglass,
+  CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTenant } from '@/context/TenantContext';
@@ -77,8 +80,11 @@ const DashboardPage: React.FC = () => {
   const [copiedReferral, setCopiedReferral] = useState(false);
   const [appEnabled, setAppEnabled] = useState<boolean>(true);
 
-  // Métricas financeiras
+  // Métricas financeiras e de conversão
   const [videoRevenue, setVideoRevenue] = useState<number>(0);
+  const [paidCount, setPaidCount] = useState<number>(0);
+  const [pendingRevenue, setPendingRevenue] = useState<number>(0);
+  const [pendingCount, setPendingCount] = useState<number>(0);
   const [referralEarnings, setReferralEarnings] = useState<number>(0);
 
   const [usage, setUsage] = useState<StoreUsageData>({
@@ -198,8 +204,6 @@ const DashboardPage: React.FC = () => {
         // 4. Feed de Eventos
         let fetchedEvents = eventsRes.status === 'fulfilled' ? eventsRes.value.data || [] : [];
 
-        // Marco Zero: se não houver atividades registradas ou se não houver o evento inicial de criação,
-        // garantimos a exibição elegante de "Loja criada com sucesso" com a data/hora real de criação da loja
         const storeCreatedAt = storeData?.created_at || new Date().toISOString();
         const hasCreationLog = fetchedEvents.some((ev: any) => ev.action === 'store.created');
 
@@ -226,7 +230,6 @@ const DashboardPage: React.FC = () => {
         const settingsData = settingsRes.status === 'fulfilled' ? settingsRes.value.data || {} : {};
         setAppEnabled(settingsData.widget_enabled !== false);
 
-        // 5. Checklist — Verificação estrita de completude das Configurações
         const hasStoreName = Boolean(storeData?.name && storeData.name.trim().length > 0);
         const hasContactEmail = Boolean(settingsData?.contact_email && settingsData.contact_email.trim().length > 3);
         const hasPlatform = Boolean(settingsData?.platform && settingsData.platform !== 'none' && settingsData.platform.trim().length > 0);
@@ -234,7 +237,6 @@ const DashboardPage: React.FC = () => {
         const hasLogo = Boolean(settingsData?.logo_url && settingsData.logo_url.trim().length > 0);
         const hasStoreUrl = Boolean(settingsData?.store_url && settingsData.store_url.trim().length > 0);
 
-        // WhatsApp agora é OBRIGATÓRIO: precisa estar habilitado E com número válido
         const hasWhatsapp = Boolean(
           settingsData?.whatsapp_enabled === true &&
           settingsData?.whatsapp_number &&
@@ -278,7 +280,6 @@ const DashboardPage: React.FC = () => {
             route: '/integration',
             completed: isIntegrationCompleted,
           },
-
           {
             id: 'products',
             title: 'Vincular os produtos',
@@ -315,10 +316,32 @@ const DashboardPage: React.FC = () => {
           setReferralEarnings(totalRef);
         }
 
-        // 7. Faturamento de vendas dos vídeos
+        // 7. Faturamento de vendas dos vídeos (Separando Pagas de Pendentes)
         if (conversionsRes.status === 'fulfilled' && conversionsRes.value.data) {
-          const totalConv = conversionsRes.value.data.reduce((acc: number, item: any) => acc + (Number(item.order_value) || 0), 0);
-          setVideoRevenue(totalConv);
+          const convList = conversionsRes.value.data as Array<{ order_value: number; status: string }>;
+          
+          let paidSum = 0;
+          let paidQty = 0;
+          let pendingSum = 0;
+          let pendingQty = 0;
+
+          for (const item of convList) {
+            const val = Number(item.order_value) || 0;
+            const st = (item.status || 'pending').toLowerCase();
+
+            if (st === 'paid' || st === 'approved' || st === 'completed') {
+              paidSum += val;
+              paidQty += 1;
+            } else {
+              pendingSum += val;
+              pendingQty += 1;
+            }
+          }
+
+          setVideoRevenue(paidSum);
+          setPaidCount(paidQty);
+          setPendingRevenue(pendingSum);
+          setPendingCount(pendingQty);
         }
       } catch (err) {
         console.error('[DashboardPage] Erro ao carregar dados:', err);
@@ -391,45 +414,30 @@ const DashboardPage: React.FC = () => {
   };
 
   const ACTION_META: Record<string, { Icon: any; label: string; chip: string }> = {
-    // 🏪 Loja
     'store.created': { Icon: StoreIcon, label: 'Loja criada com sucesso', chip: CHIP.emerald },
     'store.updated': { Icon: Settings, label: 'Dados da loja atualizados', chip: CHIP.blue },
-
-    // 🎬 Vídeos
     'video.created': { Icon: Plus, label: 'Novo vídeo adicionado', chip: CHIP.emerald },
     'video.updated': { Icon: Pencil, label: 'Vídeo atualizado', chip: CHIP.blue },
     'video.deleted': { Icon: Trash2, label: 'Vídeo excluído', chip: CHIP.rose },
-
-    // 📱 Stories
     'story.created': { Icon: Plus, label: 'Coleção de stories criada', chip: CHIP.emerald },
     'story.updated': { Icon: Pencil, label: 'Coleção de stories atualizada', chip: CHIP.violet },
     'story.deleted': { Icon: Trash2, label: 'Coleção de stories excluída', chip: CHIP.rose },
     'story.activated': { Icon: Power, label: 'Coleção ativada na loja', chip: CHIP.emerald },
     'story.deactivated': { Icon: Power, label: 'Coleção pausada na loja', chip: CHIP.slate },
-
-    // 🛍️ Produtos
     'product.created': { Icon: Plus, label: 'Produto cadastrado', chip: CHIP.emerald },
     'product.updated': { Icon: Pencil, label: 'Produto atualizado', chip: CHIP.blue },
     'product.activated': { Icon: Power, label: 'Produto ativado', chip: CHIP.emerald },
     'product.deactivated': { Icon: Power, label: 'Produto desativado', chip: CHIP.slate },
     'product.deleted': { Icon: Trash2, label: 'Produto excluído', chip: CHIP.rose },
     'product.imported': { Icon: Upload, label: 'Produtos importados com sucesso', chip: CHIP.emerald },
-
-    // 📏 Medidas
     'model.created': { Icon: Plus, label: 'Tabela de medidas criada', chip: CHIP.emerald },
     'model.updated': { Icon: Pencil, label: 'Tabela de medidas atualizada', chip: CHIP.blue },
     'model.deleted': { Icon: Trash2, label: 'Tabela de medidas excluída', chip: CHIP.rose },
-
-    // ⚙️ Configurações
     'settings.saved': { Icon: Settings, label: 'Configurações da loja salvas', chip: CHIP.amber },
-
-    // 🎨 Aparências
     'appearance.created': { Icon: Plus, label: 'Novo estilo visual criado', chip: CHIP.emerald },
     'appearance.updated': { Icon: Palette, label: 'Aparência do player atualizada', chip: CHIP.cyan },
     'appearance.default': { Icon: Star, label: 'Aparência definida como padrão', chip: CHIP.amber },
     'appearance.deleted': { Icon: Trash2, label: 'Aparência excluída', chip: CHIP.rose },
-
-    // 💾 Armazenamento e comentários
     'storage.file_deleted': { Icon: HardDrive, label: 'Arquivo removido do armazenamento', chip: CHIP.rose },
     'comment.deleted': { Icon: Trash2, label: 'Comentário removido', chip: CHIP.rose },
   };
@@ -483,7 +491,7 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-8 animate-fade-in font-sans text-slate-900 dark:text-[#e8ecf4] min-h-screen -m-6 p-6 sm:p-8 bg-transparent dark:bg-[radial-gradient(ellipse_at_top,_#1a1f3a_0%,_#0f1220_55%,_#0a0e1a_100%)]">
 
-      {/* ── 1. HEADER (Boas Vindas sem subtítulo longo + Card Status do App) ── */}
+      {/* ── 1. HEADER ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-orange-500/15 shadow-sm dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
         <div className="lg:col-span-2 flex flex-col justify-center space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
@@ -541,13 +549,66 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 2. CARDS DE FATURAMENTO (INDICAÇÕES & VENDAS DOS VÍDEOS) ── */}
+      {/* ── 2. CARDS DE FATURAMENTO & FUNIL DE VENDAS ── */}
       <div>
         <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0] mb-3 px-1">
-          Resultados Financeiros
+          Resultados de Vendas Vindas dos Vídeos
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Card Faturamento com Indicações */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          {/* Card 1: Vendas Aprovadas / Pagas */}
+          <div
+            onClick={() => navigate('/videos/performance')}
+            className="cursor-pointer bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between group"
+          >
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">
+                  Vendas Pagas
+                </span>
+                <span className="text-[10px] font-black uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+                  {paidCount} {paidCount === 1 ? 'pedido' : 'pedidos'}
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(videoRevenue)}
+              </h2>
+              <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] group-hover:text-emerald-500 transition-colors flex items-center gap-1">
+                Faturamento confirmado &rarr;
+              </p>
+            </div>
+            <div className="w-13 h-13 rounded-2xl flex items-center justify-center bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 shrink-0">
+              <CheckCircle2 size={26} className="stroke-[2.5]" />
+            </div>
+          </div>
+
+          {/* Card 2: Pedidos Pendentes / Aguardando Pagamento (Pix / Boleto) */}
+          <div
+            onClick={() => navigate('/videos/performance')}
+            className="cursor-pointer bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between group"
+          >
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">
+                  Aguardando Pagamento
+                </span>
+                <span className="text-[10px] font-black uppercase bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/40">
+                  {pendingCount} {pendingCount === 1 ? 'pedido' : 'pedidos'}
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pendingRevenue)}
+              </h2>
+              <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] group-hover:text-amber-500 transition-colors flex items-center gap-1">
+                Pix / Boleto pendente &rarr;
+              </p>
+            </div>
+            <div className="w-13 h-13 rounded-2xl flex items-center justify-center bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 shrink-0">
+              <Hourglass size={26} className="stroke-[2.5]" />
+            </div>
+          </div>
+
+          {/* Card 3: Comissões Indica & Ganha */}
           <div
             onClick={() => navigate('/indica-e-ganha')}
             className="cursor-pointer bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between group"
@@ -555,9 +616,9 @@ const DashboardPage: React.FC = () => {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">
-                  Faturamento com Indicações
+                  Faturamento Indicações
                 </span>
-                <span className="text-[10px] font-black uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+                <span className="text-[10px] font-black uppercase bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] px-2 py-0.5 rounded-full border border-blue-200 dark:border-orange-500/30">
                   Comissões
                 </span>
               </div>
@@ -568,36 +629,11 @@ const DashboardPage: React.FC = () => {
                 Ver detalhes no Indica & Ganha &rarr;
               </p>
             </div>
-            <div className="w-13 h-13 rounded-2xl flex items-center justify-center bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 shrink-0">
+            <div className="w-13 h-13 rounded-2xl flex items-center justify-center bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] shrink-0">
               <DollarSign size={26} className="stroke-[2.5]" />
             </div>
           </div>
 
-          {/* Card Faturamento de Vendas dos Vídeos */}
-          <div
-            onClick={() => navigate('/videos/performance')}
-            className="cursor-pointer bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md p-6 rounded-[1.8rem] border border-slate-200 dark:border-orange-500/15 shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_25px_rgba(255,122,41,0.12)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between group"
-          >
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#8a90a0]">
-                  Vendas Vindas dos Vídeos
-                </span>
-                <span className="text-[10px] font-black uppercase bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] px-2 py-0.5 rounded-full border border-blue-200 dark:border-orange-500/30">
-                  Conversões
-                </span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(videoRevenue)}
-              </h2>
-              <p className="text-xs font-medium text-slate-500 dark:text-[#8a90a0] group-hover:text-[#0091ff] dark:group-hover:text-[#ff7a29] transition-colors flex items-center gap-1">
-                Acompanhar métricas de performance &rarr;
-              </p>
-            </div>
-            <div className="w-13 h-13 rounded-2xl flex items-center justify-center bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] shrink-0">
-              <TrendingUp size={26} className="stroke-[2.5]" />
-            </div>
-          </div>
         </div>
       </div>
 
@@ -696,7 +732,7 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 4. CARD DE DIVULGAÇÃO DE OUTROS PRODUTOS E SERVIÇOS ── */}
+      {/* ── 4. CARD ECOSSISTEMA ── */}
       <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 sm:p-8 text-white shadow-lg border border-blue-400/30">
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl text-center md:text-left">
@@ -725,11 +761,10 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Efeito sutil de brilho no fundo */}
         <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      {/* ── 5. CHECKLIST REORGANIZADO + LOG DE ATIVIDADES RECENTES ── */}
+      {/* ── 5. CHECKLIST + ATIVIDADES ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
         {/* Checklist */}
         <div className="bg-white dark:bg-[#1a1f35]/80 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col justify-between">
@@ -883,7 +918,6 @@ const DashboardPage: React.FC = () => {
 
       {/* ── 6. ACADEMY & INDIQUE E GANHE ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-        {/* Academy */}
         <div className="lg:col-span-7 bg-white dark:bg-[#1a1f35]/75 dark:backdrop-blur-md border border-slate-200 dark:border-orange-500/15 p-6 sm:p-7 rounded-2xl shadow-sm hover:shadow-lg dark:hover:shadow-[0_10px_30px_rgba(255,122,41,0.1)] transition-all duration-300 flex flex-col md:flex-row items-center gap-5">
           <div className="w-full md:w-44 h-28 bg-slate-900 rounded-2xl flex items-center justify-center relative overflow-hidden flex-shrink-0 group cursor-pointer border border-slate-800 dark:border-white/10">
             <img
@@ -911,7 +945,6 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Indique e Ganhe */}
         <div className="lg:col-span-5 bg-white dark:bg-[#1a1f35]/90 dark:backdrop-blur-md p-6 sm:p-7 rounded-2xl shadow-sm hover:shadow-md dark:hover:shadow-[0_8px_20px_rgba(255,122,41,0.15)] flex flex-col justify-between border border-slate-200 dark:border-orange-500/15 hover:-translate-y-1 transition-all duration-300">
           <div>
             <div className="flex items-center justify-between">
