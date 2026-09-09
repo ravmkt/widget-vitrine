@@ -114,8 +114,6 @@ const generalSettingsToAppSettings = (gs: GeneralSettings): AppSettings => ({
   autoplay: gs.autoplay ?? true,
   muted_by_default: gs.muted_by_default ?? true,
   show_video_controls: gs.show_video_controls ?? false,
-  store_public_id: gs.store_public_id ?? null,
-  public_live_key: gs.public_live_key ?? null,
   created_at: gs.created_at ?? DEFAULT_SETTINGS.created_at,
   updated_at: gs.updated_at ?? DEFAULT_SETTINGS.updated_at,
 });
