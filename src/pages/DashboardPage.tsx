@@ -29,6 +29,7 @@ import {
   Sparkles,
   ExternalLink,
   Store as StoreIcon,
+  AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTenant } from '@/context/TenantContext';
