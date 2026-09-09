@@ -630,7 +630,7 @@ const SettingsPage = () => {
               </Label>
               <Input
                 type="text"
-                placeholder="Ex: useanny.com ou www.useanny.com"
+                placeholder="Ex: sualoja.com ou www.sualoja.com.br"
                 value={settings?.store_url ?? ''}
                 onChange={e =>
                   setSettings(prev => ({ ...prev, store_url: e.target.value }))
