@@ -362,46 +362,84 @@ const DashboardPage: React.FC = () => {
   };
 
   const ACTION_META: Record<string, { Icon: any; label: string; chip: string }> = {
-    'video.created': { Icon: Plus, label: 'Vídeo criado', chip: CHIP.emerald },
+    // 🏪 Loja
+    'store.created': { Icon: StoreIcon, label: 'Loja criada com sucesso', chip: CHIP.emerald },
+    'store.updated': { Icon: Settings, label: 'Dados da loja atualizados', chip: CHIP.blue },
+
+    // 🎬 Vídeos
+    'video.created': { Icon: Plus, label: 'Novo vídeo adicionado', chip: CHIP.emerald },
     'video.updated': { Icon: Pencil, label: 'Vídeo atualizado', chip: CHIP.blue },
     'video.deleted': { Icon: Trash2, label: 'Vídeo excluído', chip: CHIP.rose },
-    'story.created': { Icon: Plus, label: 'Story criado', chip: CHIP.emerald },
-    'story.updated': { Icon: Pencil, label: 'Story editado', chip: CHIP.violet },
-    'story.deleted': { Icon: Trash2, label: 'Story excluído', chip: CHIP.rose },
-    'story.activated': { Icon: Power, label: 'Story ativado', chip: CHIP.emerald },
-    'story.deactivated': { Icon: Power, label: 'Story desativado', chip: CHIP.slate },
-    'product.created': { Icon: Plus, label: 'Produto criado', chip: CHIP.emerald },
+
+    // 📱 Stories
+    'story.created': { Icon: Plus, label: 'Coleção de stories criada', chip: CHIP.emerald },
+    'story.updated': { Icon: Pencil, label: 'Coleção de stories atualizada', chip: CHIP.violet },
+    'story.deleted': { Icon: Trash2, label: 'Coleção de stories excluída', chip: CHIP.rose },
+    'story.activated': { Icon: Power, label: 'Coleção ativada na loja', chip: CHIP.emerald },
+    'story.deactivated': { Icon: Power, label: 'Coleção pausada na loja', chip: CHIP.slate },
+
+    // 🛍️ Produtos
+    'product.created': { Icon: Plus, label: 'Produto cadastrado', chip: CHIP.emerald },
     'product.updated': { Icon: Pencil, label: 'Produto atualizado', chip: CHIP.blue },
     'product.activated': { Icon: Power, label: 'Produto ativado', chip: CHIP.emerald },
     'product.deactivated': { Icon: Power, label: 'Produto desativado', chip: CHIP.slate },
     'product.deleted': { Icon: Trash2, label: 'Produto excluído', chip: CHIP.rose },
-    'product.imported': { Icon: Upload, label: 'Produtos importados', chip: CHIP.emerald },
-    'model.created': { Icon: Plus, label: 'Medida criada', chip: CHIP.emerald },
-    'model.updated': { Icon: Pencil, label: 'Medida atualizada', chip: CHIP.blue },
-    'model.deleted': { Icon: Trash2, label: 'Medida excluída', chip: CHIP.rose },
-    'settings.saved': { Icon: Settings, label: 'Configurações salvas', chip: CHIP.amber },
-    'appearance.created': { Icon: Plus, label: 'Aparência criada', chip: CHIP.emerald },
-    'appearance.updated': { Icon: Palette, label: 'Aparência atualizada', chip: CHIP.cyan },
+    'product.imported': { Icon: Upload, label: 'Produtos importados com sucesso', chip: CHIP.emerald },
+
+    // 📏 Medidas
+    'model.created': { Icon: Plus, label: 'Tabela de medidas criada', chip: CHIP.emerald },
+    'model.updated': { Icon: Pencil, label: 'Tabela de medidas atualizada', chip: CHIP.blue },
+    'model.deleted': { Icon: Trash2, label: 'Tabela de medidas excluída', chip: CHIP.rose },
+
+    // ⚙️ Configurações
+    'settings.saved': { Icon: Settings, label: 'Configurações da loja salvas', chip: CHIP.amber },
+
+    // 🎨 Aparências
+    'appearance.created': { Icon: Plus, label: 'Novo estilo visual criado', chip: CHIP.emerald },
+    'appearance.updated': { Icon: Palette, label: 'Aparência do player atualizada', chip: CHIP.cyan },
     'appearance.default': { Icon: Star, label: 'Aparência definida como padrão', chip: CHIP.amber },
     'appearance.deleted': { Icon: Trash2, label: 'Aparência excluída', chip: CHIP.rose },
-    'storage.file_deleted': { Icon: HardDrive, label: 'Arquivo excluído', chip: CHIP.rose },
+
+    // 💾 Armazenamento e comentários
+    'storage.file_deleted': { Icon: HardDrive, label: 'Arquivo removido do armazenamento', chip: CHIP.rose },
+    'comment.deleted': { Icon: Trash2, label: 'Comentário removido', chip: CHIP.rose },
   };
 
   const getActivityMeta = (action: string, details: string = '') => {
     const known = ACTION_META[action];
     if (known) return known;
+
     const act = action.toLowerCase();
     const det = details.toLowerCase();
     const isDelete = act.includes('exclu') || act.includes('remov') || det.includes('exclui') || det.includes('remov');
-    const isInsert = act.includes('enviado') || act.includes('criado') || act.includes('import') || det.includes('adicionado');
 
-    if (act.includes('vídeo') || act.includes('video')) return { Icon: isDelete ? Trash2 : VideoIcon, label: isDelete ? 'Vídeo excluído' : 'Vídeo atualizado', chip: isDelete ? CHIP.rose : CHIP.emerald };
-    if (act.includes('storie') || act.includes('coleção')) return { Icon: isDelete ? Trash2 : Plus, label: isDelete ? 'Story excluído' : 'Story criado', chip: isDelete ? CHIP.rose : CHIP.violet };
-    if (act.includes('aparência') || act.includes('design')) return { Icon: Palette, label: 'Aparência atualizada', chip: CHIP.cyan };
-    if (act.includes('config')) return { Icon: Settings, label: 'Configurações salvas', chip: CHIP.amber };
-    if (act.includes('script') || act.includes('embed')) return { Icon: Code2, label: 'Integração', chip: CHIP.blue };
-    if (isDelete) return { Icon: Trash2, label: 'Item excluído', chip: CHIP.rose };
-    return { Icon: Activity, label: action || 'Atividade', chip: CHIP.slate };
+    if (act.includes('vídeo') || act.includes('video')) {
+      return {
+        Icon: isDelete ? Trash2 : VideoIcon,
+        label: isDelete ? 'Vídeo excluído' : 'Vídeo atualizado',
+        chip: isDelete ? CHIP.rose : CHIP.emerald,
+      };
+    }
+    if (act.includes('storie') || act.includes('coleção')) {
+      return {
+        Icon: isDelete ? Trash2 : Plus,
+        label: isDelete ? 'Coleção de stories excluída' : 'Coleção de stories criada',
+        chip: isDelete ? CHIP.rose : CHIP.violet,
+      };
+    }
+    if (act.includes('aparência') || act.includes('design')) {
+      return { Icon: Palette, label: 'Aparência personalizada', chip: CHIP.cyan };
+    }
+    if (act.includes('config')) {
+      return { Icon: Settings, label: 'Configurações salvas', chip: CHIP.amber };
+    }
+    if (act.includes('script') || act.includes('embed')) {
+      return { Icon: Code2, label: 'Instalação do script', chip: CHIP.blue };
+    }
+    if (isDelete) {
+      return { Icon: Trash2, label: 'Item removido', chip: CHIP.rose };
+    }
+    return { Icon: Activity, label: action || 'Atividade realizada', chip: CHIP.slate };
   };
 
   if (loading) {
