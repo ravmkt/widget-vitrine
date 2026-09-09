@@ -630,19 +630,25 @@ const SettingsPage = () => {
               </Label>
               <Input
                 type="text"
-                placeholder="https://sualoja.com"
+                placeholder="Ex: useanny.com ou www.useanny.com"
                 value={settings?.store_url ?? ''}
                 onChange={e =>
                   setSettings(prev => ({ ...prev, store_url: e.target.value }))
                 }
                 onBlur={e => {
-                  const formatted = formatStoreUrl(e.target.value);
-                  setSettings(prev => ({ ...prev, store_url: formatted }));
+                  const val = e.target.value.trim();
+                  if (val === '') {
+                    setSettings(prev => ({ ...prev, store_url: '' }));
+                    return;
+                  }
+                  // Só formata para https:// se o usuário tiver digitado um domínio com ponto
+                  if (isValidWebDomain(val)) {
+                    setSettings(prev => ({ ...prev, store_url: formatStoreUrl(val) }));
+                  }
                 }}
                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0091ff] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
                 required
               />
-            </div>
 
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
