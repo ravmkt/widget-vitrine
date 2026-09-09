@@ -675,7 +675,6 @@ store_settings: [
   'timezone', 'language', 'open_product_new_tab', 'autoplay',
   'muted_by_default', 'show_video_controls', 'created_at',
   'updated_at', 'whatsapp_button_enabled', 'pause_on_invisible',
-      'public_installation_key', 'widget_enabled', 'default_template',
     'whatsapp_enabled', 'whatsapp_message_template', 'pause_on_leave',
   ],
   appearances: [
