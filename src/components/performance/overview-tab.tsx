@@ -3,11 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/lib/supabase'
 import { useTenant } from '@/context/TenantContext'
 import {
-  HelpCircle,
   FileText,
   X,
   Check,
-  ArrowRight,
   Sparkles,
   TrendingUp,
   Compass,
@@ -16,7 +14,8 @@ import {
   TrendingDown,
   CircleDollarSign,
   Heart,
-  Trophy
+  Trophy,
+  Hourglass
 } from 'lucide-react'
 import type { SectorBenchmark } from '@/pages/PerformancePage'
 import { cn } from '@/lib/utils'
@@ -44,7 +43,7 @@ export function OverviewTab({
   const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
 
-  // Observador dinâmico para garantir que o Recharts/Tooltip mude de cor perfeitamente com o tema global
+  // Observador dinâmico para garantir que o Recharts/Tooltip mude de cor com o tema global
   useEffect(() => {
     const checkTheme = () => {
       setIsDark(document.documentElement.classList.contains('dark'))
@@ -126,7 +125,7 @@ export function OverviewTab({
           tips: [
             "Produto Sob Esforço: Grave o tênis na corrida, a roupa suportando o agachamento ou o acessório sendo usado sob sol e chuva.",
             "Gatilho de Inspiração: Crie histórias que incentivem o cliente a começar a praticar exercícios hoje mesmo usando a sua marca.",
-            "Destaque Tecnológico: Mostre a elasticidade do tecido, respirabilidade ou leveza através de testes dinêmicos de vídeo."
+            "Destaque Tecnológico: Mostre a elasticidade do tecido, respirabilidade ou leveza através de testes dinâmicos de vídeo."
           ]
         };
       case 'infantil_brinquedos':
@@ -170,13 +169,17 @@ export function OverviewTab({
 
   const playbook = getSectorStrategicPlaybook(benchmark?.sector_key || 'default')
 
-  const { currentStore: tenant, loading: tenantLoading } = useTenant()
+  const { storeId, currentStore: tenant, loading: tenantLoading } = useTenant()
+  const resolvedStoreId = storeId || tenant?.id
+
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState({
     views: 0,
     clicks: 0,
     conversions: 0,
     revenue: 0,
+    pendingConversions: 0,
+    pendingRevenue: 0,
     likes: 0,
     comments: 0
   })
@@ -186,7 +189,7 @@ export function OverviewTab({
     async function fetchRealMetrics() {
       if (tenantLoading) return
 
-      if (!tenant?.id || tenant.id === '11111111-1111-4111-8111-111111111111') {
+      if (!resolvedStoreId || resolvedStoreId === '11111111-1111-4111-8111-111111111111') {
         setLoading(false)
         return
       }
@@ -213,21 +216,43 @@ export function OverviewTab({
         const dateString = dateLimit.toISOString()
 
         const [viewsRes, clicksRes, conversionsRes, socialRes] = await Promise.all([
-          supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('event_type', 'story_open').gte('created_at', dateString),
-          supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('event_type', 'cta_click').gte('created_at', dateString),
-          supabase.from('tracking_events').select('revenue', { count: 'exact' }).eq('tenant_id', tenant.id).eq('event_type', 'purchase').gte('created_at', dateString),
-          supabase.from('tracking_events').select('event_type').eq('tenant_id', tenant.id).in('event_type', ['story_like', 'story_comment']).gte('created_at', dateString)
+          supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', resolvedStoreId).eq('event_type', 'story_open').gte('created_at', dateString),
+          supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', resolvedStoreId).eq('event_type', 'cta_click').gte('created_at', dateString),
+          supabase.from('conversions').select('order_value, status, created_at').eq('store_id', resolvedStoreId).gte('created_at', dateString),
+          supabase.from('tracking_events').select('event_type').eq('tenant_id', resolvedStoreId).in('event_type', ['story_like', 'story_comment']).gte('created_at', dateString)
         ])
 
-        const totalRevenue = conversionsRes.data?.reduce((sum, item: any) => sum + (Number(item.revenue) || 0), 0) || 0
+        let paidRevenue = 0
+        let paidCount = 0
+        let pendingRevenue = 0
+        let pendingCount = 0
+
+        if (conversionsRes.data) {
+          const convList = conversionsRes.data as Array<{ order_value: number; status: string }>
+          for (const item of convList) {
+            const val = Number(item.order_value) || 0
+            const st = (item.status || 'pending').toLowerCase()
+
+            if (st === 'paid' || st === 'approved' || st === 'completed') {
+              paidRevenue += val
+              paidCount += 1
+            } else {
+              pendingRevenue += val
+              pendingCount += 1
+            }
+          }
+        }
+
         const totalLikes = socialRes.data?.filter((e: any) => e.event_type === 'story_like').length || 0
         const totalComments = socialRes.data?.filter((e: any) => e.event_type === 'story_comment').length || 0
 
         setData({
           views: viewsRes.count || 0,
           clicks: clicksRes.count || 0,
-          conversions: conversionsRes.count || 0,
-          revenue: totalRevenue,
+          conversions: paidCount,
+          revenue: paidRevenue,
+          pendingConversions: pendingCount,
+          pendingRevenue: pendingRevenue,
           likes: totalLikes,
           comments: totalComments
         })
@@ -235,7 +260,7 @@ export function OverviewTab({
         const { data: rawEvents } = await supabase
           .from('tracking_events')
           .select('created_at, event_type')
-          .eq('tenant_id', tenant.id)
+          .eq('tenant_id', resolvedStoreId)
           .in('event_type', ['story_open', 'cta_click'])
           .gte('created_at', dateString)
           .order('created_at', { ascending: true })
@@ -273,7 +298,7 @@ export function OverviewTab({
     }
 
     fetchRealMetrics()
-  }, [tenant, tenantLoading, timeRange, customFrom, customTo])
+  }, [resolvedStoreId, tenantLoading, timeRange, customFrom, customTo])
 
   const ctr = data.views > 0 ? (data.clicks / data.views) * 100 : 0
   const cvr = data.views > 0 ? (data.conversions / data.views) * 100 : 0
@@ -352,19 +377,26 @@ export function OverviewTab({
           </CardContent>
         </Card>
 
-        {/* 3. VENDAS */}
+        {/* 3. VENDAS REALIZADAS */}
         <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-[14px] font-black uppercase tracking-wider text-slate-800 dark:text-white">
-              3. Vendas Realizadas
+              3. Vendas Pagas
             </span>
             <div className="w-[45px] h-[45px] rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
               <Trophy className="w-[22px] h-[22px]" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">
-              {data.conversions.toLocaleString('pt-BR')}
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-slate-900 dark:text-white">
+                {data.conversions.toLocaleString('pt-BR')}
+              </span>
+              {data.pendingConversions > 0 && (
+                <span className="text-[10px] font-black uppercase bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/40">
+                  +{data.pendingConversions} pendente{data.pendingConversions > 1 ? 's' : ''}
+                </span>
+              )}
             </div>
             <div className="flex flex-col mt-0.5">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Conversão: {cvr.toFixed(1)}%</span>
@@ -373,7 +405,7 @@ export function OverviewTab({
           </CardContent>
         </Card>
 
-        {/* 4. RECEITA */}
+        {/* 4. FATURAMENTO CONFIRMADO */}
         <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-[14px] font-black uppercase tracking-wider text-slate-800 dark:text-white">
@@ -385,9 +417,16 @@ export function OverviewTab({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-              R$ {data.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.revenue)}
             </div>
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-bold">Vendas Diretas dos Vídeos</p>
+            {data.pendingRevenue > 0 ? (
+              <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-bold flex items-center gap-1">
+                <Hourglass className="w-3 h-3 inline" />
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.pendingRevenue)} em aberto
+              </p>
+            ) : (
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-bold">Vendas Diretas dos Vídeos</p>
+            )}
           </CardContent>
         </Card>
 
