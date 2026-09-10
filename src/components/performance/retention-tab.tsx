@@ -449,7 +449,7 @@ setVideoStats({
                   <Info size={16} className="text-slate-400 hover:text-slate-600" />
                 </TooltipTrigger>
 <TooltipContent>
-  {isRealData
+  {videoStats.isRealData
     ? 'Curva real calculada com base nos eventos de progresso coletados segundo a segundo pelo widget.'
     : 'Estimativa com base no completion rate — ainda não há dados granulares de progresso para este vídeo.'}
 </TooltipContent>
