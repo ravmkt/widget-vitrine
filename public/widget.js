@@ -1833,21 +1833,10 @@ function generateSessionId() {
 }
 
 function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
-
-function generateSessionId() {
-  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
-    return window.crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    var r = Math.random() * 16 | 0;
-    var v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
-
-function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
 
+  // Throttle: evita reenviar o mesmo evento para o mesmo vídeo em menos de 4s
+  // ('progress' tem throttle próprio controlado no chamador, 1x/s)
   if (eventType !== 'progress') {
     sendAnalyticsEvent._lastSent = sendAnalyticsEvent._lastSent || {};
     var throttleKey = String(eventType) + '_' + String(videoId);
@@ -1859,11 +1848,10 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   }
 
   try {
-
-      // Vidlytics: Atribuição entre subdomínios (ex: useanny.com -> seguro.useanny.com)
-      try {
-        var hName = window.location.hostname || '';
-        var rootDom = '';
+    // Vidlytics: Atribuição entre subdomínios (ex: useanny.com -> seguro.useanny.com)
+    try {
+      var hName = window.location.hostname || '';
+      var rootDom = '';
         if (hName && hName !== 'localhost' && !/^(\d{1,3}\.){3}\d{1,3}$/.test(hName)) {
           var hParts = hName.split('.');
           if (hParts.length >= 2) rootDom = '; domain=.' + hParts.slice(-2).join('.');
