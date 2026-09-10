@@ -6799,10 +6799,11 @@ storeWhatsappEnabled = settings.whatsapp_enabled !== false;
             // 📌 Story(s) com regras de página que não batem na URL atual fora do modo preview: não renderiza
             injectFallbackStories([]);
           }
+          });
         });
       });
-    });
-  });
+    });   
+  });      
 }
 
 initWidget();
