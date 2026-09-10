@@ -80,8 +80,9 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
     rewinds: number;
     dropOffRate: number;
     dropOffCount: number;
-    curve: RetentionPoint[];
-  }>({
+  isRealData: boolean;
+  curve: RetentionPoint[];
+}>({
     completionRate: 0,
     avgDuration: 0,
     percentageViewed: 0,
