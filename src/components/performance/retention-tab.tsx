@@ -201,28 +201,47 @@ const totalCompletions =
   eventsData?.filter((m) => m.event_type === 'story_complete').length || 0;
 
 const progressEvents = eventsData?.filter((m) => m.event_type === 'progress') || [];
-        const completionRate = totalPlays > 0 ? Math.round((totalCompletions / totalPlays) * 100) : 68;
-        const avgDuration = Math.round(duration * (completionRate / 100));
-        const percentageViewed = Math.round((avgDuration / duration) * 100);
+const completionRate = totalPlays > 0 ? Math.round((totalCompletions / totalPlays) * 100) : 0;
+const avgDuration = Math.round(duration * (completionRate / 100));
+const percentageViewed = Math.round((avgDuration / duration) * 100);
 
-        // Fator único por vídeo, para que vídeos com duração parecida
-        // não produzam curvas idênticas quando faltam dados reais.
-        const signature = seededFactor(selectedVideo.id);
+let finalCurve: RetentionPoint[] = [];
+let isRealData = false;
 
-        const startRetention = 100;
-        const endRetention = Math.max(10, Math.min(95, completionRate)); // curva converge para o completionRate real
+if (progressEvents.length > 0) {
+  // Curva real: para cada segundo, conta quantas sessões distintas chegaram até ali
+  const sessionsBySecond = new Map<number, Set<string>>();
+  progressEvents.forEach((ev) => {
+    const sec = ev.watch_second ?? 0;
+    const sid = ev.session_id ?? 'unknown';
+    if (!sessionsBySecond.has(sec)) sessionsBySecond.set(sec, new Set());
+    sessionsBySecond.get(sec)!.add(sid);
+  });
 
-        const simulatedCurve: RetentionPoint[] = [];
-        for (let sec = 0; sec <= duration; sec++) {
-          const progress = sec / duration;
-          // Decaimento exponencial ajustado pelo signature e pelo completionRate alvo
-          const decayRate = (1.1 - endRetention / 100) * 1.4 * signature;
-          const decay = Math.exp(-progress * decayRate);
-          const retention = Math.round(
-            endRetention + (startRetention - endRetention) * decay
-          );
-          simulatedCurve.push({ second: sec, retention: Math.max(0, Math.min(100, retention)) });
-        }
+  const totalSessions = new Set(progressEvents.map((e) => e.session_id)).size || 1;
+
+  for (let sec = 0; sec <= duration; sec++) {
+    let reached = 0;
+    sessionsBySecond.forEach((set, s) => {
+      if (s >= sec) reached += set.size; // aproximação; refinar se necessário
+    });
+    const retention = Math.round((reached / totalSessions) * 100);
+    finalCurve.push({ second: sec, retention: Math.max(0, Math.min(100, retention)) });
+  }
+  isRealData = true;
+} else {
+  // Fallback simulado — SEM dados reais de progresso ainda
+  const signature = seededFactor(selectedVideo.id);
+  const startRetention = 100;
+  const endRetention = totalPlays > 0 ? Math.max(10, Math.min(95, completionRate)) : 60;
+  for (let sec = 0; sec <= duration; sec++) {
+    const progress = sec / duration;
+    const decayRate = (1.1 - endRetention / 100) * 1.4 * signature;
+    const decay = Math.exp(-progress * decayRate);
+    const retention = Math.round(endRetention + (startRetention - endRetention) * decay);
+    finalCurve.push({ second: sec, retention: Math.max(0, Math.min(100, retention)) });
+  }
+}
 
         if (isMounted) {
           setVideoStats({
