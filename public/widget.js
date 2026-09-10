@@ -3340,7 +3340,7 @@ if (closingVideo) {
         var pPriceColor = appearanceConfig.product_card_price_color || priColor;
 
         var prodCard = createEl('div', 'vl-product');
-        prodCard.style.cssText = 'display:flex !important;align-items:center !important;justify-content:space-between !important;gap:12px !important;width:100% !important;padding:10px 12px !important;border-radius:' + pRadius + 'px !important;border:' + pBorderWidth + 'px solid ' + pBorderColor + ' !important;background:' + pBg + ' !important;box-sizing:border-box !important;cursor:pointer !important;transition:all 0.2s ease-in-out !important;';
+        prodCard.style.cssText = 'display:flex !important;align-items:center !important;justify-content:space-between !important;gap:12px !important;width:100% !important;padding:10px 12px !important;border-radius:' + pRadius + 'px !important;border:' + pBorderWidth + 'px solid ' + pBorderColor + ' !important;background:' + pBg + ' !important;box-sizing:border-box !important;';
 
         var prodImg = createEl('img', 'vl-product-img');
         prodImg.src = getThumbnailFromObject(productData) || '';
@@ -3364,34 +3364,21 @@ if (closingVideo) {
         }
         prodCard.appendChild(prodInfo);
 
-        // Setinha (Chevron) elegante na extrema direita do card do rodapé
-        var chevron = createEl('div', 'vl-product-chevron');
-        chevron.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + pPriceColor + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-        chevron.style.cssText = 'display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;transition:transform 0.2s ease !important;';
-        prodCard.appendChild(chevron);
+        // --- Área de ações: botões pequenos "Ver produto" + "WhatsApp" (se habilitado) ---
+        var prodActions = createEl('div', 'vl-product-actions');
 
-        // Micro-interações de Hover no rodapé
-        prodCard.addEventListener('mouseenter', function() {
-          prodCard.style.transform = 'translateY(-2px)';
-          prodCard.style.boxShadow = '0 6px 16px rgba(0,0,0,0.1)';
-          chevron.style.transform = 'translateX(2px)';
-        });
-        prodCard.addEventListener('mouseleave', function() {
-          prodCard.style.transform = 'none';
-          prodCard.style.boxShadow = 'none';
-          chevron.style.transform = 'none';
-        });
-
-        // Clique no Card do Rodapé
-        prodCard.onclick = function (e) {
+        var viewBtn = createEl('button', 'vl-product-btn');
+        viewBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg> Ver produto';
+        viewBtn.onclick = function (e) {
           e.stopPropagation();
           if (productUrl) {
             window.open(productUrl, '_blank');
             sendAnalyticsEvent('product_click', video ? video.id : null, productData ? productData.id : null);
           }
         };
+        prodActions.appendChild(viewBtn);
 
-        // Botão "Comprar pelo WhatsApp" — só aparece se houver produto vinculado (dentro do if productData)
+        // Botão WhatsApp — só aparece se habilitado (ao lado do "Ver produto")
         if (storeWhatsappEnabled && storeWhatsappNumber) {
           var waStoreBtn = createEl('button', 'vl-product-whatsapp-btn');
           var waPhone = storeWhatsappNumber.replace(/\D/g, '');
@@ -3399,9 +3386,8 @@ if (closingVideo) {
           var waProductName = productData.name || (story ? story.title : '') || '';
           var waFinalMsg = waTemplate.replace('{{story_title}}', waProductName);
 
-          waStoreBtn.innerHTML = svgIcon('whatsapp') + '<span style="margin-left:6px !important;">Comprar pelo WhatsApp</span>';
+          waStoreBtn.innerHTML = svgIcon('whatsapp') + ' WhatsApp';
           waStoreBtn.setAttribute('aria-label', 'Comprar pelo WhatsApp');
-          waStoreBtn.style.cssText = 'width:100% !important;margin-top:8px !important;padding:10px 16px !important;';
 
           waStoreBtn.onclick = function (e) {
             e.stopPropagation();
@@ -3409,8 +3395,10 @@ if (closingVideo) {
             window.open('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(waFinalMsg), '_blank');
           };
 
-          footerInner.appendChild(waStoreBtn);
+          prodActions.appendChild(waStoreBtn);
         }
+
+        prodCard.appendChild(prodActions);
 
         footerInner.appendChild(prodCard);
         footer.appendChild(footerInner);
