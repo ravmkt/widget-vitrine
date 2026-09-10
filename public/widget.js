@@ -159,7 +159,9 @@ function ensureModalStylesInLightDOM(appearance) {
   var videoLikeCounts = {};
   var userCommentedVideos = {};
 var storeWhatsappNumber = '';
-  var storeWhatsappMessage = '';
+var storeWhatsappMessage = '';
+var storeWhatsappMessageTemplate = '';
+var storeWhatsappEnabled = false;
   var storeLogoUrl = '';
   var storeName = '';
   var appDisabledBySettings = false;
