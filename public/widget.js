@@ -1885,16 +1885,18 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
       var resolvedDevice = window.innerWidth < 768 ? 'mobile' : 'desktop';
       var resolvedPath = String(window.location.pathname || '/');
 
-      var payload = {
-        storeId: cleanStoreId,
-        eventType: String(eventType).trim(),
-        videoId: cleanVideoId,
-        productId: cleanProductId,
-        storyId: cleanStoryId,
-        pageUrl: resolvedPageUrl,
-        deviceType: resolvedDevice,
-        pagePath: resolvedPath
-      };
+var payload = {
+  storeId: cleanStoreId,
+  eventType: String(eventType).trim(),
+  videoId: cleanVideoId,
+  productId: cleanProductId,
+  storyId: cleanStoryId,
+  pageUrl: resolvedPageUrl,
+  deviceType: resolvedDevice,
+  pagePath: resolvedPath,
+  sessionId: extraData.sessionId || null,
+  watchSecond: typeof extraData.watchSecond === 'number' ? extraData.watchSecond : null
+};
 
       var endpoint = supabaseUrl.replace(/\/rest\/v1.*/, '').replace(/\/+$/, '') + '/functions/v1/track-event';
 
