@@ -12,10 +12,13 @@ import {
   Eye,
   MousePointerClick,
   TrendingDown,
-  CircleDollarSign,
+  DollarSign,
   Heart,
   Trophy,
-  Hourglass
+  Hourglass,
+  CheckCircle2,
+  Wallet,
+  ArrowUpRight
 } from 'lucide-react'
 import type { SectorBenchmark } from '@/pages/PerformancePage'
 import { cn } from '@/lib/utils'
@@ -43,7 +46,6 @@ export function OverviewTab({
   const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
 
-  // Observador dinâmico para garantir que o Recharts/Tooltip mude de cor com o tema global
   useEffect(() => {
     const checkTheme = () => {
       setIsDark(document.documentElement.classList.contains('dark'))
@@ -74,94 +76,22 @@ export function OverviewTab({
             "Dicas de Rotina (Skincare/Make): Crie sequências curtas educacionais integrando o produto em um ritual de autocuidado diário."
           ]
         };
-      case 'artesanato':
-        return {
-          audienceBehavior: "O comprador de artesanato valoriza o processo criativo, a exclusividade e a história por trás de cada detalhe. O 'fazer manual' gera uma conexão afetiva poderosa.",
-          tips: [
-            "Storytelling do Processo ('Crafting'): Grave vídeos acelerados do produto sendo fabricado à mão. Esse formato gera um Hook Rate de até 75%.",
-            "Selo de Exclusividade: Enfatize na narração e nos textos flutuantes que cada lote do produto é único e limitado.",
-            "Vídeos de Embalagem: Stories mostrando o cuidado na hora de embalar e escrever cartinhas personalizadas para o cliente geram alto engajamento."
-          ]
-        };
       case 'eletronicos':
         return {
-          audienceBehavior: "Consumidores de tecnologia são extremamente racionais e técnicos. Eles buscam demonstrações de recursos específicos, unboxings detalhados e testes de durabilidade.",
+          audienceBehavior: "Consumidores de tecnologia são extremamente racionais e técnicos. Buscam demonstrações funcionais, unboxings e testes de durabilidade.",
           tips: [
-            "Uso Funcional Imediato: Não mostre o eletrônico desligado. O vídeo deve começar com o aparelho executando sua principal função ou brilhando.",
-            "Resolvendo uma Dor Técnico: Mostre como o gadget economiza tempo ou resolve um gargalo técnico específico no dia a dia.",
-            "Unboxing Dinâmico: Stories ágeis de 15s revelando o que vem na caixa e o sentimento de novidade estimulam a conversão."
-          ]
-        };
-      case 'casa_decoracao':
-        return {
-          audienceBehavior: "Compradores de decoração buscam harmonização e transformação de ambientes. Eles precisam visualizar o objeto inserido em um contexto residencial completo.",
-          tips: [
-            "O Poder do Antes e Depois: Grave stories rápidos mostrando um cômodo sem graça sendo transformado instantaneamente com o seu produto.",
-            "Ambientação Realista: Evite fundo branco de estúdio. Filme o objeto sob iluminação natural em salas, quartos ou cozinhas reais.",
-            "Proporção e Dimensões: Pegue o objeto na mão ou coloque-o ao lado de itens comuns para que o cliente tenha noção exata do tamanho."
-          ]
-        };
-      case 'saude_suplementos':
-        return {
-          audienceBehavior: "Setor movido por confiança, autoridade científica e benefícios claros para a saúde. O cliente precisa compreender o impacto direto da fórmula na sua rotina.",
-          tips: [
-            "Explicação Simples dos Benefícios: Use legendas flutuantes coloridas listando as 3 principais melhorias físicas que o suplemento traz.",
-            "Rotina Matinal/Pré-Treino: Grave vídeos dinâmicos de preparo, mistura do produto e consumo diário, reforçando a consistência de uso.",
-            "Origem e Certificação: Destaque a pureza dos ingredientes, selos da Anvisa ou recomendações profissionais nos primeiros segundos."
-          ]
-        };
-      case 'pet_shop':
-        return {
-          audienceBehavior: "Tutores tratam seus animais de estimação como membros da família. O apelo emocional focado em fofura, alegria e bem-estar animal é imbatível.",
-          tips: [
-            "Pets Usando o Produto: Mostre o cachorro ou gato se divertindo com o brinquedo ou saboreando o petisco com entusiasmo.",
-            "Alívio de Stress/Dificuldade: Demonstre como o produto acalma o pet, melhora a higiene ou facilita a rotina de banho e alimentação.",
-            "Alta Carga de Fofura: Use áudios carinhosos ou divertidos e garanta closes bem nítidos na expressão de felicidade do pet."
-          ]
-        };
-      case 'esporte_lazer':
-        return {
-          audienceBehavior: "Público motivado por performance, superação física e pertencimento a uma tribo. O story deve transpirar energia, resistência e atividade física real.",
-          tips: [
-            "Produto Sob Esforço: Grave o tênis na corrida, a roupa suportando o agachamento ou o acessório sendo usado sob sol e chuva.",
-            "Gatilho de Inspiração: Crie histórias que incentivem o cliente a começar a praticar exercícios hoje mesmo usando a sua marca.",
-            "Destaque Tecnológico: Mostre a elasticidade do tecido, respirabilidade ou leveza através de testes dinâmicos de vídeo."
-          ]
-        };
-      case 'infantil_brinquedos':
-        return {
-          audienceBehavior: "A compra é feita pelos pais, mas motivada pela alegria e desenvolvimento dos filhos. Destaque segurança, estímulo cognitivo e momentos felizes em família.",
-          tips: [
-            "Crianças Brincando Livremente: Mostre a interação genuína e as risadas das crianças interagindo com o brinquedo de forma segura.",
-            "Benefício Educativo: Explique rapidamente quais habilidades motoras, criativas ou sociais o produto ajuda a desenvolver.",
-            "Fácil Limpeza e Durabilidade: Faça stories mostrando a resistência do material a quedas e como é prático de limpar no dia a dia."
-          ]
-        };
-      case 'alimentos_bebidas':
-        return {
-          audienceBehavior: "O appetite-appeal é a chave de ouro. O cliente precisa 'comer com os olhos'. O som da crocância, a fumaça quente ou o brilho do alimento vendem o produto na hora.",
-          tips: [
-            "Closes Sensoriais Extremas: O queijo derretendo, o corte macio de uma carne ou a calda de chocolate caindo bem devagar sobre o doce.",
-            "Efeitos de Áudio (ASMR): Capte o som real da embalagem abrindo, do gelo caindo no copo ou da crocância ao morder.",
-            "Segurança de Preparo: Mostre a higiene da cozinha, o carinho na montagem do prato e a velocidade de entrega rápida."
-          ]
-        };
-      case 'joias_semijoias':
-        return {
-          audienceBehavior: "Mercado de luxo, autoestima e presentes memoráveis. O foco deve ser o brilho sob iluminação correta, o refinamento da peça e a embalagem luxuosa.",
-          tips: [
-            "O Jogo da Luz: Filme as joias sob luz natural direta para capturar o reflexo e o brilho real de cada detalhe e pedra preciosa.",
-            "Modelos em Close: Mostre a peça sendo usada de forma harmoniosa no pescoço, orelha ou dedos, para dar noção de escala e sofisticação.",
-            "Experiência do Unboxing Premium: Grave o processo de abertura de caixas de veludo, sacolas de seda e certificados de garantia."
+            "Uso Funcional Imediato: Mostre o eletrônico executando sua principal função nos primeiros 3 segundos.",
+            "Resolvendo uma Dor: Demonstre como o produto economiza tempo ou resolve um gargalo real.",
+            "Unboxing Dinâmico: Stories ágeis de 15s mostrando o pacote completo."
           ]
         };
       default:
         return {
-          audienceBehavior: "Comportamento geral de e-commerce e varejo digital baseado em vídeos rápidos, explicativos e com forte apelo visual imediato.",
+          audienceBehavior: "Comportamento de varejo digital focado em dinamismo, gatilhos visuais e clareza imediata de proposta de valor.",
           tips: [
-            "Regra dos 3 Segundos: Coloque a maior transformação do seu produto logo no início para capturar a atenção do usuário.",
-            "Legendas Sempre Ativas: 80% do público assiste vídeos sem áudio. O uso de textos grandes na tela é obrigatório para não perder vendas.",
-            "CTA Claro: Mantenha um único botão direcionando o usuário para a ação que você deseja (Ex: Compre Agora)."
+            "Regra dos 3 Segundos: Apresente o benefício ou dor resolvida logo no início.",
+            "Legendas Sempre Ativas: Garanta que quem assiste sem som consiga comprar com facilidade.",
+            "CTA Direto: Aponte um botão visível direto para o checkout ou página de compra."
           ]
         };
     }
@@ -176,10 +106,11 @@ export function OverviewTab({
   const [data, setData] = useState({
     views: 0,
     clicks: 0,
-    conversions: 0,
-    revenue: 0,
-    pendingConversions: 0,
+    paidCount: 0,
+    paidRevenue: 0,
+    pendingCount: 0,
     pendingRevenue: 0,
+    referralEarnings: 0,
     likes: 0,
     comments: 0
   })
@@ -197,29 +128,24 @@ export function OverviewTab({
       setLoading(true)
       try {
         let dateLimit = new Date()
-        let daysCount = 30
         if (timeRange === '7d') {
           dateLimit.setDate(dateLimit.getDate() - 7)
-          daysCount = 7
         } else if (timeRange === '15d') {
           dateLimit.setDate(dateLimit.getDate() - 15)
-          daysCount = 15
         } else if (timeRange === '30d') {
           dateLimit.setDate(dateLimit.getDate() - 30)
-          daysCount = 30
         } else if (timeRange === 'custom' && customFrom) {
           dateLimit = new Date(customFrom)
-          const diffTime = Math.abs(new Date().getTime() - dateLimit.getTime())
-          daysCount = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
         }
 
         const dateString = dateLimit.toISOString()
 
-        const [viewsRes, clicksRes, conversionsRes, socialRes] = await Promise.all([
+        const [viewsRes, clicksRes, conversionsRes, socialRes, referralRes] = await Promise.all([
           supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', resolvedStoreId).eq('event_type', 'story_open').gte('created_at', dateString),
           supabase.from('tracking_events').select('*', { count: 'exact', head: true }).eq('tenant_id', resolvedStoreId).eq('event_type', 'cta_click').gte('created_at', dateString),
           supabase.from('conversions').select('order_value, status, created_at').eq('store_id', resolvedStoreId).gte('created_at', dateString),
-          supabase.from('tracking_events').select('event_type').eq('tenant_id', resolvedStoreId).in('event_type', ['story_like', 'story_comment']).gte('created_at', dateString)
+          supabase.from('tracking_events').select('event_type').eq('tenant_id', resolvedStoreId).in('event_type', ['story_like', 'story_comment']).gte('created_at', dateString),
+          supabase.from('referral_rewards').select('amount').eq('referrer_store_id', resolvedStoreId).eq('status', 'paid').gte('created_at', dateString)
         ])
 
         let paidRevenue = 0
@@ -243,16 +169,22 @@ export function OverviewTab({
           }
         }
 
+        let totalReferrals = 0
+        if (referralRes.data) {
+          totalReferrals = referralRes.data.reduce((acc: number, r: any) => acc + (Number(r.amount) || 0), 0)
+        }
+
         const totalLikes = socialRes.data?.filter((e: any) => e.event_type === 'story_like').length || 0
         const totalComments = socialRes.data?.filter((e: any) => e.event_type === 'story_comment').length || 0
 
         setData({
           views: viewsRes.count || 0,
           clicks: clicksRes.count || 0,
-          conversions: paidCount,
-          revenue: paidRevenue,
-          pendingConversions: pendingCount,
-          pendingRevenue: pendingRevenue,
+          paidCount,
+          paidRevenue,
+          pendingCount,
+          pendingRevenue,
+          referralEarnings: totalReferrals,
           likes: totalLikes,
           comments: totalComments
         })
@@ -301,21 +233,23 @@ export function OverviewTab({
   }, [resolvedStoreId, tenantLoading, timeRange, customFrom, customTo])
 
   const ctr = data.views > 0 ? (data.clicks / data.views) * 100 : 0
-  const cvr = data.views > 0 ? (data.conversions / data.views) * 100 : 0
+  const cvr = data.views > 0 ? (data.paidCount / data.views) * 100 : 0
 
   const ctrDelta = ctr - benchmark.avg_ctr
   const cvrDelta = cvr - benchmark.avg_cvr
+
+  const totalAppImpact = data.paidRevenue + data.referralEarnings
 
   const renderSectorBadge = (delta: number) => {
     const positive = delta >= 0
     return (
       <span className={cn(
-        "inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-2xl mt-1.5 border shadow-xs transition-colors",
+        "inline-flex items-center gap-1 text-[11px] font-black px-2 py-0.5 rounded-full mt-1 border transition-colors",
         positive
           ? "text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/5"
           : "text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/25 bg-rose-50 dark:bg-rose-500/5"
       )}>
-        {positive ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />}
+        {positive ? <TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <TrendingDown className="w-3 h-3 text-rose-600 dark:text-rose-400" />}
         {positive ? '+' : ''}{delta.toFixed(1)}% vs Setor
       </span>
     )
@@ -324,167 +258,341 @@ export function OverviewTab({
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-36 bg-[#f8fafc] dark:bg-[#1a1f35] rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-32 bg-[#f8fafc] dark:bg-[#1a1f35] rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 animate-pulse" />
           ))}
         </div>
+        <div className="h-28 bg-[#f8fafc] dark:bg-[#1a1f35] rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 animate-pulse" />
         <div className="h-80 bg-[#f8fafc] dark:bg-[#1a1f35] rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 animate-pulse" />
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* ── METRICAS DO FUNIL (Produtos Theme Integration) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* 1. VISUALIZAÇÕES */}
-        <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[14px] font-black uppercase tracking-wider text-slate-800 dark:text-white">
-              1. Visualizações
-            </span>
-            <div className="w-[45px] h-[45px] rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
-              <Eye className="w-[22px] h-[22px]" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">
-              {data.views.toLocaleString('pt-BR')}
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Interações no widget</p>
-          </CardContent>
-        </Card>
+    <div className="space-y-8 font-sans">
+      {/* ── 1. BLOCO FINANCEIRO: FATURAMENTO & IMPACTO DIRETO DO APP ── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+            Resultados Financeiros do Aplicativo
+          </h3>
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+            Período selecionado: {timeRange === 'custom' ? 'Personalizado' : `Últimos ${timeRange.replace('d', ' dias')}`}
+          </span>
+        </div>
 
-        {/* 2. CLIQUES */}
-        <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[14px] font-black uppercase tracking-wider text-slate-800 dark:text-white">
-              2. Cliques em CTA
-            </span>
-            <div className="w-[45px] h-[45px] rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
-              <MousePointerClick className="w-[22px] h-[22px]" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">
-              {data.clicks.toLocaleString('pt-BR')}
-            </div>
-            <div className="flex flex-col mt-0.5">
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">CTR: {ctr.toFixed(1)}%</span>
-              {renderSectorBadge(ctrDelta)}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 3. VENDAS REALIZADAS */}
-        <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[14px] font-black uppercase tracking-wider text-slate-800 dark:text-white">
-              3. Vendas Pagas
-            </span>
-            <div className="w-[45px] h-[45px] rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
-              <Trophy className="w-[22px] h-[22px]" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">
-                {data.conversions.toLocaleString('pt-BR')}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Vendas Pagas */}
+          <Card className="rounded-[1.6rem] border border-slate-200 dark:border-[#ff7a29]/25 bg-white dark:bg-[#1a1f35]/90 shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Vendas Pagas
               </span>
-              {data.pendingConversions > 0 && (
-                <span className="text-[10px] font-black uppercase bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/40">
-                  +{data.pendingConversions} pendente{data.pendingConversions > 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
-            <div className="flex flex-col mt-0.5">
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Conversão: {cvr.toFixed(1)}%</span>
-              {renderSectorBadge(cvrDelta)}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 4. FATURAMENTO CONFIRMADO */}
-        <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[14px] font-black uppercase tracking-wider text-slate-800 dark:text-white">
-              4. Faturamento ROI
-            </span>
-            <div className="w-[45px] h-[45px] rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
-              <CircleDollarSign className="w-[22px] h-[22px]" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.revenue)}
-            </div>
-            {data.pendingRevenue > 0 ? (
-              <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-bold flex items-center gap-1">
-                <Hourglass className="w-3 h-3 inline" />
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.pendingRevenue)} em aberto
-              </p>
-            ) : (
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-bold">Vendas Diretas dos Vídeos</p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* 5. ENGAJAMENTO SOCIAL */}
-        <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] shadow-xs hover:shadow-md hover:border-[#0091ff]/50 dark:hover:border-[#ff7a29]/60 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <span className="text-[14px] font-black uppercase tracking-wider text-slate-800 dark:text-white">
-              Engajamento Social
-            </span>
-            <div className="w-[45px] h-[45px] rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/20 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
-              <Heart className="w-[22px] h-[22px] fill-[#0091ff] dark:fill-[#ff7a29] text-[#0091ff] dark:text-[#ff7a29]" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-center mt-1">
-              <div>
-                <span className="text-base font-black text-rose-600 dark:text-rose-500 flex items-center gap-1">
-                  ❤️ {data.likes}
-                </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">Curtidas</span>
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <CheckCircle2 size={20} className="stroke-[2.5]" />
               </div>
-              <div className="border-l border-slate-200 dark:border-[#ff7a29]/20 pl-4">
-                <span className="text-base font-black text-sky-600 dark:text-sky-400 flex items-center gap-1">
-                  💬 {data.comments}
-                </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">Comentários</span>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <div className="text-2xl font-black text-slate-900 dark:text-white">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.paidRevenue)}
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">{data.paidCount}</span> {data.paidCount === 1 ? 'pedido confirmado' : 'pedidos confirmados'}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 2: Aguardando Pagamento */}
+          <Card className="rounded-[1.6rem] border border-slate-200 dark:border-[#ff7a29]/25 bg-white dark:bg-[#1a1f35]/90 shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Aguardando Pagamento
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <Hourglass size={20} className="stroke-[2.5]" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <div className="text-2xl font-black text-slate-900 dark:text-white">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.pendingRevenue)}
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <span className="font-bold text-amber-600 dark:text-amber-400">{data.pendingCount}</span> {data.pendingCount === 1 ? 'pedido em aberto (Pix/Boleto)' : 'pedidos em aberto (Pix/Boleto)'}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 3: Comissões Indica & Ganha */}
+          <Card className="rounded-[1.6rem] border border-slate-200 dark:border-[#ff7a29]/25 bg-white dark:bg-[#1a1f35]/90 shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Faturamento Indicações
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
+                <DollarSign size={20} className="stroke-[2.5]" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <div className="text-2xl font-black text-slate-900 dark:text-white">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.referralEarnings)}
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                Comissões líquidas geradas
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 4: Impacto Total do Aplicativo */}
+          <Card className="rounded-[1.6rem] border-2 border-[#0091ff]/30 dark:border-[#ff7a29]/40 bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/30 dark:from-[#ff7a29]/10 dark:via-[#1a1f35] dark:to-[#1a1f35] shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <span className="text-xs font-black uppercase tracking-wider text-[#0091ff] dark:text-[#ff7a29]">
+                Impacto Total Gerado
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-[#0091ff] dark:bg-[#ff7a29] text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Wallet size={20} className="stroke-[2.5]" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <div className="text-2xl font-black text-[#0091ff] dark:text-[#ff7a29]">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalAppImpact)}
+              </div>
+              <div className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                Vendas Confirmadas + Indicações
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      {/* ── GRÁFICO DE EVOLUÇÃO TEMPORAL ── */}
-      <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35] p-6 shadow-xs">
+      {/* ── 2. TABELA DE RESUMO DE FATURAMENTO & AUDITORIA ── */}
+      <Card className="rounded-[1.8rem] border border-slate-200 dark:border-[#ff7a29]/20 bg-white dark:bg-[#1a1f35]/80 overflow-hidden shadow-sm">
+        <div className="p-5 border-b border-slate-100 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h4 className="text-sm font-black text-slate-900 dark:text-white">
+              Tabela de Consolidação de Receita
+            </h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Detalhamento de conversão por canal de receita do Vidlytics.
+            </p>
+          </div>
+          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/40 self-start sm:self-auto">
+            {data.paidCount + data.pendingCount} conversões registradas
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 dark:bg-black/20 text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider text-[10px] border-b border-slate-100 dark:border-white/5">
+              <tr>
+                <th className="py-3 px-5">Origem da Receita</th>
+                <th className="py-3 px-5">Status</th>
+                <th className="py-3 px-5">Volume (Qtd)</th>
+                <th className="py-3 px-5">Ticket Médio</th>
+                <th className="py-3 px-5 text-right">Valor Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-medium text-slate-700 dark:text-[#e8ecf4]">
+              <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02]">
+                <td className="py-3.5 px-5 font-bold flex items-center gap-2">
+                  <CheckCircle2 size={16} className="text-emerald-500" />
+                  Stories & Vídeos (Checkout Pago)
+                </td>
+                <td className="py-3.5 px-5">
+                  <span className="px-2 py-0.5 rounded-full font-bold text-[10px] uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
+                    Aprovado / Pago
+                  </span>
+                </td>
+                <td className="py-3.5 px-5 font-bold">{data.paidCount} pedidos</td>
+                <td className="py-3.5 px-5">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    data.paidCount > 0 ? data.paidRevenue / data.paidCount : 0
+                  )}
+                </td>
+                <td className="py-3.5 px-5 text-right font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.paidRevenue)}
+                </td>
+              </tr>
+
+              <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02]">
+                <td className="py-3.5 px-5 font-bold flex items-center gap-2">
+                  <Hourglass size={16} className="text-amber-500" />
+                  Stories & Vídeos (Pix / Boleto em Aberto)
+                </td>
+                <td className="py-3.5 px-5">
+                  <span className="px-2 py-0.5 rounded-full font-bold text-[10px] uppercase bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40">
+                    Pendente
+                  </span>
+                </td>
+                <td className="py-3.5 px-5 font-bold">{data.pendingCount} pedidos</td>
+                <td className="py-3.5 px-5">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    data.pendingCount > 0 ? data.pendingRevenue / data.pendingCount : 0
+                  )}
+                </td>
+                <td className="py-3.5 px-5 text-right font-black text-amber-600 dark:text-amber-400 text-sm">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.pendingRevenue)}
+                </td>
+              </tr>
+
+              <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02]">
+                <td className="py-3.5 px-5 font-bold flex items-center gap-2">
+                  <DollarSign size={16} className="text-[#0091ff] dark:text-[#ff7a29]" />
+                  Programa Indica & Ganha
+                </td>
+                <td className="py-3.5 px-5">
+                  <span className="px-2 py-0.5 rounded-full font-bold text-[10px] uppercase bg-blue-50 dark:bg-[#ff7a29]/15 text-[#0091ff] dark:text-[#ff7a29] border border-blue-200 dark:border-orange-500/30">
+                    Disponível
+                  </span>
+                </td>
+                <td className="py-3.5 px-5 font-bold">—</td>
+                <td className="py-3.5 px-5">—</td>
+                <td className="py-3.5 px-5 text-right font-black text-slate-900 dark:text-white text-sm">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.referralEarnings)}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot className="bg-slate-50/80 dark:bg-white/[0.03] font-black text-slate-900 dark:text-white border-t border-slate-200 dark:border-white/10">
+              <tr>
+                <td className="py-3.5 px-5 uppercase tracking-wider text-[11px]" colSpan={4}>
+                  Total Confirmado (Vendas Pagas + Comissões)
+                </td>
+                <td className="py-3.5 px-5 text-right text-base text-[#0091ff] dark:text-[#ff7a29]">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalAppImpact)}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </Card>
+
+      {/* ── 3. BLOCO DE ENGAJAMENTO & FUNIL DOS VÍDEOS ── */}
+      <div className="space-y-3">
+        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+          Performance dos Vídeos & Interação do Público
+        </h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* 1. VISUALIZAÇÕES */}
+          <Card className="rounded-[1.6rem] border border-slate-200 dark:border-[#ff7a29]/25 bg-white dark:bg-[#1a1f35]/90 shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Visualizações
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
+                <Eye size={20} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black text-slate-900 dark:text-white">
+                {data.views.toLocaleString('pt-BR')}
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Sessões de stories abertas</p>
+            </CardContent>
+          </Card>
+
+          {/* 2. CLIQUES EM CTA */}
+          <Card className="rounded-[1.6rem] border border-slate-200 dark:border-[#ff7a29]/25 bg-white dark:bg-[#1a1f35]/90 shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Cliques em CTA
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 text-[#0091ff] dark:text-[#ff7a29] flex items-center justify-center shrink-0">
+                <MousePointerClick size={20} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black text-slate-900 dark:text-white">
+                {data.clicks.toLocaleString('pt-BR')}
+              </div>
+              <div className="flex flex-col mt-1">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">CTR: {ctr.toFixed(1)}%</span>
+                {renderSectorBadge(ctrDelta)}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 3. TAXA DE CONVERSÃO DOS VÍDEOS */}
+          <Card className="rounded-[1.6rem] border border-slate-200 dark:border-[#ff7a29]/25 bg-white dark:bg-[#1a1f35]/90 shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Conversão (CVR)
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Trophy size={20} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black text-slate-900 dark:text-white">
+                {cvr.toFixed(1)}%
+              </div>
+              <div className="flex flex-col mt-1">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Vendas por visualização</span>
+                {renderSectorBadge(cvrDelta)}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 4. ENGAJAMENTO SOCIAL */}
+          <Card className="rounded-[1.6rem] border border-slate-200 dark:border-[#ff7a29]/25 bg-white dark:bg-[#1a1f35]/90 shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Engajamento Social
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
+                <Heart size={20} className="fill-rose-500" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between items-center mt-0.5">
+                <div>
+                  <span className="text-lg font-black text-rose-600 dark:text-rose-500">
+                    {data.likes}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Curtidas</span>
+                </div>
+                <div className="border-l border-slate-200 dark:border-white/10 pl-4">
+                  <span className="text-lg font-black text-sky-600 dark:text-sky-400">
+                    {data.comments}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Comentários</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* ── 4. GRÁFICO DE EVOLUÇÃO TEMPORAL ── */}
+      <Card className="rounded-[1.8rem] border border-slate-200 dark:border-[#ff7a29]/25 bg-white dark:bg-[#1a1f35]/80 p-6 shadow-sm">
         <CardHeader className="p-0 pb-6">
-          <CardTitle className="text-[18px] font-black text-slate-800 dark:text-white flex items-center gap-2">
-            📊 Evolução Diária de Conversões
+          <CardTitle className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
+            📊 Evolução Diária de Conversões e Visualizações
           </CardTitle>
-          <p className="text-[14px] text-slate-500 dark:text-slate-400 mt-1">Comparativo de cliques em CTAs e exibições dos Stories ao longo do tempo</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Comparativo de cliques em CTAs e exibições dos Stories ao longo do tempo selecionado.
+          </p>
         </CardHeader>
         <CardContent className="p-0 h-80 w-full">
           {chartData.length === 0 || (data.views === 0 && data.clicks === 0) ? (
             <div className="h-full flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl p-6">
               <span className="text-3xl">📈</span>
-              <h5 className="font-bold text-slate-700 dark:text-slate-300 mt-2">Sem dados históricos para exibir</h5>
-              <p className="text-[12px] text-slate-500 dark:text-slate-400 max-w-xs mt-1">Assim que seu widget receber as primeiras interações, o gráfico de evolução será desenhado automaticamente.</p>
+              <h5 className="font-bold text-slate-700 dark:text-slate-300 mt-2 text-sm">Sem dados históricos para exibir</h5>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mt-1">
+                Assim que seu widget receber interações, a linha de tendência será desenhada automaticamente.
+              </p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#38bdf8" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#0091ff" stopOpacity={0.25}/>
+                    <stop offset="95%" stopColor="#0091ff" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#ff7a29" stopOpacity={0.25}/>
+                    <stop offset="95%" stopColor="#ff7a29" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.08)" />
@@ -513,7 +621,7 @@ export function OverviewTab({
                   name="Visualizações"
                   type="monotone"
                   dataKey="views"
-                  stroke="#38bdf8"
+                  stroke="#0091ff"
                   strokeWidth={2.5}
                   fillOpacity={1}
                   fill="url(#colorViews)"
@@ -522,7 +630,7 @@ export function OverviewTab({
                   name="Cliques em CTA"
                   type="monotone"
                   dataKey="clicks"
-                  stroke="#6366f1"
+                  stroke="#ff7a29"
                   strokeWidth={2.5}
                   fillOpacity={1}
                   fill="url(#colorClicks)"
@@ -533,33 +641,31 @@ export function OverviewTab({
         </CardContent>
       </Card>
 
-      {/* ── CONTEXTO DO MERCADO ── */}
-      <div className="bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
+      {/* ── 5. BENCHMARK DO SETOR ── */}
+      <div className="bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 p-5 rounded-[1.6rem] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-start gap-3.5">
-          <Compass className="w-7 h-7 text-[#0091ff] dark:text-[#ff7a29] shrink-0 mt-0.5 animate-spin" style={{ animationDuration: '8s' }} />
+          <Compass className="w-7 h-7 text-[#0091ff] dark:text-[#ff7a29] shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-[14px] font-black text-slate-800 dark:text-slate-200">Como funciona o benchmark do setor?</h4>
-            <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed max-w-2xl">
-              As metas de comparação do setor de <strong>{benchmark?.sector_name || 'Geral'}</strong> são baseadas em pesquisas consolidadas de mercado e inteligência competitiva nacional de 2026 (cruzando relatórios oficiais da Ebit/Nielsen, Neotrust e Social Commerce global).
+            <h4 className="text-sm font-black text-slate-800 dark:text-slate-200">Como funciona o benchmark do setor?</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed max-w-2xl">
+              As metas de comparação do setor de <strong>{benchmark?.sector_name || 'Geral'}</strong> são baseadas em pesquisas de mercado e inteligência competitiva nacional de 2026 (cruzando dados de Nielsen, Neotrust e Social Commerce global).
             </p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => setIsBenchmarkModalOpen(true)}
-          className="bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] border border-transparent dark:border-[#ff7a29]/30 text-white font-black text-xs px-4 py-2.5 rounded-2xl transition-all cursor-pointer shadow-xs shrink-0 flex items-center gap-1.5 hover:scale-[1.02]"
+          className="bg-[#0091ff] hover:bg-[#0070f3] dark:bg-[#ff7a29] dark:hover:bg-[#e05e10] text-white font-black text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-xs shrink-0 flex items-center gap-1.5"
         >
           <FileText size={14} className="text-white" />
           Ver Estudo de Mercado
         </button>
       </div>
 
-      {/* ── MODAL PREMIUM: ESTUDO DE MERCADO E BENCHMARK 2026 ── */}
+      {/* ── MODAL BENCHMARK ── */}
       {isBenchmarkModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in font-sans">
           <div className="relative w-full max-w-2xl bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl shadow-2xl p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto">
-
-            {/* Botão Fechar */}
             <button
               onClick={() => setIsBenchmarkModalOpen(false)}
               className="absolute top-5 right-5 p-2 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] text-slate-500 dark:text-slate-400 hover:text-[#0091ff] dark:hover:text-[#ff7a29] transition-all cursor-pointer"
@@ -567,7 +673,6 @@ export function OverviewTab({
               <X size={18} />
             </button>
 
-            {/* Cabeçalho */}
             <div className="space-y-1.5 border-b border-slate-100 dark:border-[#ff7a29]/20 pb-5">
               <span className="inline-flex items-center gap-1 bg-[#0091ff]/10 dark:bg-[#ff7a29]/10 border border-[#0091ff]/20 dark:border-[#ff7a29]/30 text-[#0091ff] dark:text-[#ff7a29] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
                 <Sparkles className="w-3 h-3" /> Inteligência Setorial 2026
@@ -580,14 +685,12 @@ export function OverviewTab({
               </p>
             </div>
 
-            {/* Grid das Métricas do Benchmark */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-
               <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-white/[0.01] border border-slate-200 dark:border-[#ff7a29]/30">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CTR Médio (Cliques)</span>
                 <p className="text-2xl font-black text-[#0091ff] dark:text-[#ff7a29] mt-1">{benchmark?.avg_ctr || 0}%</p>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                  Taxa ideal de visualizadores que clicam em um product/CTA no story.
+                  Taxa ideal de visualizadores que clicam em um produto/CTA no story.
                 </p>
               </div>
 
@@ -606,10 +709,8 @@ export function OverviewTab({
                   Média de retenção de usuários nos primeiros 3s críticos do vídeo.
                 </p>
               </div>
-
             </div>
 
-            {/* Playbook de Ação */}
             <div className="mt-6 space-y-4 bg-slate-50/50 dark:bg-[#171c30]/50 border border-slate-200 dark:border-[#ff7a29]/30 p-5 rounded-2xl">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-[#0091ff] dark:text-[#ff7a29]" />
@@ -642,11 +743,9 @@ export function OverviewTab({
               </div>
             </div>
 
-            {/* Metodologia de Fundo */}
             <div className="mt-6 pt-4 border-t border-slate-100 dark:border-[#ff7a29]/20 text-[10px] text-slate-400 dark:text-slate-500 text-center leading-relaxed">
               * Estudo metodológico compilado em Janeiro/2026 a partir do cruzamento de pesquisas consolidadas de mercado nacional (Ebit, Nielsen, Neotrust) e taxas empíricas de Social Video Commerce do varejo digital brasileiro B2C.
             </div>
-
           </div>
         </div>
       )}
