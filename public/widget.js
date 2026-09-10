@@ -1819,6 +1819,7 @@ function applyHostPosition(host, appearance) {
     }
   }
 
+
 function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
 
