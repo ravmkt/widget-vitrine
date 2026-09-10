@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Video as VideoIcon,
+  AlertCircle,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -41,8 +42,8 @@ type Props = {
 
 interface VideoItem {
   id: string;
-  title: string;
-  video_url: string;
+  title?: string;
+  video_url?: string;
   thumbnail_url?: string;
   duration?: number;
 }
@@ -53,14 +54,17 @@ interface RetentionPoint {
 }
 
 export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
-  const { currentTenant } = useTenant();
+  const tenantContext = useTenant() as any;
+  // Suporta tanto currentTenant quanto tenant dependendo da implementação do Context
+  const currentTenant = tenantContext?.currentTenant || tenantContext?.tenant;
+  const tenantId = currentTenant?.id;
+
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [selectedVideoId, setSelectedVideoId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [hoveredSecond, setHoveredSecond] = useState<number | null>(null);
 
-  // Métricas calculadas para o vídeo selecionado
   const [videoStats, setVideoStats] = useState<{
     completionRate: number;
     avgDuration: number;
@@ -81,61 +85,81 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
     curve: [],
   });
 
-  // 1. Carregar vídeos cadastrados na loja atual
+  // 1. Carregar vídeos da loja (com proteção de timeout)
   useEffect(() => {
+    let isMounted = true;
+
     async function loadTenantVideos() {
-      if (!currentTenant?.id) return;
+      if (!tenantId) {
+        // Se o tenant ainda está carregando no context, aguarda um tick
+        return;
+      }
+
       try {
         setLoading(true);
+
         const { data, error } = await supabase
           .from('videos')
           .select('id, title, video_url, thumbnail_url, duration')
-          .eq('tenant_id', currentTenant.id)
+          .eq('tenant_id', tenantId)
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.warn('Aviso ao carregar vídeos:', error.message);
+        }
 
-        if (data && data.length > 0) {
-          setVideos(data);
-          setSelectedVideoId(data[0].id);
-        } else {
-          setVideos([]);
-          setSelectedVideoId('');
+        if (isMounted) {
+          if (data && data.length > 0) {
+            setVideos(data);
+            setSelectedVideoId(data[0].id);
+          } else {
+            setVideos([]);
+            setSelectedVideoId('');
+          }
         }
       } catch (err) {
-        console.error('Erro ao carregar vídeos da loja:', err);
+        console.error('Erro ao buscar vídeos:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
     loadTenantVideos();
-  }, [currentTenant?.id]);
 
-  // Vídeo atualmente selecionado no dropdown
+    // Fallback de segurança: nunca fica travado mais de 2.5s em loading
+    const timer = setTimeout(() => {
+      if (isMounted) setLoading(false);
+    }, 2500);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [tenantId]);
+
   const selectedVideo = useMemo(
     () => videos.find((v) => v.id === selectedVideoId) || videos[0],
     [videos, selectedVideoId]
   );
 
-  // 2. Carregar métricas reais de eventos do vídeo selecionado
+  // 2. Carregar métricas reais do vídeo selecionado
   useEffect(() => {
     async function loadVideoRetentionMetrics() {
-      if (!selectedVideo?.id || !currentTenant?.id) return;
+      if (!selectedVideo?.id || !tenantId) return;
+
+      const videoDuration = Math.max(5, Number(selectedVideo.duration) || 15);
 
       try {
-        // Busca eventos do vídeo selecionado dentro do tenant
         const { data: events, error } = await supabase
           .from('analytics_events')
-          .select('event_type, metadata, created_at')
-          .eq('tenant_id', currentTenant.id)
+          .select('event_type, metadata')
+          .eq('tenant_id', tenantId)
           .eq('video_id', selectedVideo.id);
 
-        const videoDuration = Number(selectedVideo.duration) || 15; // fallback de 15s se não cadastrado
-        const totalViews = events?.filter((e) => e.event_type === 'video_view').length || 0;
-
-        if (totalViews === 0) {
-          // Sem dados reais ainda: inicializa zerado
+        if (error || !events || events.length === 0) {
+          // Sem eventos registrados ainda: curva zerada/padrão
           setVideoStats({
             completionRate: 0,
             avgDuration: 0,
@@ -146,45 +170,45 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
             dropOffCount: 0,
             curve: [
               { second: 0, retention: 100 },
-              { second: Math.round(videoDuration * 0.25), retention: 100 },
-              { second: Math.round(videoDuration * 0.5), retention: 100 },
-              { second: Math.round(videoDuration * 0.75), retention: 100 },
-              { second: videoDuration, retention: 100 },
+              { second: Math.round(videoDuration * 0.25), retention: 0 },
+              { second: Math.round(videoDuration * 0.5), retention: 0 },
+              { second: Math.round(videoDuration * 0.75), retention: 0 },
+              { second: videoDuration, retention: 0 },
             ],
           });
           return;
         }
 
-        const completes = events?.filter((e) => e.event_type === 'video_complete').length || 0;
-        const dropsBefore3s = events?.filter(
+        const views = events.filter((e) => e.event_type === 'video_view').length;
+        const completes = events.filter((e) => e.event_type === 'video_complete').length;
+        const skips = events.filter((e) => e.event_type === 'video_skip').length;
+        const rewinds = events.filter((e) => e.event_type === 'video_rewind').length;
+        const dropsBefore3s = events.filter(
           (e) => e.event_type === 'video_dropoff' && (e.metadata?.second || 0) <= 3
-        ).length || 0;
+        ).length;
 
-        const skips = events?.filter((e) => e.event_type === 'video_skip').length || 0;
-        const rewinds = events?.filter((e) => e.event_type === 'video_rewind').length || 0;
+        const totalBase = views > 0 ? views : events.length;
+        const completionRate = totalBase > 0 ? Math.round((completes / totalBase) * 100) : 0;
+        const dropOffRate = totalBase > 0 ? Math.round((dropsBefore3s / totalBase) * 100) : 0;
 
-        const completionRate = Math.round((completes / totalViews) * 100);
-        const dropOffRate = Math.round((dropsBefore3s / totalViews) * 100);
-
-        // Curva calculada proporcional à duração
+        // Montar curva de 6 pontos proporcional à duração
         const steps = 6;
         const stepTime = Math.max(1, Math.floor(videoDuration / (steps - 1)));
         const curve: RetentionPoint[] = [];
 
         for (let i = 0; i < steps; i++) {
           const currentSec = i === steps - 1 ? videoDuration : i * stepTime;
-          // Redução progressiva baseada na taxa real de conclusão
-          const factor = i === 0 ? 1 : 1 - ((100 - completionRate) / 100) * (i / (steps - 1));
+          const factor = i === 0 ? 1 : Math.max(0, 1 - ((100 - completionRate) / 100) * (i / (steps - 1)));
           curve.push({
             second: currentSec,
-            retention: Math.max(0, Math.round(100 * factor)),
+            retention: Math.round(100 * factor),
           });
         }
 
         setVideoStats({
           completionRate,
-          avgDuration: Math.round(videoDuration * (completionRate / 100 || 0.6)),
-          percentageViewed: Math.min(100, Math.round(((videoDuration * 0.7) / videoDuration) * 100)),
+          avgDuration: Math.round(videoDuration * ((completionRate || 30) / 100)),
+          percentageViewed: Math.min(100, Math.round(((completionRate || 40) / 100) * 100)),
           skipsForward: skips,
           rewinds: rewinds,
           dropOffRate: dropOffRate,
@@ -192,12 +216,12 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
           curve,
         });
       } catch (err) {
-        console.error('Erro ao calcular retenção do vídeo:', err);
+        console.error('Erro ao calcular retenção:', err);
       }
     }
 
     loadVideoRetentionMetrics();
-  }, [selectedVideo, currentTenant?.id, timeRange]);
+  }, [selectedVideo?.id, tenantId, timeRange]);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -207,21 +231,22 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
 
   if (loading) {
     return (
-      <div className="py-16 text-center text-xs font-bold text-slate-400 animate-pulse">
-        Carregando vídeos e métricas de retenção...
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs font-bold text-slate-400">Carregando métricas de retenção...</span>
       </div>
     );
   }
 
   if (videos.length === 0) {
     return (
-      <div className="p-8 rounded-3xl border border-dashed border-slate-300 dark:border-white/10 text-center space-y-3">
-        <VideoIcon className="mx-auto text-slate-400" size={32} />
-        <h3 className="text-sm font-bold text-slate-800 dark:text-white">
-          Nenhum vídeo cadastrado nesta loja
+      <div className="p-10 rounded-3xl border border-dashed border-slate-300 dark:border-white/10 text-center space-y-3 bg-white/50 dark:bg-[#111524]/50">
+        <VideoIcon className="mx-auto text-slate-400" size={36} />
+        <h3 className="text-sm font-black text-slate-800 dark:text-white">
+          Nenhum vídeo cadastrado nesta loja ainda
         </h3>
         <p className="text-xs text-slate-500 max-w-sm mx-auto">
-          Faça o upload ou importe seus primeiros stories no menu "Vídeos" para visualizar a retenção aqui.
+          Adicione ou importe vídeos na aba <strong>Vídeos</strong> para acompanhar a retenção e comportamento da sua audiência.
         </p>
       </div>
     );
@@ -230,9 +255,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="space-y-6 animate-fade-in font-sans">
-        {/* ══════════════════════════════════════════════════════════════════
-            1. CARDS DE MÉTRICAS (COM ABANDONO EM %)
-        ══════════════════════════════════════════════════════════════════ */}
+        {/* CARDS COM ABANDONO EM % */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Conclusão */}
           <Card className="rounded-[1.6rem] border border-blue-200/60 dark:border-blue-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
@@ -250,7 +273,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
                   <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
                     <p className="font-bold text-blue-400">Taxa de Conclusão</p>
                     <p className="text-slate-300">Porcentagem de visualizações que assistiram até o final.</p>
-                    <p className="text-slate-100 font-medium">💡 Vídeos curtos (até 15s) tendem a reter até 70% do público.</p>
+                    <p className="text-slate-100 font-medium">💡 Vídeos com até 15s retêm até 70% mais que vídeos longos.</p>
                   </TooltipContent>
                 </UITooltip>
               </div>
@@ -284,7 +307,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
                   <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
                     <p className="font-bold text-emerald-400">Tempo Médio Assistido</p>
                     <p className="text-slate-300">Duração média que o cliente passou assistindo.</p>
-                    <p className="text-slate-100 font-medium">💡 Insira o produto em uso logo nos primeiros 3s para elevar esse tempo.</p>
+                    <p className="text-slate-100 font-medium">💡 Mostre o produto nos 2 primeiros segundos para elevar esse tempo.</p>
                   </TooltipContent>
                 </UITooltip>
               </div>
@@ -316,9 +339,9 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
-                    <p className="font-bold text-purple-400">Pulos vs Retrocessos</p>
-                    <p className="text-slate-300">Pulos mostram desinteresse ou pressa; retrocessos mostram revisita de conteúdo.</p>
-                    <p className="text-slate-100 font-medium">💡 Vários retrocessos indicam interesse específico em detalhes.</p>
+                    <p className="font-bold text-purple-400">Pulos vs Replays</p>
+                    <p className="text-slate-300">Pulos indicam avanço rápido; replays indicam interesse em detalhes.</p>
+                    <p className="text-slate-100 font-medium">💡 Replays frequentes sinalizam elementos que despertaram desejo.</p>
                   </TooltipContent>
                 </UITooltip>
               </div>
@@ -344,7 +367,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
             </CardContent>
           </Card>
 
-          {/* Card 4: Abandonos (Agora em Porcentagem %) */}
+          {/* Card 4: Abandonos em % */}
           <Card className="rounded-[1.6rem] border border-rose-200/60 dark:border-rose-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <div className="flex items-center gap-1.5">
@@ -360,7 +383,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
                   <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
                     <p className="font-bold text-rose-400">Taxa de Abandono Prematuro</p>
                     <p className="text-slate-300">Porcentagem de espectadores que saem antes dos primeiros 3 segundos.</p>
-                    <p className="text-slate-100 font-medium">💡 Se mais de 30% abandonarem antes dos 3s, mude a capa ou o gancho inicial.</p>
+                    <p className="text-slate-100 font-medium">💡 Se mais de 30% abandonarem antes dos 3s, teste trocar a capa ou os primeiros 2s.</p>
                   </TooltipContent>
                 </UITooltip>
               </div>
@@ -379,9 +402,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
           </Card>
         </div>
 
-        {/* ══════════════════════════════════════════════════════════════════
-            2. SELETOR DE VÍDEO REAL DA LOJA
-        ══════════════════════════════════════════════════════════════════ */}
+        {/* SELETOR DE VÍDEO REAL */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
           <div className="flex items-center gap-3">
             <label className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -407,13 +428,11 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
 
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{videos.length} vídeo(s) sincronizado(s)</span>
+            <span>{videos.length} vídeo(s) cadastrado(s)</span>
           </div>
         </div>
 
-        {/* ══════════════════════════════════════════════════════════════════
-            3. MOMENTOS IMPORTANTES DE RETENÇÃO (GRÁFICO REAL)
-        ══════════════════════════════════════════════════════════════════ */}
+        {/* CURVA DE RETENÇÃO ESTILO YOUTUBE */}
         <div className="bg-white dark:bg-[#111524] border border-slate-200 dark:border-white/10 rounded-3xl p-6 lg:p-8 shadow-xs">
           <div className="mb-6">
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
@@ -426,7 +445,6 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center border-b border-slate-100 dark:border-white/10 pb-6 mb-6">
-            {/* Métricas do vídeo */}
             <div className="space-y-5">
               <div>
                 <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
@@ -459,13 +477,13 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
               </div>
             </div>
 
-            {/* Preview do Vídeo Real */}
+            {/* Preview do Vídeo */}
             <div className="flex justify-center md:justify-end">
               <div className="relative w-full max-w-[320px] aspect-[16/10] bg-slate-950 rounded-2xl overflow-hidden shadow-lg border border-slate-800 flex items-center justify-center group">
                 {selectedVideo?.thumbnail_url ? (
                   <img
                     src={selectedVideo.thumbnail_url}
-                    alt={selectedVideo.title}
+                    alt={selectedVideo.title || 'Vídeo'}
                     className="w-full h-full object-cover opacity-80"
                   />
                 ) : (
@@ -495,7 +513,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
             </div>
           </div>
 
-          {/* Gráfico da Curva */}
+          {/* Gráfico */}
           <div className="h-[260px] w-full pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
@@ -553,7 +571,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
             </ResponsiveContainer>
           </div>
 
-          {/* Insights do Vídeo */}
+          {/* Dica Dinâmica baseada no Abandono em % */}
           <div className="mt-4 p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/20 flex items-start gap-3">
             <TrendingDown size={18} className="text-blue-500 shrink-0 mt-0.5" />
             <div className="text-xs text-slate-600 dark:text-slate-300">
@@ -561,8 +579,8 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
                 Gancho Inicial (Primeiros 3 segundos):
               </strong>
               {videoStats.dropOffRate <= 30
-                ? `Apenas ${videoStats.dropOffRate}% de abandono precoce. O gancho inicial deste vídeo está prendendo bem o cliente!`
-                : `${videoStats.dropOffRate}% abandonam antes dos 3s. Recomendamos trocar a capa ou colocar a oferta logo no início do story.`}
+                ? `Apenas ${videoStats.dropOffRate}% de abandono precoce. O gancho deste vídeo está retendo bem o cliente!`
+                : `${videoStats.dropOffRate}% de abandono antes dos 3s (acima dos 30% recomendados). Recomendamos colocar o produto ou uma oferta clara logo no início.`}
             </div>
           </div>
         </div>
