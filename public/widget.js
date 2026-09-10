@@ -1819,6 +1819,21 @@ function applyHostPosition(host, appearance) {
     }
   }
 
+var currentPlaybackSessionId = null;
+
+function generateSessionId() {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return window.crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0;
+    var v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
+
 function generateSessionId() {
   if (window.crypto && typeof window.crypto.randomUUID === 'function') {
     return window.crypto.randomUUID();
