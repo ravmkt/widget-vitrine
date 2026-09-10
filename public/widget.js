@@ -1819,10 +1819,12 @@ function applyHostPosition(host, appearance) {
     }
   }
 
-  function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
-    if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
+function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
+  if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
 
-    // Throttle: evita reenviar o mesmo evento para o mesmo vídeo em menos de 4s
+  // Throttle: evita reenviar o mesmo evento para o mesmo vídeo em menos de 4s
+  // (exceto 'progress', que tem throttle próprio de 1s controlado no chamador)
+  if (eventType !== 'progress') {
     sendAnalyticsEvent._lastSent = sendAnalyticsEvent._lastSent || {};
     var throttleKey = String(eventType) + '_' + String(videoId);
     var throttleNow = Date.now();
@@ -1830,8 +1832,9 @@ function applyHostPosition(host, appearance) {
       return;
     }
     sendAnalyticsEvent._lastSent[throttleKey] = throttleNow;
+  }
 
-    try {
+  try {
       // Vidlytics: Atribuição entre subdomínios (ex: useanny.com -> seguro.useanny.com)
       try {
         var hName = window.location.hostname || '';
