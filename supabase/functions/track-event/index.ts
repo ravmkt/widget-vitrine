@@ -2,9 +2,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.0.0";
 
 const ALLOWED_EVENTS = new Set([
-  "video_view", "play", "cta_click", "product_view", "story_complete", 
-  "product_click", "share", "next_video", "video_close", 
+  "video_view", "play", "cta_click", "product_view", "story_complete",
+  "product_click", "share", "next_video", "video_close",
   "whatsapp_click", "website_click", "like", "unlike", "comment",
+  "progress",
 ]);
 
 const supabaseAdmin = createClient(
