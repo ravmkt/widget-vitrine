@@ -243,17 +243,16 @@ if (progressEvents.length > 0) {
   }
 }
 
-        if (isMounted) {
-          setVideoStats({
-            completionRate,
-            avgDuration,
-            percentageViewed,
-            skipsForward: Math.max(1, Math.round(totalPlays * 0.12)),
-            rewinds: Math.max(1, Math.round(totalPlays * 0.05)),
-            dropOffRate: Math.max(5, 100 - completionRate),
-            dropOffCount: Math.round(totalPlays * 0.32),
-            curve: simulatedCurve,
-          });
+setVideoStats({
+  completionRate,
+  avgDuration,
+  percentageViewed,
+  skipsForward: Math.max(1, Math.round(totalPlays * 0.12)),
+  rewinds: Math.max(1, Math.round(totalPlays * 0.05)),
+  dropOffRate: Math.max(5, 100 - completionRate),
+  dropOffCount: Math.round(totalPlays * 0.32),
+  curve: finalCurve,
+});
         }
       } catch (err) {
         console.error('Erro ao calcular estatísticas do vídeo:', err);
