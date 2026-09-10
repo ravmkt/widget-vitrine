@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Clock,
-  FastForward,
   LogOut,
   Info,
-  Play,
-  Pause,
   Sparkles,
   TrendingDown,
-  Flame,
   CheckCircle2,
   ChevronDown,
   Video as VideoIcon,
@@ -31,7 +27,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { supabase } from '@/lib/supabase';
-import { db, Video, resolveStoreId } from '@/lib/db';
+import { db, resolveStoreId } from '@/lib/db';
 import { useTenant } from '@/context/TenantContext';
 
 type Props = {
@@ -53,13 +49,27 @@ interface RetentionPoint {
   retention: number;
 }
 
+/**
+ * Gera um número pseudo-aleatório determinístico (0 a 1) a partir de uma string.
+ * Usado para que cada vídeo tenha uma "assinatura" própria na curva simulada,
+ * evitando que vídeos com duração parecida gerem gráficos idênticos.
+ */
+function seededFactor(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash << 5) - hash + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  const normalized = Math.abs(hash % 1000) / 1000; // 0..1
+  return 0.85 + normalized * 0.3; // entre 0.85 e 1.15 (variação suave)
+}
+
 export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
   const { storeId: tenantStoreId } = useTenant();
 
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [selectedVideoId, setSelectedVideoId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [hoveredSecond, setHoveredSecond] = useState<number | null>(null);
 
   const [videoStats, setVideoStats] = useState<{
@@ -89,7 +99,12 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
     async function loadTenantVideos() {
       try {
         setLoading(true);
-        const candidate = tenantStoreId || localStorage.getItem('vidlytics_selected_store_id') || localStorage.getItem('current_store_id') || localStorage.getItem('store_id') || '';
+        const candidate =
+          tenantStoreId ||
+          localStorage.getItem('vidlytics_selected_store_id') ||
+          localStorage.getItem('current_store_id') ||
+          localStorage.getItem('store_id') ||
+          '';
         const safeStoreId = await resolveStoreId(candidate || undefined);
 
         if (!safeStoreId) {
@@ -101,7 +116,6 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
           return;
         }
 
-        // Tentar obter via db.videos ou direto via supabase
         let loadedVideos: any[] = [];
         try {
           loadedVideos = await db.videos.getAll(safeStoreId);
@@ -149,7 +163,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
     return videos.find((v) => v.id === selectedVideoId) || videos[0] || null;
   }, [videos, selectedVideoId]);
 
-  // 2. Carregar estatísticas e métricas reais do vídeo selecionado
+  // 2. Carregar estatísticas e curva do vídeo selecionado
   useEffect(() => {
     let isMounted = true;
 
@@ -157,12 +171,15 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
       if (!selectedVideo) return;
 
       try {
-        const candidate = tenantStoreId || localStorage.getItem('vidlytics_selected_store_id') || localStorage.getItem('current_store_id') || '';
+        const candidate =
+          tenantStoreId ||
+          localStorage.getItem('vidlytics_selected_store_id') ||
+          localStorage.getItem('current_store_id') ||
+          '';
         const safeStoreId = await resolveStoreId(candidate || undefined);
 
         const duration = Math.max(5, Math.min(120, selectedVideo.duration || 15));
 
-        // Buscar métricas da tabela 'metrics'
         let query = supabase
           .from('metrics')
           .select('event_type, metadata, created_at')
@@ -174,20 +191,35 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
 
         const { data: metricsData } = await query;
 
-        const totalPlays = metricsData?.filter(m => m.event_type === 'play' || m.event_type === 'view').length || 0;
-        const totalCompletions = metricsData?.filter(m => m.event_type === 'complete' || m.event_type === 'video_complete').length || 0;
+        const totalPlays =
+          metricsData?.filter((m) => m.event_type === 'play' || m.event_type === 'video_view').length || 0;
+        const totalCompletions =
+          metricsData?.filter((m) => m.event_type === 'complete' || m.event_type === 'story_complete').length || 0;
 
-        // Se houver dados reais, calcula; caso contrário, gera curva suavizada com base na duração
+        // ⚠️ O widget atual não envia eventos de progresso segundo-a-segundo,
+        // então a curva é uma ESTIMATIVA baseada no completionRate real do vídeo,
+        // e não em dados granulares de "quantos ainda assistiam no segundo X".
         const completionRate = totalPlays > 0 ? Math.round((totalCompletions / totalPlays) * 100) : 68;
         const avgDuration = Math.round(duration * (completionRate / 100));
         const percentageViewed = Math.round((avgDuration / duration) * 100);
 
-        const mockCurve: RetentionPoint[] = [];
+        // Fator único por vídeo, para que vídeos com duração parecida
+        // não produzam curvas idênticas quando faltam dados reais.
+        const signature = seededFactor(selectedVideo.id);
+
+        const startRetention = 100;
+        const endRetention = Math.max(10, Math.min(95, completionRate)); // curva converge para o completionRate real
+
+        const simulatedCurve: RetentionPoint[] = [];
         for (let sec = 0; sec <= duration; sec++) {
           const progress = sec / duration;
-          const decay = Math.exp(-progress * 0.45);
-          const retention = Math.max(20, Math.round(100 * decay));
-          mockCurve.push({ second: sec, retention });
+          // Decaimento exponencial ajustado pelo signature e pelo completionRate alvo
+          const decayRate = (1.1 - endRetention / 100) * 1.4 * signature;
+          const decay = Math.exp(-progress * decayRate);
+          const retention = Math.round(
+            endRetention + (startRetention - endRetention) * decay
+          );
+          simulatedCurve.push({ second: sec, retention: Math.max(0, Math.min(100, retention)) });
         }
 
         if (isMounted) {
@@ -197,9 +229,9 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
             percentageViewed,
             skipsForward: Math.max(1, Math.round(totalPlays * 0.12)),
             rewinds: Math.max(1, Math.round(totalPlays * 0.05)),
-            dropOffRate: Math.max(15, 100 - completionRate),
+            dropOffRate: Math.max(5, 100 - completionRate),
             dropOffCount: Math.round(totalPlays * 0.32),
-            curve: mockCurve,
+            curve: simulatedCurve,
           });
         }
       } catch (err) {
@@ -255,34 +287,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* SELETOR DE VÍDEO */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-[#1a1f35] p-4 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 shadow-xs">
-        <div>
-          <h2 className="text-sm font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Vídeo Analisado
-          </h2>
-          <p className="text-xs text-slate-400 dark:text-slate-500">
-            Selecione qual vídeo você quer inspecionar
-          </p>
-        </div>
-
-        <div className="relative w-full sm:w-72">
-          <select
-            value={selectedVideoId}
-            onChange={(e) => setSelectedVideoId(e.target.value)}
-            className="w-full appearance-none rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 pr-10 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29] transition-colors cursor-pointer"
-          >
-            {videos.map((vid) => (
-              <option key={vid.id} value={vid.id}>
-                {vid.title}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        </div>
-      </div>
-
-      {/* CARDS DE RESUMO DE RETENÇÃO */}
+      {/* CARDS DE RESUMO DE RETENÇÃO (do vídeo selecionado) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Taxa de Conclusão */}
         <Card className="rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#1a1f35]">
@@ -376,6 +381,33 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
         </Card>
       </div>
 
+      {/* SELETOR DE VÍDEO */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-[#1a1f35] p-4 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 shadow-xs">
+        <div>
+          <h2 className="text-sm font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Vídeo Analisado
+          </h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            Selecione qual vídeo você quer inspecionar
+          </p>
+        </div>
+
+        <div className="relative w-full sm:w-72">
+          <select
+            value={selectedVideoId}
+            onChange={(e) => setSelectedVideoId(e.target.value)}
+            className="w-full appearance-none rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-4 py-2.5 pr-10 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-[#0091ff] dark:focus:border-[#ff7a29] transition-colors cursor-pointer"
+          >
+            {videos.map((vid) => (
+              <option key={vid.id} value={vid.id}>
+                {vid.title}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        </div>
+      </div>
+
       {/* GRÁFICO SEGUNDO A SEGUNDO COM PLAYER SINCRONIZADO */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Curva de Retenção */}
@@ -395,7 +427,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
                   <Info size={16} className="text-slate-400 hover:text-slate-600" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  Mostra a porcentagem exata de pessoas que ainda estavam assistindo a cada segundo do vídeo.
+                  Estimativa com base no completion rate real do vídeo. Tracking granular por segundo ainda não é coletado pelo widget.
                 </TooltipContent>
               </UITooltip>
             </TooltipProvider>
@@ -404,6 +436,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
+                  key={selectedVideoId}
                   data={videoStats.curve}
                   onMouseMove={(e: any) => {
                     if (e && e.activePayload && e.activePayload[0]) {
@@ -481,7 +514,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
                 {criticalDropSecond !== null && criticalDropSecond <= 4 ? (
                   <>O vídeo perde audiência rapidamente nos primeiros {criticalDropSecond} segundos. Considere encurtar a introdução ou adicionar um gancho visual mais chamativo no início.</>
                 ) : (
-                  <>Excelente taxa de retenção inicial! Mais de 80% do público permaneceu após os primeiros 3 segundos de exibição.</>
+                  <>Boa retenção inicial. A maior parte da audiência permaneceu além dos primeiros segundos de exibição.</>
                 )}
               </div>
             </div>
@@ -502,6 +535,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
             <div className="relative aspect-[9/16] w-full max-w-[220px] overflow-hidden rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-black shadow-md">
               {selectedVideo?.video_url ? (
                 <video
+                  key={selectedVideoId}
                   src={selectedVideo.video_url}
                   poster={selectedVideo.thumbnail_url}
                   className="h-full w-full object-cover"
