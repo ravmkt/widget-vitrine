@@ -90,8 +90,9 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
     rewinds: 0,
     dropOffRate: 0,
     dropOffCount: 0,
-    curve: [],
-  });
+  isRealData: false,
+  curve: [],
+});
 
   // 1. Carregar vídeos da loja
   useEffect(() => {
