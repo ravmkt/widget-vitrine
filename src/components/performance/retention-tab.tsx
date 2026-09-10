@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   ChevronDown,
   Video as VideoIcon,
-  AlertCircle,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -42,8 +41,8 @@ type Props = {
 
 interface VideoItem {
   id: string;
-  title?: string;
-  video_url?: string;
+  title: string;
+  video_url: string;
   thumbnail_url?: string;
   duration?: number;
 }
@@ -55,7 +54,6 @@ interface RetentionPoint {
 
 export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
   const tenantContext = useTenant() as any;
-  // Suporta tanto currentTenant quanto tenant dependendo da implementação do Context
   const currentTenant = tenantContext?.currentTenant || tenantContext?.tenant;
   const tenantId = currentTenant?.id;
 
@@ -85,50 +83,78 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
     curve: [],
   });
 
-  // 1. Carregar vídeos da loja (com proteção de timeout)
+  // 1. Carregar vídeos da Biblioteca da loja (media_items ou fallback videos)
   useEffect(() => {
     let isMounted = true;
 
     async function loadTenantVideos() {
-      if (!tenantId) {
-        // Se o tenant ainda está carregando no context, aguarda um tick
-        return;
-      }
+      if (!tenantId) return;
 
       try {
         setLoading(true);
 
-        const { data, error } = await supabase
-          .from('videos')
-          .select('id, title, video_url, thumbnail_url, duration')
+        // Busca prioritária na tabela da Biblioteca (media_items)
+        const { data: mediaData, error: mediaError } = await supabase
+          .from('media_items')
+          .select('id, name, file_name, file_url, url, thumbnail_url, media_type, duration')
           .eq('tenant_id', tenantId)
           .order('created_at', { ascending: false });
 
-        if (error) {
-          console.warn('Aviso ao carregar vídeos:', error.message);
+        let loadedVideos: VideoItem[] = [];
+
+        if (!mediaError && mediaData && mediaData.length > 0) {
+          // Filtra apenas vídeos da biblioteca (ignora logotipos/imagens)
+          const videoRows = mediaData.filter((item: any) => {
+            const type = (item.media_type || '').toLowerCase();
+            const name = (item.name || item.file_name || item.url || item.file_url || '').toLowerCase();
+            return type.includes('video') || name.endsWith('.mp4') || name.endsWith('.webm') || name.endsWith('.mov');
+          });
+
+          loadedVideos = videoRows.map((item: any) => ({
+            id: item.id,
+            title: item.name || item.file_name || 'Vídeo sem título',
+            video_url: item.file_url || item.url || '',
+            thumbnail_url: item.thumbnail_url || '',
+            duration: Number(item.duration) || 15,
+          }));
+        }
+
+        // Se media_items estiver vazio, faz fallback para a tabela videos/stories
+        if (loadedVideos.length === 0) {
+          const { data: fallbackVideos } = await supabase
+            .from('videos')
+            .select('id, title, video_url, thumbnail_url, duration')
+            .eq('tenant_id', tenantId)
+            .order('created_at', { ascending: false });
+
+          if (fallbackVideos && fallbackVideos.length > 0) {
+            loadedVideos = fallbackVideos.map((v: any) => ({
+              id: v.id,
+              title: v.title || 'Vídeo sem título',
+              video_url: v.video_url || '',
+              thumbnail_url: v.thumbnail_url || '',
+              duration: Number(v.duration) || 15,
+            }));
+          }
         }
 
         if (isMounted) {
-          if (data && data.length > 0) {
-            setVideos(data);
-            setSelectedVideoId(data[0].id);
+          setVideos(loadedVideos);
+          if (loadedVideos.length > 0) {
+            setSelectedVideoId(loadedVideos[0].id);
           } else {
-            setVideos([]);
             setSelectedVideoId('');
           }
         }
       } catch (err) {
-        console.error('Erro ao buscar vídeos:', err);
+        console.error('Erro ao carregar vídeos da biblioteca:', err);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     }
 
     loadTenantVideos();
 
-    // Fallback de segurança: nunca fica travado mais de 2.5s em loading
     const timer = setTimeout(() => {
       if (isMounted) setLoading(false);
     }, 2500);
@@ -144,7 +170,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
     [videos, selectedVideoId]
   );
 
-  // 2. Carregar métricas reais do vídeo selecionado
+  // 2. Carregar métricas do vídeo selecionado
   useEffect(() => {
     async function loadVideoRetentionMetrics() {
       if (!selectedVideo?.id || !tenantId) return;
@@ -159,7 +185,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
           .eq('video_id', selectedVideo.id);
 
         if (error || !events || events.length === 0) {
-          // Sem eventos registrados ainda: curva zerada/padrão
+          // Curva padrão suave caso ainda não haja dados de reprodução
           setVideoStats({
             completionRate: 0,
             avgDuration: 0,
@@ -191,7 +217,6 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
         const completionRate = totalBase > 0 ? Math.round((completes / totalBase) * 100) : 0;
         const dropOffRate = totalBase > 0 ? Math.round((dropsBefore3s / totalBase) * 100) : 0;
 
-        // Montar curva de 6 pontos proporcional à duração
         const steps = 6;
         const stepTime = Math.max(1, Math.floor(videoDuration / (steps - 1)));
         const curve: RetentionPoint[] = [];
@@ -207,7 +232,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
 
         setVideoStats({
           completionRate,
-          avgDuration: Math.round(videoDuration * ((completionRate || 30) / 100)),
+          avgDuration: Math.round(videoDuration * ((completionRate || 40) / 100)),
           percentageViewed: Math.min(100, Math.round(((completionRate || 40) / 100) * 100)),
           skipsForward: skips,
           rewinds: rewinds,
@@ -233,7 +258,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <span className="text-xs font-bold text-slate-400">Carregando métricas de retenção...</span>
+        <span className="text-xs font-bold text-slate-400">Carregando vídeos e métricas de retenção...</span>
       </div>
     );
   }
@@ -246,7 +271,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
           Nenhum vídeo cadastrado nesta loja ainda
         </h3>
         <p className="text-xs text-slate-500 max-w-sm mx-auto">
-          Adicione ou importe vídeos na aba <strong>Vídeos</strong> para acompanhar a retenção e comportamento da sua audiência.
+          Adicione ou importe vídeos na aba <strong>Biblioteca</strong> para acompanhar a retenção e comportamento da sua audiência.
         </p>
       </div>
     );
@@ -255,7 +280,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="space-y-6 animate-fade-in font-sans">
-        {/* CARDS COM ABANDONO EM % */}
+        {/* CARDS COM TAXAS E ABANDONO EM % */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Conclusão */}
           <Card className="rounded-[1.6rem] border border-blue-200/60 dark:border-blue-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
@@ -325,7 +350,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
             </CardContent>
           </Card>
 
-          {/* Card 3: Pulos vs Retrocessos */}
+          {/* Card 3: Pulos vs Replays */}
           <Card className="rounded-[1.6rem] border border-purple-200/60 dark:border-purple-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <div className="flex items-center gap-1.5">
@@ -367,7 +392,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
             </CardContent>
           </Card>
 
-          {/* Card 4: Abandonos em % */}
+          {/* Card 4: Abandono com Porcentagem */}
           <Card className="rounded-[1.6rem] border border-rose-200/60 dark:border-rose-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <div className="flex items-center gap-1.5">
@@ -383,7 +408,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
                   <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
                     <p className="font-bold text-rose-400">Taxa de Abandono Prematuro</p>
                     <p className="text-slate-300">Porcentagem de espectadores que saem antes dos primeiros 3 segundos.</p>
-                    <p className="text-slate-100 font-medium">💡 Se mais de 30% abandonarem antes dos 3s, teste trocar a capa ou os primeiros 2s.</p>
+                    <p className="text-slate-100 font-medium">💡 Se mais de 30% abandonarem antes dos 3s, teste trocar a capa ou o gancho.</p>
                   </TooltipContent>
                 </UITooltip>
               </div>
@@ -402,7 +427,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
           </Card>
         </div>
 
-        {/* SELETOR DE VÍDEO REAL */}
+        {/* SELETOR DE VÍDEO DA BIBLIOTECA */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
           <div className="flex items-center gap-3">
             <label className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -412,11 +437,11 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
               <select
                 value={selectedVideoId}
                 onChange={(e) => setSelectedVideoId(e.target.value)}
-                className="appearance-none pl-4 pr-10 py-2.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111524] text-xs font-black text-slate-800 dark:text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all max-w-[280px] sm:max-w-[400px] truncate"
+                className="appearance-none pl-4 pr-10 py-2.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111524] text-xs font-black text-slate-800 dark:text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all max-w-[280px] sm:max-w-[420px] truncate"
               >
                 {videos.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.title || 'Vídeo sem título'}
+                    {v.title}
                   </option>
                 ))}
               </select>
@@ -428,7 +453,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
 
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{videos.length} vídeo(s) cadastrado(s)</span>
+            <span>{videos.length} vídeo(s) na Biblioteca</span>
           </div>
         </div>
 
@@ -483,7 +508,7 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
                 {selectedVideo?.thumbnail_url ? (
                   <img
                     src={selectedVideo.thumbnail_url}
-                    alt={selectedVideo.title || 'Vídeo'}
+                    alt={selectedVideo.title}
                     className="w-full h-full object-cover opacity-80"
                   />
                 ) : (
