@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.08.31-04';
+  var WIDGET_VERSION = '2026.09.10-04';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -6802,6 +6802,8 @@ storeWhatsappEnabled = settings.whatsapp_enabled !== false;
           });
         });
       });
+    });
+  });
 }
 
 initWidget();
