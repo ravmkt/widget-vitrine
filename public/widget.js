@@ -6802,8 +6802,6 @@ storeWhatsappEnabled = settings.whatsapp_enabled !== false;
           });
         });
       });
-    });   
-  });      
 }
 
 initWidget();
