@@ -1148,9 +1148,10 @@ function readStoreSettings() {
                             store.auto_approve_comments === '1';
         return {
           auto_approve_comments: isAutoApprove,
-          whatsapp_number: store.whatsapp_number || '',
-          whatsapp_message: store.whatsapp_message || '',
-          whatsapp_message_template: store.whatsapp_message_template || '',
+whatsapp_number: store.whatsapp_number || '',
+whatsapp_message: store.whatsapp_message || '',
+whatsapp_message_template: store.whatsapp_message_template || '',
+whatsapp_enabled: store.whatsapp_enabled !== false,
           store_logo_url: store.logo_url || '',
           store_name: store.store_name || '',
           app_enabled: store.app_enabled !== false,
