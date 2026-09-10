@@ -6581,8 +6581,10 @@ function initWidget() {
           }
 
           autoApproveComments = Boolean(settings.auto_approve_comments);
-          storeWhatsappNumber = settings.whatsapp_number || '';
-          storeWhatsappMessage = settings.whatsapp_message || '';
+storeWhatsappNumber = settings.whatsapp_number || '';
+storeWhatsappMessage = settings.whatsapp_message || '';
+storeWhatsappMessageTemplate = settings.whatsapp_message_template || '';
+storeWhatsappEnabled = settings.whatsapp_enabled !== false;
           if (settings.store_logo_url || settings.logo_url) {
             storeLogoUrl = normalizeMediaUrl(settings.store_logo_url || settings.logo_url);
           }
