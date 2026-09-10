@@ -402,11 +402,16 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
                       <Info size={14} />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
-                    <p className="font-bold text-rose-400">Engajamento Total</p>
-                    <p className="text-slate-300">Total de reações sociais somadas em todos os stories publicados.</p>
-                    <p className="text-slate-100 font-medium">💡 Responda aos comentários para aumentar a proximidade com o consumidor.</p>
-                  </TooltipContent>
+<TooltipContent className="bg-slate-900 text-white p-3 rounded-xl max-w-xs shadow-xl space-y-1">
+  <div className="font-bold text-pink-400">Engajamento Total</div>
+  <div className="text-slate-300">Soma de todas as curtidas e comentários recebidos.</div>
+  <div className="flex items-start gap-1.5 pt-0.5">
+    <span className="font-semibold">💡</span>
+    <span className="text-slate-100 font-medium">
+      Faça perguntas diretas ou enquetes no final dos vídeos para incentivar o público a comentar.
+    </span>
+  </div>
+</TooltipContent>
                 </UITooltip>
               </div>
               <div className="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
