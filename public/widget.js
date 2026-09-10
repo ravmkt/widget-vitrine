@@ -1946,7 +1946,7 @@ function applyHostPosition(host, appearance) {
         'background:#000 !important;';
 
       wrapper.appendChild(imgEl);
-      trackMetric({ event_type: 'play', story_id: storyId, video_id: video ? video.id : null, page_url: window.location.href });
+      trackMetric({ event_type: 'video_view', story_id: storyId, video_id: video ? video.id : null, page_url: window.location.href });
       return wrapper;
     }
 
@@ -1960,7 +1960,7 @@ function applyHostPosition(host, appearance) {
       iframe.setAttribute('data-is-muted', isUserMuted ? 'true' : 'false');
       iframe.setAttribute('data-is-paused', 'false');
       wrapper.appendChild(iframe);
-      trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+      trackMetric({ event_type: 'video_view', story_id: storyId, video_id: video.id, page_url: window.location.href });
       return wrapper;
     }
 
@@ -1980,7 +1980,7 @@ function applyHostPosition(host, appearance) {
       pinIframe.setAttribute('allowfullscreen', '');
       pinIframe.style.cssText = 'width:100% !important;height:100% !important;border:none !important;background:#fff !important;';
       wrapper.appendChild(pinIframe);
-      trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+      trackMetric({ event_type: 'video_view', story_id: storyId, video_id: video.id, page_url: window.location.href });
       return wrapper;
     }
 
@@ -1992,7 +1992,7 @@ function applyHostPosition(host, appearance) {
       tkIframe.setAttribute('allowfullscreen', '');
       tkIframe.style.cssText = 'width:100% !important;height:100% !important;border:none !important;';
       wrapper.appendChild(tkIframe);
-      trackMetric({ event_type: 'play', story_id: storyId, video_id: video.id, page_url: window.location.href });
+      trackMetric({ event_type: 'video_view', story_id: storyId, video_id: video.id, page_url: window.location.href });
       return wrapper;
     }
 

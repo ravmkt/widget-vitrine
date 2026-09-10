@@ -177,7 +177,7 @@ BEGIN
   );
 
   -- Se for um evento de 'view', atualiza de forma atômica o contador mensal da loja (SaaS Usage Control)
-  IF p_event_type = 'view' THEN
+  IF p_event_type IN ('view', 'video_view', 'play') THEN
     v_month := to_char(now(), 'YYYY-MM');
     
     INSERT INTO public.usage_counters (store_id, month, views_count, updated_at)
