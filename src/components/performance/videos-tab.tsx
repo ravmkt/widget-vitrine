@@ -9,7 +9,17 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Percent,
+  ShoppingBag,
+  Info,
 } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useTenant } from '@/context/TenantContext';
 import { db } from '@/lib/db';
@@ -101,6 +111,44 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
   useEffect(() => {
     setPage(0);
   }, [search]);
+
+  // Cálculos consolidados para os cards superiores
+  const overallMetrics = useMemo(() => {
+    const totalVideos = videos.length;
+    let totalViews = 0;
+    let totalConversions = 0;
+    let totalRevenue = 0;
+    let totalLikes = 0;
+    let totalComments = 0;
+    let totalShares = 0;
+    let totalClicksEstimate = 0;
+
+    videos.forEach((v) => {
+      totalViews += v.metrics.views || 0;
+      totalConversions += v.metrics.conversions || 0;
+      totalRevenue += v.metrics.revenue || 0;
+      totalLikes += v.metrics.likes || 0;
+      totalComments += v.metrics.comments || 0;
+      totalShares += v.metrics.shares || 0;
+      // Reconstitui o clique com base no CTR do vídeo
+      totalClicksEstimate += Math.round(((v.metrics.ctr || 0) / 100) * (v.metrics.views || 0));
+    });
+
+    const averageCtr = totalViews > 0 ? (totalClicksEstimate / totalViews) * 100 : 0;
+    const avgViewsPerVideo = totalVideos > 0 ? Math.round(totalViews / totalVideos) : 0;
+
+    return {
+      totalVideos,
+      totalViews,
+      avgViewsPerVideo,
+      averageCtr,
+      totalConversions,
+      totalRevenue,
+      totalLikes,
+      totalComments,
+      totalShares,
+    };
+  }, [videos]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -228,188 +276,348 @@ export function VideosTab({ timeRange, customFrom, customTo }: Props) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in font-sans">
-      {/* Barra de busca Premium */}
-      <div className="relative">
-        <Search
-          size={16}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0091ff] dark:text-[#ff7a29]"
-        />
-        <input
-          type="text"
-          placeholder="Buscar por título do vídeo..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#111524] text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0091ff]/30 focus:border-[#0091ff] dark:focus:ring-[#ff7a29]/30 dark:focus:border-[#ff7a29] transition-all"
-        />
-      </div>
+    <TooltipProvider delayDuration={150}>
+      <div className="space-y-6 animate-fade-in font-sans">
+        {/* ══════════════════════════════════════════════════════════════════
+            CARDS DE MÉTRICAS GERAIS DOS VÍDEOS (SOMATÓRIO & MÉDIAS)
+        ══════════════════════════════════════════════════════════════════ */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Total de Visualizações */}
+          <Card className="rounded-[1.6rem] border border-blue-200/60 dark:border-blue-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Total de Visualizações
+                </span>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="text-slate-400 hover:text-blue-500 cursor-pointer">
+                      <Info size={14} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
+                    <p className="font-bold text-blue-400">Total de Visualizações</p>
+                    <p className="text-slate-300">Soma acumulada de todas as visualizações em todos os seus vídeos.</p>
+                    <p className="text-slate-100 font-medium">💡 Mantenha novos vídeos na primeira posição para maximizar o alcance.</p>
+                  </TooltipContent>
+                </UITooltip>
+              </div>
+              <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                <Eye size={20} />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <div className="text-2xl font-black text-slate-900 dark:text-white">
+                {overallMetrics.totalViews.toLocaleString('pt-BR')}
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <span>Média de <strong className="text-blue-600 dark:text-blue-400 font-black">{overallMetrics.avgViewsPerVideo.toLocaleString('pt-BR')}</strong> por vídeo</span>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Tabela com Borda Arredondada Premium */}
-      <div className="bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-[#ff7a29]/20">
-                <Th field="title" className="min-w-[220px]" align="left">
-                  Vídeo
-                </Th>
-                <Th field="views" align="center">Visualizações</Th>
-                <Th field="ctr" align="center">CTR</Th>
-                <Th field="conversions" align="center">Conversões</Th>
-                <Th field="revenue" align="center">Receita</Th>
-                <Th field="likes" align="center">Engajamento</Th>
-                <Th field="duration" align="center">Duração</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginated.map((video) => (
-                <tr
-                  key={video.id}
-                  className="border-b border-slate-100 dark:border-[#ff7a29]/10 last:border-0 hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors"
-                >
-                  {/* Vídeo */}
-                  <td className="px-4 py-4 text-left">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-16 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200/60 dark:border-[#ff7a29]/20">
-                        {video.thumbnail_url ? (
-                          <img
-                            src={video.thumbnail_url}
-                            alt={video.title}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center text-slate-400 dark:text-slate-500">
-                            <Eye size={14} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 text-left">
-                        <p className="text-sm font-black text-slate-850 dark:text-white truncate max-w-[200px]">
-                          {video.title}
-                        </p>
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5">
-                          {video.status === 'active' ? 'Ativo' : 'Inativo'}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
+          {/* Card 2: Média Geral de CTR */}
+          <Card className="rounded-[1.6rem] border border-emerald-200/60 dark:border-emerald-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  CTR Médio Geral
+                </span>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="text-slate-400 hover:text-emerald-500 cursor-pointer">
+                      <Info size={14} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
+                    <p className="font-bold text-emerald-400">CTR Médio Geral</p>
+                    <p className="text-slate-300">Porcentagem média ponderada de cliques sobre as visualizações de todos os vídeos.</p>
+                    <p className="text-slate-100 font-medium">💡 Vídeos com chamada clara nos primeiros 5 segundos superam 4% de CTR.</p>
+                  </TooltipContent>
+                </UITooltip>
+              </div>
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Percent size={20} className="stroke-[2.5]" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                {overallMetrics.averageCtr.toFixed(1).replace('.', ',')}%
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                Em {overallMetrics.totalVideos} {overallMetrics.totalVideos === 1 ? 'vídeo analisado' : 'vídeos analisados'}
+              </div>
+            </CardContent>
+          </Card>
 
-                  {/* Visualizações */}
-                  <td className="px-4 py-4 text-center">
-                    <p className="text-sm font-black text-slate-800 dark:text-white">
-                      {video.metrics.views.toLocaleString()}
-                    </p>
-                  </td>
+          {/* Card 3: Total Conversões & Faturamento */}
+          <Card className="rounded-[1.6rem] border border-orange-200/60 dark:border-orange-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Conversões Atribuídas
+                </span>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="text-slate-400 hover:text-orange-500 cursor-pointer">
+                      <Info size={14} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
+                    <p className="font-bold text-[#ff7a29]">Conversões Atribuídas</p>
+                    <p className="text-slate-300">Pedidos concluídos por clientes impactados pelos vídeos da loja.</p>
+                    <p className="text-slate-100 font-medium">💡 Promova produtos de alta demanda em vídeos para acelerar conversões.</p>
+                  </TooltipContent>
+                </UITooltip>
+              </div>
+              <div className="w-10 h-10 rounded-2xl bg-orange-500/10 text-orange-600 dark:text-[#ff7a29] flex items-center justify-center shrink-0">
+                <ShoppingBag size={20} />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <div className="text-2xl font-black text-slate-900 dark:text-white">
+                {overallMetrics.totalConversions.toLocaleString('pt-BR')}
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                Receita:{' '}
+                <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
+                  {overallMetrics.totalRevenue > 0
+                    ? `R$ ${overallMetrics.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                    : 'R$ 0,00'}
+                </strong>
+              </div>
+            </CardContent>
+          </Card>
 
-                  {/* CTR */}
-                  <td className="px-4 py-4 text-center">
-                    <span
-                      className={cn(
-                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-2xl text-[11px] font-black border',
-                        video.metrics.ctr >= 5
-                          ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20'
-                          : video.metrics.ctr >= 2
-                            ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-500/20'
-                            : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-500/20',
-                      )}
-                    >
-                      {video.metrics.ctr.toFixed(1).replace('.', ',')}%
-                    </span>
-                  </td>
-
-                  {/* Conversões */}
-                  <td className="px-4 py-4 text-center">
-                    <p className="text-sm font-black text-slate-800 dark:text-white">
-                      {video.metrics.conversions.toLocaleString()}
-                    </p>
-                  </td>
-
-                  {/* Receita */}
-                  <td className="px-4 py-4 text-center">
-                    <p className="text-sm font-black text-slate-800 dark:text-white">
-                      {video.metrics.revenue > 0
-                        ? `R$ ${video.metrics.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                        : '—'}
-                    </p>
-                  </td>
-
-                  {/* Engajamento */}
-                  <td className="px-4 py-4 text-center">
-                    <div className="flex items-center justify-center gap-3">
-                      <span
-                        className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400"
-                        title="Curtidas"
-                      >
-                        <Heart size={12} className="text-rose-500 dark:text-rose-400 fill-rose-500/10" />
-                        {video.metrics.likes}
-                      </span>
-                      <span
-                        className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400"
-                        title="Comentários"
-                      >
-                        <MessageCircle size={12} className="text-emerald-500 dark:text-emerald-400 fill-emerald-500/10" />
-                        {video.metrics.comments}
-                      </span>
-                      <span
-                        className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400"
-                        title="Compartilhamentos"
-                      >
-                        <Share2 size={12} className="text-amber-500 dark:text-amber-400" />
-                        {video.metrics.shares}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Duração */}
-                  <td className="px-4 py-4 text-center">
-                    <p className="text-sm font-bold text-slate-500 dark:text-slate-400 font-mono">
-                      {formatDuration(video.duration)}
-                    </p>
-                  </td>
-                </tr>
-              ))}
-
-              {paginated.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-16 text-center text-slate-450 dark:text-slate-500 font-bold text-sm"
-                  >
-                    {search.trim()
-                      ? 'Nenhum vídeo encontrado para esta busca.'
-                      : 'Nenhum vídeo cadastrado.'}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          {/* Card 4: Engajamento Social Geral (Metade exata) */}
+          <Card className="rounded-[1.6rem] border border-rose-200/60 dark:border-rose-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Engajamento Total
+                </span>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="text-slate-400 hover:text-rose-500 cursor-pointer">
+                      <Info size={14} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
+                    <p className="font-bold text-rose-400">Engajamento Total</p>
+                    <p className="text-slate-300">Total de reações sociais somadas em todos os stories publicados.</p>
+                    <p className="text-slate-100 font-medium">💡 Responda aos comentários para aumentar a proximidade com o consumidor.</p>
+                  </TooltipContent>
+                </UITooltip>
+              </div>
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
+                <Heart size={20} className="fill-rose-500" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* Metade simétrica 50%/50% */}
+              <div className="grid grid-cols-2 items-center divide-x divide-slate-100 dark:divide-white/10 mt-0.5">
+                <div className="pr-2">
+                  <span className="text-2xl font-black text-rose-600 dark:text-rose-500">
+                    {overallMetrics.totalLikes.toLocaleString('pt-BR')}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">Curtidas</span>
+                </div>
+                <div className="pl-4">
+                  <span className="text-2xl font-black text-sky-600 dark:text-sky-400">
+                    {overallMetrics.totalComments.toLocaleString('pt-BR')}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">Comentários</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Paginação Premium */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-[#ff7a29]/20 bg-slate-50/50 dark:bg-transparent">
-            <p className="text-xs font-bold text-slate-500">
-              {filteredAndSorted.length} vídeos · Página {page + 1} de {totalPages}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0}
-                className="p-2 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page >= totalPages - 1}
-                className="p-2 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
+        {/* ══════════════════════════════════════════════════════════════════
+            TABELA E FILTRO DE BUSCA POR VÍDEO INDIVIDUAL
+        ══════════════════════════════════════════════════════════════════ */}
+        {/* Barra de busca Premium */}
+        <div className="relative">
+          <Search
+            size={16}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0091ff] dark:text-[#ff7a29]"
+          />
+          <input
+            type="text"
+            placeholder="Buscar por título do vídeo..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-white dark:bg-[#111524] text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0091ff]/30 focus:border-[#0091ff] dark:focus:ring-[#ff7a29]/30 dark:focus:border-[#ff7a29] transition-all"
+          />
+        </div>
+
+        {/* Tabela com Borda Arredondada Premium */}
+        <div className="bg-white dark:bg-[#111524] border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl shadow-xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-[#ff7a29]/20">
+                  <Th field="title" className="min-w-[220px]" align="left">
+                    Vídeo
+                  </Th>
+                  <Th field="views" align="center">Visualizações</Th>
+                  <Th field="ctr" align="center">CTR</Th>
+                  <Th field="conversions" align="center">Conversões</Th>
+                  <Th field="revenue" align="center">Receita</Th>
+                  <Th field="likes" align="center">Engajamento</Th>
+                  <Th field="duration" align="center">Duração</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map((video) => (
+                  <tr
+                    key={video.id}
+                    className="border-b border-slate-100 dark:border-[#ff7a29]/10 last:border-0 hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors"
+                  >
+                    {/* Vídeo */}
+                    <td className="px-4 py-4 text-left">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-16 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200/60 dark:border-[#ff7a29]/20">
+                          {video.thumbnail_url ? (
+                            <img
+                              src={video.thumbnail_url}
+                              alt={video.title}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-slate-400 dark:text-slate-500">
+                              <Eye size={14} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 text-left">
+                          <p className="text-sm font-black text-slate-850 dark:text-white truncate max-w-[200px]">
+                            {video.title}
+                          </p>
+                          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5">
+                            {video.status === 'active' ? 'Ativo' : 'Inativo'}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Visualizações */}
+                    <td className="px-4 py-4 text-center">
+                      <p className="text-sm font-black text-slate-800 dark:text-white">
+                        {video.metrics.views.toLocaleString()}
+                      </p>
+                    </td>
+
+                    {/* CTR */}
+                    <td className="px-4 py-4 text-center">
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 px-2.5 py-1 rounded-2xl text-[11px] font-black border',
+                          video.metrics.ctr >= 5
+                            ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20'
+                            : video.metrics.ctr >= 2
+                              ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-500/20'
+                              : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-500/20',
+                        )}
+                      >
+                        {video.metrics.ctr.toFixed(1).replace('.', ',')}%
+                      </span>
+                    </td>
+
+                    {/* Conversões */}
+                    <td className="px-4 py-4 text-center">
+                      <p className="text-sm font-black text-slate-800 dark:text-white">
+                        {video.metrics.conversions.toLocaleString()}
+                      </p>
+                    </td>
+
+                    {/* Receita */}
+                    <td className="px-4 py-4 text-center">
+                      <p className="text-sm font-black text-slate-800 dark:text-white">
+                        {video.metrics.revenue > 0
+                          ? `R$ ${video.metrics.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                          : '—'}
+                      </p>
+                    </td>
+
+                    {/* Engajamento */}
+                    <td className="px-4 py-4 text-center">
+                      <div className="flex items-center justify-center gap-3">
+                        <span
+                          className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400"
+                          title="Curtidas"
+                        >
+                          <Heart size={12} className="text-rose-500 dark:text-rose-400 fill-rose-500/10" />
+                          {video.metrics.likes}
+                        </span>
+                        <span
+                          className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400"
+                          title="Comentários"
+                        >
+                          <MessageCircle size={12} className="text-emerald-500 dark:text-emerald-400 fill-emerald-500/10" />
+                          {video.metrics.comments}
+                        </span>
+                        <span
+                          className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400"
+                          title="Compartilhamentos"
+                        >
+                          <Share2 size={12} className="text-amber-500 dark:text-amber-400" />
+                          {video.metrics.shares}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Duração */}
+                    <td className="px-4 py-4 text-center">
+                      <p className="text-sm font-bold text-slate-500 dark:text-slate-400 font-mono">
+                        {formatDuration(video.duration)}
+                      </p>
+                    </td>
+                  </tr>
+                ))}
+
+                {paginated.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-4 py-16 text-center text-slate-450 dark:text-slate-500 font-bold text-sm"
+                    >
+                      {search.trim()
+                        ? 'Nenhum vídeo encontrado para esta busca.'
+                        : 'Nenhum vídeo cadastrado.'}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          {/* Paginação Premium */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-[#ff7a29]/20 bg-slate-50/50 dark:bg-transparent">
+              <p className="text-xs font-bold text-slate-500">
+                {filteredAndSorted.length} vídeos · Página {page + 1} de {totalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="p-2 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1}
+                  className="p-2 rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
