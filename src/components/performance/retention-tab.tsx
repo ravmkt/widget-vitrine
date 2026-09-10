@@ -446,9 +446,11 @@ setVideoStats({
                 <TooltipTrigger>
                   <Info size={16} className="text-slate-400 hover:text-slate-600" />
                 </TooltipTrigger>
-                <TooltipContent>
-                  Estimativa com base no completion rate real do vídeo. Tracking granular por segundo ainda não é coletado pelo widget.
-                </TooltipContent>
+<TooltipContent>
+  {isRealData
+    ? 'Curva real calculada com base nos eventos de progresso coletados segundo a segundo pelo widget.'
+    : 'Estimativa com base no completion rate — ainda não há dados granulares de progresso para este vídeo.'}
+</TooltipContent>
               </UITooltip>
             </TooltipProvider>
           </CardHeader>
