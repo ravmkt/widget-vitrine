@@ -32,7 +32,7 @@ serve(async (req) => {
     let rawOrigin = req.headers.get("origin") || req.headers.get("referer") || "unknown_origin";
 
     const body = await req.json().catch(() => ({}));
-    const { storeId, eventType, videoId, productId, storyId, pageUrl, deviceType } = body;
+const { storeId, eventType, videoId, productId, storyId, pageUrl, deviceType, sessionId, watchSecond } = body;
 
     if (!storeId || !eventType || !ALLOWED_EVENTS.has(eventType)) {
       return new Response(JSON.stringify({ error: "Payload inválido ou tipo de evento não permitido." }), {
