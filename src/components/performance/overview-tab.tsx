@@ -285,7 +285,6 @@ export function OverviewTab({
     fetchRealMetrics()
   }, [resolvedStoreId, tenantLoading, timeRange, customFrom, customTo])
 
-  // CTR = Taxa de cliques nos cards de produto em relação às visualizações
   const ctr = data.views > 0 ? (data.clicks / data.views) * 100 : 0
   const ctrDelta = ctr - benchmark.avg_ctr
   const totalAppImpact = data.paidRevenue + data.referralEarnings
@@ -335,7 +334,7 @@ export function OverviewTab({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Card 1: Aguardando Pagamento (Âmbar #f59e0b) */}
+            {/* Card 1: Aguardando Pagamento */}
             <Card className="rounded-[1.6rem] border border-amber-200/60 dark:border-amber-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <div className="flex items-center gap-1.5">
@@ -348,9 +347,10 @@ export function OverviewTab({
                         <Info size={14} />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl">
-                      <p className="font-bold text-amber-400">Pedidos que não foram pagos</p>
-                      <p className="mt-1 text-slate-300">Pedidos gerados (Pix/Boleto) aguardando compensação. <span className="font-semibold text-white">Dica:</span> Entre em contato com o lead e ofereça um cupom para fechar.</p>
+                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
+                      <p className="font-bold text-amber-400">Aguardando Pagamento</p>
+                      <p className="text-slate-300">Pedidos que não foram pagos.</p>
+                      <p className="text-slate-100 font-medium">💡 Entre em contato com o lead e ofereça um cupom.</p>
                     </TooltipContent>
                   </UITooltip>
                 </div>
@@ -368,7 +368,7 @@ export function OverviewTab({
               </CardContent>
             </Card>
 
-            {/* Card 2: Vendas Pagas (Verde #10b981) */}
+            {/* Card 2: Vendas Pagas */}
             <Card className="rounded-[1.6rem] border border-emerald-200/60 dark:border-emerald-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <div className="flex items-center gap-1.5">
@@ -381,9 +381,10 @@ export function OverviewTab({
                         <Info size={14} />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl">
-                      <p className="font-bold text-emerald-400">Pedidos pagos</p>
-                      <p className="mt-1 text-slate-300">Vendas confirmadas geradas a partir dos Stories. <span className="font-semibold text-white">Dica:</span> Ofereça um Upsell ao cliente logo após a compra para aumentar o LTV.</p>
+                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
+                      <p className="font-bold text-emerald-400">Vendas Pagas</p>
+                      <p className="text-slate-300">Pedidos pagos com sucesso via Stories.</p>
+                      <p className="text-slate-100 font-medium">💡 Ofereça um Upsell ao cliente para aumentar o LTV.</p>
                     </TooltipContent>
                   </UITooltip>
                 </div>
@@ -401,7 +402,7 @@ export function OverviewTab({
               </CardContent>
             </Card>
 
-            {/* Card 3: Indicações (Roxo / Indigo #8b5cf6) */}
+            {/* Card 3: Indicações */}
             <Card className="rounded-[1.6rem] border border-purple-200/60 dark:border-purple-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <div className="flex items-center gap-1.5">
@@ -414,9 +415,10 @@ export function OverviewTab({
                         <Info size={14} />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl">
-                      <p className="font-bold text-purple-400">Faturamento Indica & Ganha</p>
-                      <p className="mt-1 text-slate-300">Comissões recebidas indicando a plataforma. <span className="font-semibold text-white">Dica:</span> Compartilhe seu link exclusivo com outros lojistas para lucrar no automático.</p>
+                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
+                      <p className="font-bold text-purple-400">Indicações</p>
+                      <p className="text-slate-300">Comissões recebidas pelo programa de parceiros.</p>
+                      <p className="text-slate-100 font-medium">💡 Divulgue seu link para lojistas parceiros e reduza o custo da sua mensalidade.</p>
                     </TooltipContent>
                   </UITooltip>
                 </div>
@@ -434,7 +436,7 @@ export function OverviewTab({
               </CardContent>
             </Card>
 
-            {/* Card 4: Total Gerado (Azul #0091ff / Laranja #ff7a29) */}
+            {/* Card 4: Total Gerado */}
             <Card className="rounded-[1.6rem] border-2 border-[#0091ff]/30 dark:border-[#ff7a29]/40 bg-gradient-to-br from-blue-50/40 via-white to-sky-50/30 dark:from-[#ff7a29]/10 dark:via-[#1a1f35] dark:to-[#1a1f35] shadow-xs hover:shadow-md transition-all">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <div className="flex items-center gap-1.5">
@@ -447,9 +449,10 @@ export function OverviewTab({
                         <Info size={14} />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl">
-                      <p className="font-bold text-[#0091ff] dark:text-[#ff7a29]">Impacto Total no seu Caixa</p>
-                      <p className="mt-1 text-slate-300">Soma de Vendas Pagas + Ganhos de Indicação. <span className="font-semibold text-white">Dica:</span> Compare este valor com o plano do Vidlytics para ver o ROI líquido.</p>
+                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
+                      <p className="font-bold text-[#0091ff] dark:text-[#ff7a29]">Total Gerado</p>
+                      <p className="text-slate-300">Receita total somando Vendas Pagas e Indicações.</p>
+                      <p className="text-slate-100 font-medium">💡 Compare esse valor com o custo da plataforma para medir seu ROI direto.</p>
                     </TooltipContent>
                   </UITooltip>
                 </div>
@@ -631,7 +634,7 @@ export function OverviewTab({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Card 1: Visualizações (Azul #0091ff) */}
+            {/* Card 1: Visualizações */}
             <Card className="rounded-[1.6rem] border border-blue-200/60 dark:border-blue-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <div className="flex items-center gap-1.5">
@@ -644,9 +647,10 @@ export function OverviewTab({
                         <Info size={14} />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl">
-                      <p className="font-bold text-blue-400">Total de Visualizações</p>
-                      <p className="mt-1 text-slate-300">Número de vezes que seus stories foram abertos. <span className="font-semibold text-white">Dica:</span> Deixe o widget visível logo na primeira dobra do site para atrair mais cliques.</p>
+                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
+                      <p className="font-bold text-blue-400">Visualizações</p>
+                      <p className="text-slate-300">Total de vezes que os Stories foram abertos pelos clientes.</p>
+                      <p className="text-slate-100 font-medium">💡 Posicione o widget visível logo na primeira dobra da sua página inicial.</p>
                     </TooltipContent>
                   </UITooltip>
                 </div>
@@ -662,7 +666,7 @@ export function OverviewTab({
               </CardContent>
             </Card>
 
-            {/* Card 2: Cliques em CTA (Laranja #ff7a29) */}
+            {/* Card 2: Cliques em CTA */}
             <Card className="rounded-[1.6rem] border border-orange-200/60 dark:border-orange-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <div className="flex items-center gap-1.5">
@@ -675,9 +679,10 @@ export function OverviewTab({
                         <Info size={14} />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl">
-                      <p className="font-bold text-orange-400">Interesse Direto de Compra</p>
-                      <p className="mt-1 text-slate-300">Cliques nos botões e cards de produtos anexados aos vídeos. <span className="font-semibold text-white">Dica:</span> Fale no vídeo: "Toque no produto abaixo para comprar com frete grátis".</p>
+                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
+                      <p className="font-bold text-[#ff7a29]">Cliques em CTA</p>
+                      <p className="text-slate-300">Quantidade de toques no card ou botão do produto no story.</p>
+                      <p className="text-slate-100 font-medium">💡 Fale no início do vídeo para o cliente tocar no card de produto abaixo.</p>
                     </TooltipContent>
                   </UITooltip>
                 </div>
@@ -693,7 +698,7 @@ export function OverviewTab({
               </CardContent>
             </Card>
 
-            {/* Card 3: Engajamento Social (Rosa #f43f5e) */}
+            {/* Card 3: Engajamento Social (Metade exata) */}
             <Card className="rounded-[1.6rem] border border-rose-200/60 dark:border-rose-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <div className="flex items-center gap-1.5">
@@ -706,9 +711,10 @@ export function OverviewTab({
                         <Info size={14} />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl">
-                      <p className="font-bold text-rose-400">Conexão com a Marca</p>
-                      <p className="mt-1 text-slate-300">Curtidas e comentários deixados nos vídeos. <span className="font-semibold text-white">Dica:</span> Faça perguntas no vídeo ("Qual cor você prefere?") para gerar comentários imediatos.</p>
+                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
+                      <p className="font-bold text-rose-400">Engajamento Social</p>
+                      <p className="text-slate-300">Total de interações sociais diretas (curtidas e comentários).</p>
+                      <p className="text-slate-100 font-medium">💡 Faça perguntas ao público no vídeo para incentivar respostas e likes.</p>
                     </TooltipContent>
                   </UITooltip>
                 </div>
@@ -717,24 +723,25 @@ export function OverviewTab({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex justify-between items-center mt-0.5">
-                  <div>
-                    <span className="text-xl font-black text-rose-600 dark:text-rose-500">
+                {/* Grid 50% / 50% simétrico */}
+                <div className="grid grid-cols-2 items-center divide-x divide-slate-100 dark:divide-white/10 mt-0.5">
+                  <div className="pr-2">
+                    <span className="text-2xl font-black text-rose-600 dark:text-rose-500">
                       {data.likes}
                     </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Curtidas</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">Curtidas</span>
                   </div>
-                  <div className="border-l border-slate-200 dark:border-white/10 pl-4">
-                    <span className="text-xl font-black text-sky-600 dark:text-sky-400">
+                  <div className="pl-4">
+                    <span className="text-2xl font-black text-sky-600 dark:text-sky-400">
                       {data.comments}
                     </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Comentários</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">Comentários</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Card 4: CTR - Taxa de Cliques no Produto (Verde Esmeralda #10b981) */}
+            {/* Card 4: CTR - Taxa de Cliques */}
             <Card className="rounded-[1.6rem] border border-emerald-200/60 dark:border-emerald-500/30 bg-white dark:bg-[#1a1f35]/90 shadow-xs hover:shadow-md transition-all">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <div className="flex items-center gap-1.5">
@@ -747,9 +754,10 @@ export function OverviewTab({
                         <Info size={14} />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl">
+                    <TooltipContent side="top" className="max-w-xs p-3 text-xs bg-slate-900 text-white rounded-xl shadow-xl space-y-1">
                       <p className="font-bold text-emerald-400">CTR (Click-Through Rate)</p>
-                      <p className="mt-1 text-slate-300">Porcentagem de pessoas que assistiram e clicaram no produto. <span className="font-semibold text-white">Dica:</span> Vídeos diretos e focados na dor do cliente elevam o CTR para acima de 4%.</p>
+                      <p className="text-slate-300">Porcentagem de pessoas que assistiram e clicaram no produto.</p>
+                      <p className="text-slate-100 font-medium">💡 Vídeos diretos e focados na dor do cliente elevam o CTR para acima de 4%</p>
                     </TooltipContent>
                   </UITooltip>
                 </div>
