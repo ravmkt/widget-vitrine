@@ -1848,8 +1848,6 @@ function generateSessionId() {
 function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
 
-  // Throttle: evita reenviar o mesmo evento para o mesmo vídeo em menos de 4s
-  // ('progress' tem throttle próprio controlado no chamador, 1x/s)
   if (eventType !== 'progress') {
     sendAnalyticsEvent._lastSent = sendAnalyticsEvent._lastSent || {};
     var throttleKey = String(eventType) + '_' + String(videoId);
@@ -1861,6 +1859,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   }
 
   try {
+
       // Vidlytics: Atribuição entre subdomínios (ex: useanny.com -> seguro.useanny.com)
       try {
         var hName = window.location.hostname || '';
