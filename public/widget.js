@@ -1905,8 +1905,8 @@ var payload = {
   pageUrl: resolvedPageUrl,
   deviceType: resolvedDevice,
   pagePath: resolvedPath,
-  sessionId: extraData.sessionId || null,
-  watchSecond: typeof extraData.watchSecond === 'number' ? extraData.watchSecond : null
+  sessionId: (extraData && extraData.sessionId) || null,
+  watchSecond: (extraData && typeof extraData.watchSecond === 'number') ? extraData.watchSecond : null
 };
 
       var endpoint = supabaseUrl.replace(/\/rest\/v1.*/, '').replace(/\/+$/, '') + '/functions/v1/track-event';
