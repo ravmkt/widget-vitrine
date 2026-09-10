@@ -2028,15 +2028,33 @@ var payload = {
 
       var thumb = getVideoThumbnail(video);
       if (thumb) media.poster = thumb;
-      media.src = url;
+media.src = url;
 
-      media.addEventListener('play', function () {
-        sendAnalyticsEvent('video_view', video ? video.id : null, null);
-      });
-      media.addEventListener('ended', function () {
-        sendAnalyticsEvent('story_complete', video ? video.id : null, null);
-        if (typeof onEnded === 'function') onEnded();
-      });
+var playbackSessionId = null;
+var lastProgressSecond = -1;
+
+media.addEventListener('play', function () {
+  playbackSessionId = generateSessionId();
+  lastProgressSecond = -1;
+  sendAnalyticsEvent('video_view', video ? video.id : null, null, { sessionId: playbackSessionId });
+});
+
+media.addEventListener('timeupdate', function () {
+  if (!playbackSessionId) return;
+  var currentSecond = Math.floor(media.currentTime || 0);
+  if (currentSecond !== lastProgressSecond && currentSecond >= 0) {
+    lastProgressSecond = currentSecond;
+    sendAnalyticsEvent('progress', video ? video.id : null, null, {
+      sessionId: playbackSessionId,
+      watchSecond: currentSecond
+    });
+  }
+});
+
+media.addEventListener('ended', function () {
+  sendAnalyticsEvent('story_complete', video ? video.id : null, null, { sessionId: playbackSessionId });
+  if (typeof onEnded === 'function') onEnded();
+});
       
       // Tratamento de Erro Fallback (Ex: link 403 Forbidden expirado)
       media.addEventListener('error', function () {
