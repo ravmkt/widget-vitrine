@@ -253,9 +253,9 @@ setVideoStats({
   rewinds: Math.max(1, Math.round(totalPlays * 0.05)),
   dropOffRate: Math.max(5, 100 - completionRate),
   dropOffCount: Math.round(totalPlays * 0.32),
+  isRealData,
   curve: finalCurve,
 });
-        }
       } catch (err) {
         console.error('Erro ao calcular estatísticas do vídeo:', err);
       }
