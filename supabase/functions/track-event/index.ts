@@ -19,6 +19,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function isValidUuid(v: unknown): v is string {
+  return typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -32,7 +36,7 @@ serve(async (req) => {
     let rawOrigin = req.headers.get("origin") || req.headers.get("referer") || "unknown_origin";
 
     const body = await req.json().catch(() => ({}));
-const { storeId, eventType, videoId, productId, storyId, pageUrl, deviceType, sessionId, watchSecond } = body;
+    const { storeId, eventType, videoId, productId, storyId, pageUrl, deviceType, sessionId, watchSecond } = body;
 
     if (!storeId || !eventType || !ALLOWED_EVENTS.has(eventType)) {
       return new Response(JSON.stringify({ error: "Payload inválido ou tipo de evento não permitido." }), {
@@ -43,6 +47,11 @@ const { storeId, eventType, videoId, productId, storyId, pageUrl, deviceType, se
 
     const sanitizedPageUrl = pageUrl ? String(pageUrl).slice(0, 2048) : null;
     const sanitizedDevice = deviceType ? String(deviceType).slice(0, 32) : "desktop";
+    const sanitizedSessionId = isValidUuid(sessionId) ? sessionId : null;
+    const sanitizedWatchSecond =
+      typeof watchSecond === "number" && Number.isFinite(watchSecond) && watchSecond >= 0 && watchSecond <= 86400
+        ? Math.floor(watchSecond)
+        : null;
 
     const { data: store, error: storeError } = await supabaseAdmin
       .from("stores")
@@ -98,7 +107,7 @@ const { storeId, eventType, videoId, productId, storyId, pageUrl, deviceType, se
       const storeHost = new URL(rawStoreUrl.startsWith("http") ? rawStoreUrl : `https://${rawStoreUrl}`).hostname.toLowerCase();
       const isDevEnvironment = Deno.env.get("ENVIRONMENT") === "development" || Deno.env.get("SUPABASE_URL")?.includes("127.0.0.1");
       const isLocalhostBypass = isDevEnvironment && (originHost === "localhost" || originHost === "127.0.0.1");
-      
+
       const isAuthorizedDomain = isLocalhostBypass || originHost === storeHost || originHost.endsWith(`.${storeHost}`);
 
       if (!isAuthorizedDomain) {
@@ -127,6 +136,8 @@ const { storeId, eventType, videoId, productId, storyId, pageUrl, deviceType, se
       p_device_type: sanitizedDevice,
       p_browser: userAgent.slice(0, 256),
       p_referrer: referrer,
+      p_session_id: sanitizedSessionId,
+      p_watch_second: sanitizedWatchSecond,
     });
 
     if (rpcError) {
