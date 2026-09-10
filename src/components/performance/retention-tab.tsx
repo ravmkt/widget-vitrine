@@ -180,25 +180,27 @@ export function RetentionTab({ timeRange, customFrom, customTo }: Props) {
 
         const duration = Math.max(5, Math.min(120, selectedVideo.duration || 15));
 
-        let query = supabase
-          .from('metrics')
-          .select('event_type, metadata, created_at')
-          .eq('video_id', selectedVideo.id);
+let query = supabase
+  .from('store_activity_events')
+  .select('event_type, metadata, session_id, watch_second, created_at')
+  .eq('video_id', selectedVideo.id);
 
-        if (safeStoreId) {
-          query = query.eq('store_id', safeStoreId);
-        }
+if (safeStoreId) {
+  query = query.eq('store_id', safeStoreId);
+}
 
-        const { data: metricsData } = await query;
+const { data: eventsData, error: eventsError } = await query;
 
-        const totalPlays =
-          metricsData?.filter((m) => m.event_type === 'play' || m.event_type === 'video_view').length || 0;
-        const totalCompletions =
-          metricsData?.filter((m) => m.event_type === 'complete' || m.event_type === 'story_complete').length || 0;
+if (eventsError) {
+  console.error('Erro ao buscar eventos de retenção:', eventsError);
+}
 
-        // ⚠️ O widget atual não envia eventos de progresso segundo-a-segundo,
-        // então a curva é uma ESTIMATIVA baseada no completionRate real do vídeo,
-        // e não em dados granulares de "quantos ainda assistiam no segundo X".
+const totalPlays =
+  eventsData?.filter((m) => m.event_type === 'video_view').length || 0;
+const totalCompletions =
+  eventsData?.filter((m) => m.event_type === 'story_complete').length || 0;
+
+const progressEvents = eventsData?.filter((m) => m.event_type === 'progress') || [];
         const completionRate = totalPlays > 0 ? Math.round((totalCompletions / totalPlays) * 100) : 68;
         const avgDuration = Math.round(duration * (completionRate / 100));
         const percentageViewed = Math.round((avgDuration / duration) * 100);
