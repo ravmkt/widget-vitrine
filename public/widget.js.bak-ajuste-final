@@ -3409,9 +3409,6 @@ if (showVerProduto) {
   }
 }
 
-    modalContent.appendChild(container);
-  }
-
   /* ================================================================
      NAVEGAÇÃO ENTRE STORIES E VÍDEOS
      ================================================================ */

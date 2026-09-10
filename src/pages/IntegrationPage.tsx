@@ -214,7 +214,7 @@ export const IntegrationPage = () => {
   const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
   const canInstall = hasStoreId && hasSupabaseConfig && Boolean(publicUrl);
 
-  const widgetVersion = '2026.08.27-04';
+  const widgetVersion = '2026.08.31-05';
 
   // Busca o token de segurança da loja
   useEffect(() => {
