@@ -6292,11 +6292,11 @@ function renderFloatingWidget(floatingStories) {
     });
     
     // Clique do CTA abre o Story
-    ctaElement.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      openModal(0);
-    });
+ctaElement.addEventListener('click', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  openStoryModal(0);
+});
 
     widget.appendChild(ctaElement);
   }
