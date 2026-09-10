@@ -1834,7 +1834,7 @@ function sendAnalyticsEvent(eventType, videoId, productId, extraData) {
   if (!storeId || !supabaseUrl || !supabaseAnonKey) return;
 
   // Throttle: evita reenviar o mesmo evento para o mesmo vídeo em menos de 4s
-  // (exceto 'progress', que tem throttle próprio de 1s controlado no chamador)
+  // ('progress' tem throttle próprio controlado no chamador, 1x/s)
   if (eventType !== 'progress') {
     sendAnalyticsEvent._lastSent = sendAnalyticsEvent._lastSent || {};
     var throttleKey = String(eventType) + '_' + String(videoId);
