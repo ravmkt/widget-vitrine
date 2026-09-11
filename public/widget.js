@@ -3351,31 +3351,25 @@ if (showVerProduto) {
     prodCard.appendChild(prodImg);
 
     var prodInfo = createEl('div', 'vl-product-info');
-    prodInfo.style.cssText = 'flex:1 !important;min-width:0 !important;display:flex !important;flex-direction:column !important;justify-content:center !important;gap:2px !important;';
 
     var pName = createEl('div', 'vl-product-name');
     pName.textContent = productData.name || 'Produto';
-    // texto completo, quebra em 2 linhas se precisar, sem cortar
-    pName.style.cssText = 'font-size:' + pNameSize + 'px !important;font-weight:700 !important;color:' + pNameColor + ' !important;white-space:normal !important;line-height:1.2 !important;display:-webkit-box !important;-webkit-line-clamp:2 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;';
     prodInfo.appendChild(pName);
 
     if (productData.price) {
       var pPrice = createEl('div', 'vl-product-price');
       pPrice.textContent = 'R$ ' + parseFloat(productData.price).toFixed(2).replace('.', ',');
-      pPrice.style.cssText = 'font-size:' + pPriceSize + 'px !important;font-weight:800 !important;color:' + pPriceColor + ' !important;';
       prodInfo.appendChild(pPrice);
     }
     prodCard.appendChild(prodInfo);
 
     footer.appendChild(prodCard);
 
-    // ---- Botões fora do card ----
+    // ---- Botões fora do card (lado a lado 50% / 50%) ----
     var prodActions = createEl('div', 'vl-product-actions');
-    prodActions.style.cssText = 'display:flex !important;gap:8px !important;width:100% !important;';
 
     var viewBtn = createEl('button', 'vl-product-btn');
-    viewBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg> Ver produto';
-    viewBtn.style.cssText = 'flex:1 !important;';
+    viewBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg><span>Ver produto</span>';
     viewBtn.onclick = function (e) {
       e.stopPropagation();
       if (productUrl) {
@@ -3392,9 +3386,8 @@ if (showVerProduto) {
       var waProductName = productData.name || (story ? story.title : '') || '';
       var waFinalMsg = waTemplate.replace('{{story_title}}', waProductName);
 
-      waStoreBtn.innerHTML = svgIcon('whatsapp') + ' WhatsApp';
+      waStoreBtn.innerHTML = svgIcon('whatsapp') + '<span>WhatsApp</span>';
       waStoreBtn.setAttribute('aria-label', 'Comprar pelo WhatsApp');
-      waStoreBtn.style.cssText = 'flex:1 !important;';
 
       waStoreBtn.onclick = function (e) {
         e.stopPropagation();
