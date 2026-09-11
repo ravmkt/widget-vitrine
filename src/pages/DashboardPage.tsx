@@ -26,8 +26,6 @@ import {
   Code2,
   Activity,
   TrendingUp,
-  Sparkles,
-  ExternalLink,
   Store as StoreIcon,
   AlertTriangle,
   ShoppingBag,
