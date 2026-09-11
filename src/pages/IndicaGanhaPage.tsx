@@ -104,8 +104,8 @@ export const IndicaGanhaPage = () => {
         </div>
       </div>
 
-      {/* Banner de Destaque com gradiente garantido e legibilidade impecável */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 dark:from-blue-700 dark:via-indigo-800 dark:to-slate-900 p-6 sm:p-8 text-white shadow-sm border border-blue-500/20">
+      {/* Banner de Destaque com o AZUL EXATO do menu ativo (#0091ff) */}
+      <div className="relative overflow-hidden rounded-2xl bg-[#0091ff] p-6 sm:p-8 text-white shadow-md shadow-blue-500/20 border border-blue-400/30">
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-bold tracking-wider uppercase mb-3 text-white">
             <Sparkles size={13} className="text-amber-300" />
@@ -120,14 +120,18 @@ export const IndicaGanhaPage = () => {
 
           {/* Área de Compartilhamento do Link */}
           <div className="mt-6 flex flex-col sm:flex-row items-center gap-3">
-            <div className="flex-1 w-full flex items-center bg-black/25 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 text-xs font-mono text-white">
-              <span className="truncate">{referralUrl || 'Carregando seu link...'}</span>
+            <div className="flex-1 w-full flex items-center bg-black/20 backdrop-blur-md border border-white/25 rounded-xl px-4 py-2.5 text-xs font-mono text-white">
+              <span className="truncate">
+                {loading
+                  ? 'Carregando seu link...'
+                  : referralUrl || 'Nenhum código de afiliado encontrado para esta conta'}
+              </span>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
               <button
                 onClick={handleCopyLink}
                 disabled={!referralUrl}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-900 font-bold text-xs hover:bg-slate-100 transition-colors cursor-pointer shadow-xs"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-900 font-bold text-xs hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-xs"
               >
                 {copied ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
                 {copied ? 'Copiado!' : 'Copiar Link'}
@@ -135,7 +139,7 @@ export const IndicaGanhaPage = () => {
               <button
                 onClick={handleShareWhatsApp}
                 disabled={!referralUrl}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 transition-colors cursor-pointer shadow-xs"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-xs"
               >
                 <Share2 size={15} />
                 WhatsApp
