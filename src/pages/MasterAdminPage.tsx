@@ -86,6 +86,11 @@ export default function MasterAdminPage() {
   const [selectedStatus, setSelectedStatus] = useState<"active" | "trialing" | "canceled">("active");
   const [savingPlan, setSavingPlan] = useState(false);
 
+  // Estados das Ações Rápidas (Lifetime / Extensão)
+  const [extendDays, setExtendDays] = useState<number>(30);
+  const [applyingLifetime, setApplyingLifetime] = useState(false);
+  const [applyingExtend, setApplyingExtend] = useState(false);
+
   useEffect(() => {
     loadMasterData();
   }, [searchTerm]);
@@ -169,6 +174,7 @@ export default function MasterAdminPage() {
     else setSelectedStatus("active");
 
     setSelectedDurationMonths(12);
+    setExtendDays(30);
   };
 
   // Salvar Alteracao Manual de Plano
@@ -215,6 +221,72 @@ if (rpcError) {
       toast.error("Erro ao atualizar plano: " + (err.message || "Falha na conexao"));
     } finally {
       setSavingPlan(false);
+    }
+  };
+
+  // Ativa acesso Lifetime (vitalicio) para a loja
+  const handleSetLifetime = async () => {
+    if (!selectedStoreForPlan) return;
+    if (!window.confirm(`Confirma ativar acesso VITALÍCIO para "${selectedStoreForPlan.store_name}"? Essa ação sobrepõe qualquer assinatura ativa.`)) return;
+
+    setApplyingLifetime(true);
+    try {
+      const { error } = await supabase.rpc("admin_set_store_lifetime", {
+        p_store_id: selectedStoreForPlan.store_id,
+      });
+      if (error) throw error;
+
+      try {
+        await supabase.from("audit_logs").insert({
+          store_id: selectedStoreForPlan.store_id,
+          action: "master_set_lifetime",
+          details: { description: "Acesso vitalício ativado manualmente pelo Painel Master." },
+        });
+      } catch (logErr) {}
+
+      toast.success("Acesso vitalício ativado com sucesso!");
+      setSelectedStoreForPlan(null);
+      await loadMasterData();
+    } catch (err: any) {
+      console.error("Erro ao ativar lifetime:", err);
+      toast.error("Erro ao ativar lifetime: " + err.message);
+    } finally {
+      setApplyingLifetime(false);
+    }
+  };
+
+  // Estende a assinatura atual em X dias
+  const handleExtendDays = async () => {
+    if (!selectedStoreForPlan) return;
+    if (extendDays <= 0) {
+      toast.error("Informe uma quantidade de dias válida.");
+      return;
+    }
+
+    setApplyingExtend(true);
+    try {
+      const { error } = await supabase.rpc("admin_extend_subscription", {
+        p_store_id: selectedStoreForPlan.store_id,
+        p_days: Number(extendDays),
+      });
+      if (error) throw error;
+
+      try {
+        await supabase.from("audit_logs").insert({
+          store_id: selectedStoreForPlan.store_id,
+          action: "master_extend_subscription",
+          details: { description: `Assinatura estendida em ${extendDays} dias pelo Painel Master.`, days: extendDays },
+        });
+      } catch (logErr) {}
+
+      toast.success(`Assinatura estendida em ${extendDays} dias!`);
+      setSelectedStoreForPlan(null);
+      await loadMasterData();
+    } catch (err: any) {
+      console.error("Erro ao estender assinatura:", err);
+      toast.error("Erro ao estender assinatura: " + err.message);
+    } finally {
+      setApplyingExtend(false);
     }
   };
 
@@ -635,7 +707,7 @@ store.subscription_status?.toLowerCase() === 'active'
               </button>
             </div>
 
-            <form onSubmit={handleSavePlan} className="p-6 space-y-5">
+            <form onSubmit={handleSavePlan} className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
                   1. Selecione o Plano
@@ -752,6 +824,57 @@ store.subscription_status?.toLowerCase() === 'active'
                 <p className="text-[11px] leading-relaxed">
                   O lojista terá acesso liberado imediatamente aos stories e recursos correspondentes ao plano selecionado sem restrição de trial.
                 </p>
+              </div>
+
+              {/* 4. Ações Rápidas: Lifetime / Extensão */}
+              <div className="pt-4 border-t border-zinc-800">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+                  4. Ações Rápidas
+                </label>
+                <div className="grid grid-cols-1 gap-3">
+                  {/* Ativar Lifetime */}
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-purple-500/5 border border-purple-500/20">
+                    <div>
+                      <p className="text-xs font-bold text-purple-300">Acesso Vitalício (Lifetime)</p>
+                      <p className="text-[11px] text-zinc-400">Ignora cobrança e validade. Uso interno/parcerias.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSetLifetime}
+                      disabled={applyingLifetime}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500 hover:bg-purple-400 disabled:opacity-50 text-white text-xs font-bold transition cursor-pointer whitespace-nowrap"
+                    >
+                      {applyingLifetime ? <Loader2 size={13} className="animate-spin" /> : <Crown size={13} />}
+                      Ativar
+                    </button>
+                  </div>
+
+                  {/* Estender Dias */}
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-sky-500/5 border border-sky-500/20">
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-sky-300">Estender Assinatura</p>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <input
+                          type="number"
+                          min={1}
+                          value={extendDays}
+                          onChange={(e) => setExtendDays(Number(e.target.value))}
+                          className="w-24 bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-sky-500"
+                        />
+                        <span className="text-[11px] text-zinc-400">dias adicionais</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleExtendDays}
+                      disabled={applyingExtend}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-zinc-950 text-xs font-bold transition cursor-pointer whitespace-nowrap"
+                    >
+                      {applyingExtend ? <Loader2 size={13} className="animate-spin" /> : <Clock size={13} />}
+                      Estender
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="pt-2 border-t border-zinc-800 flex items-center justify-end gap-3">
@@ -970,4 +1093,3 @@ store.subscription_status?.toLowerCase() === 'active'
     </div>
   );
 }
-
