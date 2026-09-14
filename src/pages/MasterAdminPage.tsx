@@ -1,5 +1,6 @@
-@'
-import React, { useEffect, useState } from 'react';
+node -e "
+const fs = require('fs');
+const content = \`import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import {
@@ -13,14 +14,10 @@ import {
   X,
   Clock,
   FileText,
-  AlertCircle,
   Video,
   Mail,
   MessageCircle,
   Sparkles,
-  CheckCircle2,
-  Calendar,
-  Send,
   Loader2,
   Crown,
   ShieldCheck,
@@ -83,7 +80,7 @@ export default function MasterAdminPage() {
   // Estados do Modal de Gestão Manual de Plano
   const [selectedStoreForPlan, setSelectedStoreForPlan] = useState<MasterStore | null>(null);
   const [selectedPlanTier, setSelectedPlanTier] = useState<'starter' | 'pro' | 'scale'>('pro');
-  const [selectedDurationMonths, setSelectedDurationMonths] = useState<number>(12); // Default: 1 ano
+  const [selectedDurationMonths, setSelectedDurationMonths] = useState<number>(12);
   const [selectedStatus, setSelectedStatus] = useState<'active' | 'trialing' | 'canceled'>('active');
   const [savingPlan, setSavingPlan] = useState(false);
 
@@ -160,7 +157,6 @@ export default function MasterAdminPage() {
   const handleOpenPlanModal = (store: MasterStore) => {
     setSelectedStoreForPlan(store);
 
-    // Pré-seleciona conforme o plano atual da loja
     const currentName = (store.plan_name || '').toLowerCase();
     if (currentName.includes('scale')) {
       setSelectedPlanTier('scale');
@@ -179,7 +175,7 @@ export default function MasterAdminPage() {
       setSelectedStatus('active');
     }
 
-    setSelectedDurationMonths(12); // Padrão: 1 ano
+    setSelectedDurationMonths(12);
   };
 
   // Salvar Alteração Manual de Plano
@@ -214,17 +210,15 @@ export default function MasterAdminPage() {
         .eq('id', selectedStoreForPlan.store_id);
 
       if (storeUpdateError) {
-        console.warn('Aviso ao atualizar stores diretamente:', storeUpdateError.message);
+        console.warn('Aviso ao atualizar stores:', storeUpdateError.message);
       }
 
-      // 2. Registrar/Atualizar assinatura na tabela subscriptions
-      // Primeiro desativamos subscriptions anteriores
+      // 2. Atualizar tabela subscriptions
       await supabase
         .from('subscriptions')
         .update({ is_current: false, status: 'superseded' })
         .eq('store_id', selectedStoreForPlan.store_id);
 
-      // Inserimos a nova assinatura manual
       const { error: subError } = await supabase
         .from('subscriptions')
         .insert({
@@ -236,7 +230,7 @@ export default function MasterAdminPage() {
           current_period_end: periodEnd.toISOString(),
           is_current: true,
           gateway_provider: 'manual_master',
-          asaas_subscription_id: `MANUAL_VIP_${Date.now()}`
+          asaas_subscription_id: 'MANUAL_VIP_' + Date.now()
         });
 
       if (subError) {
@@ -249,7 +243,7 @@ export default function MasterAdminPage() {
           store_id: selectedStoreForPlan.store_id,
           action: 'master_plan_update',
           details: {
-            description: `Plano alterado manualmente pelo Painel Master para ${planNameFormatted} (${selectedDurationMonths} meses, status: ${selectedStatus}).`,
+            description: 'Plano alterado manualmente pelo Painel Master para ' + planNameFormatted + ' (' + selectedDurationMonths + ' meses, status: ' + selectedStatus + ').',
             plan: selectedPlanTier,
             duration_months: selectedDurationMonths,
             status: selectedStatus
@@ -260,7 +254,7 @@ export default function MasterAdminPage() {
       }
 
       toast.success(
-        `Plano da loja "${selectedStoreForPlan.store_name}" atualizado para ${planNameFormatted} por ${selectedDurationMonths} meses!`
+        'Plano da loja \"' + selectedStoreForPlan.store_name + '\" atualizado para ' + planNameFormatted + ' por ' + selectedDurationMonths + ' meses!'
       );
       setSelectedStoreForPlan(null);
       await loadMasterData();
@@ -280,9 +274,9 @@ export default function MasterAdminPage() {
     }
 
     setSelectedStoreForEmail(store);
-    setEmailSubject(`Vidlytics Stories - Contato com a loja ${store.store_name}`);
+    setEmailSubject('Vidlytics Stories - Contato com a loja ' + store.store_name);
     setEmailMessage(
-      `Olá ${store.owner_name || 'Lojista'},\n\nAqui é da equipe Vidlytics. Estamos acompanhando o desempenho da loja "${store.store_name}" e gostaríamos de saber se precisa de algum suporte técnico ou consultoria para alavancar suas conversões com Stories em vídeo.\n\nFicamos à total disposição!\n\nAtenciosamente,\nEquipe Vidlytics Stories`
+      'Olá ' + (store.owner_name || 'Lojista') + ',\\n\\nAqui é da equipe Vidlytics. Estamos acompanhando o desempenho da loja \"' + store.store_name + '\" e gostaríamos de saber se precisa de algum suporte técnico ou consultoria para alavancar suas conversões com Stories em vídeo.\\n\\nFicamos à total disposição!\\n\\nAtenciosamente,\\nEquipe Vidlytics Stories'
     );
   };
 
@@ -315,11 +309,11 @@ export default function MasterAdminPage() {
         throw new Error(data.error);
       }
 
-      toast.success(`E-mail enviado com sucesso para ${selectedStoreForEmail.owner_email}!`);
+      toast.success('E-mail enviado com sucesso para ' + selectedStoreForEmail.owner_email + '!');
       setSelectedStoreForEmail(null);
     } catch (err: any) {
       console.error('Erro no disparo de e-mail:', err);
-      toast.error(`Erro ao enviar e-mail: ${err.message}`);
+      toast.error('Erro ao enviar e-mail: ' + err.message);
     } finally {
       setSendingEmail(false);
     }
@@ -330,19 +324,19 @@ export default function MasterAdminPage() {
     let phone = store.owner_phone;
     if (!phone) {
       const promptedPhone = window.prompt(
-        `A loja "${store.store_name}" não tem WhatsApp cadastrado. Digite o número com DDD (ex: 41999998888):`
+        'A loja \"' + store.store_name + '\" não tem WhatsApp cadastrado. Digite o número com DDD (ex: 41999998888):'
       );
       if (!promptedPhone) return;
       phone = promptedPhone;
     }
 
-    const cleanPhone = phone.replace(/\D/g, '');
-    const finalNumber = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
+    const cleanPhone = phone.replace(/\\D/g, '');
+    const finalNumber = cleanPhone.startsWith('55') ? cleanPhone : '55' + cleanPhone;
     const text = encodeURIComponent(
-      `Olá ${store.owner_name || ''}! Aqui é da equipe Vidlytics. Tudo bem? Estou entrando em contato para saber como estão os resultados dos Stories na loja "${store.store_name}".`
+      'Olá ' + (store.owner_name || '') + '! Aqui é da equipe Vidlytics. Tudo bem? Estou entrando em contato para saber como estão os resultados dos Stories na loja \"' + store.store_name + '\".'
     );
 
-    window.open(`https://wa.me/${finalNumber}?text=${text}`, '_blank');
+    window.open('https://wa.me/' + finalNumber + '?text=' + text, '_blank');
   };
 
   // Abre modal e carrega logs amigáveis
@@ -368,7 +362,7 @@ export default function MasterAdminPage() {
             timestamp: store.created_at,
             category: 'account',
             title: 'Conta Criada',
-            description: `A loja "${store.store_name}" foi registrada na plataforma.`
+            description: 'A loja \"' + store.store_name + '\" foi registrada na plataforma.'
           }
         ]);
         return;
@@ -410,26 +404,26 @@ export default function MasterAdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090a0f] text-zinc-100 flex flex-col">
+    <div className=\"min-h-screen bg-[#090a0f] text-zinc-100 flex flex-col\">
       {/* Topbar */}
-      <header className="border-b border-zinc-850 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <Sparkles className="text-zinc-950" size={20} />
+      <header className=\"border-b border-zinc-850 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4\">
+        <div className=\"max-w-7xl mx-auto flex items-center justify-between\">
+          <div className=\"flex items-center gap-3\">
+            <div className=\"h-9 w-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20\">
+              <Sparkles className=\"text-zinc-950\" size={20} />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white tracking-tight leading-none">
+              <h1 className=\"text-lg font-bold text-white tracking-tight leading-none\">
                 Painel Master Vidlytics
               </h1>
-              <p className="text-xs text-zinc-400 mt-0.5">Visão Executiva & Gestão Global de Lojas</p>
+              <p className=\"text-xs text-zinc-400 mt-0.5\">Visão Executiva & Gestão Global de Lojas</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className=\"flex items-center gap-3\">
             <button
               onClick={handleMasterLogout}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-rose-500/50 hover:bg-rose-500/10 text-zinc-300 hover:text-rose-400 text-sm font-semibold transition duration-200 cursor-pointer"
+              className=\"inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-rose-500/50 hover:bg-rose-500/10 text-zinc-300 hover:text-rose-400 text-sm font-semibold transition duration-200 cursor-pointer\"
             >
               <LogOut size={16} />
               <span>Sair da Plataforma</span>
@@ -439,167 +433,167 @@ export default function MasterAdminPage() {
       </header>
 
       {/* Conteúdo Principal */}
-      <div className="max-w-7xl mx-auto w-full px-6 py-8 flex-1 flex flex-col gap-8">
+      <div className=\"max-w-7xl mx-auto w-full px-6 py-8 flex-1 flex flex-col gap-8\">
         
         {/* Cards de Métricas Principais */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-zinc-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Total de Lojas</span>
-              <Store size={18} className="text-emerald-400" />
+        <div className=\"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4\">
+          <div className=\"bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 shadow-sm\">
+            <div className=\"flex items-center justify-between text-zinc-400 mb-2\">
+              <span className=\"text-xs font-semibold uppercase tracking-wider\">Total de Lojas</span>
+              <Store size={18} className=\"text-emerald-400\" />
             </div>
-            <div className="text-2xl font-bold text-white">{stats?.total_stores || 0}</div>
+            <div className=\"text-2xl font-bold text-white\">{stats?.total_stores || 0}</div>
           </div>
 
-          <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-zinc-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Lojas Ativas</span>
-              <Users size={18} className="text-blue-400" />
+          <div className=\"bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 shadow-sm\">
+            <div className=\"flex items-center justify-between text-zinc-400 mb-2\">
+              <span className=\"text-xs font-semibold uppercase tracking-wider\">Lojas Ativas</span>
+              <Users size={18} className=\"text-blue-400\" />
             </div>
-            <div className="text-2xl font-bold text-white">{stats?.active_stores || 0}</div>
+            <div className=\"text-2xl font-bold text-white\">{stats?.active_stores || 0}</div>
           </div>
 
-          <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-zinc-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Views Globais</span>
-              <Eye size={18} className="text-purple-400" />
+          <div className=\"bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 shadow-sm\">
+            <div className=\"flex items-center justify-between text-zinc-400 mb-2\">
+              <span className=\"text-xs font-semibold uppercase tracking-wider\">Views Globais</span>
+              <Eye size={18} className=\"text-purple-400\" />
             </div>
-            <div className="text-2xl font-bold text-white">
+            <div className=\"text-2xl font-bold text-white\">
               {(stats?.total_views || 0).toLocaleString('pt-BR')}
             </div>
           </div>
 
-          <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between text-zinc-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Receita Mensal</span>
-              <DollarSign size={18} className="text-emerald-400" />
+          <div className=\"bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 shadow-sm\">
+            <div className=\"flex items-center justify-between text-zinc-400 mb-2\">
+              <span className=\"text-xs font-semibold uppercase tracking-wider\">Receita Mensal</span>
+              <DollarSign size={18} className=\"text-emerald-400\" />
             </div>
-            <div className="text-2xl font-bold text-emerald-400">
+            <div className=\"text-2xl font-bold text-emerald-400\">
               R$ {(stats?.total_revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
           </div>
         </div>
 
         {/* Barra de Pesquisa e Filtro */}
-        <div className="flex flex-col sm:row gap-4 items-center justify-between bg-zinc-900/40 border border-zinc-800/60 p-4 rounded-2xl">
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+        <div className=\"flex flex-col sm:flex-row gap-4 items-center justify-between bg-zinc-900/40 border border-zinc-800/60 p-4 rounded-2xl\">
+          <div className=\"relative w-full sm:w-80\">
+            <Search className=\"absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400\" size={16} />
             <input
-              type="text"
-              placeholder="Buscar por loja, slug ou e-mail..."
+              type=\"text\"
+              placeholder=\"Buscar por loja, slug ou e-mail...\"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-10 pr-4 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500 transition"
+              className=\"w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-10 pr-4 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500 transition\"
             />
           </div>
-          <div className="text-xs text-zinc-400 font-medium">
-            Exibindo <span className="text-emerald-400 font-bold">{stores.length}</span> lojista(s) cadastrado(s)
+          <div className=\"text-xs text-zinc-400 font-medium\">
+            Exibindo <span className=\"text-emerald-400 font-bold\">{stores.length}</span> lojista(s) cadastrado(s)
           </div>
         </div>
 
         {/* Tabela de Lojas */}
-        <div className="space-y-4">
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
+        <div className=\"space-y-4\">
+          <div className=\"bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl\">
+            <div className=\"overflow-x-auto\">
+              <table className=\"w-full text-left border-collapse text-sm\">
                 <thead>
-                  <tr className="border-b border-zinc-800 bg-zinc-950/60 text-zinc-400 font-semibold text-[11px] uppercase tracking-wider">
-                    <th className="py-3.5 px-4">Loja & Dono</th>
-                    <th className="py-3.5 px-4">Plano</th>
-                    <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-4 text-center">Stories</th>
-                    <th className="py-3.5 px-4 text-center">Views (Mês)</th>
-                    <th className="py-3.5 px-4 text-right">Vendas Stories</th>
-                    <th className="py-3.5 px-4 text-center">Indicações (10%)</th>
-                    <th className="py-3.5 px-4 text-center">Ações</th>
+                  <tr className=\"border-b border-zinc-800 bg-zinc-950/60 text-zinc-400 font-semibold text-[11px] uppercase tracking-wider\">
+                    <th className=\"py-3.5 px-4\">Loja & Dono</th>
+                    <th className=\"py-3.5 px-4\">Plano</th>
+                    <th className=\"py-3.5 px-4\">Status</th>
+                    <th className=\"py-3.5 px-4 text-center\">Stories</th>
+                    <th className=\"py-3.5 px-4 text-center\">Views (Mês)</th>
+                    <th className=\"py-3.5 px-4 text-right\">Vendas Stories</th>
+                    <th className=\"py-3.5 px-4 text-center\">Indicações (10%)</th>
+                    <th className=\"py-3.5 px-4 text-center\">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-800/60">
+                <tbody className=\"divide-y divide-zinc-800/60\">
                   {loading ? (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-zinc-400">
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <Loader2 className="animate-spin text-emerald-400" size={24} />
-                          <span className="text-xs">Carregando dados das lojas...</span>
+                      <td colSpan={8} className=\"py-12 text-center text-zinc-400\">
+                        <div className=\"flex flex-col items-center justify-center gap-2\">
+                          <Loader2 className=\"animate-spin text-emerald-400\" size={24} />
+                          <span className=\"text-xs\">Carregando dados das lojas...</span>
                         </div>
                       </td>
                     </tr>
                   ) : stores.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-zinc-500">
+                      <td colSpan={8} className=\"py-12 text-center text-zinc-500\">
                         Nenhuma loja encontrada para o termo pesquisado.
                       </td>
                     </tr>
                   ) : (
                     stores.map((store) => (
-                      <tr key={store.store_id} className="hover:bg-zinc-800/20 transition-colors">
+                      <tr key={store.store_id} className=\"hover:bg-zinc-800/20 transition-colors\">
                         {/* Loja / Dono */}
-                        <td className="py-3.5 px-4">
-                          <div className="font-semibold text-white">{store.store_name}</div>
-                          <div className="text-xs text-zinc-400">
+                        <td className=\"py-3.5 px-4\">
+                          <div className=\"font-semibold text-white\">{store.store_name}</div>
+                          <div className=\"text-xs text-zinc-400\">
                             {store.owner_name || 'Sem responsável'} • {store.owner_email || 'Sem e-mail'}
                           </div>
                           {store.owner_phone && (
-                            <div className="text-[11px] text-zinc-500 mt-0.5">
+                            <div className=\"text-[11px] text-zinc-500 mt-0.5\">
                               Tel: {store.owner_phone}
                             </div>
                           )}
                         </td>
 
                         {/* Plano */}
-                        <td className="py-3.5 px-4">
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700 capitalize">
+                        <td className=\"py-3.5 px-4\">
+                          <span className=\"px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700 capitalize\">
                             {store.plan_name || 'Free / Trial'}
                           </span>
                         </td>
 
                         {/* Status */}
-                        <td className="py-3.5 px-4">
+                        <td className=\"py-3.5 px-4\">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                            className={'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ' + (
                               store.subscription_status?.toLowerCase() === 'active'
                                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                                 : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                            }`}
+                            )}
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                            <span className=\"w-1.5 h-1.5 rounded-full bg-current\" />
                             {store.subscription_status?.toLowerCase() === 'active' ? 'Ativo' : 'Em Trial / Pendente'}
                           </span>
                         </td>
 
                         {/* Stories Cadastrados */}
-                        <td className="py-3.5 px-4 text-center">
-                          <span className="inline-flex items-center gap-1 text-zinc-300 text-xs font-medium">
-                            <Video size={13} className="text-emerald-400" />
+                        <td className=\"py-3.5 px-4 text-center\">
+                          <span className=\"inline-flex items-center gap-1 text-zinc-300 text-xs font-medium\">
+                            <Video size={13} className=\"text-emerald-400\" />
                             {store.videos_count || 0}
                           </span>
                         </td>
 
                         {/* Views do Mês */}
-                        <td className="py-3.5 px-4 text-center">
-                          <span className="text-zinc-300 text-xs font-semibold">
+                        <td className=\"py-3.5 px-4 text-center\">
+                          <span className=\"text-zinc-300 text-xs font-semibold\">
                             {(store.month_views || 0).toLocaleString('pt-BR')}
                           </span>
                         </td>
 
                         {/* Vendas geradas pelos Stories */}
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="font-semibold text-emerald-400 text-xs">
+                        <td className=\"py-3.5 px-4 text-right\">
+                          <div className=\"font-semibold text-emerald-400 text-xs\">
                             {Number(store.stories_sales_revenue || 0).toLocaleString('pt-BR', {
                               style: 'currency',
                               currency: 'BRL',
                             })}
                           </div>
-                          <span className="text-[10px] text-zinc-500">rastreado</span>
+                          <span className=\"text-[10px] text-zinc-500\">rastreado</span>
                         </td>
 
                         {/* Indicações & Comissão de 10% */}
-                        <td className="py-3.5 px-4 text-center">
-                          <div className="inline-flex flex-col items-center">
-                            <span className="text-xs font-semibold text-zinc-200">
+                        <td className=\"py-3.5 px-4 text-center\">
+                          <div className=\"inline-flex flex-col items-center\">
+                            <span className=\"text-xs font-semibold text-zinc-200\">
                               {store.referrals_count || 0} {store.referrals_count === 1 ? 'loja' : 'lojas'}
                             </span>
-                            <span className="text-[11px] text-amber-400 font-medium">
+                            <span className=\"text-[11px] text-amber-400 font-medium\">
                               {Number(store.commission_earned || 0).toLocaleString('pt-BR', {
                                 style: 'currency',
                                 currency: 'BRL',
@@ -609,46 +603,46 @@ export default function MasterAdminPage() {
                         </td>
 
                         {/* Contato & Ações */}
-                        <td className="py-3.5 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
+                        <td className=\"py-3.5 px-4 text-center\">
+                          <div className=\"flex items-center justify-center gap-1.5\">
                             {/* Gerenciar Plano / VIP */}
                             <button
-                              type="button"
+                              type=\"button\"
                               onClick={() => handleOpenPlanModal(store)}
-                              className="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition cursor-pointer"
-                              title="Alterar Plano & Validade Manualmente"
+                              className=\"p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition cursor-pointer\"
+                              title=\"Alterar Plano & Validade Manualmente\"
                             >
                               <Crown size={15} />
                             </button>
 
                             {/* WhatsApp */}
                             <button
-                              type="button"
+                              type=\"button\"
                               onClick={() => handleOpenWhatsApp(store)}
-                              className="p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition cursor-pointer"
-                              title="Chamar Lojista no WhatsApp"
+                              className=\"p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition cursor-pointer\"
+                              title=\"Chamar Lojista no WhatsApp\"
                             >
                               <MessageCircle size={15} />
                             </button>
 
                             {/* E-mail via Resend */}
                             <button
-                              type="button"
+                              type=\"button\"
                               onClick={() => handleOpenEmail(store)}
-                              className="p-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 transition cursor-pointer"
-                              title="Enviar E-mail oficial via Vidlytics"
+                              className=\"p-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 transition cursor-pointer\"
+                              title=\"Enviar E-mail oficial via Vidlytics\"
                             >
                               <Mail size={15} />
                             </button>
 
                             {/* Logs Amigáveis */}
                             <button
-                              type="button"
+                              type=\"button\"
                               onClick={() => handleOpenLogs(store)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-xs font-medium transition cursor-pointer border border-zinc-700/60 ml-1"
-                              title="Ver relatório de atividades da loja"
+                              className=\"inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-xs font-medium transition cursor-pointer border border-zinc-700/60 ml-1\"
+                              title=\"Ver relatório de atividades da loja\"
                             >
-                              <History size={14} className="text-emerald-400" />
+                              <History size={14} className=\"text-emerald-400\" />
                               <span>Logs</span>
                             </button>
                           </div>
@@ -666,89 +660,89 @@ export default function MasterAdminPage() {
 
       {/* Modal de Gestão Manual de Plano */}
       {selectedStoreForPlan && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b border-zinc-800 bg-zinc-950/70">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
+        <div className=\"fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4\">
+          <div className=\"bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col\">
+            <div className=\"flex items-center justify-between p-5 border-b border-zinc-800 bg-zinc-950/70\">
+              <div className=\"flex items-center gap-3\">
+                <div className=\"p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20\">
                   <Crown size={20} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Gerenciar Plano da Loja</h3>
-                  <p className="text-xs text-zinc-400">
-                    Loja: <span className="text-amber-400 font-semibold">{selectedStoreForPlan.store_name}</span>
+                  <h3 className=\"text-base font-bold text-white\">Gerenciar Plano da Loja</h3>
+                  <p className=\"text-xs text-zinc-400\">
+                    Loja: <span className=\"text-amber-400 font-semibold\">{selectedStoreForPlan.store_name}</span>
                   </p>
                 </div>
               </div>
               <button
-                type="button"
+                type=\"button\"
                 onClick={() => setSelectedStoreForPlan(null)}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+                className=\"p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition\"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSavePlan} className="p-6 space-y-5">
+            <form onSubmit={handleSavePlan} className=\"p-6 space-y-5\">
               {/* Escolha do Plano */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+                <label className=\"block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2\">
                   1. Selecione o Plano
                 </label>
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className=\"grid grid-cols-3 gap-2.5\">
                   <button
-                    type="button"
+                    type=\"button\"
                     onClick={() => setSelectedPlanTier('starter')}
-                    className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                    className={'p-3 rounded-xl border text-left transition flex flex-col justify-between ' + (
                       selectedPlanTier === 'starter'
                         ? 'border-amber-500/80 bg-amber-500/10 text-white shadow-sm'
                         : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-400'
-                    }`}
+                    )}
                   >
-                    <span className="text-xs font-bold">Starter</span>
-                    <span className="text-[11px] text-zinc-400 mt-1">Até 10k views</span>
+                    <span className=\"text-xs font-bold\">Starter</span>
+                    <span className=\"text-[11px] text-zinc-400 mt-1\">Até 10k views</span>
                   </button>
 
                   <button
-                    type="button"
+                    type=\"button\"
                     onClick={() => setSelectedPlanTier('pro')}
-                    className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                    className={'p-3 rounded-xl border text-left transition flex flex-col justify-between ' + (
                       selectedPlanTier === 'pro'
                         ? 'border-amber-500/80 bg-amber-500/10 text-white shadow-sm'
                         : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-400'
-                    }`}
+                    )}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-amber-300">Pro</span>
-                      <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">Popular</span>
+                    <div className=\"flex items-center justify-between\">
+                      <span className=\"text-xs font-bold text-amber-300\">Pro</span>
+                      <span className=\"text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded\">Popular</span>
                     </div>
-                    <span className="text-[11px] text-zinc-400 mt-1">Até 50k views</span>
+                    <span className=\"text-[11px] text-zinc-400 mt-1\">Até 50k views</span>
                   </button>
 
                   <button
-                    type="button"
+                    type=\"button\"
                     onClick={() => setSelectedPlanTier('scale')}
-                    className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                    className={'p-3 rounded-xl border text-left transition flex flex-col justify-between ' + (
                       selectedPlanTier === 'scale'
                         ? 'border-amber-500/80 bg-amber-500/10 text-white shadow-sm'
                         : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-400'
-                    }`}
+                    )}
                   >
-                    <span className="text-xs font-bold">Scale</span>
-                    <span className="text-[11px] text-zinc-400 mt-1">Até 200k views</span>
+                    <span className=\"text-xs font-bold\">Scale</span>
+                    <span className=\"text-[11px] text-zinc-400 mt-1\">Até 200k views</span>
                   </button>
                 </div>
               </div>
 
               {/* Duração / Validade */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                <label className=\"block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5\">
                   2. Período de Acesso / Duração
                 </label>
                 <select
                   value={selectedDurationMonths}
                   onChange={(e) => setSelectedDurationMonths(Number(e.target.value))}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition cursor-pointer"
+                  className=\"w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition cursor-pointer\"
                 >
                   <option value={1}>1 Mês (Mensal)</option>
                   <option value={3}>3 Meses (Trimestral)</option>
@@ -761,73 +755,73 @@ export default function MasterAdminPage() {
 
               {/* Status da Assinatura */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                <label className=\"block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5\">
                   3. Status da Assinatura
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className=\"grid grid-cols-3 gap-2\">
                   <button
-                    type="button"
+                    type=\"button\"
                     onClick={() => setSelectedStatus('active')}
-                    className={`py-2 px-3 rounded-xl border text-xs font-semibold transition ${
+                    className={'py-2 px-3 rounded-xl border text-xs font-semibold transition ' + (
                       selectedStatus === 'active'
                         ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
                         : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                    }`}
+                    )}
                   >
                     Ativo (Liberado)
                   </button>
                   <button
-                    type="button"
+                    type=\"button\"
                     onClick={() => setSelectedStatus('trialing')}
-                    className={`py-2 px-3 rounded-xl border text-xs font-semibold transition ${
+                    className={'py-2 px-3 rounded-xl border text-xs font-semibold transition ' + (
                       selectedStatus === 'trialing'
                         ? 'bg-amber-500/20 border-amber-500 text-amber-300'
                         : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                    }`}
+                    )}
                   >
                     Trial (Teste)
                   </button>
                   <button
-                    type="button"
+                    type=\"button\"
                     onClick={() => setSelectedStatus('canceled')}
-                    className={`py-2 px-3 rounded-xl border text-xs font-semibold transition ${
+                    className={'py-2 px-3 rounded-xl border text-xs font-semibold transition ' + (
                       selectedStatus === 'canceled'
                         ? 'bg-rose-500/20 border-rose-500 text-rose-300'
                         : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                    }`}
+                    )}
                   >
                     Bloqueado
                   </button>
                 </div>
               </div>
 
-              <div className="p-3 bg-zinc-950/80 border border-zinc-800 rounded-xl text-xs text-zinc-400 space-y-1">
-                <div className="flex items-center gap-1.5 text-zinc-300 font-medium">
-                  <ShieldCheck size={14} className="text-amber-400" />
+              <div className=\"p-3 bg-zinc-950/80 border border-zinc-800 rounded-xl text-xs text-zinc-400 space-y-1\">
+                <div className=\"flex items-center gap-1.5 text-zinc-300 font-medium\">
+                  <ShieldCheck size={14} className=\"text-amber-400\" />
                   <span>Liberação Instantânea</span>
                 </div>
-                <p className="text-[11px] leading-relaxed">
+                <p className=\"text-[11px] leading-relaxed\">
                   O lojista terá acesso liberado imediatamente aos stories e recursos correspondentes ao plano selecionado sem restrição de trial.
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-zinc-800 flex items-center justify-end gap-3">
+              <div className=\"pt-2 border-t border-zinc-800 flex items-center justify-end gap-3\">
                 <button
-                  type="button"
+                  type=\"button\"
                   onClick={() => setSelectedStoreForPlan(null)}
                   disabled={savingPlan}
-                  className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition cursor-pointer"
+                  className=\"px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition cursor-pointer\"
                 >
                   Cancelar
                 </button>
                 <button
-                  type="submit"
+                  type=\"submit\"
                   disabled={savingPlan}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 text-xs font-bold transition shadow-lg shadow-amber-500/20 cursor-pointer"
+                  className=\"inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 text-xs font-bold transition shadow-lg shadow-amber-500/20 cursor-pointer\"
                 >
                   {savingPlan ? (
                     <>
-                      <Loader2 size={14} className="animate-spin" />
+                      <Loader2 size={14} className=\"animate-spin\" />
                       <span>Salvando...</span>
                     </>
                   ) : (
@@ -845,58 +839,58 @@ export default function MasterAdminPage() {
 
       {/* Modal de Disparo de E-mail via Resend */}
       {selectedStoreForEmail && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b border-zinc-800 bg-zinc-950/70">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20">
+        <div className=\"fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4\">
+          <div className=\"bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col\">
+            <div className=\"flex items-center justify-between p-5 border-b border-zinc-800 bg-zinc-950/70\">
+              <div className=\"flex items-center gap-3\">
+                <div className=\"p-2.5 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20\">
                   <Mail size={20} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Enviar E-mail para Lojista</h3>
-                  <p className="text-xs text-zinc-400">
-                    Loja: <span className="text-blue-400 font-medium">{selectedStoreForEmail.store_name}</span>
+                  <h3 className=\"text-base font-bold text-white\">Enviar E-mail para Lojista</h3>
+                  <p className=\"text-xs text-zinc-400\">
+                    Loja: <span className=\"text-blue-400 font-medium\">{selectedStoreForEmail.store_name}</span>
                   </p>
                 </div>
               </div>
               <button
-                type="button"
+                type=\"button\"
                 onClick={() => setSelectedStoreForEmail(null)}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+                className=\"p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition\"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSendEmail} className="p-5 space-y-4">
+            <form onSubmit={handleSendEmail} className=\"p-5 space-y-4\">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                <label className=\"block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5\">
                   Destinatário
                 </label>
                 <input
-                  type="email"
+                  type=\"email\"
                   disabled
-                  value={`${selectedStoreForEmail.owner_name || 'Lojista'} <${selectedStoreForEmail.owner_email}>`}
-                  className="w-full bg-zinc-950/60 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-zinc-400 cursor-not-allowed"
+                  value={(selectedStoreForEmail.owner_name || 'Lojista') + ' <' + selectedStoreForEmail.owner_email + '>'}
+                  className=\"w-full bg-zinc-950/60 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-zinc-400 cursor-not-allowed\"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                <label className=\"block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5\">
                   Assunto
                 </label>
                 <input
-                  type="text"
+                  type=\"text\"
                   required
                   value={emailSubject}
                   onChange={(e) => setEmailSubject(e.target.value)}
-                  placeholder="Ex: Atualizações importantes nos seus Stories"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition"
+                  placeholder=\"Ex: Atualizações importantes nos seus Stories\"
+                  className=\"w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition\"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                <label className=\"block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5\">
                   Mensagem
                 </label>
                 <textarea
@@ -904,28 +898,28 @@ export default function MasterAdminPage() {
                   required
                   value={emailMessage}
                   onChange={(e) => setEmailMessage(e.target.value)}
-                  placeholder="Escreva a mensagem que deseja enviar..."
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition resize-none leading-relaxed"
+                  placeholder=\"Escreva a mensagem que deseja enviar...\"
+                  className=\"w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition resize-none leading-relaxed\"
                 />
               </div>
 
-              <div className="pt-2 border-t border-zinc-800 flex items-center justify-end gap-3">
+              <div className=\"pt-2 border-t border-zinc-800 flex items-center justify-end gap-3\">
                 <button
-                  type="button"
+                  type=\"button\"
                   onClick={() => setSelectedStoreForEmail(null)}
                   disabled={sendingEmail}
-                  className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition cursor-pointer"
+                  className=\"px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition cursor-pointer\"
                 >
                   Cancelar
                 </button>
                 <button
-                  type="submit"
+                  type=\"submit\"
                   disabled={sendingEmail}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-semibold transition shadow-lg shadow-blue-500/20 cursor-pointer"
+                  className=\"inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-semibold transition shadow-lg shadow-blue-500/20 cursor-pointer\"
                 >
                   {sendingEmail ? (
                     <>
-                      <Loader2 size={14} className="animate-spin" />
+                      <Loader2 size={14} className=\"animate-spin\" />
                       <span>Enviando...</span>
                     </>
                   ) : (
@@ -943,60 +937,60 @@ export default function MasterAdminPage() {
 
       {/* Modal de Histórico e Logs em Linguagem Amigável */}
       {selectedStoreForLogs && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+        <div className=\"fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4\">
+          <div className=\"bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]\">
 
             {/* Cabeçalho do Modal */}
-            <div className="flex items-center justify-between p-5 border-b border-zinc-800 bg-zinc-950/70">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+            <div className=\"flex items-center justify-between p-5 border-b border-zinc-800 bg-zinc-950/70\">
+              <div className=\"flex items-center gap-3\">
+                <div className=\"p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20\">
                   <FileText size={20} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Relatório de Atividades da Loja</h3>
-                  <p className="text-xs text-zinc-400">
-                    Loja: <span className="text-emerald-400 font-medium">{selectedStoreForLogs.store_name}</span>
+                  <h3 className=\"text-base font-bold text-white\">Relatório de Atividades da Loja</h3>
+                  <p className=\"text-xs text-zinc-400\">
+                    Loja: <span className=\"text-emerald-400 font-medium\">{selectedStoreForLogs.store_name}</span>
                   </p>
                 </div>
               </div>
               <button
-                type="button"
+                type=\"button\"
                 onClick={() => setSelectedStoreForLogs(null)}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+                className=\"p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition\"
               >
                 <X size={18} />
               </button>
             </div>
 
             {/* Lista dos Logs */}
-            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+            <div className=\"p-6 overflow-y-auto flex-1 space-y-4\">
               {loadingLogs ? (
-                <div className="py-12 text-center text-zinc-400">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <Loader2 className="animate-spin text-emerald-400" size={24} />
-                    <span className="text-xs">Buscando atividades registradas...</span>
+                <div className=\"py-12 text-center text-zinc-400\">
+                  <div className=\"flex flex-col items-center justify-center gap-2\">
+                    <Loader2 className=\"animate-spin text-emerald-400\" size={24} />
+                    <span className=\"text-xs\">Buscando atividades registradas...</span>
                   </div>
                 </div>
               ) : storeLogs.length === 0 ? (
-                <div className="py-10 text-center text-zinc-500 text-xs">
+                <div className=\"py-10 text-center text-zinc-500 text-xs\">
                   Nenhuma atividade encontrada para esta loja até o momento.
                 </div>
               ) : (
-                <div className="relative border-l-2 border-zinc-800 ml-3 space-y-6">
+                <div className=\"relative border-l-2 border-zinc-800 ml-3 space-y-6\">
                   {storeLogs.map((log) => (
-                    <div key={log.id} className="relative pl-6">
-                      <div className="absolute -left-[9px] top-0.5 w-4 h-4 rounded-full bg-zinc-900 border-2 border-emerald-500 flex items-center justify-center" />
-                      <div className="bg-zinc-950/70 border border-zinc-800/80 rounded-xl p-3.5 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-white">
+                    <div key={log.id} className=\"relative pl-6\">
+                      <div className=\"absolute -left-[9px] top-0.5 w-4 h-4 rounded-full bg-zinc-900 border-2 border-emerald-500 flex items-center justify-center\" />
+                      <div className=\"bg-zinc-950/70 border border-zinc-800/80 rounded-xl p-3.5 space-y-1\">
+                        <div className=\"flex items-center justify-between\">
+                          <span className=\"text-xs font-semibold text-white\">
                             {log.title}
                           </span>
-                          <span className="text-[11px] text-zinc-500 flex items-center gap-1">
+                          <span className=\"text-[11px] text-zinc-500 flex items-center gap-1\">
                             <Clock size={11} />
                             {new Date(log.timestamp).toLocaleString('pt-BR')}
                           </span>
                         </div>
-                        <p className="text-xs text-zinc-400 leading-relaxed">
+                        <p className=\"text-xs text-zinc-400 leading-relaxed\">
                           {log.description}
                         </p>
                       </div>
@@ -1007,14 +1001,14 @@ export default function MasterAdminPage() {
             </div>
 
             {/* Rodapé do Modal */}
-            <div className="p-4 border-t border-zinc-800 bg-zinc-950/50 flex items-center justify-between">
-              <span className="text-xs text-zinc-500">
+            <div className=\"p-4 border-t border-zinc-800 bg-zinc-950/50 flex items-center justify-between\">
+              <span className=\"text-xs text-zinc-500\">
                 {storeLogs.length} registro(s) no histórico
               </span>
               <button
-                type="button"
+                type=\"button\"
                 onClick={() => setSelectedStoreForLogs(null)}
-                className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition cursor-pointer"
+                className=\"px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition cursor-pointer\"
               >
                 Fechar
               </button>
@@ -1027,4 +1021,8 @@ export default function MasterAdminPage() {
     </div>
   );
 }
-'@ | Set-Content -Path "src\pages\MasterAdminPage.tsx" -Encoding UTF8
+\`;
+
+fs.writeFileSync('src/pages/MasterAdminPage.tsx', content, 'utf8');
+console.log('MasterAdminPage.tsx gravado com sucesso!');
+"
