@@ -43,7 +43,6 @@ serve(async (req) => {
   try {
     // ─────────────────────────────────────────────────────────
     // 1. VALIDAÇÃO DO asaas-access-token
-    //    (token configurado no painel do Asaas → Integrações → Webhook)
     // ─────────────────────────────────────────────────────────
     const expectedToken = Deno.env.get("ASAAS_ACCESS_TOKEN") ??
       Deno.env.get("ASAAS_WEBHOOK_TOKEN") ?? "";
@@ -82,7 +81,6 @@ serve(async (req) => {
       );
     }
 
-    // Eventos sem pagamento (ex.: SUBSCRIPTION_*) apenas confirmam recebimento
     if (!payment?.id) {
       console.log("[asaas-webhook] Evento sem pagamento associado. Ack e encerramento.");
       return new Response(
@@ -100,8 +98,6 @@ serve(async (req) => {
 
     // ─────────────────────────────────────────────────────────
     // 4. IDEMPOTÊNCIA
-    //    Registra o evento na tabela asaas_webhook_events.
-    //    Se o mesmo evento já foi processado, responde 200 sem reprocessar.
     // ─────────────────────────────────────────────────────────
     const eventKey = `${event}:${payment.id}`;
 
@@ -117,7 +113,6 @@ serve(async (req) => {
       });
 
     if (insertEventErr) {
-      // Violação de chave única = evento duplicado → idempotência garantida
       if (insertEventErr.code === "23505" || /duplicate key|unique/i.test(insertEventErr.message)) {
         console.log("[asaas-webhook] Evento duplicado detectado (idempotência):", eventKey);
         return new Response(
@@ -151,7 +146,6 @@ serve(async (req) => {
 
     if (subErr || !subscriptionRow) {
       console.warn("[asaas-webhook] Assinatura local não encontrada para:", subscriptionId);
-      // Ack para o Asaas não ficar reenviando; o evento já ficou registrado para auditoria
       return new Response(
         JSON.stringify({ received: true, processed: false, reason: "subscription_not_found" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -165,6 +159,7 @@ serve(async (req) => {
     // ─────────────────────────────────────────────────────────
     const invoiceStatus = INVOICE_STATUS_MAP[event] ?? "pending";
     const isPaid = invoiceStatus === "paid";
+    const isRefunded = invoiceStatus === "refunded" || invoiceStatus === "disputed";
 
     const invoicePayload = {
       store_id: storeId,
@@ -192,7 +187,58 @@ serve(async (req) => {
     console.log("[asaas-webhook] Fatura atualizada:", payment.id, "→", invoiceStatus);
 
     // ─────────────────────────────────────────────────────────
-    // 7. ESTADO DA ASSINATURA CONFORME O PAGAMENTO
+    // 7. SISTEMA DE AFILIADOS: PROCESSA COMISSÃO (10%)
+    // ─────────────────────────────────────────────────────────
+    try {
+      // Busca a loja que pagou para verificar se foi indicada por outra loja
+      const { data: payingStore } = await supabase
+        .from("stores")
+        .select("id, referred_by_store_id")
+        .eq("id", storeId)
+        .maybeSingle();
+
+      if (payingStore?.referred_by_store_id) {
+        const referrerStoreId = payingStore.referred_by_store_id;
+        const paidAmount = Number(payment.value ?? 0);
+
+        if (isPaid && paidAmount > 0) {
+          // 10% de comissão calculada sobre o valor líquido/bruto faturado
+          const commissionAmount = Math.round((paidAmount * 0.10) * 100) / 100;
+
+          // Insere ou atualiza recompensa como pendente para saque
+          const { error: rewardErr } = await supabase
+            .from("referral_rewards")
+            .upsert({
+              referrer_store_id: referrerStoreId,
+              referred_store_id: storeId,
+              asaas_payment_id: payment.id,
+              amount: commissionAmount,
+              commission_rate: 10.00,
+              status: "pending",
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "referrer_store_id,asaas_payment_id" });
+
+          if (rewardErr) {
+            console.error("[asaas-webhook] Erro ao registrar comissão de afiliado:", rewardErr);
+          } else {
+            console.log(`[asaas-webhook] Comissão de R$ ${commissionAmount} creditada para loja ${referrerStoreId}`);
+          }
+        } else if (isRefunded) {
+          // Se for estorno ou chargeback, cancela a recompensa
+          await supabase
+            .from("referral_rewards")
+            .update({ status: "canceled", updated_at: new Date().toISOString() })
+            .eq("asaas_payment_id", payment.id);
+
+          console.log(`[asaas-webhook] Comissão cancelada por estorno do pagamento ${payment.id}`);
+        }
+      }
+    } catch (affiliateErr) {
+      console.error("[asaas-webhook] Erro não fatal no processamento de afiliado:", affiliateErr);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // 8. ESTADO DA ASSINATURA CONFORME O PAGAMENTO
     // ─────────────────────────────────────────────────────────
     let subStatus: string | null = null;
     if (isPaid) subStatus = "active";
