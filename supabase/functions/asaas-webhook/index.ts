@@ -190,7 +190,6 @@ serve(async (req) => {
     // 7. SISTEMA DE AFILIADOS: PROCESSA COMISSÃO (10%)
     // ─────────────────────────────────────────────────────────
     try {
-      // Busca a loja que pagou para verificar se foi indicada por outra loja
       const { data: payingStore } = await supabase
         .from("stores")
         .select("id, referred_by_store_id")
@@ -202,10 +201,8 @@ serve(async (req) => {
         const paidAmount = Number(payment.value ?? 0);
 
         if (isPaid && paidAmount > 0) {
-          // 10% de comissão calculada sobre o valor líquido/bruto faturado
           const commissionAmount = Math.round((paidAmount * 0.10) * 100) / 100;
 
-          // Insere ou atualiza recompensa como pendente para saque
           const { error: rewardErr } = await supabase
             .from("referral_rewards")
             .upsert({
@@ -224,7 +221,6 @@ serve(async (req) => {
             console.log(`[asaas-webhook] Comissão de R$ ${commissionAmount} creditada para loja ${referrerStoreId}`);
           }
         } else if (isRefunded) {
-          // Se for estorno ou chargeback, cancela a recompensa
           await supabase
             .from("referral_rewards")
             .update({ status: "canceled", updated_at: new Date().toISOString() })
@@ -238,22 +234,27 @@ serve(async (req) => {
     }
 
     // ─────────────────────────────────────────────────────────
-    // 8. ESTADO DA ASSINATURA CONFORME O PAGAMENTO
+    // 8. ESTADO DA ASSINATURA + SINCRONIZAÇÃO COM STORES
     // ─────────────────────────────────────────────────────────
     let subStatus: string | null = null;
     if (isPaid) subStatus = "active";
     else if (SUBSCRIPTION_BLOCKING_EVENTS.has(event)) subStatus = "past_due";
 
     if (subStatus) {
+      const nowIso = new Date().toISOString();
+      const periodEnd = isPaid
+        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        : null;
+
       const { error: updSubErr } = await supabase
         .from("subscriptions")
         .update({
           status: subStatus,
-          updated_at: new Date().toISOString(),
+          updated_at: nowIso,
           ...(isPaid
             ? {
-                current_period_start: new Date().toISOString(),
-                current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                current_period_start: nowIso,
+                current_period_end: periodEnd,
               }
             : {}),
         })
@@ -264,6 +265,26 @@ serve(async (req) => {
         console.error("[asaas-webhook] Erro ao atualizar assinatura:", updSubErr);
       } else {
         console.log("[asaas-webhook] Assinatura marcada como:", subStatus);
+      }
+
+      // Sincroniza a tabela stores para refletir no painel/dashboard
+      const storeUpdatePayload: Record<string, any> = {
+        subscription_status: subStatus,
+        plan_id: subscriptionRow.plan_id,
+        updated_at: nowIso,
+        ...(isPaid ? { trial_ends_at: null } : {}),
+        ...(periodEnd ? { current_period_end: periodEnd } : {}),
+      };
+
+      const { error: storeUpdErr } = await supabase
+        .from("stores")
+        .update(storeUpdatePayload)
+        .eq("id", storeId);
+
+      if (storeUpdErr) {
+        console.error("[asaas-webhook] Erro ao sincronizar stores:", storeUpdErr);
+      } else {
+        console.log("[asaas-webhook] Store sincronizada com status:", subStatus);
       }
     }
 
