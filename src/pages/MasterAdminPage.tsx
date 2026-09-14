@@ -1,7 +1,4 @@
-Set-Content -Path "fix_master.js" -Value @'
-const fs = require('fs');
-
-const content = `import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import {
@@ -15,10 +12,14 @@ import {
   X,
   Clock,
   FileText,
+  AlertCircle,
   Video,
   Mail,
   MessageCircle,
   Sparkles,
+  CheckCircle2,
+  Calendar,
+  Send,
   Loader2,
   Crown,
   ShieldCheck,
@@ -78,11 +79,11 @@ export default function MasterAdminPage() {
   const [emailMessage, setEmailMessage] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
 
-  // Estados do Modal de Gestão Manual de Plano
+  // Estados do Modal de Gestao de Plano
   const [selectedStoreForPlan, setSelectedStoreForPlan] = useState<MasterStore | null>(null);
-  const [selectedPlanTier, setSelectedPlanTier] = useState<'starter' | 'pro' | 'scale'>('pro');
+  const [selectedPlanTier, setSelectedPlanTier] = useState<"starter" | "pro" | "scale">("pro");
   const [selectedDurationMonths, setSelectedDurationMonths] = useState<number>(12);
-  const [selectedStatus, setSelectedStatus] = useState<'active' | 'trialing' | 'canceled'>('active');
+  const [selectedStatus, setSelectedStatus] = useState<"active" | "trialing" | "canceled">("active");
   const [savingPlan, setSavingPlan] = useState(false);
 
   useEffect(() => {
@@ -154,74 +155,54 @@ export default function MasterAdminPage() {
     }
   };
 
-  // Abre Modal de Gestão de Plano
+  // Abre Modal de Gestao de Plano
   const handleOpenPlanModal = (store: MasterStore) => {
     setSelectedStoreForPlan(store);
+    const cName = (store.plan_name || "").toLowerCase();
+    if (cName.includes("scale")) setSelectedPlanTier("scale");
+    else if (cName.includes("starter")) setSelectedPlanTier("starter");
+    else setSelectedPlanTier("pro");
 
-    const currentName = (store.plan_name || '').toLowerCase();
-    if (currentName.includes('scale')) {
-      setSelectedPlanTier('scale');
-    } else if (currentName.includes('starter')) {
-      setSelectedPlanTier('starter');
-    } else {
-      setSelectedPlanTier('pro');
-    }
-
-    const currentStatus = (store.subscription_status || '').toLowerCase();
-    if (currentStatus === 'active') {
-      setSelectedStatus('active');
-    } else if (currentStatus === 'trialing' || currentStatus === 'trial') {
-      setSelectedStatus('trialing');
-    } else {
-      setSelectedStatus('active');
-    }
+    const cStatus = (store.subscription_status || "").toLowerCase();
+    if (cStatus === "active") setSelectedStatus("active");
+    else if (cStatus === "trialing" || cStatus === "trial") setSelectedStatus("trialing");
+    else setSelectedStatus("active");
 
     setSelectedDurationMonths(12);
   };
 
-  // Salvar Alteração Manual de Plano
+  // Salvar Alteracao Manual de Plano
   const handleSavePlan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStoreForPlan) return;
-
     setSavingPlan(true);
+
     try {
       const now = new Date();
       const periodEnd = new Date(now);
       periodEnd.setMonth(periodEnd.getMonth() + Number(selectedDurationMonths));
 
-      const planNameFormatted =
-        selectedPlanTier === 'starter'
-          ? 'Starter'
-          : selectedPlanTier === 'scale'
-          ? 'Scale'
-          : 'Pro';
+      const planNameFormatted = selectedPlanTier === "starter" ? "Starter" : selectedPlanTier === "scale" ? "Scale" : "Pro";
 
-      // 1. Atualizar tabela stores
-      const { error: storeUpdateError } = await supabase
-        .from('stores')
+      await supabase
+        .from("stores")
         .update({
           subscription_status: selectedStatus,
           plan_tier: selectedPlanTier,
           plan_name: planNameFormatted,
           current_period_end: periodEnd.toISOString(),
-          active: selectedStatus === 'active' || selectedStatus === 'trialing',
+          active: selectedStatus === "active" || selectedStatus === "trialing",
           updated_at: new Date().toISOString()
         })
-        .eq('id', selectedStoreForPlan.store_id);
+        .eq("id", selectedStoreForPlan.store_id);
 
-      if (storeUpdateError) {
-        console.warn('Aviso ao atualizar stores:', storeUpdateError.message);
-      }
-
-      // 2. Atualizar tabela subscriptions
       await supabase
-        .from('subscriptions')
-        .update({ is_current: false, status: 'superseded' })
-        .eq('store_id', selectedStoreForPlan.store_id);
+        .from("subscriptions")
+        .update({ is_current: false, status: "superseded" })
+        .eq("store_id", selectedStoreForPlan.store_id);
 
-      const { error: subError } = await supabase
-        .from('subscriptions')
+      await supabase
+        .from("subscriptions")
         .insert({
           store_id: selectedStoreForPlan.store_id,
           plan_id: selectedPlanTier,
@@ -230,38 +211,29 @@ export default function MasterAdminPage() {
           current_period_start: now.toISOString(),
           current_period_end: periodEnd.toISOString(),
           is_current: true,
-          gateway_provider: 'manual_master',
-          asaas_subscription_id: 'MANUAL_VIP_' + Date.now()
+          gateway_provider: "manual_master",
+          asaas_subscription_id: "MANUAL_VIP_" + Date.now()
         });
 
-      if (subError) {
-        console.warn('Aviso na tabela subscriptions:', subError.message);
-      }
-
-      // 3. Registrar Log de Auditoria
       try {
-        await supabase.from('audit_logs').insert({
+        await supabase.from("audit_logs").insert({
           store_id: selectedStoreForPlan.store_id,
-          action: 'master_plan_update',
+          action: "master_plan_update",
           details: {
-            description: 'Plano alterado manualmente pelo Painel Master para ' + planNameFormatted + ' (' + selectedDurationMonths + ' meses, status: ' + selectedStatus + ').',
+            description: "Plano alterado manualmente pelo Painel Master para " + planNameFormatted + " (" + selectedDurationMonths + " meses, status: " + selectedStatus + ").",
             plan: selectedPlanTier,
             duration_months: selectedDurationMonths,
             status: selectedStatus
           }
         });
-      } catch (logErr) {
-        // silencioso
-      }
+      } catch (logErr) {}
 
-      toast.success(
-        'Plano da loja "' + selectedStoreForPlan.store_name + '" atualizado para ' + planNameFormatted + ' por ' + selectedDurationMonths + ' meses!'
-      );
+      toast.success("Plano da loja atualizado com sucesso!");
       setSelectedStoreForPlan(null);
       await loadMasterData();
     } catch (err: any) {
-      console.error('Erro ao atualizar plano:', err);
-      toast.error('Erro ao atualizar plano: ' + (err.message || 'Falha na conexão'));
+      console.error("Erro ao atualizar plano:", err);
+      toast.error("Erro ao atualizar plano: " + (err.message || "Falha na conexao"));
     } finally {
       setSavingPlan(false);
     }
@@ -275,9 +247,9 @@ export default function MasterAdminPage() {
     }
 
     setSelectedStoreForEmail(store);
-    setEmailSubject('Vidlytics Stories - Contato com a loja ' + store.store_name);
+    setEmailSubject(`Vidlytics Stories - Contato com a loja ${store.store_name}`);
     setEmailMessage(
-      'Olá ' + (store.owner_name || 'Lojista') + ',\\n\\nAqui é da equipe Vidlytics. Estamos acompanhando o desempenho da loja "' + store.store_name + '" e gostaríamos de saber se precisa de algum suporte técnico ou consultoria para alavancar suas conversões com Stories em vídeo.\\n\\nFicamos à total disposição!\\n\\nAtenciosamente,\\nEquipe Vidlytics Stories'
+      `Olá ${store.owner_name || 'Lojista'},\n\nAqui é da equipe Vidlytics. Estamos acompanhando o desempenho da loja "${store.store_name}" e gostaríamos de saber se precisa de algum suporte técnico ou consultoria para alavancar suas conversões com Stories em vídeo.\n\nFicamos à total disposição!\n\nAtenciosamente,\nEquipe Vidlytics Stories`
     );
   };
 
@@ -310,11 +282,11 @@ export default function MasterAdminPage() {
         throw new Error(data.error);
       }
 
-      toast.success('E-mail enviado com sucesso para ' + selectedStoreForEmail.owner_email + '!');
+      toast.success(`E-mail enviado com sucesso para ${selectedStoreForEmail.owner_email}!`);
       setSelectedStoreForEmail(null);
     } catch (err: any) {
       console.error('Erro no disparo de e-mail:', err);
-      toast.error('Erro ao enviar e-mail: ' + err.message);
+      toast.error(`Erro ao enviar e-mail: ${err.message}`);
     } finally {
       setSendingEmail(false);
     }
@@ -325,19 +297,19 @@ export default function MasterAdminPage() {
     let phone = store.owner_phone;
     if (!phone) {
       const promptedPhone = window.prompt(
-        'A loja "' + store.store_name + '" não tem WhatsApp cadastrado. Digite o número com DDD (ex: 41999998888):'
+        `A loja "${store.store_name}" não tem WhatsApp cadastrado. Digite o número com DDD (ex: 41999998888):`
       );
       if (!promptedPhone) return;
       phone = promptedPhone;
     }
 
-    const cleanPhone = phone.replace(/\\D/g, '');
-    const finalNumber = cleanPhone.startsWith('55') ? cleanPhone : '55' + cleanPhone;
+    const cleanPhone = phone.replace(/\D/g, '');
+    const finalNumber = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
     const text = encodeURIComponent(
-      'Olá ' + (store.owner_name || '') + '! Aqui é da equipe Vidlytics. Tudo bem? Estou entrando em contato para saber como estão os resultados dos Stories na loja "' + store.store_name + '".'
+      `Olá ${store.owner_name || ''}! Aqui é da equipe Vidlytics. Tudo bem? Estou entrando em contato para saber como estão os resultados dos Stories na loja "${store.store_name}".`
     );
 
-    window.open('https://wa.me/' + finalNumber + '?text=' + text, '_blank');
+    window.open(`https://wa.me/${finalNumber}?text=${text}`, '_blank');
   };
 
   // Abre modal e carrega logs amigáveis
@@ -363,7 +335,7 @@ export default function MasterAdminPage() {
             timestamp: store.created_at,
             category: 'account',
             title: 'Conta Criada',
-            description: 'A loja "' + store.store_name + '" foi registrada na plataforma.'
+            description: `A loja "${store.store_name}" foi registrada na plataforma.`
           }
         ]);
         return;
@@ -512,7 +484,7 @@ export default function MasterAdminPage() {
                 <tbody className="divide-y divide-zinc-800/60">
                   {loading ? (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-zinc-400">
+                      <td colSpan={6} className="py-12 text-center text-zinc-400">
                         <div className="flex flex-col items-center justify-center gap-2">
                           <Loader2 className="animate-spin text-emerald-400" size={24} />
                           <span className="text-xs">Carregando dados das lojas...</span>
@@ -521,7 +493,7 @@ export default function MasterAdminPage() {
                     </tr>
                   ) : stores.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-zinc-500">
+                      <td colSpan={6} className="py-12 text-center text-zinc-500">
                         Nenhuma loja encontrada para o termo pesquisado.
                       </td>
                     </tr>
@@ -543,7 +515,7 @@ export default function MasterAdminPage() {
 
                         {/* Plano */}
                         <td className="py-3.5 px-4">
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700 capitalize">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
                             {store.plan_name || 'Free / Trial'}
                           </span>
                         </td>
@@ -552,13 +524,13 @@ export default function MasterAdminPage() {
                         <td className="py-3.5 px-4">
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                              store.subscription_status?.toLowerCase() === 'active'
+store.subscription_status?.toLowerCase() === 'active'
                                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                                 : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
                             }`}
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                            {store.subscription_status?.toLowerCase() === 'active' ? 'Ativo' : 'Em Trial / Pendente'}
+{store.subscription_status?.toLowerCase() === 'active' ? 'Ativo' : 'Em Trial / Pendente'}
                           </span>
                         </td>
 
@@ -659,7 +631,7 @@ export default function MasterAdminPage() {
 
       </div>
 
-      {/* Modal de Gestão Manual de Plano */}
+      {/* Modal de Gestao Manual de Plano */}
       {selectedStoreForPlan && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col">
@@ -685,7 +657,6 @@ export default function MasterAdminPage() {
             </div>
 
             <form onSubmit={handleSavePlan} className="p-6 space-y-5">
-              {/* Escolha do Plano */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
                   1. Selecione o Plano
@@ -693,12 +664,12 @@ export default function MasterAdminPage() {
                 <div className="grid grid-cols-3 gap-2.5">
                   <button
                     type="button"
-                    onClick={() => setSelectedPlanTier('starter')}
-                    className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
-                      selectedPlanTier === 'starter'
-                        ? 'border-amber-500/80 bg-amber-500/10 text-white shadow-sm'
-                        : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-400'
-                    }`}
+                    onClick={() => setSelectedPlanTier("starter")}
+                    className={"p-3 rounded-xl border text-left transition flex flex-col justify-between " + (
+                      selectedPlanTier === "starter"
+                        ? "border-amber-500/80 bg-amber-500/10 text-white shadow-sm"
+                        : "border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-400"
+                    )}
                   >
                     <span className="text-xs font-bold">Starter</span>
                     <span className="text-[11px] text-zinc-400 mt-1">Até 10k views</span>
@@ -706,12 +677,12 @@ export default function MasterAdminPage() {
 
                   <button
                     type="button"
-                    onClick={() => setSelectedPlanTier('pro')}
-                    className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
-                      selectedPlanTier === 'pro'
-                        ? 'border-amber-500/80 bg-amber-500/10 text-white shadow-sm'
-                        : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-400'
-                    }`}
+                    onClick={() => setSelectedPlanTier("pro")}
+                    className={"p-3 rounded-xl border text-left transition flex flex-col justify-between " + (
+                      selectedPlanTier === "pro"
+                        ? "border-amber-500/80 bg-amber-500/10 text-white shadow-sm"
+                        : "border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-400"
+                    )}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-amber-300">Pro</span>
@@ -722,12 +693,12 @@ export default function MasterAdminPage() {
 
                   <button
                     type="button"
-                    onClick={() => setSelectedPlanTier('scale')}
-                    className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
-                      selectedPlanTier === 'scale'
-                        ? 'border-amber-500/80 bg-amber-500/10 text-white shadow-sm'
-                        : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-400'
-                    }`}
+                    onClick={() => setSelectedPlanTier("scale")}
+                    className={"p-3 rounded-xl border text-left transition flex flex-col justify-between " + (
+                      selectedPlanTier === "scale"
+                        ? "border-amber-500/80 bg-amber-500/10 text-white shadow-sm"
+                        : "border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-400"
+                    )}
                   >
                     <span className="text-xs font-bold">Scale</span>
                     <span className="text-[11px] text-zinc-400 mt-1">Até 200k views</span>
@@ -735,7 +706,6 @@ export default function MasterAdminPage() {
                 </div>
               </div>
 
-              {/* Duração / Validade */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
                   2. Período de Acesso / Duração
@@ -754,7 +724,6 @@ export default function MasterAdminPage() {
                 </select>
               </div>
 
-              {/* Status da Assinatura */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
                   3. Status da Assinatura
@@ -762,34 +731,34 @@ export default function MasterAdminPage() {
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
-                    onClick={() => setSelectedStatus('active')}
-                    className={`py-2 px-3 rounded-xl border text-xs font-semibold transition ${
-                      selectedStatus === 'active'
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                        : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                    }`}
+                    onClick={() => setSelectedStatus("active")}
+                    className={"py-2 px-3 rounded-xl border text-xs font-semibold transition " + (
+                      selectedStatus === "active"
+                        ? "bg-emerald-500/20 border-emerald-500 text-emerald-300"
+                        : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                    )}
                   >
                     Ativo (Liberado)
                   </button>
                   <button
                     type="button"
-                    onClick={() => setSelectedStatus('trialing')}
-                    className={`py-2 px-3 rounded-xl border text-xs font-semibold transition ${
-                      selectedStatus === 'trialing'
-                        ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                        : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                    }`}
+                    onClick={() => setSelectedStatus("trialing")}
+                    className={"py-2 px-3 rounded-xl border text-xs font-semibold transition " + (
+                      selectedStatus === "trialing"
+                        ? "bg-amber-500/20 border-amber-500 text-amber-300"
+                        : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                    )}
                   >
                     Trial (Teste)
                   </button>
                   <button
                     type="button"
-                    onClick={() => setSelectedStatus('canceled')}
-                    className={`py-2 px-3 rounded-xl border text-xs font-semibold transition ${
-                      selectedStatus === 'canceled'
-                        ? 'bg-rose-500/20 border-rose-500 text-rose-300'
-                        : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                    }`}
+                    onClick={() => setSelectedStatus("canceled")}
+                    className={"py-2 px-3 rounded-xl border text-xs font-semibold transition " + (
+                      selectedStatus === "canceled"
+                        ? "bg-rose-500/20 border-rose-500 text-rose-300"
+                        : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700"
+                    )}
                   >
                     Bloqueado
                   </button>
@@ -1022,8 +991,3 @@ export default function MasterAdminPage() {
     </div>
   );
 }
-`;
-
-fs.writeFileSync('src/pages/MasterAdminPage.tsx', content, 'utf8');
-console.log('SUCCESS');
-'@
