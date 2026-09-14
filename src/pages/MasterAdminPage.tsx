@@ -850,8 +850,10 @@ store.subscription_status?.toLowerCase() === 'active'
                   {/* Ativar Lifetime */}
                   <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-purple-500/5 border border-purple-500/20">
                     <div>
-                      <p className="text-xs font-bold text-purple-300">Acesso Vitalício (Lifetime)</p>
-                      <p className="text-[11px] text-zinc-400">Ignora cobrança e validade. Uso interno/parcerias.</p>
+                      <p className="text-xs font-bold text-purple-300">
+                        Acesso Vitalício (Lifetime) — Plano {selectedPlanTier === "starter" ? "Starter" : selectedPlanTier === "scale" ? "Scale" : "Pro"}
+                      </p>
+                      <p className="text-[11px] text-zinc-400">Usa o plano selecionado na Seção 1. Ignora cobrança e validade.</p>
                     </div>
                     <button
                       type="button"
