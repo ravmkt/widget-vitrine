@@ -1,6 +1,7 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
+import { useTenant } from "@/context/TenantContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,6 +57,7 @@ interface Subscriber {
 
 export function LiveCommercePage() {
   const { user } = useAuth();
+  const { storeId: tenantStoreId } = useTenant();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -129,15 +131,20 @@ export function LiveCommercePage() {
   // Carrega informações da loja e plano
   useEffect(() => {
     async function loadStoreAndPlan() {
-      if (!user) return;
+      const activeStoreId = tenantStoreId;
+      if (!activeStoreId) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
 
         const { data: store, error: storeErr } = await supabase
           .from("stores")
           .select("id, plan_id, plan:plan_id(id, name, allows_live)")
-          .eq("user_id", user.id)
-          .single();
+          .eq("id", activeStoreId)
+          .maybeSingle();
 
         if (storeErr || !store) {
           toast.error("Loja não encontrada.");
@@ -169,7 +176,7 @@ export function LiveCommercePage() {
     }
 
     loadStoreAndPlan();
-  }, [user]);
+  }, [tenantStoreId]);
 
   async function loadLives(currentStoreId: string) {
     const { data: lives, error } = await supabase
