@@ -178,9 +178,6 @@ export default function MasterAdminPage() {
     setSavingPlan(true);
 
     try {
-      const now = new Date();
-      const periodEnd = new Date(now);
-      periodEnd.setMonth(periodEnd.getMonth() + Number(selectedDurationMonths));
 
 const planNameFormatted = selectedPlanTier === "starter" ? "Starter" : selectedPlanTier === "scale" ? "Scale" : "Pro";
 
