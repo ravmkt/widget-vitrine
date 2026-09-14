@@ -61,6 +61,13 @@ interface FriendlyLog {
   description: string;
 }
 
+// Mapa de UUIDs dos planos (Master Admin)
+const PLAN_IDS: Record<"starter" | "pro" | "scale", string> = {
+  starter: "a1da1891-9720-42b6-a23c-66b713bb3050",
+  pro: "eae5022d-617a-44f1-a2ce-46e12ad3c32e",
+  scale: "5493cbc5-05b4-4f39-99ba-e29c98d86cb6",
+};
+
 export default function MasterAdminPage() {
   const navigate = useNavigate();
   const [stats, setStats] = useState<MasterStats | null>(null);
