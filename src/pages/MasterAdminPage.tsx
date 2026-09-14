@@ -231,15 +231,20 @@ if (rpcError) {
     }
   };
 
-  // Ativa acesso Lifetime (vitalicio) para a loja
+  // Ativa acesso Lifetime (vitalicio) para a loja, no plano selecionado
   const handleSetLifetime = async () => {
     if (!selectedStoreForPlan) return;
-    if (!window.confirm(`Confirma ativar acesso VITALÍCIO para "${selectedStoreForPlan.store_name}"? Essa ação sobrepõe qualquer assinatura ativa.`)) return;
+
+    const planNameFormatted = selectedPlanTier === "starter" ? "Starter" : selectedPlanTier === "scale" ? "Scale" : "Pro";
+    const planId = PLAN_IDS[selectedPlanTier];
+
+    if (!window.confirm(`Confirma ativar acesso VITALÍCIO (plano ${planNameFormatted}) para "${selectedStoreForPlan.store_name}"? Essa ação sobrepõe qualquer assinatura ativa.`)) return;
 
     setApplyingLifetime(true);
     try {
       const { error } = await supabase.rpc("admin_set_store_lifetime", {
         p_store_id: selectedStoreForPlan.store_id,
+        p_plan_id: planId,
       });
       if (error) throw error;
 
@@ -247,11 +252,14 @@ if (rpcError) {
         await supabase.from("audit_logs").insert({
           store_id: selectedStoreForPlan.store_id,
           action: "master_set_lifetime",
-          details: { description: "Acesso vitalício ativado manualmente pelo Painel Master." },
+          details: {
+            description: `Acesso vitalício ativado manualmente pelo Painel Master (plano ${planNameFormatted}).`,
+            plan: selectedPlanTier,
+          },
         });
       } catch (logErr) {}
 
-      toast.success("Acesso vitalício ativado com sucesso!");
+      toast.success(`Acesso vitalício (${planNameFormatted}) ativado com sucesso!`);
       setSelectedStoreForPlan(null);
       await loadMasterData();
     } catch (err: any) {
