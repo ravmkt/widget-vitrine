@@ -182,38 +182,18 @@ export default function MasterAdminPage() {
       const periodEnd = new Date(now);
       periodEnd.setMonth(periodEnd.getMonth() + Number(selectedDurationMonths));
 
-      const planNameFormatted = selectedPlanTier === "starter" ? "Starter" : selectedPlanTier === "scale" ? "Scale" : "Pro";
+const planNameFormatted = selectedPlanTier === "starter" ? "Starter" : selectedPlanTier === "scale" ? "Scale" : "Pro";
 
-      await supabase
-        .from("stores")
-        .update({
-          subscription_status: selectedStatus,
-          plan_tier: selectedPlanTier,
-          plan_name: planNameFormatted,
-          current_period_end: periodEnd.toISOString(),
-          active: selectedStatus === "active" || selectedStatus === "trialing",
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", selectedStoreForPlan.store_id);
+const { error: rpcError } = await supabase.rpc("admin_set_store_plan", {
+  p_store_id: selectedStoreForPlan.store_id,
+  p_plan_name: planNameFormatted,
+  p_status: selectedStatus,
+  p_duration_months: Number(selectedDurationMonths),
+});
 
-      await supabase
-        .from("subscriptions")
-        .update({ is_current: false, status: "superseded" })
-        .eq("store_id", selectedStoreForPlan.store_id);
-
-      await supabase
-        .from("subscriptions")
-        .insert({
-          store_id: selectedStoreForPlan.store_id,
-          plan_id: selectedPlanTier,
-          plan_name: planNameFormatted,
-          status: selectedStatus,
-          current_period_start: now.toISOString(),
-          current_period_end: periodEnd.toISOString(),
-          is_current: true,
-          gateway_provider: "manual_master",
-          asaas_subscription_id: "MANUAL_VIP_" + Date.now()
-        });
+if (rpcError) {
+  throw rpcError;
+}
 
       try {
         await supabase.from("audit_logs").insert({
@@ -991,3 +971,4 @@ store.subscription_status?.toLowerCase() === 'active'
     </div>
   );
 }
+
