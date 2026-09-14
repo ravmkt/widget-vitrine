@@ -253,23 +253,29 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 8. Salvar ou atualizar a subscription local
-    const { data: newSubscription, error: insertError } = await supabaseAdmin
-      .from("subscriptions")
-      .insert({
-        store_id,
-        plan_id,
-        asaas_subscription_id: subscriptionData.id,
-        asaas_customer_id: asaasCustomerId,
-        status: "pending",
-        is_current: false,
-      })
-      .select()
-      .single();
+// 8. Salvar a subscription local (marca antigas como não-atuais e insere a nova como atual)
+await supabaseAdmin
+  .from("subscriptions")
+  .update({ is_current: false, updated_at: new Date().toISOString() })
+  .eq("store_id", store_id)
+  .eq("is_current", true);
 
-    if (insertError) {
-      console.error("Erro ao salvar subscription local:", insertError);
-    }
+const { data: newSubscription, error: insertError } = await supabaseAdmin
+  .from("subscriptions")
+  .insert({
+    store_id,
+    plan_id,
+    asaas_subscription_id: subscriptionData.id,
+    asaas_customer_id: asaasCustomerId,
+    status: "pending",
+    is_current: true, // corrigido: precisa ser true para o webhook conseguir atualizar depois
+  })
+  .select()
+  .single();
+
+if (insertError) {
+  console.error("Erro ao salvar subscription local:", insertError);
+}
 
     // 9. Buscar invoice URL
     let invoiceUrl = subscriptionData.invoiceUrl || null;
