@@ -181,6 +181,8 @@ export default function MasterAdminPage() {
 
 const planNameFormatted = selectedPlanTier === "starter" ? "Starter" : selectedPlanTier === "scale" ? "Scale" : "Pro";
 
+console.log("store_id enviado:", selectedStoreForPlan.store_id);
+
 const { error: rpcError } = await supabase.rpc("admin_set_store_plan", {
   p_store_id: selectedStoreForPlan.store_id,
   p_plan_name: planNameFormatted,
