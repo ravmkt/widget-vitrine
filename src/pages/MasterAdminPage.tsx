@@ -1,3 +1,4 @@
+@'
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -20,7 +21,10 @@ import {
   CheckCircle2,
   Calendar,
   Send,
-  Loader2
+  Loader2,
+  Crown,
+  ShieldCheck,
+  Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -75,6 +79,13 @@ export default function MasterAdminPage() {
   const [emailSubject, setEmailSubject] = useState('');
   const [emailMessage, setEmailMessage] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
+
+  // Estados do Modal de Gestão Manual de Plano
+  const [selectedStoreForPlan, setSelectedStoreForPlan] = useState<MasterStore | null>(null);
+  const [selectedPlanTier, setSelectedPlanTier] = useState<'starter' | 'pro' | 'scale'>('pro');
+  const [selectedDurationMonths, setSelectedDurationMonths] = useState<number>(12); // Default: 1 ano
+  const [selectedStatus, setSelectedStatus] = useState<'active' | 'trialing' | 'canceled'>('active');
+  const [savingPlan, setSavingPlan] = useState(false);
 
   useEffect(() => {
     loadMasterData();
@@ -142,6 +153,122 @@ export default function MasterAdminPage() {
       navigate('/master/login');
     } catch (err: any) {
       toast.error('Erro ao sair: ' + err.message);
+    }
+  };
+
+  // Abre Modal de Gestão de Plano
+  const handleOpenPlanModal = (store: MasterStore) => {
+    setSelectedStoreForPlan(store);
+
+    // Pré-seleciona conforme o plano atual da loja
+    const currentName = (store.plan_name || '').toLowerCase();
+    if (currentName.includes('scale')) {
+      setSelectedPlanTier('scale');
+    } else if (currentName.includes('starter')) {
+      setSelectedPlanTier('starter');
+    } else {
+      setSelectedPlanTier('pro');
+    }
+
+    const currentStatus = (store.subscription_status || '').toLowerCase();
+    if (currentStatus === 'active') {
+      setSelectedStatus('active');
+    } else if (currentStatus === 'trialing' || currentStatus === 'trial') {
+      setSelectedStatus('trialing');
+    } else {
+      setSelectedStatus('active');
+    }
+
+    setSelectedDurationMonths(12); // Padrão: 1 ano
+  };
+
+  // Salvar Alteração Manual de Plano
+  const handleSavePlan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStoreForPlan) return;
+
+    setSavingPlan(true);
+    try {
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + Number(selectedDurationMonths));
+
+      const planNameFormatted =
+        selectedPlanTier === 'starter'
+          ? 'Starter'
+          : selectedPlanTier === 'scale'
+          ? 'Scale'
+          : 'Pro';
+
+      // 1. Atualizar tabela stores
+      const { error: storeUpdateError } = await supabase
+        .from('stores')
+        .update({
+          subscription_status: selectedStatus,
+          plan_tier: selectedPlanTier,
+          plan_name: planNameFormatted,
+          current_period_end: periodEnd.toISOString(),
+          active: selectedStatus === 'active' || selectedStatus === 'trialing',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedStoreForPlan.store_id);
+
+      if (storeUpdateError) {
+        console.warn('Aviso ao atualizar stores diretamente:', storeUpdateError.message);
+      }
+
+      // 2. Registrar/Atualizar assinatura na tabela subscriptions
+      // Primeiro desativamos subscriptions anteriores
+      await supabase
+        .from('subscriptions')
+        .update({ is_current: false, status: 'superseded' })
+        .eq('store_id', selectedStoreForPlan.store_id);
+
+      // Inserimos a nova assinatura manual
+      const { error: subError } = await supabase
+        .from('subscriptions')
+        .insert({
+          store_id: selectedStoreForPlan.store_id,
+          plan_id: selectedPlanTier,
+          plan_name: planNameFormatted,
+          status: selectedStatus,
+          current_period_start: now.toISOString(),
+          current_period_end: periodEnd.toISOString(),
+          is_current: true,
+          gateway_provider: 'manual_master',
+          asaas_subscription_id: `MANUAL_VIP_${Date.now()}`
+        });
+
+      if (subError) {
+        console.warn('Aviso na tabela subscriptions:', subError.message);
+      }
+
+      // 3. Registrar Log de Auditoria
+      try {
+        await supabase.from('audit_logs').insert({
+          store_id: selectedStoreForPlan.store_id,
+          action: 'master_plan_update',
+          details: {
+            description: `Plano alterado manualmente pelo Painel Master para ${planNameFormatted} (${selectedDurationMonths} meses, status: ${selectedStatus}).`,
+            plan: selectedPlanTier,
+            duration_months: selectedDurationMonths,
+            status: selectedStatus
+          }
+        });
+      } catch (logErr) {
+        // silencioso
+      }
+
+      toast.success(
+        `Plano da loja "${selectedStoreForPlan.store_name}" atualizado para ${planNameFormatted} por ${selectedDurationMonths} meses!`
+      );
+      setSelectedStoreForPlan(null);
+      await loadMasterData();
+    } catch (err: any) {
+      console.error('Erro ao atualizar plano:', err);
+      toast.error('Erro ao atualizar plano: ' + (err.message || 'Falha na conexão'));
+    } finally {
+      setSavingPlan(false);
     }
   };
 
@@ -354,7 +481,7 @@ export default function MasterAdminPage() {
         </div>
 
         {/* Barra de Pesquisa e Filtro */}
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-zinc-900/40 border border-zinc-800/60 p-4 rounded-2xl">
+        <div className="flex flex-col sm:row gap-4 items-center justify-between bg-zinc-900/40 border border-zinc-800/60 p-4 rounded-2xl">
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
             <input
@@ -390,7 +517,7 @@ export default function MasterAdminPage() {
                 <tbody className="divide-y divide-zinc-800/60">
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-zinc-400">
+                      <td colSpan={8} className="py-12 text-center text-zinc-400">
                         <div className="flex flex-col items-center justify-center gap-2">
                           <Loader2 className="animate-spin text-emerald-400" size={24} />
                           <span className="text-xs">Carregando dados das lojas...</span>
@@ -399,7 +526,7 @@ export default function MasterAdminPage() {
                     </tr>
                   ) : stores.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-zinc-500">
+                      <td colSpan={8} className="py-12 text-center text-zinc-500">
                         Nenhuma loja encontrada para o termo pesquisado.
                       </td>
                     </tr>
@@ -421,7 +548,7 @@ export default function MasterAdminPage() {
 
                         {/* Plano */}
                         <td className="py-3.5 px-4">
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700 capitalize">
                             {store.plan_name || 'Free / Trial'}
                           </span>
                         </td>
@@ -430,13 +557,13 @@ export default function MasterAdminPage() {
                         <td className="py-3.5 px-4">
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-store.subscription_status?.toLowerCase() === 'active'
+                              store.subscription_status?.toLowerCase() === 'active'
                                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                                 : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
                             }`}
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-current" />
-{store.subscription_status?.toLowerCase() === 'active' ? 'Ativo' : 'Em Trial / Pendente'}
+                            {store.subscription_status?.toLowerCase() === 'active' ? 'Ativo' : 'Em Trial / Pendente'}
                           </span>
                         </td>
 
@@ -484,6 +611,16 @@ store.subscription_status?.toLowerCase() === 'active'
                         {/* Contato & Ações */}
                         <td className="py-3.5 px-4 text-center">
                           <div className="flex items-center justify-center gap-1.5">
+                            {/* Gerenciar Plano / VIP */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenPlanModal(store)}
+                              className="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition cursor-pointer"
+                              title="Alterar Plano & Validade Manualmente"
+                            >
+                              <Crown size={15} />
+                            </button>
+
                             {/* WhatsApp */}
                             <button
                               type="button"
@@ -526,6 +663,185 @@ store.subscription_status?.toLowerCase() === 'active'
         </div>
 
       </div>
+
+      {/* Modal de Gestão Manual de Plano */}
+      {selectedStoreForPlan && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-zinc-800 bg-zinc-950/70">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
+                  <Crown size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Gerenciar Plano da Loja</h3>
+                  <p className="text-xs text-zinc-400">
+                    Loja: <span className="text-amber-400 font-semibold">{selectedStoreForPlan.store_name}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedStoreForPlan(null)}
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePlan} className="p-6 space-y-5">
+              {/* Escolha do Plano */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+                  1. Selecione o Plano
+                </label>
+                <div className="grid grid-cols-3 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPlanTier('starter')}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                      selectedPlanTier === 'starter'
+                        ? 'border-amber-500/80 bg-amber-500/10 text-white shadow-sm'
+                        : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-400'
+                    }`}
+                  >
+                    <span className="text-xs font-bold">Starter</span>
+                    <span className="text-[11px] text-zinc-400 mt-1">Até 10k views</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPlanTier('pro')}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                      selectedPlanTier === 'pro'
+                        ? 'border-amber-500/80 bg-amber-500/10 text-white shadow-sm'
+                        : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-400'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-300">Pro</span>
+                      <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">Popular</span>
+                    </div>
+                    <span className="text-[11px] text-zinc-400 mt-1">Até 50k views</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPlanTier('scale')}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                      selectedPlanTier === 'scale'
+                        ? 'border-amber-500/80 bg-amber-500/10 text-white shadow-sm'
+                        : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-400'
+                    }`}
+                  >
+                    <span className="text-xs font-bold">Scale</span>
+                    <span className="text-[11px] text-zinc-400 mt-1">Até 200k views</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Duração / Validade */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                  2. Período de Acesso / Duração
+                </label>
+                <select
+                  value={selectedDurationMonths}
+                  onChange={(e) => setSelectedDurationMonths(Number(e.target.value))}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition cursor-pointer"
+                >
+                  <option value={1}>1 Mês (Mensal)</option>
+                  <option value={3}>3 Meses (Trimestral)</option>
+                  <option value={6}>6 Meses (Semestral)</option>
+                  <option value={12}>1 Ano (Anual / VIP Padrão)</option>
+                  <option value={24}>2 Anos (Fidelidade)</option>
+                  <option value={60}>5 Anos (Acesso Vitalício / Partner)</option>
+                </select>
+              </div>
+
+              {/* Status da Assinatura */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                  3. Status da Assinatura
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStatus('active')}
+                    className={`py-2 px-3 rounded-xl border text-xs font-semibold transition ${
+                      selectedStatus === 'active'
+                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                        : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                    }`}
+                  >
+                    Ativo (Liberado)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStatus('trialing')}
+                    className={`py-2 px-3 rounded-xl border text-xs font-semibold transition ${
+                      selectedStatus === 'trialing'
+                        ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                        : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                    }`}
+                  >
+                    Trial (Teste)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStatus('canceled')}
+                    className={`py-2 px-3 rounded-xl border text-xs font-semibold transition ${
+                      selectedStatus === 'canceled'
+                        ? 'bg-rose-500/20 border-rose-500 text-rose-300'
+                        : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                    }`}
+                  >
+                    Bloqueado
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-3 bg-zinc-950/80 border border-zinc-800 rounded-xl text-xs text-zinc-400 space-y-1">
+                <div className="flex items-center gap-1.5 text-zinc-300 font-medium">
+                  <ShieldCheck size={14} className="text-amber-400" />
+                  <span>Liberação Instantânea</span>
+                </div>
+                <p className="text-[11px] leading-relaxed">
+                  O lojista terá acesso liberado imediatamente aos stories e recursos correspondentes ao plano selecionado sem restrição de trial.
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-zinc-800 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedStoreForPlan(null)}
+                  disabled={savingPlan}
+                  className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingPlan}
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 text-xs font-bold transition shadow-lg shadow-amber-500/20 cursor-pointer"
+                >
+                  {savingPlan ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Salvando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check size={14} />
+                      <span>Confirmar & Ativar Plano</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Disparo de E-mail via Resend */}
       {selectedStoreForEmail && (
@@ -711,3 +1027,4 @@ store.subscription_status?.toLowerCase() === 'active'
     </div>
   );
 }
+'@ | Set-Content -Path "src\pages\MasterAdminPage.tsx" -Encoding UTF8
