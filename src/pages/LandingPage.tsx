@@ -492,17 +492,20 @@ export const LandingPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Básico */}
+          {/* Starter */}
           <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 flex flex-col justify-between hover:border-slate-700 transition-all">
             <div>
-              <h4 className="text-xl font-bold text-white">Iniciante</h4>
+              <h4 className="text-xl font-bold text-white">Starter</h4>
               <p className="text-xs text-slate-400 mt-1">Para lojas virtuais que querem validar os primeiros vídeos.</p>
               <div className="mt-6 mb-6">
                 <span className="text-4xl font-extrabold text-white">R$ 67</span>
                 <span className="text-xs text-slate-400">/mês</span>
               </div>
               <ul className="space-y-3 text-sm text-slate-300">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Até 10.000 visualizações</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Até 5.000 visualizações/mês</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Até 10 vídeos ativos</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Até 2 páginas ativas</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> 5 GB de armazenamento</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Importador de TikTok e Reels</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Instalação Universal via GTM</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Métricas essenciais de cliques</li>
@@ -522,14 +525,17 @@ export const LandingPage: React.FC = () => {
               Mais Recomendado
             </div>
             <div>
-              <h4 className="text-xl font-bold text-white">Profissional & Analytics</h4>
+              <h4 className="text-xl font-bold text-white">Pro</h4>
               <p className="text-xs text-slate-400 mt-1">Para marcas que buscam alta conversão e métricas reais.</p>
               <div className="mt-6 mb-6">
-                <span className="text-4xl font-extrabold text-white">R$ 147</span>
+                <span className="text-4xl font-extrabold text-white">R$ 127</span>
                 <span className="text-xs text-slate-400">/mês</span>
               </div>
               <ul className="space-y-3 text-sm text-slate-300">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Até 50.000 visualizações</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Até 20.000 visualizações/mês</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Até 30 vídeos ativos</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Até 10 páginas ativas</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> 15 GB de armazenamento</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> <strong>Módulo de Live Shopping Ativo</strong></li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Atribuição de Vendas no Checkout</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Análise de Drop-off segundo a segundo</li>
@@ -547,17 +553,19 @@ export const LandingPage: React.FC = () => {
           {/* Scale */}
           <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 flex flex-col justify-between hover:border-slate-700 transition-all">
             <div>
-              <h4 className="text-xl font-bold text-white">Escala & Enterprise</h4>
+              <h4 className="text-xl font-bold text-white">Scale</h4>
               <p className="text-xs text-slate-400 mt-1">Para grandes operações com alto volume de tráfego.</p>
               <div className="mt-6 mb-6">
-                <span className="text-4xl font-extrabold text-white">R$ 297</span>
+                <span className="text-4xl font-extrabold text-white">R$ 247</span>
                 <span className="text-xs text-slate-400">/mês</span>
               </div>
               <ul className="space-y-3 text-sm text-slate-300">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Visualizações Ilimitadas</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Lives Ilimitadas com CDN Dedicada</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Até 60.000 visualizações/mês</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Até 100 vídeos ativos</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Páginas ilimitadas</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> 50 GB de armazenamento</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> <strong>Módulo de Live Shopping Ativo</strong></li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Webhooks e API Aberta de Dados</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Múltiplas Lojas / Domínios</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-orange-400" /> Suporte Prioritário por WhatsApp</li>
               </ul>
             </div>
