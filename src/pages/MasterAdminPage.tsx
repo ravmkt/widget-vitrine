@@ -126,28 +126,32 @@ export default function MasterAdminPage() {
         return;
       }
 
-      // 3. Tenta buscar telefones adicionais diretamente da tabela stores
-      if (storesData && storesData.length > 0) {
-        const storeIds = storesData.map((s: any) => s.store_id);
-        const { data: storesDetails } = await supabase
-          .from('stores')
-          .select('id, phone, whatsapp')
-          .in('id', storeIds);
+// 3. Busca dados de contato reais em general_settings (fonte de verdade)
+if (storesData && storesData.length > 0) {
+  const storeIds = storesData.map((s: any) => s.store_id);
+  const { data: settingsDetails } = await supabase
+    .from('general_settings')
+    .select('store_id, contact_email, whatsapp_number')
+    .in('store_id', storeIds);
 
-        const phoneMap: Record<string, string> = {};
-        storesDetails?.forEach((st: any) => {
-          phoneMap[st.id] = st.whatsapp || st.phone || '';
-        });
+  const settingsMap: Record<string, { contact_email?: string; whatsapp_number?: string }> = {};
+  settingsDetails?.forEach((gs: any) => {
+    settingsMap[gs.store_id] = {
+      contact_email: gs.contact_email || undefined,
+      whatsapp_number: gs.whatsapp_number || undefined,
+    };
+  });
 
-        const merged = storesData.map((s: any) => ({
-          ...s,
-          owner_phone: phoneMap[s.store_id] || null
-        }));
+  const merged = storesData.map((s: any) => ({
+    ...s,
+    contact_email: settingsMap[s.store_id]?.contact_email || null,
+    owner_phone: settingsMap[s.store_id]?.whatsapp_number || null,
+  }));
 
-        setStores(merged);
-      } else {
-        setStores([]);
-      }
+  setStores(merged);
+} else {
+  setStores([]);
+}
     } catch (err: any) {
       console.error('[MasterAdmin] Erro geral:', err);
       toast.error('Erro ao conectar com a base master.');
