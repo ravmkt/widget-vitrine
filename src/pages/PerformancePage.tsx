@@ -17,11 +17,12 @@ import type { TimeRange } from '@/services/metrics-service'
 import { supabase } from '@/lib/supabase'
 import { useTenant } from '@/context/TenantContext'
 
-// Componentes modulares
-import { OverviewTab } from '@/components/performance/overview-tab'
-import { VideosTab } from '@/components/performance/videos-tab'
-import { InsightsTab } from '@/components/performance/insights-tab'
-import { RetentionTab } from '@/components/performance/retention-tab'
+// Componentes modulares (lazy-loaded para code-splitting do Recharts)
+import { lazy, Suspense } from 'react'
+const OverviewTab = lazy(() => import('@/components/performance/overview-tab').then(m => ({ default: m.OverviewTab })))
+const VideosTab = lazy(() => import('@/components/performance/videos-tab').then(m => ({ default: m.VideosTab })))
+const InsightsTab = lazy(() => import('@/components/performance/insights-tab').then(m => ({ default: m.InsightsTab })))
+const RetentionTab = lazy(() => import('@/components/performance/retention-tab').then(m => ({ default: m.RetentionTab })))
 
 type TabKey = 'overview' | 'videos' | 'insights' | 'retention'
 
