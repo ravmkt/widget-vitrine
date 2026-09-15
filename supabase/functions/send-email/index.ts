@@ -122,7 +122,7 @@ const finalLogo = DEFAULT_LOGO;
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" align="center" style="width:600px;max-width:600px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;">
 <tr>
   <td style="padding:24px;background-color:#ffffff;text-align:center;border-bottom:1px solid #e2e8f0;">
-    <img src="${finalLogo}" alt="Vidlytics" width="48" height="48" style="display:inline-block;border-radius:8px;" />
+<img src="${finalLogo}" alt="Vidlytics" width="160" height="auto" style="display:inline-block; max-width:160px; width:100%; height:auto;" />
   </td>
 </tr>                        </td>
                       </tr>
