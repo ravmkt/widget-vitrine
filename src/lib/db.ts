@@ -1033,7 +1033,7 @@ const ensureSupabaseStoreExists = async (storeId?: string) => {
     name: localStore?.name || 'Loja',
     url: localStore?.url || '',
     owner_user_id: user.id,
-    plan_id: (localStore as any)?.plan_id || 'c8c634e6-0641-4f5b-a826-4db837192c83',
+plan_id: (localStore as any)?.plan_id || 'a1da1891-9720-42b6-a23c-66b713bb3050',
     subscription_status: (localStore as any)?.subscription_status || 'trialing',
     trial_ends_at: (localStore as any)?.trial_ends_at || trialEndsDate.toISOString(),
   });
