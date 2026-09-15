@@ -225,7 +225,6 @@ if (settingsRow) {
     loaded.store_url = '';
   }
 
-  // contact_name mora na tabela `stores`, não em `store_settings`
   const { data: storeRow } = await supabase
     .from('stores')
     .select('contact_name')
@@ -251,18 +250,6 @@ if (settingsRow) {
   });
   setLogoPreview(currentStore.logo_url || "");
 }
-
-setSettings({
-  ...DEFAULT_SETTINGS,
-  store_id: currentStore.id,
-  store_name: currentStore.name || '',
-  contact_name: (currentStore as any).contact_name || '',
-  store_url: validInitialUrl,
-  store_logo_url: currentStore.logo_url || null,
-  contact_email: currentStore.contact_email || null,
-  owner_contact_email: (currentStore as any).owner_contact_email || null,
-});
-          }
         } else {
           setSettings(DEFAULT_SETTINGS);
         }
