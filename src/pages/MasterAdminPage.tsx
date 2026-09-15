@@ -311,18 +311,19 @@ if (rpcError) {
   };
 
   // Abertura do Modal de E-mail
-  const handleOpenEmail = (store: MasterStore) => {
-    if (!store.owner_email) {
-      toast.error('Lojista não possui e-mail cadastrado.');
-      return;
-    }
+const handleOpenEmail = (store: MasterStore) => {
+  const recipient = store.contact_email || store.owner_email;
+  if (!recipient) {
+    toast.error('Lojista não possui e-mail cadastrado.');
+    return;
+  }
 
-    setSelectedStoreForEmail(store);
-    setEmailSubject(`Vidlytics Stories - Contato com a loja ${store.store_name}`);
-    setEmailMessage(
-      `Olá ${store.owner_name || 'Lojista'},\n\nAqui é da equipe Vidlytics. Estamos acompanhando o desempenho da loja "${store.store_name}" e gostaríamos de saber se precisa de algum suporte técnico ou consultoria para alavancar suas conversões com Stories em vídeo.\n\nFicamos à total disposição!\n\nAtenciosamente,\nEquipe Vidlytics Stories`
-    );
-  };
+  setSelectedStoreForEmail(store);
+  setEmailSubject(`Vidlytics Stories - Contato com a loja ${store.store_name}`);
+  setEmailMessage(
+    `Olá ${store.owner_name || 'Lojista'},\n\nAqui é da equipe Vidlytics. Estamos acompanhando o desempenho da loja "${store.store_name}" e gostaríamos de saber se precisa de algum suporte técnico ou consultoria para alavancar suas conversões com Stories em vídeo.\n\nFicamos à total disposição!\n\nAtenciosamente,\nEquipe Vidlytics Stories`
+  );
+};
 
   // Disparo do E-mail via Edge Function (Resend)
   const handleSendEmail = async (e: React.FormEvent) => {
