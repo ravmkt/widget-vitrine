@@ -130,7 +130,6 @@ const appSettingsToGeneralSettings = (
   id: app.id,
   store_id: app.store_id,
   store_name: app.store_name || '',
-  contact_name: app.contact_name || '',
   store_url: app.store_url || '',
   logo_url: app.store_logo_url,
   platform: app.platform || '',
@@ -151,7 +150,7 @@ const appSettingsToGeneralSettings = (
   autoplay: app.autoplay,
   muted_by_default: app.muted_by_default,
   show_video_controls: app.show_video_controls,
-} as any);
+});
 
 // Helper para converter a string de ícone vinda do banco em Componente SVG
 const renderSectorIcon = (iconName: string) => {
