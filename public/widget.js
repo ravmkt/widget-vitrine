@@ -27,6 +27,9 @@
   } catch (e) {}
 
   var enableFloating = widgetsCfg.floatingVideo !== undefined ? widgetsCfg.floatingVideo : config.floatingVideo !== false;
+var liveWidgetRoot = null;
+var liveWidgetShadow = null;
+var currentLiveData = null;
 
   // 🆕 PLAYER FULLSCREEN (independente do modal de stories)
   var fsPlayerOverlay = null;
