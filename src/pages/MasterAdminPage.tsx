@@ -52,6 +52,7 @@ interface MasterStore {
   referrals_count?: number;
   commission_earned?: number;
   contact_email?: string;
+  logo_url: string | null;
 }
 
 interface FriendlyLog {
