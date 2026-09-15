@@ -38,6 +38,9 @@ interface AppSettings {
   id: string;
   store_id: string;
   store_name: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  owner_contact_email: string | null;
   store_url: string | null;
   store_logo_url: string | null;
   platform: string | null;
