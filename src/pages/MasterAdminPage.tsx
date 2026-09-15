@@ -308,7 +308,7 @@ if (rpcError) {
 
   // Abertura do Modal de E-mail
 const handleOpenEmail = (store: MasterStore) => {
-  const recipient = store.contact_email || store.owner_email;
+const recipient = store.owner_email || store.contact_email;
   if (!recipient) {
     toast.error('Lojista não possui e-mail cadastrado.');
     return;
