@@ -508,17 +508,30 @@ var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_co
     });
   }
 
-function trackLiveEvent(liveId, eventType, metadata) {
-  if (!hasSupabase || !liveId) return;
-  supabaseFetch('live_events', {
-    method: 'POST',
-    headers: { 'Prefer': 'return=minimal' },
-    body: JSON.stringify({
-      live_id: liveId,
-      event_type: eventType,
-      metadata: metadata || {}
-    })
-  }).catch(function () {});
+function fetchActiveLive() {
+  if (!hasSupabase) return Promise.resolve(null);
+  var nowIso = new Date().toISOString();
+  var path = 'lives?select=*&store_id=eq.' + encodeURIComponent(storeId) +
+    '&status=in.(scheduled,live)&order=created_at.desc&limit=1';
+
+  return fetchJson(path).then(function (rows) {
+    if (!rows || !rows.length) return null;
+    var live = rows[0];
+
+    // Valida janela de divulgação (se configurada)
+    if (live.promo_start_at && new Date(live.promo_start_at) > new Date(nowIso)) return null;
+    if (live.promo_end_at && new Date(live.promo_end_at) < new Date(nowIso)) return null;
+
+    // Valida target de página (home / contains / not_contains)
+    var path_ = window.location.pathname + window.location.search;
+    var targetType = live.promo_target_type || 'all';
+    var targetValue = live.promo_target_value || '';
+    if (targetType === 'home' && path_ !== '/' && path_ !== '') return null;
+    if (targetType === 'url_contains' && targetValue && path_.indexOf(targetValue) === -1) return null;
+    if (targetType === 'url_not_contains' && targetValue && path_.indexOf(targetValue) !== -1) return null;
+
+    return live;
+  }).catch(function () { return null; });
 }
 
   function fetchJson(path) {
