@@ -53,6 +53,7 @@ interface MasterStore {
   commission_earned?: number;
   contact_email?: string;
   logo_url: string | null;
+  contact_name?: string | null;
 }
 
 interface FriendlyLog {
