@@ -233,21 +233,16 @@ const SettingsPage = () => {
             const rawUrl = currentStore.url || '';
             const validInitialUrl = isValidWebDomain(rawUrl) ? rawUrl : '';
 
-            setSettings({
-              ...DEFAULT_SETTINGS,
-              store_id: currentStore.id,
-              store_name: currentStore.name || '',
-              store_url: validInitialUrl,
-              store_logo_url: currentStore.logo_url || null,
-              contact_email: currentStore.contact_email || null,
-              owner_contact_email: (currentStore as any).owner_contact_email || null,
-            });
-            setLogoPreview(currentStore.logo_url || "");
-          } else {
-            setSettings({
-              ...DEFAULT_SETTINGS,
-              store_id: activeStoreId,
-            });
+setSettings({
+  ...DEFAULT_SETTINGS,
+  store_id: currentStore.id,
+  store_name: currentStore.name || '',
+  contact_name: (currentStore as any).contact_name || '',
+  store_url: validInitialUrl,
+  store_logo_url: currentStore.logo_url || null,
+  contact_email: currentStore.contact_email || null,
+  owner_contact_email: (currentStore as any).owner_contact_email || null,
+});
           }
         } else {
           setSettings(DEFAULT_SETTINGS);
