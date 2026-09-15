@@ -670,15 +670,12 @@ stores: [
   ],
 store_settings: [
   'id', 'store_id', 'store_name', 'store_url', 'logo_url',
-  'contact_email', 'whatsapp_number', 'whatsapp_default_message',
+  'contact_email', 'owner_contact_email', 'whatsapp_number', 'whatsapp_default_message',
   'app_enabled', 'stories_enabled', 'carousel_enabled',
   'floating_widget_enabled', 'default_appearance_id',
-  'platform', // 👈 ADICIONAR
+  'platform',
   'timezone', 'language', 'open_product_new_tab', 'autoplay',
   'muted_by_default', 'show_video_controls', 'created_at',
-  'updated_at', 'whatsapp_button_enabled', 'pause_on_invisible',
-    'whatsapp_enabled', 'whatsapp_message_template', 'pause_on_leave',
-    'widget_enabled', 'default_template',
   ],
   appearances: [
     'id', 'store_id', 'created_at', 'updated_at',
