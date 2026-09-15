@@ -496,15 +496,19 @@ const DashboardPage: React.FC = () => {
             <span className="text-xs font-black uppercase tracking-wider text-[#0091ff] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10 px-3 py-1 rounded-full border border-blue-100 dark:border-[#ff7a29]/25 dark:shadow-[0_0_12px_rgba(255,122,41,0.2)]">
               Plano {usage.planName}
             </span>
-            {usage.subscriptionStatus === 'trialing' && usage.trialDaysLeft !== null ? (
-              <span className="text-xs font-extrabold text-amber-700 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-700/40">
-                Período de Testes ({usage.trialDaysLeft} dias restantes)
-              </span>
-            ) : usage.subscriptionStatus === 'active' ? (
-              <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-700/40">
-                Assinatura Ativa
-              </span>
-            ) : null}
+{usage.subscriptionStatus === 'lifetime' ? (
+  <span className="text-xs font-extrabold text-purple-700 bg-purple-50 dark:bg-purple-950/40 dark:text-purple-300 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-700/40">
+    Acesso Vitalício
+  </span>
+) : usage.subscriptionStatus === 'trialing' && usage.trialDaysLeft !== null ? (
+  <span className="text-xs font-extrabold text-amber-700 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-700/40">
+    Período de Testes ({usage.trialDaysLeft} dias restantes)
+  </span>
+) : usage.subscriptionStatus === 'active' ? (
+  <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-700/40">
+    Assinatura Ativa
+  </span>
+) : null}
           </div>
 
           <div>
