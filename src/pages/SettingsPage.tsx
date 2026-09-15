@@ -409,19 +409,20 @@ setSettings({
         const selectedSectorObj = sectors.find(s => s.id === selectedSectorId);
         const sectorSlug = selectedSectorObj ? selectedSectorObj.slug : null;
 
-        await supabase
-          .from('stores')
-          .update({
-            name: updatedSettings.store_name || 'Loja',
-            url: finalStoreUrl || null,
-            logo_url: finalLogoUrl || null,
-            contact_email: updatedSettings.contact_email || null,
-            owner_contact_email: updatedSettings.owner_contact_email || null,
-            sector_id: sectorValue,
-            sector: sectorSlug, // Sincronização direta e transparente
-            updated_at: now,
-          })
-          .eq('id', resolvedStoreId);
+await supabase
+  .from('stores')
+  .update({
+    name: updatedSettings.store_name || 'Loja',
+    contact_name: updatedSettings.contact_name || null,
+    url: finalStoreUrl || null,
+    logo_url: finalLogoUrl || null,
+    contact_email: updatedSettings.contact_email || null,
+    owner_contact_email: updatedSettings.owner_contact_email || null,
+    sector_id: sectorValue,
+    sector: sectorSlug,
+    updated_at: now,
+  })
+  .eq('id', resolvedStoreId);
       }
 
       // 📋 Registra a atividade no Log do Painel
