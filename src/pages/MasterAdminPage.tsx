@@ -314,11 +314,11 @@ const recipient = store.owner_email || store.contact_email;
     return;
   }
 
-  setSelectedStoreForEmail(store);
-  setEmailSubject(`Vidlytics Stories - Contato com a loja ${store.store_name}`);
-  setEmailMessage(
-    `Olá ${store.owner_name || 'Lojista'},\n\nAqui é da equipe Vidlytics. Estamos acompanhando o desempenho da loja "${store.store_name}" e gostaríamos de saber se precisa de algum suporte técnico ou consultoria para alavancar suas conversões com Stories em vídeo.\n\nFicamos à total disposição!\n\nAtenciosamente,\nEquipe Vidlytics Stories`
-  );
+setSelectedStoreForEmail(store);
+setEmailSubject(`Vidlytics Stories - Contato com a loja ${store.store_name}`);
+setEmailMessage(
+  `Olá {{nome_dono}},\n\nAqui é da equipe Vidlytics. Estamos acompanhando o desempenho da loja "{{nome_loja}}" e notamos que você está no plano {{plano}}, com {{views}} visualizações este mês.\n\nGostaríamos de saber se precisa de algum suporte técnico ou consultoria para alavancar suas conversões com Stories em vídeo.\n\nFicamos à total disposição!\n\nAtenciosamente,\nEquipe Vidlytics Stories`
+);
 };
 
   // Disparo do E-mail via Edge Function (Resend)
