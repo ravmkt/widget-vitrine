@@ -334,7 +334,7 @@ setEmailMessage(
 const replacePlaceholders = (text: string, store: MasterStore) => {
   return text
     .replace(/{{\s*nome_loja\s*}}/g, store.store_name)
-    .replace(/{{\s*nome_dono\s*}}/g, store.owner_name || "Lojista")
+.replace(/{{\s*nome_dono\s*}}/g, store.contact_name || store.owner_name || "Lojista")
     .replace(/{{\s*plano\s*}}/g, store.plan_name || "—")
     .replace(/{{\s*views\s*}}/g, String(store.month_views ?? 0));
 };
