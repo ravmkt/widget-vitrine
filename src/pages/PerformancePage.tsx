@@ -34,6 +34,13 @@ export interface SectorBenchmark {
   avg_watch_time: number;
 }
 
+// ── Loader exibido enquanto o chunk da aba está sendo baixado ──
+const TabLoader = () => (
+  <div className="flex items-center justify-center py-20">
+    <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-[#0091ff] dark:border-[#ff7a29]" />
+  </div>
+);
+
 export default function PerformancePage() {
   const { currentStore: tenant, loading: tenantLoading } = useTenant()
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
@@ -83,7 +90,7 @@ export default function PerformancePage() {
 
     loadSectorAndBenchmark();
   }, [tenant, tenantLoading]);
-  
+
   return (
     <div className="space-y-8 animate-fade-in pb-20 font-sans">
       {/* ── HEADER NOVO ESTILO VIDLYTICS ── */}
@@ -140,87 +147,95 @@ export default function PerformancePage() {
         <TabsList className="w-fit bg-slate-100 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-2xl p-1.5 gap-1 shadow-inner h-auto">
           <TabsTrigger
             value="overview"
-            className="px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer 
+            className="px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer
               hover:text-slate-800 dark:hover:text-white
-              data-[state=inactive]:!bg-slate-200 dark:data-[state=inactive]:!bg-slate-800 
+              data-[state=inactive]:!bg-slate-200 dark:data-[state=inactive]:!bg-slate-800
               data-[state=inactive]:!text-slate-600 dark:data-[state=inactive]:!text-slate-400
-              data-[state=active]:!bg-[#0091ff] dark:data-[state=active]:!bg-[#ff7a29] 
-              data-[state=active]:!text-white data-[state=active]:shadow-md 
+              data-[state=active]:!bg-[#0091ff] dark:data-[state=active]:!bg-[#ff7a29]
+              data-[state=active]:!text-white data-[state=active]:shadow-md
               data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30"
           >
             📊 Visão Geral
           </TabsTrigger>
           <TabsTrigger
             value="videos"
-            className="px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer 
+            className="px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer
               hover:text-slate-800 dark:hover:text-white
-              data-[state=inactive]:!bg-slate-200 dark:data-[state=inactive]:!bg-slate-800 
+              data-[state=inactive]:!bg-slate-200 dark:data-[state=inactive]:!bg-slate-800
               data-[state=inactive]:!text-slate-600 dark:data-[state=inactive]:!text-slate-400
-              data-[state=active]:!bg-[#0091ff] dark:data-[state=active]:!bg-[#ff7a29] 
-              data-[state=active]:!text-white data-[state=active]:shadow-md 
+              data-[state=active]:!bg-[#0091ff] dark:data-[state=active]:!bg-[#ff7a29]
+              data-[state=active]:!text-white data-[state=active]:shadow-md
               data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30"
           >
             🎬 Vídeos
           </TabsTrigger>
           <TabsTrigger
             value="retention"
-            className="px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer 
+            className="px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer
               hover:text-slate-800 dark:hover:text-white
-              data-[state=inactive]:!bg-slate-200 dark:data-[state=inactive]:!bg-slate-800 
+              data-[state=inactive]:!bg-slate-200 dark:data-[state=inactive]:!bg-slate-800
               data-[state=inactive]:!text-slate-600 dark:data-[state=inactive]:!text-slate-400
-              data-[state=active]:!bg-[#0091ff] dark:data-[state=active]:!bg-[#ff7a29] 
-              data-[state=active]:!text-white data-[state=active]:shadow-md 
+              data-[state=active]:!bg-[#0091ff] dark:data-[state=active]:!bg-[#ff7a29]
+              data-[state=active]:!text-white data-[state=active]:shadow-md
               data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30"
           >
             📈 Retenção
           </TabsTrigger>
           <TabsTrigger
             value="insights"
-            className="px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer 
+            className="px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer
               hover:text-slate-800 dark:hover:text-white
-              data-[state=inactive]:!bg-slate-200 dark:data-[state=inactive]:!bg-slate-800 
+              data-[state=inactive]:!bg-slate-200 dark:data-[state=inactive]:!bg-slate-800
               data-[state=inactive]:!text-slate-600 dark:data-[state=inactive]:!text-slate-400
-              data-[state=active]:!bg-[#0091ff] dark:data-[state=active]:!bg-[#ff7a29] 
-              data-[state=active]:!text-white data-[state=active]:shadow-md 
+              data-[state=active]:!bg-[#0091ff] dark:data-[state=active]:!bg-[#ff7a29]
+              data-[state=active]:!text-white data-[state=active]:shadow-md
               data-[state=active]:shadow-blue-500/20 dark:data-[state=active]:shadow-orange-500/30"
           >
             🧠 Insights
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="overview">
-          <OverviewTab 
-            timeRange={timeRange} 
-            customFrom={customRange.from?.toISOString()} 
-            customTo={customRange.to?.toISOString()} 
-            benchmark={benchmark}
-          />
+          <Suspense fallback={<TabLoader />}>
+            <OverviewTab
+              timeRange={timeRange}
+              customFrom={customRange.from?.toISOString()}
+              customTo={customRange.to?.toISOString()}
+              benchmark={benchmark}
+            />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="videos">
-          <VideosTab 
-            timeRange={timeRange} 
-            customFrom={customRange.from?.toISOString()} 
-            customTo={customRange.to?.toISOString()} 
-          />
+          <Suspense fallback={<TabLoader />}>
+            <VideosTab
+              timeRange={timeRange}
+              customFrom={customRange.from?.toISOString()}
+              customTo={customRange.to?.toISOString()}
+            />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="retention">
-          <RetentionTab 
-            timeRange={timeRange} 
-            customFrom={customRange.from?.toISOString()} 
-            customTo={customRange.to?.toISOString()} 
-            benchmark={benchmark}
-          />
+          <Suspense fallback={<TabLoader />}>
+            <RetentionTab
+              timeRange={timeRange}
+              customFrom={customRange.from?.toISOString()}
+              customTo={customRange.to?.toISOString()}
+              benchmark={benchmark}
+            />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="insights">
-          <InsightsTab 
-            timeRange={timeRange} 
-            customFrom={customRange.from?.toISOString()} 
-            customTo={customRange.to?.toISOString()} 
-            benchmark={benchmark}
-          />
+          <Suspense fallback={<TabLoader />}>
+            <InsightsTab
+              timeRange={timeRange}
+              customFrom={customRange.from?.toISOString()}
+              customTo={customRange.to?.toISOString()}
+              benchmark={benchmark}
+            />
+          </Suspense>
         </TabsContent>
       </Tabs>
 
