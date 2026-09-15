@@ -324,7 +324,7 @@ const recipient = store.owner_email || store.contact_email;
   // Disparo do E-mail via Edge Function (Resend)
 const handleSendEmail = async (e: React.FormEvent) => {
   e.preventDefault();
-  const recipient = selectedStoreForEmail?.contact_email || selectedStoreForEmail?.owner_email;
+const recipient = selectedStoreForEmail?.owner_email || selectedStoreForEmail?.contact_email;
   if (!selectedStoreForEmail || !recipient) return;
 
   if (!emailSubject.trim() || !emailMessage.trim()) {
