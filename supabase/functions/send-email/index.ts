@@ -116,7 +116,7 @@ const finalLogo = DEFAULT_LOGO;
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
             </head>
             <body style="margin:0;padding:24px;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" align="center">
                 <tr>
                   <td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" align="center" style="width:600px;max-width:600px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;">
