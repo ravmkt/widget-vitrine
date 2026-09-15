@@ -340,6 +340,7 @@ const DEFAULT_store_settings: GeneralSettings = {
   logo_url:
     'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=100&q=80',
   contact_email: 'contato@vitrinevideo.com.br',
+  owner_contact_email: '',
   whatsapp_number: '5545999629702',
   whatsapp_default_message: 'Olá! Tenho interesse no vídeo: {{story_title}}',
   app_enabled: true,
