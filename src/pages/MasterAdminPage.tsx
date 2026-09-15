@@ -322,9 +322,17 @@ setEmailMessage(
 };
 
   // Disparo do E-mail via Edge Function (Resend)
+const replacePlaceholders = (text: string, store: MasterStore) => {
+  return text
+    .replace(/{{\s*nome_loja\s*}}/g, store.store_name)
+    .replace(/{{\s*nome_dono\s*}}/g, store.owner_name || "Lojista")
+    .replace(/{{\s*plano\s*}}/g, store.plan_name || "—")
+    .replace(/{{\s*views\s*}}/g, String(store.month_views ?? 0));
+};
+
 const handleSendEmail = async (e: React.FormEvent) => {
   e.preventDefault();
-const recipient = selectedStoreForEmail?.owner_email || selectedStoreForEmail?.contact_email;
+  const recipient = selectedStoreForEmail?.owner_email || selectedStoreForEmail?.contact_email;
   if (!selectedStoreForEmail || !recipient) return;
 
   if (!emailSubject.trim() || !emailMessage.trim()) {
@@ -334,23 +342,30 @@ const recipient = selectedStoreForEmail?.owner_email || selectedStoreForEmail?.c
 
   setSendingEmail(true);
   try {
-    const { data, error } = await supabase.functions.invoke('send-email', {
+    const finalSubject = replacePlaceholders(emailSubject.trim(), selectedStoreForEmail);
+    const finalMessage = replacePlaceholders(emailMessage.trim(), selectedStoreForEmail);
+
+    const { error } = await supabase.functions.invoke('send-email', {
       body: {
         to: recipient,
-        subject: emailSubject.trim(),
-        message: emailMessage.trim(),
+        subject: finalSubject,
+        message: finalMessage,
         storeName: selectedStoreForEmail.store_name,
+        metrics: {
+          planName: selectedStoreForEmail.plan_name,
+          monthViews: selectedStoreForEmail.month_views,
+          videosCount: selectedStoreForEmail.videos_count,
+          revenue: selectedStoreForEmail.stories_sales_revenue,
+        },
       },
     });
 
-    if (error) throw new Error(error.message || 'Falha ao processar envio do e-mail.');
-    if (data?.error) throw new Error(data.error);
+    if (error) throw error;
 
     toast.success(`E-mail enviado com sucesso para ${recipient}!`);
     setSelectedStoreForEmail(null);
   } catch (err: any) {
-    console.error('Erro no disparo de e-mail:', err);
-    toast.error(`Erro ao enviar e-mail: ${err.message}`);
+    toast.error(err.message || "Erro ao enviar e-mail.");
   } finally {
     setSendingEmail(false);
   }
