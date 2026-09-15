@@ -586,27 +586,28 @@ if (rpcError) {
                           </span>
                         </td>
 
-                        {/* Status */}
-                        <td className="py-3.5 px-4">
-<span
-  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-    store.subscription_status?.toLowerCase() === 'lifetime'
-      ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
+{/* Status */}
+<td className="py-3.5 px-4">
+  <span
+    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+      store.subscription_status?.toLowerCase() === 'lifetime'
+        ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
+        : store.subscription_status?.toLowerCase() === 'active'
+        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+        : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+    }`}
+  >
+    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+    {store.subscription_status?.toLowerCase() === 'lifetime'
+      ? 'Vitalício'
       : store.subscription_status?.toLowerCase() === 'active'
-      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-      : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-  }`}
->
-  <span className="w-1.5 h-1.5 rounded-full bg-current" />
-  {store.subscription_status?.toLowerCase() === 'lifetime'
-    ? 'Vitalício'
-    : store.subscription_status?.toLowerCase() === 'active'
-    ? 'Ativo'
-    : 'Em Trial / Pendente'}
-</span>
+      ? 'Ativo'
+      : 'Em Trial / Pendente'}
+  </span>
+</td>
 
-                        {/* Stories Cadastrados */}
-                        <td className="py-3.5 px-4 text-center">
+{/* Stories Cadastrados */}
+<td className="py-3.5 px-4 text-center">
                           <span className="inline-flex items-center gap-1 text-zinc-300 text-xs font-medium">
                             <Video size={13} className="text-emerald-400" />
                             {store.videos_count || 0}
