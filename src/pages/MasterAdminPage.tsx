@@ -51,6 +51,7 @@ interface MasterStore {
   stories_sales_revenue?: number;
   referrals_count?: number;
   commission_earned?: number;
+  contact_email?: string;
 }
 
 interface FriendlyLog {
