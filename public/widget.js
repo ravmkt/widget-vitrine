@@ -547,6 +547,106 @@ function trackLiveEvent(liveId, eventType, metadata) {
   }).catch(function () {});
 }
 
+function renderLiveWidget(live) {
+  if (!live || liveWidgetRoot) return;
+
+  var host = document.createElement('div');
+  host.id = 'vidlytics-live-root';
+  host.style.cssText = 'position:fixed;z-index:2147483000;bottom:20px;left:20px;';
+  document.body.appendChild(host);
+  liveWidgetRoot = host;
+  liveWidgetShadow = host.attachShadow({ mode: 'open' });
+
+  var isLive = live.status === 'live';
+  var mediaUrl = live.promo_media_url || live.youtube_thumbnail_url || '';
+  var mediaType = live.promo_media_type || 'image';
+  var ctaText = live.promo_cta_text || 'Assista Agora';
+  var title = live.title || 'Live Commerce';
+
+  var style = document.createElement('style');
+  style.textContent =
+    '.vl-live-card{width:260px;border-radius:14px;overflow:hidden;background:#0f172a;box-shadow:0 10px 30px rgba(0,0,0,.35);font-family:system-ui,sans-serif;cursor:pointer;position:relative;animation:vlFadeIn .3s ease;}' +
+    '@keyframes vlFadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}' +
+    '.vl-live-media{width:100%;height:140px;object-fit:cover;display:block;background:#000;}' +
+    '.vl-live-badge{position:absolute;top:10px;left:10px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;display:flex;align-items:center;gap:4px;}' +
+    '.vl-live-badge.scheduled{background:#334155;}' +
+    '.vl-live-dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:vlPulse 1.2s infinite;}' +
+    '@keyframes vlPulse{0%,100%{opacity:1;}50%{opacity:.3;}}' +
+    '.vl-live-body{padding:10px 12px 12px;}' +
+    '.vl-live-title{color:#fff;font-size:13px;font-weight:700;line-height:1.3;margin:0 0 8px;max-height:34px;overflow:hidden;}' +
+    '.vl-live-cta{display:block;width:100%;background:#22c55e;color:#fff;border:none;border-radius:8px;padding:8px 0;font-size:12px;font-weight:700;text-align:center;cursor:pointer;}' +
+    '.vl-live-close{position:absolute;top:6px;right:8px;background:rgba(0,0,0,.4);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;cursor:pointer;line-height:1;z-index:2;}';
+  liveWidgetShadow.appendChild(style);
+
+  var card = document.createElement('div');
+  card.className = 'vl-live-card';
+
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'vl-live-close';
+  closeBtn.textContent = '×';
+  closeBtn.onclick = function (e) {
+    e.stopPropagation();
+    host.remove();
+    liveWidgetRoot = null;
+  };
+  card.appendChild(closeBtn);
+
+  var badge = document.createElement('div');
+  badge.className = 'vl-live-badge' + (isLive ? '' : ' scheduled');
+  if (isLive) {
+    var dot = document.createElement('span');
+    dot.className = 'vl-live-dot';
+    badge.appendChild(dot);
+    badge.appendChild(document.createTextNode('AO VIVO'));
+  } else {
+    badge.textContent = 'EM BREVE';
+  }
+  card.appendChild(badge);
+
+  if (mediaUrl) {
+    if (mediaType === 'video') {
+      var vid = document.createElement('video');
+      vid.className = 'vl-live-media';
+      vid.src = mediaUrl;
+      vid.muted = true;
+      vid.loop = true;
+      vid.autoplay = true;
+      vid.playsInline = true;
+      card.appendChild(vid);
+    } else {
+      var img = document.createElement('img');
+      img.className = 'vl-live-media';
+      img.src = mediaUrl;
+      img.alt = title;
+      card.appendChild(img);
+    }
+  }
+
+  var body = document.createElement('div');
+  body.className = 'vl-live-body';
+
+  var titleEl = document.createElement('p');
+  titleEl.className = 'vl-live-title';
+  titleEl.textContent = title;
+  body.appendChild(titleEl);
+
+  var cta = document.createElement('button');
+  cta.className = 'vl-live-cta';
+  cta.textContent = ctaText;
+  body.appendChild(cta);
+
+  card.appendChild(body);
+  liveWidgetShadow.appendChild(card);
+
+  card.addEventListener('click', function () {
+    trackLiveEvent(live.id, 'product_click', { source: 'promo_card' });
+    openLiveModal(live);
+  });
+
+  currentLiveData = live;
+  trackLiveEvent(live.id, 'view', { source: 'promo_card' });
+}
+
   function fetchJson(path) {
     return supabaseFetch(path, { method: 'GET' })
       .then(function (response) { if (!response.ok) return []; return response.json(); })
