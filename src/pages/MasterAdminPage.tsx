@@ -326,43 +326,39 @@ const handleOpenEmail = (store: MasterStore) => {
 };
 
   // Disparo do E-mail via Edge Function (Resend)
-  const handleSendEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedStoreForEmail || !selectedStoreForEmail.owner_email) return;
+const handleSendEmail = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const recipient = selectedStoreForEmail?.contact_email || selectedStoreForEmail?.owner_email;
+  if (!selectedStoreForEmail || !recipient) return;
 
-    if (!emailSubject.trim() || !emailMessage.trim()) {
-      toast.error('Por favor, preencha o assunto e a mensagem.');
-      return;
-    }
+  if (!emailSubject.trim() || !emailMessage.trim()) {
+    toast.error('Por favor, preencha o assunto e a mensagem.');
+    return;
+  }
 
-    setSendingEmail(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('send-email', {
-        body: {
-          to: selectedStoreForEmail.owner_email,
-          subject: emailSubject.trim(),
-          message: emailMessage.trim(),
-          storeName: selectedStoreForEmail.store_name,
-        },
-      });
+  setSendingEmail(true);
+  try {
+    const { data, error } = await supabase.functions.invoke('send-email', {
+      body: {
+        to: recipient,
+        subject: emailSubject.trim(),
+        message: emailMessage.trim(),
+        storeName: selectedStoreForEmail.store_name,
+      },
+    });
 
-      if (error) {
-        throw new Error(error.message || 'Falha ao processar envio do e-mail.');
-      }
+    if (error) throw new Error(error.message || 'Falha ao processar envio do e-mail.');
+    if (data?.error) throw new Error(data.error);
 
-      if (data?.error) {
-        throw new Error(data.error);
-      }
-
-      toast.success(`E-mail enviado com sucesso para ${selectedStoreForEmail.owner_email}!`);
-      setSelectedStoreForEmail(null);
-    } catch (err: any) {
-      console.error('Erro no disparo de e-mail:', err);
-      toast.error(`Erro ao enviar e-mail: ${err.message}`);
-    } finally {
-      setSendingEmail(false);
-    }
-  };
+    toast.success(`E-mail enviado com sucesso para ${recipient}!`);
+    setSelectedStoreForEmail(null);
+  } catch (err: any) {
+    console.error('Erro no disparo de e-mail:', err);
+    toast.error(`Erro ao enviar e-mail: ${err.message}`);
+  } finally {
+    setSendingEmail(false);
+  }
+};
 
   // Disparo de WhatsApp direto
   const handleOpenWhatsApp = (store: MasterStore) => {
