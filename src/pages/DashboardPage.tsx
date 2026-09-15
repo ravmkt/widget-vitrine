@@ -722,9 +722,13 @@ const DashboardPage: React.FC = () => {
             </div>
             <div>
               <p className="text-[10px] font-black text-slate-400 dark:text-[#8a90a0] uppercase tracking-widest">Status</p>
-              <p className="text-base font-black text-slate-900 dark:text-white">
-                {usage.subscriptionStatus === 'active' ? 'Assinatura Ativa' : `${usage.trialDaysLeft} dias restantes`}
-              </p>
+<p className="text-base font-black text-slate-900 dark:text-white">
+  {usage.subscriptionStatus === 'lifetime'
+    ? 'Vitalício'
+    : usage.subscriptionStatus === 'active'
+    ? 'Assinatura Ativa'
+    : `${usage.trialDaysLeft} dias restantes`}
+</p>
             </div>
             <div className="flex justify-between items-center text-xs font-bold text-slate-500 dark:text-[#c0c5d4] border-t border-slate-100 dark:border-white/5 pt-2">
               <span>Renovação:</span>
