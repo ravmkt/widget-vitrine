@@ -127,26 +127,22 @@ export default function MasterAdminPage() {
         return;
       }
 
-// 3. Busca dados de contato reais em general_settings (fonte de verdade)
+// 3. Busca o WhatsApp real cadastrado em store_settings
 if (storesData && storesData.length > 0) {
   const storeIds = storesData.map((s: any) => s.store_id);
   const { data: settingsDetails } = await supabase
-    .from('general_settings')
-    .select('store_id, contact_email, whatsapp_number')
+    .from('store_settings')
+    .select('store_id, whatsapp_number')
     .in('store_id', storeIds);
 
-  const settingsMap: Record<string, { contact_email?: string; whatsapp_number?: string }> = {};
-  settingsDetails?.forEach((gs: any) => {
-    settingsMap[gs.store_id] = {
-      contact_email: gs.contact_email || undefined,
-      whatsapp_number: gs.whatsapp_number || undefined,
-    };
+  const phoneMap: Record<string, string> = {};
+  settingsDetails?.forEach((st: any) => {
+    phoneMap[st.store_id] = st.whatsapp_number || '';
   });
 
   const merged = storesData.map((s: any) => ({
     ...s,
-    contact_email: settingsMap[s.store_id]?.contact_email || null,
-    owner_phone: settingsMap[s.store_id]?.whatsapp_number || null,
+    owner_phone: phoneMap[s.store_id] || null,
   }));
 
   setStores(merged);
