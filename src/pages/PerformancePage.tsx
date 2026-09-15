@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
@@ -18,7 +18,6 @@ import { supabase } from '@/lib/supabase'
 import { useTenant } from '@/context/TenantContext'
 
 // Componentes modulares (lazy-loaded para code-splitting do Recharts)
-import { lazy, Suspense } from 'react'
 const OverviewTab = lazy(() => import('@/components/performance/overview-tab').then(m => ({ default: m.OverviewTab })))
 const VideosTab = lazy(() => import('@/components/performance/videos-tab').then(m => ({ default: m.VideosTab })))
 const InsightsTab = lazy(() => import('@/components/performance/insights-tab').then(m => ({ default: m.InsightsTab })))
