@@ -13,6 +13,17 @@ interface EmailMetrics {
   revenue?: number;
 }
 
+// Escapa HTML e converte \n em <br> para exibir a mensagem em texto plano com segurança
+function escapeAndFormat(text: string): string {
+  const escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+  return escaped.replace(/\n/g, "<br>");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -48,26 +59,39 @@ serve(async (req) => {
         ? value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
         : "—";
 
+    const safeMessage = escapeAndFormat(message);
+    const safeStoreName = storeName ? escapeAndFormat(storeName) : "Vidlytics Store";
+
     const metricsBlock = metrics
       ? `
-        <div class="metrics">
-          <div class="metric">
-            <span class="metric-label">Plano</span>
-            <span class="metric-value">${metrics.planName || "—"}</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Views (mês)</span>
-            <span class="metric-value">${metrics.monthViews ?? "—"}</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Vídeos ativos</span>
-            <span class="metric-value">${metrics.videosCount ?? "—"}</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Faturamento via Stories</span>
-            <span class="metric-value">${formatCurrency(metrics.revenue)}</span>
-          </div>
-        </div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 20px;">
+          <tr>
+            <td style="padding: 4px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
+                <tr>
+                  <td style="padding:14px 16px;">
+                    <span style="display:block;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Plano</span>
+                    <span style="display:block;font-size:16px;font-weight:700;color:#059669;">${metrics.planName || "—"}</span>
+                  </td>
+                  <td style="padding:14px 16px;">
+                    <span style="display:block;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Views (mês)</span>
+                    <span style="display:block;font-size:16px;font-weight:700;color:#059669;">${metrics.monthViews ?? "—"}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 16px;">
+                    <span style="display:block;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Vídeos ativos</span>
+                    <span style="display:block;font-size:16px;font-weight:700;color:#059669;">${metrics.videosCount ?? "—"}</span>
+                  </td>
+                  <td style="padding:14px 16px;">
+                    <span style="display:block;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Faturamento via Stories</span>
+                    <span style="display:block;font-size:16px;font-weight:700;color:#059669;">${formatCurrency(metrics.revenue)}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       `
       : "";
 
@@ -83,37 +107,46 @@ serve(async (req) => {
         subject: subject,
         html: `
           <!DOCTYPE html>
-          <html>
+          <html lang="pt-BR">
             <head>
               <meta charset="utf-8">
-              <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #090a0f; color: #f4f4f5; margin: 0; padding: 24px; }
-                .card { background-color: #12141c; border: 1px solid #27272a; border-radius: 12px; max-width: 580px; margin: 0 auto; overflow: hidden; }
-                .header { padding: 24px; border-bottom: 1px solid #27272a; background: linear-gradient(to right, rgba(16, 185, 129, 0.15), transparent); display: flex; align-items: center; gap: 12px; }
-                .brand { color: #10b981; font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
-                .sub { color: #71717a; font-size: 13px; margin-top: 4px; }
-                .content { padding: 24px; font-size: 15px; line-height: 1.6; color: #d4d4d8; white-space: pre-wrap; }
-                .metrics { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 24px 24px; }
-                .metric { flex: 1 1 120px; background-color: #0d0f17; border: 1px solid #27272a; border-radius: 10px; padding: 12px 14px; }
-                .metric-label { display: block; font-size: 11px; color: #71717a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-                .metric-value { display: block; font-size: 16px; font-weight: 700; color: #10b981; }
-                .footer { padding: 16px 24px; border-top: 1px solid #27272a; background-color: #0d0f17; font-size: 12px; color: #71717a; }
-              </style>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
             </head>
-            <body>
-              <div class="card">
-                <div class="header">
-                  <div>
-                    <h2 class="brand">Vidlytics Stories</h2>
-                    <p class="sub">Comunicação oficial da plataforma</p>
-                  </div>
-                </div>
-                <div class="content">${message}</div>
-                ${metricsBlock}
-                <div class="footer">
-                  Mensagem referente à loja <strong>${storeName || "Vidlytics Store"}</strong>.
-                </div>
-              </div>
+            <body style="margin:0;padding:24px;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;">
+                      <tr>
+                        <td style="padding:24px;border-bottom:1px solid #e2e8f0;background-color:#f0fdf4;">
+                          <table role="presentation" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td style="vertical-align:middle;padding-right:12px;">
+                                <img src="https://vidlytics.com.br/logo.png" alt="Vidlytics" width="36" height="36" style="display:block;border-radius:8px;" />
+                              </td>
+                              <td style="vertical-align:middle;">
+                                <p style="margin:0;font-size:20px;font-weight:700;color:#059669;letter-spacing:-0.5px;">Vidlytics Stories</p>
+                                <p style="margin:4px 0 0;font-size:13px;color:#64748b;">Comunicação oficial da plataforma</p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:24px;font-size:15px;line-height:1.6;color:#334155;">
+                          ${safeMessage}
+                          ${metricsBlock}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:16px 24px;border-top:1px solid #e2e8f0;background-color:#f8fafc;font-size:12px;color:#64748b;">
+                          Mensagem referente à loja <strong>${safeStoreName}</strong>.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
             </body>
           </html>
         `,
