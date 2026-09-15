@@ -68,8 +68,7 @@ serve(async (req) => {
     const safeMessage = escapeAndFormat(message);
     const safeStoreName = storeName ? escapeAndFormat(storeName) : "Vidlytics Store";
     const safeContactName = contactName ? escapeAndFormat(contactName) : "";
-    const finalLogo = logoUrl && logoUrl.trim() ? logoUrl.trim() : DEFAULT_LOGO;
-
+const finalLogo = DEFAULT_LOGO;
     // Cards de métrica: 4 cards centralizados, mesma largura
     const metricCard = (label: string, value: string) => `
       <td width="25%" align="center" style="padding:6px;">
