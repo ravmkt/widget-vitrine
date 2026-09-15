@@ -37,10 +37,8 @@ const LOGO_BUCKET = "store-assets";
 interface AppSettings {
   id: string;
   store_id: string;
-  store_name: '',
-  contact_name: '',
-  contact_email: '',
-  owner_contact_email: '',
+  store_name: string | null;
+  contact_name: string | null;
   store_url: string | null;
   store_logo_url: string | null;
   platform: string | null;
