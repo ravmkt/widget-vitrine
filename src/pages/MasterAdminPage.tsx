@@ -345,20 +345,22 @@ const handleSendEmail = async (e: React.FormEvent) => {
     const finalSubject = replacePlaceholders(emailSubject.trim(), selectedStoreForEmail);
     const finalMessage = replacePlaceholders(emailMessage.trim(), selectedStoreForEmail);
 
-    const { error } = await supabase.functions.invoke('send-email', {
-      body: {
-        to: recipient,
-        subject: finalSubject,
-        message: finalMessage,
-        storeName: selectedStoreForEmail.store_name,
-        metrics: {
-          planName: selectedStoreForEmail.plan_name,
-          monthViews: selectedStoreForEmail.month_views,
-          videosCount: selectedStoreForEmail.videos_count,
-          revenue: selectedStoreForEmail.stories_sales_revenue,
-        },
-      },
-    });
+const { error } = await supabase.functions.invoke('send-email', {
+  body: {
+    to: recipient,
+    subject: finalSubject,
+    message: finalMessage,
+    storeName: selectedStoreForEmail.store_name,
+    logoUrl: selectedStoreForEmail.logo_url,
+    contactName: selectedStoreForEmail.owner_name || "Lojista",
+    metrics: {
+      planName: selectedStoreForEmail.plan_name,
+      monthViews: selectedStoreForEmail.month_views,
+      videosCount: selectedStoreForEmail.videos_count,
+      revenue: selectedStoreForEmail.stories_sales_revenue,
+    },
+  },
+});
 
     if (error) throw error;
 
