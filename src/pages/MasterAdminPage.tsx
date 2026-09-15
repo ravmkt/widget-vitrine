@@ -588,17 +588,22 @@ if (rpcError) {
 
                         {/* Status */}
                         <td className="py-3.5 px-4">
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-store.subscription_status?.toLowerCase() === 'active'
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                            }`}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-current" />
-{store.subscription_status?.toLowerCase() === 'active' ? 'Ativo' : 'Em Trial / Pendente'}
-                          </span>
-                        </td>
+<span
+  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+    store.subscription_status?.toLowerCase() === 'lifetime'
+      ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
+      : store.subscription_status?.toLowerCase() === 'active'
+      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+      : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+  }`}
+>
+  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+  {store.subscription_status?.toLowerCase() === 'lifetime'
+    ? 'Vitalício'
+    : store.subscription_status?.toLowerCase() === 'active'
+    ? 'Ativo'
+    : 'Em Trial / Pendente'}
+</span>
 
                         {/* Stories Cadastrados */}
                         <td className="py-3.5 px-4 text-center">
