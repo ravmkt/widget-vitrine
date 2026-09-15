@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const BRAND_BLUE = "#0094eb";
 const BRAND_ORANGE = "#fd8539";
-const DEFAULT_LOGO = "https://vidlytics.com.br/logo.png";
+const DEFAULT_LOGO = "https://vidlytics.com.br/assets/sll-logotipo.png";
 
 interface EmailMetrics {
   planName?: string;
