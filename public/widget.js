@@ -6046,6 +6046,11 @@ if (displayMode === 'dynamic_carousel') {
     } else {
       initInlineWidget(options);
     }
+
+    // 🆕 LIVE COMMERCE — divulgação flutuante independente do modo
+    fetchActiveLive().then(function (live) {
+      if (live) renderLiveWidget(live);
+    });
   }
 
   /* ================================================================
