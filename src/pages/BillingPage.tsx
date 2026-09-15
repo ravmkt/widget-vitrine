@@ -116,11 +116,11 @@ export function BillingPage() {
         setStoreId(activeStoreId);
 
         // 2. Busca dados da loja, plano associado e consumo registrado
-        const { data: storeRow, error: storeErr } = await supabase
-          .from('stores')
-          .select('storage_used_bytes, storage_limit_bytes, plan_id, subscription_status, trial_ends_at, views_used, views_limit, pages_used, pages_limit, plans(*)')
-          .eq('id', activeStoreId)
-          .maybeSingle();
+const { data: storeRow, error: storeErr } = await supabase
+  .from('stores')
+  .select('storage_used_bytes, storage_limit_bytes, plan_id, subscription_status, trial_ends_at, plans(*)')
+  .eq('id', activeStoreId)
+  .maybeSingle();
 
         if (storeErr) {
           console.error('[Billing] Erro ao buscar loja:', storeErr);
