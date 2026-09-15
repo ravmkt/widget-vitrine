@@ -318,11 +318,10 @@ export function AppSidebar() {
         {/* Botão Sair da Plataforma */}
         <button
           type="button"
-          onClick={async () => {
-            const { supabase } = await import('@/lib/supabase');
-            await supabase.auth.signOut();
-            window.location.href = '/login';
-          }}
+onClick={async () => {
+  await supabase.auth.signOut();
+  window.location.href = '/login';
+}}
           className="w-full flex items-center gap-2 py-1.5 px-3 text-xs font-semibold text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
         >
           <LogOut size={14} className="shrink-0" />
