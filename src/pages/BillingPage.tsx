@@ -461,27 +461,29 @@ export function BillingPage() {
               )}
             </div>
 
-            <p className="mt-3 text-xs font-medium text-slate-500 dark:text-[#c0c5d4] leading-relaxed">
-              {subscriptionStatus === 'canceled' ? (
-                <span className="text-rose-500 font-black">Assinatura desativada</span>
-              ) : subscriptionStatus === 'trialing' ? (
-                <>
-                  Período de teste até:{' '}
-                  <strong className="text-slate-800 dark:text-white font-bold">
-                    {trialEndsAt ? new Date(trialEndsAt).toLocaleDateString('pt-BR') : '7 dias'}
-                  </strong>
-                </>
-              ) : (
-                <>
-                  Próxima renovação em:{' '}
-                  <strong className="text-slate-800 dark:text-white font-bold">
-                    {subscription?.current_period_end
-                      ? new Date(subscription.current_period_end).toLocaleDateString('pt-BR')
-                      : 'Em 30 dias'}
-                  </strong>
-                </>
-              )}
-            </p>
+<p className="mt-3 text-xs font-medium text-slate-500 dark:text-[#c0c5d4] leading-relaxed">
+  {subscriptionStatus === 'lifetime' ? (
+    <span className="text-purple-600 dark:text-purple-400 font-black">Acesso vitalício ativo — sem cobranças recorrentes</span>
+  ) : subscriptionStatus === 'canceled' ? (
+    <span className="text-rose-500 font-black">Assinatura desativada</span>
+  ) : subscriptionStatus === 'trialing' ? (
+    <>
+      Período de teste até:{' '}
+      <strong className="text-slate-800 dark:text-white font-bold">
+        {trialEndsAt ? new Date(trialEndsAt).toLocaleDateString('pt-BR') : '7 dias'}
+      </strong>
+    </>
+  ) : (
+    <>
+      Próxima renovação em:{' '}
+      <strong className="text-slate-800 dark:text-white font-bold">
+        {subscription?.current_period_end
+          ? new Date(subscription.current_period_end).toLocaleDateString('pt-BR')
+          : 'Em 30 dias'}
+      </strong>
+    </>
+  )}
+</p>
           </div>
 
           <div className="mt-6 border-t border-slate-100 dark:border-white/5 pt-4">
