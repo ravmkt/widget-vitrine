@@ -97,7 +97,7 @@ const generalSettingsToAppSettings = (gs: GeneralSettings): AppSettings => ({
   id: gs.id || '',
   store_id: gs.store_id || '',
   store_name: gs.store_name ?? null,
-  contact_name: (gs as any).contact_name ?? null,
+  contact_name: null, // será sobrescrito abaixo com dado real de `stores`
   store_url: gs.store_url ?? null,
   store_logo_url: gs.logo_url ?? null,
   platform: gs.platform ?? null,
