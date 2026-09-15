@@ -730,10 +730,16 @@ const DashboardPage: React.FC = () => {
     : `${usage.trialDaysLeft} dias restantes`}
 </p>
             </div>
-            <div className="flex justify-between items-center text-xs font-bold text-slate-500 dark:text-[#c0c5d4] border-t border-slate-100 dark:border-white/5 pt-2">
-              <span>Renovação:</span>
-              <span>{usage.currentPeriodEnd ? new Date(usage.currentPeriodEnd).toLocaleDateString('pt-BR') : '—'}</span>
-            </div>
+<div className="flex justify-between items-center text-xs font-bold text-slate-500 dark:text-[#c0c5d4] border-t border-slate-100 dark:border-white/5 pt-2">
+  <span>Renovação:</span>
+  <span>
+    {usage.subscriptionStatus === 'lifetime'
+      ? '— (sem vencimento)'
+      : usage.currentPeriodEnd
+      ? new Date(usage.currentPeriodEnd).toLocaleDateString('pt-BR')
+      : '—'}
+  </span>
+</div>
           </div>
         </div>
       </div>
