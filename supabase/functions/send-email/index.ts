@@ -108,43 +108,45 @@ const finalLogo = DEFAULT_LOGO;
         from: "Vidlytics <contato@mail.vidlytics.com.br>",
         to: [to],
         subject: subject,
-        html: `
-          <!DOCTYPE html>
-          <html lang="pt-BR">
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body style="margin:0;padding:24px;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" align="center">
-                <tr>
-                  <td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" align="center" style="width:600px;max-width:600px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;">
-<tr>
-  <td style="padding:24px;background-color:#ffffff;text-align:center;border-bottom:1px solid #e2e8f0;">
-<img src="${finalLogo}" alt="Vidlytics" width="160" height="auto" style="display:inline-block; max-width:160px; width:100%; height:auto;" />
-  </td>
-</tr>                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding:24px;font-size:15px;line-height:1.6;color:#334155;">
-                          ${greeting}
-                          ${safeMessage}
-                          ${metricsBlock}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding:16px 24px;border-top:1px solid #e2e8f0;background-color:#f8fafc;font-size:12px;color:#64748b;">
-                          Mensagem referente à loja <strong style="color:${BRAND_ORANGE};">${safeStoreName}</strong>.
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </body>
-          </html>
-        `,
+html: `
+  <!DOCTYPE html>
+  <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin:0;padding:24px;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" align="center">
+        <tr>
+          <td align="center">
+            <table role="presentation" width="600" cellpadding="0" cellspacing="0" align="center" style="width:600px;max-width:600px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;">
+              <tr>
+                <td style="padding:28px 24px 20px;background-color:#ffffff;text-align:center;">
+                  <img src="${finalLogo}" alt="Vidlytics" width="200" height="auto" style="display:inline-block; max-width:200px; width:100%; height:auto;" />
+                </td>
+              </tr>
+              <tr>
+                <td style="height:3px;background-color:${BRAND_BLUE};font-size:0;line-height:0;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="padding:24px;font-size:15px;line-height:1.6;color:#334155;">
+                  ${greeting}
+                  ${safeMessage}
+                  ${metricsBlock}
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:16px 24px;border-top:1px solid #e2e8f0;background-color:#f8fafc;font-size:12px;color:#64748b;">
+                  Mensagem referente à loja <strong style="color:${BRAND_ORANGE};">${safeStoreName}</strong>.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+  </html>
+`,
       }),
     });
 
