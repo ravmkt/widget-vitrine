@@ -748,6 +748,23 @@ await supabase
                 </div>
               </div>
             </div>
+<div className="space-y-2">
+  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+    Nome do Contato
+  </Label>
+  <Input
+    type="text"
+    placeholder="Nome da pessoa responsável"
+    value={settings?.contact_name ?? ''}
+    onChange={e =>
+      setSettings(prev => ({ ...prev, contact_name: e.target.value }))
+    }
+    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0091ff] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
+  />
+  <p className="text-[11px] text-slate-500 dark:text-[#8a90a0]">
+    Usado nas mensagens automáticas de e-mail e WhatsApp (ex: "Olá, {"{{"}nome_contato{"}}"}}!").
+  </p>
+</div>
 
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
