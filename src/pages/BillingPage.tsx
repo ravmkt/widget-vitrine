@@ -420,22 +420,17 @@ export function BillingPage() {
                 Plano Atual
               </span>
 
-              {/* Badge de Status */}
-              {subscriptionStatus === 'active' && (
-                <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-700/40 px-2.5 py-0.5 text-xs font-black text-emerald-700 dark:text-emerald-400">
-                  <CheckCircle2 size={13} /> Ativo
-                </span>
-              )}
-              {subscriptionStatus === 'canceled' && (
-                <span className="flex items-center gap-1.5 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-700/40 px-2.5 py-0.5 text-xs font-black text-rose-700 dark:text-rose-400">
-                  <XCircle size={13} /> Cancelada
-                </span>
-              )}
-              {subscriptionStatus === 'past_due' && (
-                <span className="flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-700/40 px-2.5 py-0.5 text-xs font-black text-amber-700 dark:text-amber-300">
-                  <AlertTriangle size={13} /> Pendente
-                </span>
-              )}
+{/* Badge de Status */}
+{subscriptionStatus === 'lifetime' && (
+  <span className="flex items-center gap-1.5 rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-700/40 px-2.5 py-0.5 text-xs font-black text-purple-700 dark:text-purple-400">
+    <Sparkles size={13} /> Vitalício
+  </span>
+)}
+{subscriptionStatus === 'active' && (
+  <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-700/40 px-2.5 py-0.5 text-xs font-black text-emerald-700 dark:text-emerald-400">
+    <CheckCircle2 size={13} /> Ativo
+  </span>
+)}
               {subscriptionStatus === 'trialing' && (
                 <span className="flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-[#ff7a29]/15 border border-blue-100 dark:border-[#ff7a29]/25 px-2.5 py-0.5 text-xs font-black text-[#0091ff] dark:text-[#ff7a29]">
                   <Clock size={13} /> Em Teste
