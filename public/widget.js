@@ -534,6 +534,19 @@ function fetchActiveLive() {
   }).catch(function () { return null; });
 }
 
+function trackLiveEvent(liveId, eventType, metadata) {
+  if (!hasSupabase || !liveId) return;
+  supabaseFetch('live_events', {
+    method: 'POST',
+    headers: { 'Prefer': 'return=minimal' },
+    body: JSON.stringify({
+      live_id: liveId,
+      event_type: eventType,
+      metadata: metadata || {}
+    })
+  }).catch(function () {});
+}
+
   function fetchJson(path) {
     return supabaseFetch(path, { method: 'GET' })
       .then(function (response) { if (!response.ok) return []; return response.json(); })
