@@ -219,18 +219,38 @@ const SettingsPage = () => {
             .eq('store_id', activeStoreId)
             .maybeSingle();
 
-          if (settingsRow) {
-            const loaded = generalSettingsToAppSettings(settingsRow as GeneralSettings);
-            // Se a URL salva não for um domínio real (apenas slug antigo), deixa em branco
-            if (loaded.store_url && !isValidWebDomain(loaded.store_url)) {
-              loaded.store_url = '';
-            }
-            setSettings(loaded);
-            setLogoPreview(loaded.store_logo_url || "");
-          } else if (currentStore) {
-            // Se a URL da loja for slug antigo sem ponto (ex: use-anny-moda-feminina), deixa em branco
-            const rawUrl = currentStore.url || '';
-            const validInitialUrl = isValidWebDomain(rawUrl) ? rawUrl : '';
+if (settingsRow) {
+  const loaded = generalSettingsToAppSettings(settingsRow as GeneralSettings);
+  if (loaded.store_url && !isValidWebDomain(loaded.store_url)) {
+    loaded.store_url = '';
+  }
+
+  // contact_name mora na tabela `stores`, não em `store_settings`
+  const { data: storeRow } = await supabase
+    .from('stores')
+    .select('contact_name')
+    .eq('id', activeStoreId)
+    .maybeSingle();
+  loaded.contact_name = storeRow?.contact_name ?? null;
+
+  setSettings(loaded);
+  setLogoPreview(loaded.store_logo_url || "");
+} else if (currentStore) {
+  const rawUrl = currentStore.url || '';
+  const validInitialUrl = isValidWebDomain(rawUrl) ? rawUrl : '';
+
+  setSettings({
+    ...DEFAULT_SETTINGS,
+    store_id: currentStore.id,
+    store_name: currentStore.name || '',
+    contact_name: (currentStore as any).contact_name || '',
+    store_url: validInitialUrl,
+    store_logo_url: currentStore.logo_url || null,
+    contact_email: currentStore.contact_email || null,
+    owner_contact_email: (currentStore as any).owner_contact_email || null,
+  });
+  setLogoPreview(currentStore.logo_url || "");
+}
 
 setSettings({
   ...DEFAULT_SETTINGS,
