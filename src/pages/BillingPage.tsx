@@ -131,7 +131,6 @@ const { data: storeRow, error: storeErr } = await supabase
 
         if (storeRow) {
           setStorageUsedBytes(Number(storeRow.storage_used_bytes || 0));
-          setViewsUsed(Number(storeRow.views_used || 0));
           
           if (storeRow.subscription_status) {
             setSubscriptionStatus(storeRow.subscription_status);
