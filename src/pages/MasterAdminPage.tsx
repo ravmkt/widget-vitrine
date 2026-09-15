@@ -361,7 +361,7 @@ const { error } = await supabase.functions.invoke('send-email', {
     message: finalMessage,
     storeName: selectedStoreForEmail.store_name,
     logoUrl: selectedStoreForEmail.logo_url,
-    contactName: selectedStoreForEmail.owner_name || "Lojista",
+contactName: selectedStoreForEmail.contact_name || selectedStoreForEmail.owner_name || "Lojista",
     metrics: {
       planName: selectedStoreForEmail.plan_name,
       monthViews: selectedStoreForEmail.month_views,
