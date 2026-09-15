@@ -42,6 +42,7 @@ interface AppSettings {
   store_logo_url: string | null;
   platform: string | null;
   contact_email: string | null;
+  owner_contact_email: string | null;
   widget_enabled: boolean;
   stories_enabled: boolean;
   carousel_enabled: boolean;
@@ -69,6 +70,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   store_logo_url: '',
   platform: null,
   contact_email: '',
+  owner_contact_email: '',
   widget_enabled: true,
   stories_enabled: true,
   carousel_enabled: true,
@@ -97,6 +99,7 @@ const generalSettingsToAppSettings = (gs: GeneralSettings): AppSettings => ({
   store_logo_url: gs.logo_url ?? null,
   platform: gs.platform ?? null,
   contact_email: gs.contact_email ?? null,
+  owner_contact_email: gs.owner_contact_email ?? null,
   widget_enabled: gs.widget_enabled ?? true,
   stories_enabled: gs.stories_enabled ?? true,
   carousel_enabled: gs.carousel_enabled ?? true,
@@ -128,6 +131,7 @@ const appSettingsToGeneralSettings = (
   logo_url: app.store_logo_url,
   platform: app.platform || '',
   contact_email: app.contact_email || '',
+  owner_contact_email: app.owner_contact_email || '',
   widget_enabled: app.widget_enabled,
   stories_enabled: app.stories_enabled,
   carousel_enabled: app.carousel_enabled,
@@ -232,6 +236,7 @@ const SettingsPage = () => {
               store_url: validInitialUrl,
               store_logo_url: currentStore.logo_url || null,
               contact_email: currentStore.contact_email || null,
+              owner_contact_email: (currentStore as any).owner_contact_email || null,
             });
             setLogoPreview(currentStore.logo_url || "");
           } else {
@@ -412,6 +417,7 @@ const SettingsPage = () => {
             url: finalStoreUrl || null,
             logo_url: finalLogoUrl || null,
             contact_email: updatedSettings.contact_email || null,
+            owner_contact_email: updatedSettings.owner_contact_email || null,
             sector_id: sectorValue,
             sector: sectorSlug, // Sincronização direta e transparente
             updated_at: now,
@@ -745,7 +751,25 @@ const SettingsPage = () => {
 
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
-                E-mail de Contato
+                E-mail do Dono da Loja
+              </Label>
+              <Input
+                type="email"
+                placeholder="dono@sualoja.com"
+                value={settings?.owner_contact_email ?? ''}
+                onChange={e =>
+                  setSettings(prev => ({ ...prev, owner_contact_email: e.target.value }))
+                }
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0091ff] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
+              />
+              <p className="text-[11px] text-slate-500 dark:text-[#8a90a0]">
+                Usado pela equipe Vidlytics para contato direto com o responsável da loja.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-[#8a90a0]">
+                E-mail de Atendimento
               </Label>
               <Input
                 type="email"
@@ -756,6 +780,9 @@ const SettingsPage = () => {
                 }
                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#111524] border border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus-visible:ring-2 focus-visible:ring-[#0091ff] dark:focus-visible:ring-[#ff7a29] focus-visible:ring-offset-0"
               />
+              <p className="text-[11px] text-slate-500 dark:text-[#8a90a0]">
+                Exibido para os clientes finais nos canais de suporte/atendimento.
+              </p>
             </div>
           </div>
         </div>
