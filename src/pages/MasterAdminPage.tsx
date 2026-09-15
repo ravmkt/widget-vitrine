@@ -963,7 +963,7 @@ const recipient = selectedStoreForEmail?.owner_email || selectedStoreForEmail?.c
                 <input
                   type="email"
                   disabled
-value={`${selectedStoreForEmail.owner_name || 'Lojista'} <${selectedStoreForEmail.contact_email || selectedStoreForEmail.owner_email}>`}
+value={`${selectedStoreForEmail.owner_name || 'Lojista'} <${selectedStoreForEmail.owner_email || selectedStoreForEmail.contact_email}>`}
                   className="w-full bg-zinc-950/60 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-zinc-400 cursor-not-allowed"
                 />
               </div>
