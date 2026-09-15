@@ -67,6 +67,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   id: '',
   store_id: '',
   store_name: '',
+  contact_name: '',
   store_url: '',
   store_logo_url: '',
   platform: null,
@@ -78,7 +79,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   floating_widget_enabled: true,
   default_template: 'minimalista',
   language: 'pt-BR',
-  timezone: 'America/Paulo',
+  timezone: 'America/Sao_Paulo',
   whatsapp_number: '',
   whatsapp_enabled: true,
   whatsapp_message_template:
