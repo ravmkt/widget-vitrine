@@ -38,7 +38,7 @@ serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Vidlytics <onboarding@resend.dev>",
+        from: "Vidlytics <contato@mail.vidlytics.com.br>",
         to: [to],
         subject: subject,
         html: `
