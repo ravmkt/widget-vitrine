@@ -12,24 +12,15 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { LiveFormDialog } from "@/components/live/LiveFormDialog";
 import { ShareLiveModal } from "@/components/live/ShareLiveModal";
-// AQUI ESTÁ A CORREÇÃO: Sem as chaves {}
-import LiveAppearanceModal from "@/components/live/LiveAppearanceModal";
 
-export interface LiveWidgetConfig {
-  enabled: boolean;
-  position: string;
-  bubble_color: string;
-  text_color: string;
-  label_text: string;
-}
-
-export interface LivePlayerConfig {
-  primary_color: string;
-  background_color: string;
-  show_viewer_count: boolean;
-  show_chat: boolean;
-  autoplay_muted: boolean;
-}
+// AQUI: Importando o modal default e os novos tipos nomeados que criamos
+import LiveAppearanceModal, {
+  DeviceConfig,
+  LiveWidgetSettings,
+  LivePlayerSettings,
+  defaultWidgetSettings,
+  defaultPlayerSettings
+} from "@/components/live/LiveAppearanceModal";
 
 interface Product {
   id: string;
@@ -73,20 +64,17 @@ export function LiveCommercePage() {
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [savingAppearance, setSavingAppearance] = useState(false);
   
-  const [widgetConfig, setWidgetConfig] = useState<LiveWidgetConfig>({
-    enabled: true,
-    position: "bottom-right",
-    bubble_color: "#e11d48",
-    text_color: "#ffffff",
-    label_text: "🔴 AO VIVO AGORA",
+  // AQUI: Usando o novo formato DeviceConfig
+  const [widgetConfig, setWidgetConfig] = useState<DeviceConfig<LiveWidgetSettings>>({
+    desktop: { ...defaultWidgetSettings },
+    mobile: { ...defaultWidgetSettings, width: 90, marginBottom: 10, marginSide: 10 },
+    linked: false
   });
   
-  const [playerConfig, setPlayerConfig] = useState<LivePlayerConfig>({
-    primary_color: "#e11d48",
-    background_color: "#000000",
-    show_viewer_count: true,
-    show_chat: true,
-    autoplay_muted: true,
+  const [playerConfig, setPlayerConfig] = useState<DeviceConfig<LivePlayerSettings>>({
+    desktop: { ...defaultPlayerSettings },
+    mobile: { ...defaultPlayerSettings },
+    linked: true
   });
 
   useEffect(() => {
@@ -153,15 +141,22 @@ export function LiveCommercePage() {
       console.error("Erro ao carregar aparência da live:", error);
       return;
     }
+    
+    // AQUI: Proteção para garantir que os dados antigos não quebrem o formato novo
     if (data?.live_widget_config && Object.keys(data.live_widget_config).length > 0) {
-      setWidgetConfig(data.live_widget_config as LiveWidgetConfig);
+      if ('desktop' in (data.live_widget_config as any)) {
+        setWidgetConfig(data.live_widget_config as DeviceConfig<LiveWidgetSettings>);
+      }
     }
     if (data?.live_player_config && Object.keys(data.live_player_config).length > 0) {
-      setPlayerConfig(data.live_player_config as LivePlayerConfig);
+      if ('desktop' in (data.live_player_config as any)) {
+        setPlayerConfig(data.live_player_config as DeviceConfig<LivePlayerSettings>);
+      }
     }
   }
 
-  async function handleSaveAppearance(newWidgetConfig: LiveWidgetConfig, newPlayerConfig: LivePlayerConfig) {
+  // AQUI: Assinatura atualizada
+  async function handleSaveAppearance(newWidgetConfig: DeviceConfig<LiveWidgetSettings>, newPlayerConfig: DeviceConfig<LivePlayerSettings>) {
     if (!storeId) return;
     try {
       setSavingAppearance(true);
