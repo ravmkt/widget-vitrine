@@ -6178,7 +6178,8 @@ if (displayMode === 'dynamic_carousel') {
     storeId = options.store_id || options.storeId || storeId;
     supabaseUrl = options.supabase_url || options.supabaseUrl || supabaseUrl;
     supabaseAnonKey = options.supabase_key || options.supabaseKey || options.supabaseAnonKey || supabaseAnonKey;
-    hasSupabase = !!(supabaseUrl && supabaseAnonKey && storeId);
+hasSupabase = !!(supabaseUrl && supabaseAnonKey && storeId);
+console.log('[VIDLYTICS DEBUG INIT]', { storeId, supabaseUrl, supabaseAnonKey: supabaseAnonKey ? '(presente)' : '(vazio)', hasSupabase });
 
     storeWhatsappNumber = options.whatsapp_number || options.whatsappNumber || storeWhatsappNumber;
     storeWhatsappMessage = options.whatsapp_message || options.whatsappMessage || storeWhatsappMessage;
