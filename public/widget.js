@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.09.16-20';
+  var WIDGET_VERSION = '2026.09.16-21';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
@@ -7126,5 +7126,10 @@ if (document.readyState === 'loading') {
 }
 
 initWidget();
+
+// Dispara a busca pela Live Ativa assim que o widget inicializar
+fetchActiveLive().then(function(live) {
+  if (live) renderLiveWidget(live);
+});
 
 })();
