@@ -12,8 +12,26 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { LiveFormDialog } from "@/components/live/LiveFormDialog";
 import { ShareLiveModal } from "@/components/live/ShareLiveModal";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import LiveAppearanceTab, { LiveWidgetConfig, LivePlayerConfig } from "@/components/live/LiveAppearanceTab";
+
+// 1. Importamos o novo Modal no lugar do LiveAppearanceTab e do Dialog padrão
+import LiveAppearanceModal from "@/components/live/LiveAppearanceModal"; 
+
+// Se as interfaces estiverem no arquivo do Modal, importe de lá. Caso contrário, mantenha do arquivo de tipos.
+export interface LiveWidgetConfig {
+  enabled: boolean;
+  position: string;
+  bubble_color: string;
+  text_color: string;
+  label_text: string;
+}
+
+export interface LivePlayerConfig {
+  primary_color: string;
+  background_color: string;
+  show_viewer_count: boolean;
+  show_chat: boolean;
+  autoplay_muted: boolean;
+}
 
 interface Product {
   id: string;
@@ -56,6 +74,7 @@ export function LiveCommercePage() {
 
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [savingAppearance, setSavingAppearance] = useState(false);
+  
   const [widgetConfig, setWidgetConfig] = useState<LiveWidgetConfig>({
     enabled: true,
     position: "bottom-right",
@@ -63,6 +82,7 @@ export function LiveCommercePage() {
     text_color: "#ffffff",
     label_text: "🔴 AO VIVO AGORA",
   });
+  
   const [playerConfig, setPlayerConfig] = useState<LivePlayerConfig>({
     primary_color: "#e11d48",
     background_color: "#000000",
@@ -143,19 +163,25 @@ export function LiveCommercePage() {
     }
   }
 
-  async function handleSaveAppearance() {
+  // 2. Atualizamos a função para receber os dados prontos do Modal
+  async function handleSaveAppearance(newWidgetConfig: LiveWidgetConfig, newPlayerConfig: LivePlayerConfig) {
     if (!storeId) return;
     try {
       setSavingAppearance(true);
       const { error } = await supabase
         .from("store_settings")
         .update({
-          live_widget_config: widgetConfig,
-          live_player_config: playerConfig,
+          live_widget_config: newWidgetConfig,
+          live_player_config: newPlayerConfig,
         })
         .eq("store_id", storeId);
 
       if (error) throw error;
+      
+      // Atualiza o estado local para refletir as mudanças
+      setWidgetConfig(newWidgetConfig);
+      setPlayerConfig(newPlayerConfig);
+      
       toast.success("Aparência da Live salva com sucesso!");
       setAppearanceOpen(false);
     } catch (err) {
@@ -250,6 +276,7 @@ export function LiveCommercePage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* O Botão Aparência continua igual, ativando appearanceOpen */}
           <Button
             variant="outline"
             onClick={() => {
@@ -385,27 +412,15 @@ export function LiveCommercePage() {
         />
       )}
 
-      <Dialog open={appearanceOpen} onOpenChange={setAppearanceOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Aparência da Live</DialogTitle>
-          </DialogHeader>
-          <LiveAppearanceTab
-            widgetConfig={widgetConfig}
-            playerConfig={playerConfig}
-            onWidgetChange={setWidgetConfig}
-            onPlayerChange={setPlayerConfig}
-          />
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setAppearanceOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSaveAppearance} disabled={savingAppearance} className="bg-rose-600 hover:bg-rose-700 text-white">
-              {savingAppearance ? "Salvando..." : "Salvar Aparência"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* 3. Aqui injetamos o nosso novo Modal! Passamos as configurações iniciais e a função de salvar/fechar */}
+      <LiveAppearanceModal
+        isOpen={appearanceOpen}
+        onClose={() => setAppearanceOpen(false)}
+        onSave={handleSaveAppearance}
+        initialWidgetConfig={widgetConfig}
+        initialPlayerConfig={playerConfig}
+        isSaving={savingAppearance}
+      />
     </div>
   );
 }
