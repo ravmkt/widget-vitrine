@@ -531,6 +531,7 @@ var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_co
   }
 
 function fetchActiveLive() {
+  console.log('[VIDLYTICS DEBUG] fetchActiveLive chamado.', { hasSupabase: hasSupabase, storeId: storeId });
   if (!hasSupabase) return Promise.resolve(null);
   var cleanId = cleanUuid(storeId);
   if (!cleanId) return Promise.resolve(null);
