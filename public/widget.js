@@ -6884,6 +6884,12 @@ storeWhatsappNumber = settings.whatsapp_number || '';
 storeWhatsappMessage = settings.whatsapp_message || '';
 storeWhatsappMessageTemplate = settings.whatsapp_message_template || '';
 storeWhatsappEnabled = settings.whatsapp_enabled !== false;
+          if (settings.live_widget_config) {
+            liveWidgetConfig = Object.assign({}, liveWidgetConfig, settings.live_widget_config);
+          }
+          if (settings.live_player_config) {
+            livePlayerConfig = Object.assign({}, livePlayerConfig, settings.live_player_config);
+          }
           if (settings.store_logo_url || settings.logo_url) {
             storeLogoUrl = normalizeMediaUrl(settings.store_logo_url || settings.logo_url);
           }
