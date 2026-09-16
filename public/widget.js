@@ -743,10 +743,11 @@ function openLiveModal(live) {
     playerWrap.appendChild(iframe);
   } else if (live.stream_url) {
     var vidEl = document.createElement('video');
-    vidEl.src = live.stream_url;
+vidEl.src = live.stream_url;
     vidEl.controls = true;
     vidEl.autoplay = true;
     vidEl.playsInline = true;
+    vidEl.muted = livePlayerConfig.autoplay_muted !== false;
     playerWrap.appendChild(vidEl);
   }
   modal.appendChild(playerWrap);
