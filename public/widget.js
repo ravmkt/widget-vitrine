@@ -38,6 +38,20 @@
 var liveWidgetRoot = null;
 var liveWidgetShadow = null;
 var currentLiveData = null;
+var liveWidgetConfig = {
+  enabled: true,
+  position: 'bottom-right',
+  bubble_color: '#e11d48',
+  text_color: '#ffffff',
+  label_text: '🔴 AO VIVO AGORA'
+};
+var livePlayerConfig = {
+  primary_color: '#e11d48',
+  background_color: '#000000',
+  show_viewer_count: true,
+  show_chat: true,
+  autoplay_muted: true
+};
 
   // 🆕 PLAYER FULLSCREEN (independente do modal de stories)
   var fsPlayerOverlay = null;
