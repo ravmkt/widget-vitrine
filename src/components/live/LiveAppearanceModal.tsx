@@ -56,10 +56,10 @@ export default function LiveAppearanceModal({
     <label className="flex items-center justify-between cursor-pointer p-3 rounded-lg border border-border/50 bg-background hover:bg-muted/30 transition-colors">
       <span className="text-sm font-medium">{label}</span>
       <div
-        className={elative inline-flex h-6 w-11 items-center rounded-full transition-colors }
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-primary' : 'bg-muted'}`}
         onClick={() => onChange(!checked)}
       >
-        <span className={inline-block h-4 w-4 transform rounded-full bg-white transition-transform } />
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
       </div>
     </label>
   );
@@ -84,8 +84,8 @@ export default function LiveAppearanceModal({
         <div className="flex flex-1 overflow-hidden">
           <div className="w-1/3 min-w-[320px] border-r border-border flex flex-col bg-muted/10">
             <div className="flex p-2 gap-1 border-b border-border bg-background">
-              <button onClick={() => setActiveTab("widget")} className={lex-1 py-2 px-3 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-colors }><LayoutTemplate className="h-4 w-4" />Divulgação</button>
-              <button onClick={() => setActiveTab("player")} className={lex-1 py-2 px-3 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-colors }><PlaySquare className="h-4 w-4" />Player</button>
+              <button onClick={() => setActiveTab("widget")} className={`flex-1 py-2 px-3 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-colors ${activeTab === "widget" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}><LayoutTemplate className="h-4 w-4" />Divulgação</button>
+              <button onClick={() => setActiveTab("player")} className={`flex-1 py-2 px-3 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-colors ${activeTab === "player" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}><PlaySquare className="h-4 w-4" />Player</button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -123,12 +123,12 @@ export default function LiveAppearanceModal({
 
           <div className="flex-1 flex flex-col bg-muted/30 relative">
             <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 bg-background border border-border rounded-lg shadow-sm z-10">
-              <button onClick={() => setDevice("desktop")} className={p-2 rounded-md transition-colors }><Monitor className="h-4 w-4" /></button>
-              <button onClick={() => setDevice("mobile")} className={p-2 rounded-md transition-colors }><Smartphone className="h-4 w-4" /></button>
+              <button onClick={() => setDevice("desktop")} className={`p-2 rounded-md transition-colors ${device === "desktop" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}><Monitor className="h-4 w-4" /></button>
+              <button onClick={() => setDevice("mobile")} className={`p-2 rounded-md transition-colors ${device === "mobile" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}><Smartphone className="h-4 w-4" /></button>
             </div>
 
             <div className="flex-1 flex items-center justify-center p-8 overflow-hidden">
-              <div className={elative bg-background border border-border shadow-xl overflow-hidden transition-all duration-500 flex flex-col } style={activeTab === "player" ? { backgroundColor: player.background_color } : {}}>
+              <div className={`relative bg-background border border-border shadow-xl overflow-hidden transition-all duration-500 flex flex-col ${device === "desktop" ? "w-full max-w-[800px] aspect-video rounded-xl" : "w-[320px] h-[650px] rounded-[2rem] border-[6px]"}`} style={activeTab === "player" ? { backgroundColor: player.background_color } : {}}>
                 {activeTab === "widget" && (
                   <div className="absolute inset-0 bg-muted/10">
                     <div className="w-full h-12 border-b border-border bg-background flex items-center px-4 shadow-sm"><div className="w-24 h-4 bg-muted rounded-full"></div></div>
@@ -157,7 +157,7 @@ export default function LiveAppearanceModal({
                     <div className="p-4 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-between">
                       <div className="flex-1"><h2 className="text-white font-bold text-lg mb-1 drop-shadow-md">Lançamento Exclusivo</h2><p className="text-white/80 text-sm">Compre agora com descontos imperdíveis!</p></div>
                       <div className="flex flex-col gap-2 items-end">
-                        {player.show_chat && <div className="bg-black/50 backdrop-blur-md p-2.5 rounded-full text-white cursor-pointer border border-white/10" style={{ backgroundColor: ${player.primary_color}40 }}><MessageSquare className="w-5 h-5" /></div>}
+                        {player.show_chat && <div className="bg-black/50 backdrop-blur-md p-2.5 rounded-full text-white cursor-pointer border border-white/10" style={{ backgroundColor: `${player.primary_color}40` }}><MessageSquare className="w-5 h-5" /></div>}
                         <div className="bg-black/50 backdrop-blur-md p-2.5 rounded-full text-white cursor-pointer border border-white/10"><Maximize className="w-5 h-5" /></div>
                       </div>
                     </div>
