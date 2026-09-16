@@ -12,9 +12,9 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { LiveFormDialog } from "@/components/live/LiveFormDialog";
 import { ShareLiveModal } from "@/components/live/ShareLiveModal";
-import { LiveAppearanceModal } from "@/components/live/LiveAppearanceModal";
+// AQUI ESTÁ A CORREÇÃO: Sem as chaves {}
+import LiveAppearanceModal from "@/components/live/LiveAppearanceModal";
 
-// Se as interfaces estiverem no arquivo do Modal, importe de lá. Caso contrário, mantenha do arquivo de tipos.
 export interface LiveWidgetConfig {
   enabled: boolean;
   position: string;
@@ -161,7 +161,6 @@ export function LiveCommercePage() {
     }
   }
 
-  // 2. Atualizamos a função para receber os dados prontos do Modal
   async function handleSaveAppearance(newWidgetConfig: LiveWidgetConfig, newPlayerConfig: LivePlayerConfig) {
     if (!storeId) return;
     try {
@@ -176,7 +175,6 @@ export function LiveCommercePage() {
 
       if (error) throw error;
       
-      // Atualiza o estado local para refletir as mudanças
       setWidgetConfig(newWidgetConfig);
       setPlayerConfig(newPlayerConfig);
       
@@ -259,7 +257,6 @@ export function LiveCommercePage() {
 
   return (
     <div className="space-y-6 p-6 max-w-6xl mx-auto">
-      {/* Cabeçalho */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500">
@@ -274,7 +271,6 @@ export function LiveCommercePage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* O Botão Aparência continua igual, ativando appearanceOpen */}
           <Button
             variant="outline"
             onClick={() => {
@@ -310,7 +306,6 @@ export function LiveCommercePage() {
         </div>
       )}
 
-      {/* Busca e filtro */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -333,7 +328,6 @@ export function LiveCommercePage() {
         </select>
       </div>
 
-      {/* Lista de lives */}
       {filteredLives.length === 0 ? (
         <Card className="border-border/60">
           <CardContent className="py-12 text-center text-muted-foreground">
@@ -410,7 +404,6 @@ export function LiveCommercePage() {
         />
       )}
 
-      {/* 3. Aqui injetamos o nosso novo Modal! Passamos as configurações iniciais e a função de salvar/fechar */}
       <LiveAppearanceModal
         isOpen={appearanceOpen}
         onClose={() => setAppearanceOpen(false)}
