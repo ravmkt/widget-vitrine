@@ -7117,6 +7117,13 @@ if (!storeId || !hasSupabase) {
   });
 }
 
+// Executa a inicializacao automatica via atributo data-vidlytics-init
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', autoInit);
+} else {
+  autoInit();
+}
+
 initWidget();
 
 })();
