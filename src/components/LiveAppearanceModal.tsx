@@ -1,424 +1,355 @@
-'use client';
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  Monitor, Smartphone, MessageSquare, Users, VolumeX, Radio, Maximize,
+  Save, LayoutTemplate, PlaySquare
+} from "lucide-react";
 
-import React, { useState, useEffect } from 'react';
-import {
-  X,
-  Monitor,
-  Smartphone,
-  Link as LinkIcon,
-  Link2Off,
-  Share2,
-  PlaySquare,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-// ──────────────────── TIPOS E ESTRUTURAS ────────────────────
-
-type DeviceType = 'desktop' | 'mobile';
-type LiveTab = 'divulgacao' | 'player';
-
-// Estrutura responsiva baseada no seu padrão
-type ResponsiveConfig<T> = {
-  linked: boolean; // Equivale ao seu "same_for_all"
-  desktop: T;
-  mobile: T;
-};
-
-// Configurações da Aba de Divulgação
-type DivulgacaoConfig = {
-  title: string;
-  titleColor: string;
-  description: string;
-  ctaText: string;
-  ctaBgColor: string;
-  ctaTextColor: string;
-  showShareButton: boolean;
-  borderRadius: string;
-};
-
-// Configurações da Aba de Player
-type PlayerConfig = {
-  autoPlay: boolean;
-  muted: boolean;
-  showControls: boolean;
-  primaryColor: string;
-  objectFit: 'cover' | 'contain';
-};
-
-// Estado Global do Modal
-export type LiveAppearanceData = {
-  divulgacao: ResponsiveConfig<DivulgacaoConfig>;
-  player: ResponsiveConfig<PlayerConfig>;
-};
-
-// ──────────────────── DADOS INICIAIS ────────────────────
-
-const defaultDivulgacao: DivulgacaoConfig = {
-  title: 'Nossa Live Imperdível!',
-  titleColor: '#0F172A',
-  description: 'Acompanhe as novidades exclusivas.',
-  ctaText: 'ENTRAR NA LIVE',
-  ctaBgColor: '#0094EB',
-  ctaTextColor: '#FFFFFF',
-  showShareButton: true,
-  borderRadius: '12',
-};
-
-const defaultPlayer: PlayerConfig = {
-  autoPlay: true,
-  muted: true,
-  showControls: true,
-  primaryColor: '#0094EB',
-  objectFit: 'cover',
-};
-
-const defaultAppearanceData: LiveAppearanceData = {
-  divulgacao: { linked: false, desktop: { ...defaultDivulgacao }, mobile: { ...defaultDivulgacao } },
-  player: { linked: false, desktop: { ...defaultPlayer }, mobile: { ...defaultPlayer } },
-};
-
-// ──────────────────── COMPONENTES DE UI ────────────────────
-
-const inputClass =
-  'w-full rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 bg-slate-50 dark:bg-[#111524] px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-white outline-none transition focus:border-[#0091ff] dark:focus:border-[#ff7a29] focus:bg-white dark:focus:bg-[#111524] disabled:cursor-not-allowed disabled:opacity-50';
-
-const ToggleSwitch = ({ label, checked, onChange, description }: any) => (
-  <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/80 dark:border-[#ff7a29]/30 bg-white dark:bg-[#111524] px-3 py-2 transition hover:border-blue-200 hover:bg-blue-50/20 dark:hover:border-[#ff7a29]/60 dark:hover:bg-[#ff7a29]/5">
-    <input type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 rounded border-slate-300 text-[#0091ff] accent-[#0091ff] focus:ring-2 focus:ring-[#0091ff]" />
-    <span className="min-w-0 flex-1">
-      <span className="block text-xs font-bold text-slate-800 dark:text-white">{label}</span>
-      {description && <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400">{description}</span>}
-    </span>
-  </label>
-);
-
-const ColorInput = ({ value, onChange }: any) => (
-  <div className="flex items-center gap-1.5 w-full">
-    <div className="relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 dark:border-[#ff7a29]/30 overflow-hidden" style={{ backgroundColor: value }}>
-      <input type="color" value={value} onChange={onChange} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
-    </div>
-    <input type="text" value={value} onChange={onChange} className={cn(inputClass, 'w-full')} />
-  </div>
-);
-
-// Accordion Customizado baseado no seu layout
-const AccordionSection = ({ title, children, defaultOpen = false }: any) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  return (
-    <div className="border border-slate-200 dark:border-[#ff7a29]/30 rounded-2xl overflow-hidden mb-3 bg-white dark:bg-[#1a1f35]">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 text-sm font-black text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-[#111524] transition-colors"
-      >
-        {title}
-        {isOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-      </button>
-      {isOpen && <div className="p-4 border-t border-slate-100 dark:border-[#ff7a29]/20 space-y-4">{children}</div>}
-    </div>
-  );
-};
-
-// ──────────────────── COMPONENTE PRINCIPAL ────────────────────
-
-interface LiveAppearanceModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  initialData?: LiveAppearanceData;
-  onSave: (data: LiveAppearanceData) => void;
+export interface LiveWidgetConfig {
+  enabled: boolean;
+  position: string;
+  bubble_color: string;
+  text_color: string;
+  label_text: string;
 }
 
-export default function LiveAppearanceModal({ isOpen, onClose, initialData, onSave }: LiveAppearanceModalProps) {
-  const [activeTab, setActiveTab] = useState<LiveTab>('divulgacao');
-  const [activeDevice, setActiveDevice] = useState<DeviceType>('mobile');
-  
-  const [formData, setFormData] = useState<LiveAppearanceData>(initialData || defaultAppearanceData);
+export interface LivePlayerConfig {
+  primary_color: string;
+  background_color: string;
+  show_viewer_count: boolean;
+  show_chat: boolean;
+  autoplay_muted: boolean;
+}
 
-  // Atualiza os dados quando o modal abre com dados existentes
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (widgetConfig: LiveWidgetConfig, playerConfig: LivePlayerConfig) => void;
+  initialWidgetConfig: LiveWidgetConfig;
+  initialPlayerConfig: LivePlayerConfig;
+  isSaving: boolean;
+}
+
+export default function LiveAppearanceModal({
+  isOpen, onClose, onSave, initialWidgetConfig, initialPlayerConfig, isSaving
+}: Props) {
+  const [activeTab, setActiveTab] = useState<"widget" | "player">("widget");
+  const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+
+  const [widget, setWidget] = useState<LiveWidgetConfig>(initialWidgetConfig);
+  const [player, setPlayer] = useState<LivePlayerConfig>(initialPlayerConfig);
+
+  // Sincroniza o estado interno sempre que o modal abrir
   useEffect(() => {
-    if (initialData) setFormData(initialData);
-  }, [initialData]);
+    if (isOpen) {
+      setWidget(initialWidgetConfig);
+      setPlayer(initialPlayerConfig);
+    }
+  }, [isOpen, initialWidgetConfig, initialPlayerConfig]);
 
-  if (!isOpen) return null;
-
-  // ──────────────────── HELPERS DE ATUALIZAÇÃO ────────────────────
-
-  const updateConfig = (tab: LiveTab, field: string, value: any) => {
-    setFormData((prev) => {
-      const tabData = prev[tab];
-      const isLinked = tabData.linked;
-
-      // Se estiver linkado e o usuário estiver no desktop, replica pro mobile
-      if (isLinked && activeDevice === 'desktop') {
-        return {
-          ...prev,
-          [tab]: {
-            ...tabData,
-            desktop: { ...tabData.desktop, [field]: value },
-            mobile: { ...tabData.mobile, [field]: value },
-          },
-        };
-      }
-
-      // Comportamento normal
-      return {
-        ...prev,
-        [tab]: {
-          ...tabData,
-          [activeDevice]: { ...tabData[activeDevice], [field]: value },
-        },
-      };
-    });
+  const handleSave = () => {
+    onSave(widget, player);
   };
 
-  const toggleLink = () => {
-    setFormData((prev) => {
-      const tabData = prev[activeTab];
-      const newLinkedState = !tabData.linked;
-
-      return {
-        ...prev,
-        [activeTab]: {
-          ...tabData,
-          linked: newLinkedState,
-          // Se ativou o link, sobrescreve o mobile com os dados atuais do desktop
-          mobile: newLinkedState ? { ...tabData.desktop } : tabData.mobile,
-        },
-      };
-    });
-  };
-
-  const currentConfig = formData[activeTab][activeDevice] as any;
-  const isLinked = formData[activeTab].linked;
+  // Switch Toggle customizado para não depender do Switch do shadcn caso não esteja instalado
+  const CustomSwitch = ({ checked, onChange, label }: { checked: boolean, onChange: (v: boolean) => void, label: string }) => (
+    <label className="flex items-center justify-between cursor-pointer p-3 rounded-lg border border-border/50 bg-background hover:bg-muted/30 transition-colors">
+      <span className="text-sm font-medium">{label}</span>
+      <div 
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-primary' : 'bg-muted'}`}
+        onClick={() => onChange(!checked)}
+      >
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
+      </div>
+    </label>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-      {/* Container Principal do Modal */}
-      <div className="w-full max-w-7xl h-[90vh] bg-slate-50 dark:bg-[#0b0e17] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-[#ff7a29]/20">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      {/* Max-w expandido para acomodar controles + preview lado a lado */}
+      <DialogContent className="max-w-6xl w-full h-[90vh] p-0 flex flex-col gap-0 overflow-hidden bg-background">
         
-        {/* HEADER */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-[#ff7a29]/20 bg-white dark:bg-[#111524]">
-          <h2 className="text-xl font-black text-slate-900 dark:text-white">Editar Estilo da Live</h2>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#1a1f35] text-slate-500 transition-colors">
-            <X size={20} />
-          </button>
-        </div>
+        {/* Cabeçalho */}
+        <DialogHeader className="px-6 py-4 border-b border-border flex flex-row items-center justify-between sticky top-0 bg-background z-10">
+          <DialogTitle className="text-xl flex items-center gap-2">
+            <Radio className="h-5 w-5 text-rose-500" />
+            Aparência da Live
+          </DialogTitle>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={onClose} disabled={isSaving}>Cancelar</Button>
+            <Button onClick={handleSave} disabled={isSaving} className="bg-rose-600 hover:bg-rose-700 text-white gap-2">
+              <Save className="h-4 w-4" />
+              {isSaving ? "Salvando..." : "Salvar Alterações"}
+            </Button>
+          </div>
+        </DialogHeader>
 
-        {/* TABS SUPERIORES */}
-        <div className="flex items-center gap-2 px-6 py-4 bg-white dark:bg-[#111524] border-b border-slate-200 dark:border-[#ff7a29]/20">
-          <button
-            onClick={() => setActiveTab('divulgacao')}
-            className={cn('flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-black transition-all', activeTab === 'divulgacao' ? 'bg-[#0091ff] text-white' : 'bg-slate-100 dark:bg-[#1a1f35] text-slate-500 hover:text-slate-800 dark:hover:text-white')}
-          >
-            <Share2 size={16} /> Divulgação
-          </button>
-          <button
-            onClick={() => setActiveTab('player')}
-            className={cn('flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-black transition-all', activeTab === 'player' ? 'bg-[#0091ff] text-white' : 'bg-slate-100 dark:bg-[#1a1f35] text-slate-500 hover:text-slate-800 dark:hover:text-white')}
-          >
-            <PlaySquare size={16} /> Player
-          </button>
-        </div>
-
-        {/* CORPO: Esquerda (Controles) | Direita (Preview) */}
         <div className="flex flex-1 overflow-hidden">
-          
-          {/* MENU ESQUERDO */}
-          <div className="w-[400px] flex-shrink-0 overflow-y-auto p-6 bg-slate-50 dark:bg-[#0b0e17] border-r border-slate-200 dark:border-[#ff7a29]/20">
-            <h3 className="text-lg font-black text-slate-800 dark:text-white mb-6">
-              Configurações {activeTab === 'divulgacao' ? 'da Divulgação' : 'do Player'}
-            </h3>
-
-            {/* SELETOR DE DISPOSITIVO (Idêntico ao seu print) */}
-            <div className="flex items-center justify-between p-1 bg-white dark:bg-[#111524] rounded-2xl border border-slate-200 dark:border-[#ff7a29]/30 mb-6 shadow-sm">
-              <span className="px-3 text-xs font-bold text-slate-600 dark:text-slate-400">Dispositivo</span>
-              <div className="flex items-center p-1 bg-slate-100 dark:bg-[#1a1f35] rounded-xl border border-slate-200 dark:border-[#ff7a29]/20">
-                <button
-                  onClick={() => setActiveDevice('desktop')}
-                  className={cn('p-1.5 rounded-lg transition-all', activeDevice === 'desktop' ? 'bg-white dark:bg-[#0b0e17] shadow text-[#0091ff] dark:text-[#ff7a29]' : 'text-slate-400')}
-                >
-                  <Monitor size={16} />
-                </button>
-                <button
-                  onClick={toggleLink}
-                  title="Sincronizar Desktop e Mobile"
-                  className={cn('p-1.5 rounded-lg mx-1 transition-all', isLinked ? 'text-[#0091ff] dark:text-[#ff7a29] bg-blue-50 dark:bg-[#ff7a29]/10' : 'text-slate-400')}
-                >
-                  {isLinked ? <LinkIcon size={16} /> : <Link2Off size={16} />}
-                </button>
-                <button
-                  onClick={() => {
-                    if (isLinked) toggleLink(); // Se clicar no mobile, quebra o link automaticamente
-                    setActiveDevice('mobile');
-                  }}
-                  className={cn('p-1.5 rounded-lg transition-all', activeDevice === 'mobile' ? 'bg-white dark:bg-[#0b0e17] shadow text-[#0091ff] dark:text-[#ff7a29]' : 'text-slate-400')}
-                >
-                  <Smartphone size={16} />
-                </button>
-              </div>
+          {/* COLUNA ESQUERDA - CONTROLES */}
+          <div className="w-1/3 min-w-[320px] border-r border-border flex flex-col bg-muted/10">
+            {/* Custom Tabs */}
+            <div className="flex p-2 gap-1 border-b border-border bg-background">
+              <button
+                onClick={() => setActiveTab("widget")}
+                className={`flex-1 py-2 px-3 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-colors ${activeTab === "widget" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}
+              >
+                <LayoutTemplate className="h-4 w-4" />
+                Divulgação
+              </button>
+              <button
+                onClick={() => setActiveTab("player")}
+                className={`flex-1 py-2 px-3 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-colors ${activeTab === "player" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}
+              >
+                <PlaySquare className="h-4 w-4" />
+                Player
+              </button>
             </div>
 
-            {/* AVISO DE LINK ATIVO */}
-            {isLinked && activeDevice === 'desktop' && (
-              <div className="mb-6 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-xs text-blue-600 dark:text-blue-400 font-medium">
-                🔗 As alterações feitas no <strong>Desktop</strong> serão aplicadas automaticamente no <strong>Mobile</strong>.
-              </div>
-            )}
-
-            {/* CONTROLES: DIVULGAÇÃO */}
-            {activeTab === 'divulgacao' && (
-              <>
-                <AccordionSection title="1. Textos e Chamadas" defaultOpen={true}>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Título Principal</label>
-                      <input type="text" value={currentConfig.title} onChange={(e) => updateConfig('divulgacao', 'title', e.target.value)} className={inputClass} />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Cor do Título</label>
-                      <ColorInput value={currentConfig.titleColor} onChange={(e: any) => updateConfig('divulgacao', 'titleColor', e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Texto do Botão (CTA)</label>
-                      <input type="text" value={currentConfig.ctaText} onChange={(e) => updateConfig('divulgacao', 'ctaText', e.target.value)} className={inputClass} />
-                    </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {activeTab === "widget" ? (
+                <div className="space-y-5 animate-in fade-in slide-in-from-left-2 duration-300">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">Widget Flutuante</h3>
+                    <p className="text-sm text-muted-foreground mb-4">Configuração do balão que aparece na sua loja.</p>
                   </div>
-                </AccordionSection>
 
-                <AccordionSection title="2. Estilo do Botão">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Cor de Fundo (CTA)</label>
-                      <ColorInput value={currentConfig.ctaBgColor} onChange={(e: any) => updateConfig('divulgacao', 'ctaBgColor', e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Cor do Texto (CTA)</label>
-                      <ColorInput value={currentConfig.ctaTextColor} onChange={(e: any) => updateConfig('divulgacao', 'ctaTextColor', e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Arredondamento (px)</label>
-                      <input type="number" value={currentConfig.borderRadius} onChange={(e) => updateConfig('divulgacao', 'borderRadius', e.target.value)} className={inputClass} />
-                    </div>
-                  </div>
-                </AccordionSection>
-
-                <AccordionSection title="3. Elementos Visíveis">
-                  <ToggleSwitch
-                    label="Mostrar Botão de Compartilhar"
-                    checked={currentConfig.showShareButton}
-                    onChange={(e: any) => updateConfig('divulgacao', 'showShareButton', e.target.checked)}
+                  <CustomSwitch 
+                    checked={widget.enabled} 
+                    onChange={(v) => setWidget({...widget, enabled: v})} 
+                    label="Habilitar Widget na loja" 
                   />
-                </AccordionSection>
-              </>
-            )}
 
-            {/* CONTROLES: PLAYER */}
-            {activeTab === 'player' && (
-              <>
-                <AccordionSection title="1. Comportamento de Vídeo" defaultOpen={true}>
-                  <div className="space-y-4">
-                    <ToggleSwitch label="Autoplay" checked={currentConfig.autoPlay} onChange={(e: any) => updateConfig('player', 'autoPlay', e.target.checked)} />
-                    <ToggleSwitch label="Iniciar Mutado" checked={currentConfig.muted} onChange={(e: any) => updateConfig('player', 'muted', e.target.checked)} />
-                  </div>
-                </AccordionSection>
-                
-                <AccordionSection title="2. Controles Visuais">
-                  <div className="space-y-4">
-                    <ToggleSwitch label="Mostrar Controles do Player" checked={currentConfig.showControls} onChange={(e: any) => updateConfig('player', 'showControls', e.target.checked)} />
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Cor Principal (Barra de progresso)</label>
-                      <ColorInput value={currentConfig.primaryColor} onChange={(e: any) => updateConfig('player', 'primaryColor', e.target.value)} />
-                    </div>
-                  </div>
-                </AccordionSection>
-              </>
-            )}
-          </div>
-
-          {/* ÁREA DIREITA: PREVIEW */}
-          <div className="flex-1 bg-slate-100 dark:bg-[#111524] flex items-center justify-center p-8 overflow-y-auto">
-            
-            {/* Simulador de Dispositivo */}
-            <div
-              className={cn(
-                'relative bg-white dark:bg-black shadow-2xl overflow-hidden flex flex-col items-center justify-center transition-all duration-500',
-                activeDevice === 'mobile' ? 'w-[320px] h-[640px] rounded-[40px] border-[10px] border-slate-900' : 'w-[800px] h-[450px] rounded-xl border border-slate-300 dark:border-slate-800'
-              )}
-            >
-              {/* Fake UI baseado na tab ativa */}
-              {activeTab === 'divulgacao' ? (
-                <div className="flex flex-col items-center justify-center text-center p-6 w-full h-full bg-slate-50 dark:bg-slate-900">
-                  <h3 style={{ color: currentConfig.titleColor }} className="text-2xl font-black mb-2">{currentConfig.title}</h3>
-                  <p className="text-slate-500 mb-6 text-sm">{currentConfig.description}</p>
-                  <button
-                    style={{
-                      backgroundColor: currentConfig.ctaBgColor,
-                      color: currentConfig.ctaTextColor,
-                      borderRadius: `${currentConfig.borderRadius}px`,
-                    }}
-                    className="px-6 py-3 font-bold shadow-lg"
-                  >
-                    {currentConfig.ctaText}
-                  </button>
-                  {currentConfig.showShareButton && (
-                    <button className="mt-4 flex items-center gap-2 text-slate-400 text-sm hover:text-slate-600">
-                      <Share2 size={16} /> Compartilhar
-                    </button>
+                  {widget.enabled && (
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Texto do Balão</label>
+                        <Input 
+                          value={widget.label_text} 
+                          onChange={(e) => setWidget({...widget, label_text: e.target.value})}
+                          placeholder="Ex: 🔴 AO VIVO AGORA"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Cor de Fundo</label>
+                          <div className="flex gap-2">
+                            <Input 
+                              type="color" 
+                              value={widget.bubble_color} 
+                              onChange={(e) => setWidget({...widget, bubble_color: e.target.value})}
+                              className="w-12 p-1 h-10 cursor-pointer"
+                            />
+                            <Input 
+                              value={widget.bubble_color} 
+                              onChange={(e) => setWidget({...widget, bubble_color: e.target.value})}
+                              className="flex-1 font-mono uppercase text-xs"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Cor do Texto</label>
+                          <div className="flex gap-2">
+                            <Input 
+                              type="color" 
+                              value={widget.text_color} 
+                              onChange={(e) => setWidget({...widget, text_color: e.target.value})}
+                              className="w-12 p-1 h-10 cursor-pointer"
+                            />
+                            <Input 
+                              value={widget.text_color} 
+                              onChange={(e) => setWidget({...widget, text_color: e.target.value})}
+                              className="flex-1 font-mono uppercase text-xs"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Posição</label>
+                        <select 
+                          className="w-full flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          value={widget.position}
+                          onChange={(e) => setWidget({...widget, position: e.target.value})}
+                        >
+                          <option value="bottom-right">Inferior Direito</option>
+                          <option value="bottom-left">Inferior Esquerdo</option>
+                        </select>
+                      </div>
+                    </>
                   )}
                 </div>
               ) : (
-                <div className="w-full h-full bg-black relative flex items-center justify-center group">
-                  {/* Fake Video Player */}
-                  <PlaySquare size={64} className="text-white/20" />
-                  
-                  {/* Fake Controls */}
-                  {currentConfig.showControls && (
-                    <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent">
-                      <div className="h-1.5 w-full bg-white/30 rounded-full overflow-hidden">
-                        <div className="h-full w-1/3" style={{ backgroundColor: currentConfig.primaryColor }} />
+                <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
+                   <div>
+                    <h3 className="text-lg font-semibold mb-1">Player da Live</h3>
+                    <p className="text-sm text-muted-foreground mb-4">Aparência do player dentro da sua página de vendas.</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Cor Principal</label>
+                      <div className="flex gap-2">
+                        <Input 
+                          type="color" 
+                          value={player.primary_color} 
+                          onChange={(e) => setPlayer({...player, primary_color: e.target.value})}
+                          className="w-12 p-1 h-10 cursor-pointer"
+                        />
+                        <Input 
+                          value={player.primary_color} 
+                          onChange={(e) => setPlayer({...player, primary_color: e.target.value})}
+                          className="flex-1 font-mono uppercase text-xs"
+                        />
                       </div>
                     </div>
-                  )}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Fundo</label>
+                      <div className="flex gap-2">
+                        <Input 
+                          type="color" 
+                          value={player.background_color} 
+                          onChange={(e) => setPlayer({...player, background_color: e.target.value})}
+                          className="w-12 p-1 h-10 cursor-pointer"
+                        />
+                        <Input 
+                          value={player.background_color} 
+                          onChange={(e) => setPlayer({...player, background_color: e.target.value})}
+                          className="flex-1 font-mono uppercase text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-2 border-t border-border/50">
+                    <CustomSwitch 
+                      checked={player.show_chat} 
+                      onChange={(v) => setPlayer({...player, show_chat: v})} 
+                      label="Exibir Chat" 
+                    />
+                    <CustomSwitch 
+                      checked={player.show_viewer_count} 
+                      onChange={(v) => setPlayer({...player, show_viewer_count: v})} 
+                      label="Exibir Número de Espectadores" 
+                    />
+                    <CustomSwitch 
+                      checked={player.autoplay_muted} 
+                      onChange={(v) => setPlayer({...player, autoplay_muted: v})} 
+                      label="Autoplay Mutado" 
+                    />
+                  </div>
                 </div>
               )}
             </div>
           </div>
-        </div>
 
-        {/* FOOTER */}
-        <div className="p-4 border-t border-slate-200 dark:border-[#ff7a29]/20 bg-white dark:bg-[#111524] flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setFormData(defaultAppearanceData)}
-              className="text-xs font-black uppercase tracking-wider text-rose-500 bg-rose-50 hover:bg-rose-100 px-4 py-2 rounded-xl transition-all"
-            >
-              Resetar
-            </button>
-            <span className="text-xs text-slate-500 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-              Preview visual.
-            </span>
-          </div>
-          
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="px-5 py-2 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={() => onSave(formData)}
-              className="px-5 py-2 text-sm font-bold text-white bg-[#0091ff] hover:bg-blue-600 rounded-xl shadow-md transition-all"
-            >
-              Salvar Configurações
-            </button>
+          {/* COLUNA DIREITA - PREVIEW */}
+          <div className="flex-1 flex flex-col bg-muted/30 relative">
+            {/* Seletor de Dispositivo */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 bg-background border border-border rounded-lg shadow-sm z-10">
+              <button
+                onClick={() => setDevice("desktop")}
+                className={`p-2 rounded-md transition-colors ${device === "desktop" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}
+                title="Visualização Desktop"
+              >
+                <Monitor className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setDevice("mobile")}
+                className={`p-2 rounded-md transition-colors ${device === "mobile" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}
+                title="Visualização Mobile"
+              >
+                <Smartphone className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Container do Mockup */}
+            <div className="flex-1 flex items-center justify-center p-8 overflow-hidden">
+              <div 
+                className={`relative bg-background border border-border shadow-xl overflow-hidden transition-all duration-500 flex flex-col ${
+                  device === "desktop" ? "w-full max-w-[800px] aspect-video rounded-xl" : "w-[320px] h-[650px] rounded-[2rem] border-[6px]"
+                }`}
+                style={activeTab === "player" ? { backgroundColor: player.background_color } : {}}
+              >
+                
+                {/* PREVIEW WIDGET */}
+                {activeTab === "widget" && (
+                  <div className="absolute inset-0 bg-muted/10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNlNWU3ZWIiLz48L3N2Zz4=')]">
+                    {/* Mock Conteúdo da loja */}
+                    <div className="w-full h-12 border-b border-border bg-background flex items-center px-4 shadow-sm">
+                      <div className="w-24 h-4 bg-muted rounded-full"></div>
+                    </div>
+                    
+                    {widget.enabled && (
+                      <div 
+                        className="absolute p-3 px-4 rounded-full shadow-lg cursor-pointer flex items-center gap-2 hover:scale-105 transition-transform"
+                        style={{
+                          backgroundColor: widget.bubble_color,
+                          color: widget.text_color,
+                          bottom: '24px',
+                          right: widget.position === 'bottom-right' ? '24px' : 'auto',
+                          left: widget.position === 'bottom-left' ? '24px' : 'auto',
+                        }}
+                      >
+                        <Radio className="h-5 w-5 animate-pulse" />
+                        <span className="font-bold text-sm tracking-wide">{widget.label_text}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* PREVIEW PLAYER */}
+                {activeTab === "player" && (
+                  <div className="absolute inset-0 flex flex-col">
+                    {/* Header do Player */}
+                    <div className="p-4 flex justify-between items-start z-10 bg-gradient-to-b from-black/50 to-transparent">
+                      <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full pr-3 border border-white/10">
+                        <div className="bg-rose-600 text-white text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                          <Radio className="w-3 h-3" /> Ao Vivo
+                        </div>
+                        {player.show_viewer_count && (
+                          <div className="text-white text-xs font-medium flex items-center gap-1 opacity-90">
+                            <Users className="w-3 h-3" /> 1.2k
+                          </div>
+                        )}
+                      </div>
+                      {player.autoplay_muted && (
+                        <div className="bg-black/40 backdrop-blur-md p-1.5 rounded-full text-white/90 border border-white/10">
+                          <VolumeX className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Vídeo / Centro do Player */}
+                    <div className="flex-1 flex items-center justify-center">
+                       <PlaySquare className="w-16 h-16 opacity-20" style={{ color: player.primary_color }} />
+                    </div>
+
+                    {/* Footer / Controles mockados */}
+                    <div className="p-4 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-between">
+                      <div className="flex-1">
+                        <h2 className="text-white font-bold text-lg mb-1 drop-shadow-md">Lançamento Exclusivo</h2>
+                        <p className="text-white/80 text-sm">Compre agora com descontos imperdíveis!</p>
+                      </div>
+                      
+                      <div className="flex flex-col gap-2 items-end">
+                        {player.show_chat && (
+                          <div className="bg-black/50 backdrop-blur-md p-2.5 rounded-full text-white cursor-pointer hover:bg-black/70 transition-colors border border-white/10" style={{ backgroundColor: `${player.primary_color}40` }}>
+                            <MessageSquare className="w-5 h-5" />
+                          </div>
+                        )}
+                        <div className="bg-black/50 backdrop-blur-md p-2.5 rounded-full text-white cursor-pointer border border-white/10">
+                          <Maximize className="w-5 h-5" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
