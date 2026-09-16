@@ -574,10 +574,19 @@ function trackLiveEvent(liveId, eventType, metadata) {
 
 function renderLiveWidget(live) {
   if (!live || liveWidgetRoot) return;
+  if (liveWidgetConfig.enabled === false) return;
+
+  var posMap = {
+    'bottom-right': 'bottom:20px;right:20px;',
+    'bottom-left': 'bottom:20px;left:20px;',
+    'top-right': 'top:20px;right:20px;',
+    'top-left': 'top:20px;left:20px;'
+  };
+  var posCss = posMap[liveWidgetConfig.position] || posMap['bottom-right'];
 
   var host = document.createElement('div');
   host.id = 'vidlytics-live-root';
-  host.style.cssText = 'position:fixed;z-index:2147483000;bottom:20px;left:20px;';
+  host.style.cssText = 'position:fixed;z-index:2147483000;' + posCss;
   document.body.appendChild(host);
   liveWidgetRoot = host;
   liveWidgetShadow = host.attachShadow({ mode: 'open' });
