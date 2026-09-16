@@ -3,7 +3,6 @@
   "rewrites": [
     { "source": "/widget.js", "destination": "/widget.js" },
     { "source": "/vidlytics-tracking.js", "destination": "/vidlytics-tracking.js" },
-    { "source": "/yampi-tracking.js", "destination": "/yampi-tracking.js" },
     { "source": "/((?!assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -17,14 +16,6 @@
     },
     {
       "source": "/vidlytics-tracking.js",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
-        { "key": "CDN-Cache-Control", "value": "no-store" },
-        { "key": "Vercel-CDN-Cache-Control", "value": "no-store" }
-      ]
-    },
-    {
-      "source": "/yampi-tracking.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
         { "key": "CDN-Cache-Control", "value": "no-store" },
