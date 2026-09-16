@@ -510,10 +510,12 @@ var JSONB_KEYS = ['floating_config', 'carousel_config', 'grid_config', 'modal_co
 
 function fetchActiveLive() {
   if (!hasSupabase) return Promise.resolve(null);
+  var cleanId = cleanUuid(storeId);
+  if (!cleanId) return Promise.resolve(null);
   var nowIso = new Date().toISOString();
-  var path = 'lives?select=*&store_id=eq.' + encodeURIComponent(storeId) +
+  var path = 'lives?select=*&store_id=eq.' + encodeURIComponent(cleanId) +
     '&status=in.(scheduled,live)&order=created_at.desc&limit=1';
-
+    
   return fetchJson(path).then(function (rows) {
     if (!rows || !rows.length) return null;
     var live = rows[0];
