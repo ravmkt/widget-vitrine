@@ -877,9 +877,10 @@ vidEl.src = live.stream_url;
 function normalizeFloatingPosition(pos) {
   if (!pos) return 'bottom-right';
   var p = String(pos).trim().toLowerCase().replace(/_/g, '-');
-  if (p === 'fixed-top-left' || p === 'top-left' || p === 'superior-esquerda') return 'top-left';
-  if (p === 'fixed-top-right' || p === 'top-right' || p === 'superior-direita') return 'top-right';
-  if (p === 'fixed-bottom-left' || p === 'bottom-left' || p === 'inferior-esquerda') return 'bottom-left';
+  if (p === 'fixed-top-left' || p === 'top-left' || p === 'superior-esquerdo' || p === 'superior-esquerda') return 'top-left';
+  if (p === 'fixed-top-right' || p === 'top-right' || p === 'superior-direito' || p === 'superior-direita') return 'top-right';
+  if (p === 'fixed-bottom-left' || p === 'bottom-left' || p === 'inferior-esquerdo' || p === 'inferior-esquerda') return 'bottom-left';
+  if (p === 'fixed-bottom-right' || p === 'bottom-right' || p === 'inferior-direito' || p === 'inferior-direita') return 'bottom-right';
   return 'bottom-right';
 }
 
