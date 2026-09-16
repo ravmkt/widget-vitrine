@@ -12,6 +12,10 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { LiveFormDialog } from "@/components/live/LiveFormDialog";
 import { ShareLiveModal } from "@/components/live/ShareLiveModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Palette } from "lucide-react";
+import LiveAppearanceTab, { LiveWidgetConfig, LivePlayerConfig } from "@/components/live/LiveAppearanceTab";
+
 
 interface Product {
   id: string;
