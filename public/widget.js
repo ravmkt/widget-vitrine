@@ -6792,10 +6792,10 @@ function cleanupPicker(overlayEl, bannerEl, highlightEl) {
       return new Date(store.trial_ends_at).getTime() <= Date.now();
     }
 
-    // 4. Status ativo: liberado
-    if (status === 'active') {
-      return false;
-    }
+// 4. Status ativo ou vitalício: liberado
+if (status === 'active' || status === 'lifetime') {
+  return false;
+}
 
     // Fail-closed por padrão
     return true;
