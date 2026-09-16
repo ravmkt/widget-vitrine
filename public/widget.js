@@ -558,7 +558,7 @@ function renderLiveWidget(live) {
   liveWidgetShadow = host.attachShadow({ mode: 'open' });
 
   var isLive = live.status === 'live';
-  var mediaUrl = live.promo_media_url || live.youtube_thumbnail_url || '';
+var mediaUrl = live.promo_media_url || live.youtube_thumbnail_url || '';
   var mediaType = live.promo_media_type || 'image';
   var ctaText = live.promo_cta_text || 'Assista Agora';
   var title = live.title || 'Live Commerce';
