@@ -778,8 +778,9 @@ vidEl.src = live.stream_url;
       name.textContent = p.name || '';
       card.appendChild(name);
 
-      var price = document.createElement('div');
+            var price = document.createElement('div');
       price.className = 'vl-live-product-price';
+      price.style.color = livePlayerConfig.primary_color || '#22c55e';
       price.textContent = p.price || '';
       card.appendChild(price);
 
