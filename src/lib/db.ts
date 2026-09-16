@@ -268,6 +268,8 @@ carousel_enabled: boolean;
   muted_by_default: boolean;
   mutedByDefault?: boolean;
   show_video_controls: boolean;
+    live_widget_config?: Record<string, any>;
+  live_player_config?: Record<string, any>;
   created_at?: string;
   updated_at?: string;
   whatsapp_button_enabled?: boolean;
