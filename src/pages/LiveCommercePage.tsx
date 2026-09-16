@@ -55,6 +55,23 @@ export function LiveCommercePage() {
 
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareLive, setShareLive] = useState<LiveRow | null>(null);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+const [savingAppearance, setSavingAppearance] = useState(false);
+const [widgetConfig, setWidgetConfig] = useState<LiveWidgetConfig>({
+  enabled: true,
+  position: "bottom-right",
+  bubble_color: "#e11d48",
+  text_color: "#ffffff",
+  label_text: "🔴 AO VIVO AGORA",
+});
+const [playerConfig, setPlayerConfig] = useState<LivePlayerConfig>({
+  primary_color: "#e11d48",
+  background_color: "#000000",
+  show_viewer_count: true,
+  show_chat: true,
+  autoplay_muted: true,
+});
+
 
   useEffect(() => {
     async function loadStoreAndPlan() {
