@@ -1,4 +1,3 @@
-$code = @'
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -65,44 +64,44 @@ interface Props {
 }
 
 // --- DEFAULTS ---
-const defaultWidgetSettings: LiveWidgetSettings = {
+export const defaultWidgetSettings: LiveWidgetSettings = {
   format: "portrait",
   objectFit: "cover",
-  width: 100,
+  width: 120,
   position: "bottom-left",
-  marginBottom: 0,
-  marginTop: 0,
-  marginSide: 5,
-  borderColor: "#0094EB",
+  marginBottom: 20,
+  marginTop: 20,
+  marginSide: 20,
+  borderColor: "#E11D48",
   borderWidth: 2,
   borderRadius: 12,
   showCTA: true,
-  ctaText: "Participe",
-  showCountdown: true,
+  ctaText: "AO VIVO",
+  showCountdown: false,
   playVideo: true,
   showCloseButton: true,
 };
 
-const defaultPlayerSettings: LivePlayerSettings = {
-  borderColor: "#0094EB",
-  borderWidth: 2,
+export const defaultPlayerSettings: LivePlayerSettings = {
+  borderColor: "#E11D48",
+  borderWidth: 0,
   borderRadius: 12,
   showTitle: true,
-  showBadge: false,
+  showBadge: true,
   badgeUrl: "",
   showViewerCount: true,
-  showChat: false,
+  showChat: true,
   autoplayMuted: true,
   cardBgColor: "#FFFFFF",
   cardBorderColor: "#E2E8F0",
-  cardBorderWidth: 2,
-  cardBorderRadius: 12,
-  productNameSize: 12,
+  cardBorderWidth: 1,
+  cardBorderRadius: 8,
+  productNameSize: 14,
   productNameColor: "#0F172A",
-  priceSize: 12,
-  priceColor: "#0094EB",
+  priceSize: 16,
+  priceColor: "#E11D48",
   couponSize: 12,
-  couponColor: "#eb0000",
+  couponColor: "#22C55E",
 };
 
 export default function LiveAppearanceModal({
@@ -113,8 +112,8 @@ export default function LiveAppearanceModal({
 
   const [widgetConfig, setWidgetConfig] = useState<DeviceConfig<LiveWidgetSettings>>({
     desktop: { ...defaultWidgetSettings },
-    mobile: { ...defaultWidgetSettings },
-    linked: true
+    mobile: { ...defaultWidgetSettings, width: 90, marginBottom: 10, marginSide: 10 },
+    linked: false
   });
 
   const [playerConfig, setPlayerConfig] = useState<DeviceConfig<LivePlayerSettings>>({
@@ -125,8 +124,8 @@ export default function LiveAppearanceModal({
 
   useEffect(() => {
     if (isOpen) {
-      if (initialWidgetConfig) setWidgetConfig(initialWidgetConfig);
-      if (initialPlayerConfig) setPlayerConfig(initialPlayerConfig);
+      if (initialWidgetConfig && initialWidgetConfig.desktop) setWidgetConfig(initialWidgetConfig);
+      if (initialPlayerConfig && initialPlayerConfig.desktop) setPlayerConfig(initialPlayerConfig);
     }
   }, [isOpen, initialWidgetConfig, initialPlayerConfig]);
 
@@ -168,7 +167,7 @@ export default function LiveAppearanceModal({
       setWidgetConfig(prev => ({
         ...prev,
         linked: !prev.linked,
-        mobile: !prev.linked ? { ...prev.desktop } : prev.mobile // Copia desktop pro mobile ao linkar
+        mobile: !prev.linked ? { ...prev.desktop } : prev.mobile
       }));
     } else {
       setPlayerConfig(prev => ({
@@ -179,11 +178,11 @@ export default function LiveAppearanceModal({
     }
   };
 
-  // Utilitários de UI e Cálculos
+  // Cálculo de altura automático baseado na largura e formato
   const calcHeight = (format: string, width: number) => {
     if (format === "square" || format === "circular") return width;
-    if (format === "portrait") return width * (16 / 9);
-    if (format === "landscape") return width * (9 / 16);
+    if (format === "portrait") return Math.round(width * 16 / 9);
+    if (format === "landscape") return Math.round(width * 9 / 16);
     return width;
   };
 
@@ -197,7 +196,7 @@ export default function LiveAppearanceModal({
   );
 
   const Section = ({ title, children }: { title: string, children: React.ReactNode }) => (
-    <div className="mb-6 bg-background border border-border/60 rounded-xl overflow-hidden">
+    <div className="mb-6 bg-background border border-border/60 rounded-xl overflow-hidden shadow-sm">
       <div className="bg-muted/30 px-4 py-2 border-b border-border/60"><h4 className="text-sm font-semibold text-foreground/80">{title}</h4></div>
       <div className="p-4 space-y-4">{children}</div>
     </div>
@@ -206,7 +205,8 @@ export default function LiveAppearanceModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[1200px] w-full h-[90vh] p-0 flex flex-col gap-0 overflow-hidden bg-background">
-        <DialogHeader className="px-6 py-4 border-b border-border flex flex-row items-center justify-between sticky top-0 bg-background z-10">
+        {/* Cabeçalho do Modal */}
+        <DialogHeader className="px-6 py-4 border-b border-border flex flex-row items-center justify-between sticky top-0 bg-background z-10 shadow-sm">
           <DialogTitle className="text-xl flex items-center gap-2">
             <Radio className="h-5 w-5 text-rose-500 animate-pulse" /> Aparência da Live
           </DialogTitle>
@@ -219,105 +219,160 @@ export default function LiveAppearanceModal({
         </DialogHeader>
 
         <div className="flex flex-1 overflow-hidden">
-          {/* MENU ESQUERDO - CONFIGURAÇÕES */}
-          <div className="w-[380px] min-w-[380px] border-r border-border flex flex-col bg-muted/5 z-10">
-            <div className="flex p-2 gap-1 border-b border-border bg-background shadow-sm">
-              <button onClick={() => setActiveTab("widget")} className={`flex-1 py-2.5 px-3 flex items-center justify-center gap-2 text-sm font-semibold rounded-md transition-all ${activeTab === "widget" ? "bg-white shadow-sm border border-border text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}><LayoutTemplate className="h-4 w-4" />Divulgação</button>
-              <button onClick={() => setActiveTab("player")} className={`flex-1 py-2.5 px-3 flex items-center justify-center gap-2 text-sm font-semibold rounded-md transition-all ${activeTab === "player" ? "bg-white shadow-sm border border-border text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}><PlaySquare className="h-4 w-4" />Player</button>
+          {/* PAINEL ESQUERDO - CONFIGURAÇÕES */}
+          <div className="w-[380px] min-w-[380px] border-r border-border flex flex-col bg-muted/10 z-10">
+            {/* Abas */}
+            <div className="flex p-2 gap-1 border-b border-border bg-background">
+              <button onClick={() => setActiveTab("widget")} className={`flex-1 py-2.5 px-3 flex items-center justify-center gap-2 text-sm font-semibold rounded-md transition-all ${activeTab === "widget" ? "bg-white shadow-sm border border-border text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}>
+                <LayoutTemplate className="h-4 w-4" /> Divulgação
+              </button>
+              <button onClick={() => setActiveTab("player")} className={`flex-1 py-2.5 px-3 flex items-center justify-center gap-2 text-sm font-semibold rounded-md transition-all ${activeTab === "player" ? "bg-white shadow-sm border border-border text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}>
+                <PlaySquare className="h-4 w-4" /> Player
+              </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
+              {/* Configurações Divulgação */}
               {activeTab === "widget" && (
                 <div className="space-y-4 animate-in fade-in duration-300">
                   <Section title="1. Formato & Dimensões">
-                    <div className="space-y-2"><label className="text-xs font-medium">Formato</label>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Formato</label>
                       <select className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm" value={currentWidget.format} onChange={(e) => updateWidget("format", e.target.value)}>
-                        <option value="portrait">Retrato 9:16</option><option value="landscape">Paisagem 16:9</option><option value="square">Quadrado</option><option value="circular">Circular</option>
+                        <option value="portrait">Retrato 9:16</option>
+                        <option value="landscape">Paisagem 16:9</option>
+                        <option value="square">Quadrado</option>
+                        <option value="circular">Circular</option>
                       </select>
                     </div>
-                    <div className="space-y-2"><label className="text-xs font-medium">Ajuste da Imagem</label>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Ajuste da Imagem</label>
                       <select className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm" value={currentWidget.objectFit} onChange={(e) => updateWidget("objectFit", e.target.value)}>
-                        <option value="cover">Cover (Preencher)</option><option value="contain">Contain (Ajustar)</option><option value="fill">Fill (Esticar)</option>
+                        <option value="cover">Cover (Preencher)</option>
+                        <option value="contain">Contain (Ajustar)</option>
+                        <option value="fill">Fill (Esticar)</option>
                       </select>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2"><label className="text-xs font-medium">Largura (px)</label><Input type="number" value={currentWidget.width} onChange={(e) => updateWidget("width", Number(e.target.value))} className="h-9"/></div>
-                      <div className="space-y-2"><label className="text-xs font-medium text-muted-foreground">Altura (Calculada)</label><Input disabled value={Math.round(calcHeight(currentWidget.format, currentWidget.width))} className="h-9 bg-muted/50"/></div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium">Largura (px)</label>
+                        <Input type="number" value={currentWidget.width} onChange={(e) => updateWidget("width", Number(e.target.value))} className="h-9" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Altura (px)</label>
+                        <Input disabled value={Math.round(calcHeight(currentWidget.format, currentWidget.width))} className="h-9 bg-muted/50" />
+                      </div>
                     </div>
                   </Section>
 
                   <Section title="2. Posição & Margens">
-                    <div className="space-y-2"><label className="text-xs font-medium">Posição na Tela</label>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Posição na Tela</label>
                       <select className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm" value={currentWidget.position} onChange={(e) => updateWidget("position", e.target.value)}>
-                        <option value="bottom-left">Inferior Esquerda</option><option value="bottom-right">Inferior Direita</option><option value="top-left">Superior Esquerda</option><option value="top-right">Superior Direita</option>
+                        <option value="bottom-left">Inferior Esquerda</option>
+                        <option value="bottom-right">Inferior Direita</option>
+                        <option value="top-left">Superior Esquerda</option>
+                        <option value="top-right">Superior Direita</option>
                       </select>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="space-y-2"><label className="text-[10px] font-medium">Margem Inferior</label><Input type="number" value={currentWidget.marginBottom} onChange={(e) => updateWidget("marginBottom", Number(e.target.value))} className="h-8 text-xs"/></div>
-                      <div className="space-y-2"><label className="text-[10px] font-medium">Margem Superior</label><Input type="number" value={currentWidget.marginTop} onChange={(e) => updateWidget("marginTop", Number(e.target.value))} className="h-8 text-xs"/></div>
-                      <div className="space-y-2"><label className="text-[10px] font-medium">Margem Lateral</label><Input type="number" value={currentWidget.marginSide} onChange={(e) => updateWidget("marginSide", Number(e.target.value))} className="h-8 text-xs"/></div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-medium leading-tight">Margem<br/>Inferior/Sup</label>
+                        <Input type="number" value={currentWidget.position.includes('bottom') ? currentWidget.marginBottom : currentWidget.marginTop} onChange={(e) => updateWidget(currentWidget.position.includes('bottom') ? "marginBottom" : "marginTop", Number(e.target.value))} className="h-8 text-xs" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-medium leading-tight">Margem<br/>Lateral</label>
+                        <Input type="number" value={currentWidget.marginSide} onChange={(e) => updateWidget("marginSide", Number(e.target.value))} className="h-8 text-xs" />
+                      </div>
                     </div>
                   </Section>
 
-                  <Section title="3. Bordas">
+                  <Section title="3. Aparência & Bordas">
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="space-y-2 col-span-1"><label className="text-xs font-medium">Cor</label><div className="flex h-9 rounded-md border border-input overflow-hidden"><input type="color" value={currentWidget.borderColor} onChange={(e) => updateWidget("borderColor", e.target.value)} className="w-8 h-full cursor-pointer border-0 p-0"/><input type="text" value={currentWidget.borderColor.toUpperCase()} readOnly className="w-full text-[10px] px-1 outline-none"/></div></div>
-                      <div className="space-y-2"><label className="text-xs font-medium">Largura (px)</label><Input type="number" value={currentWidget.borderWidth} onChange={(e) => updateWidget("borderWidth", Number(e.target.value))} className="h-9"/></div>
-                      <div className="space-y-2"><label className="text-xs font-medium">Raio (px)</label><Input type="number" value={currentWidget.borderRadius} onChange={(e) => updateWidget("borderRadius", Number(e.target.value))} disabled={currentWidget.format === 'circular'} className="h-9"/></div>
+                      <div className="space-y-2 col-span-1">
+                        <label className="text-xs font-medium">Cor Borda</label>
+                        <div className="flex h-9 rounded-md border border-input overflow-hidden">
+                          <input type="color" value={currentWidget.borderColor} onChange={(e) => updateWidget("borderColor", e.target.value)} className="w-8 h-full cursor-pointer border-0 p-0" />
+                          <input type="text" value={currentWidget.borderColor.toUpperCase()} readOnly className="w-full text-[10px] px-1 outline-none" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium">Espessura</label>
+                        <Input type="number" value={currentWidget.borderWidth} onChange={(e) => updateWidget("borderWidth", Number(e.target.value))} className="h-8" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium">Raio (px)</label>
+                        <Input type="number" value={currentWidget.borderRadius} onChange={(e) => updateWidget("borderRadius", Number(e.target.value))} disabled={currentWidget.format === 'circular'} className="h-8 disabled:opacity-50" />
+                      </div>
                     </div>
                   </Section>
 
                   <Section title="4. Elementos Visíveis">
                     <div className="space-y-2">
-                      <CustomSwitch checked={currentWidget.showCTA} onChange={(v) => updateWidget("showCTA", v)} label="Exibir CTA" />
-                      {currentWidget.showCTA && <div className="pl-4 pt-1"><Input value={currentWidget.ctaText} onChange={(e) => updateWidget("ctaText", e.target.value)} placeholder="Texto do botão" className="h-8 text-xs"/></div>}
+                      <CustomSwitch checked={currentWidget.showCTA} onChange={(v) => updateWidget("showCTA", v)} label="Exibir CTA (Balão)" />
+                      {currentWidget.showCTA && (
+                        <div className="pl-4 pt-1 pb-2"><Input value={currentWidget.ctaText} onChange={(e) => updateWidget("ctaText", e.target.value)} placeholder="Ex: AO VIVO" className="h-8 text-xs" /></div>
+                      )}
                       <CustomSwitch checked={currentWidget.showCountdown} onChange={(v) => updateWidget("showCountdown", v)} label="Exibir Contador Regressivo" />
-                      <CustomSwitch checked={currentWidget.playVideo} onChange={(v) => updateWidget("playVideo", v)} label="Reproduzir vídeo" />
-                      <CustomSwitch checked={currentWidget.showCloseButton} onChange={(v) => updateWidget("showCloseButton", v)} label="Exibir botão de fechar (X)" />
+                      <CustomSwitch checked={currentWidget.playVideo} onChange={(v) => updateWidget("playVideo", v)} label="Ícone de Reprodução" />
+                      <CustomSwitch checked={currentWidget.showCloseButton} onChange={(v) => updateWidget("showCloseButton", v)} label="Botão Fechar (X)" />
                     </div>
                   </Section>
                 </div>
               )}
 
+              {/* Configurações Player */}
               {activeTab === "player" && (
                 <div className="space-y-4 animate-in fade-in duration-300">
-                  <Section title="1. Borda do Player">
+                  <Section title="1. Borda e Player">
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="space-y-2 col-span-1"><label className="text-xs font-medium">Cor</label><div className="flex h-9 rounded-md border border-input overflow-hidden"><input type="color" value={currentPlayer.borderColor} onChange={(e) => updatePlayer("borderColor", e.target.value)} className="w-8 h-full cursor-pointer border-0 p-0"/><input type="text" value={currentPlayer.borderColor.toUpperCase()} readOnly className="w-full text-[10px] px-1 outline-none"/></div></div>
-                      <div className="space-y-2"><label className="text-xs font-medium">Largura (px)</label><Input type="number" value={currentPlayer.borderWidth} onChange={(e) => updatePlayer("borderWidth", Number(e.target.value))} className="h-9"/></div>
-                      <div className="space-y-2"><label className="text-xs font-medium">Raio (px)</label><Input type="number" value={currentPlayer.borderRadius} onChange={(e) => updatePlayer("borderRadius", Number(e.target.value))} className="h-9"/></div>
+                      <div className="space-y-2 col-span-1">
+                        <label className="text-xs font-medium">Cor</label>
+                        <div className="flex h-9 rounded-md border border-input overflow-hidden">
+                          <input type="color" value={currentPlayer.borderColor} onChange={(e) => updatePlayer("borderColor", e.target.value)} className="w-8 h-full cursor-pointer border-0 p-0" />
+                          <input type="text" value={currentPlayer.borderColor.toUpperCase()} readOnly className="w-full text-[10px] px-1 outline-none" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium">Espessura</label>
+                        <Input type="number" value={currentPlayer.borderWidth} onChange={(e) => updatePlayer("borderWidth", Number(e.target.value))} className="h-8" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium">Raio (px)</label>
+                        <Input type="number" value={currentPlayer.borderRadius} onChange={(e) => updatePlayer("borderRadius", Number(e.target.value))} className="h-8" />
+                      </div>
                     </div>
                   </Section>
 
                   <Section title="2. Elementos Visíveis">
                     <div className="space-y-2">
-                      <CustomSwitch checked={currentPlayer.showTitle} onChange={(v) => updatePlayer("showTitle", v)} label="Exibir título" />
+                      <CustomSwitch checked={currentPlayer.showTitle} onChange={(v) => updatePlayer("showTitle", v)} label="Exibir título da Live" />
                       <CustomSwitch checked={currentPlayer.showBadge} onChange={(v) => updatePlayer("showBadge", v)} label="Selo destaque" />
-                      {currentPlayer.showBadge && <div className="pl-4 pt-1"><div className="flex items-center gap-2 border border-dashed border-border rounded p-2 justify-center text-xs text-muted-foreground"><ImageIcon className="h-4 w-4"/> Enviar Imagem (150x150)</div></div>}
-                      <CustomSwitch checked={currentPlayer.showViewerCount} onChange={(v) => updatePlayer("showViewerCount", v)} label="Exibir contador de espectadores" />
+                      <CustomSwitch checked={currentPlayer.showViewerCount} onChange={(v) => updatePlayer("showViewerCount", v)} label="Contador de espectadores" />
                       <CustomSwitch checked={currentPlayer.showChat} onChange={(v) => updatePlayer("showChat", v)} label="Exibir chat ao vivo" />
-                      <CustomSwitch checked={currentPlayer.autoplayMuted} onChange={(v) => updatePlayer("autoplayMuted", v)} label="Iniciar com som desativado" />
+                      <CustomSwitch checked={currentPlayer.autoplayMuted} onChange={(v) => updatePlayer("autoplayMuted", v)} label="Ícone de volume" />
                     </div>
                   </Section>
 
-                  <Section title="3. Card de Produto">
+                  <Section title="3. Estilo do Produto (Card)">
                     <div className="grid grid-cols-2 gap-3 mb-3">
-                       <div className="space-y-2"><label className="text-xs font-medium">Fundo</label><div className="flex h-8 rounded-md border border-input overflow-hidden"><input type="color" value={currentPlayer.cardBgColor} onChange={(e) => updatePlayer("cardBgColor", e.target.value)} className="w-8 h-full cursor-pointer border-0 p-0"/><input type="text" value={currentPlayer.cardBgColor.toUpperCase()} readOnly className="w-full text-[10px] px-1 outline-none"/></div></div>
-                       <div className="space-y-2"><label className="text-xs font-medium">Cor Borda</label><div className="flex h-8 rounded-md border border-input overflow-hidden"><input type="color" value={currentPlayer.cardBorderColor} onChange={(e) => updatePlayer("cardBorderColor", e.target.value)} className="w-8 h-full cursor-pointer border-0 p-0"/><input type="text" value={currentPlayer.cardBorderColor.toUpperCase()} readOnly className="w-full text-[10px] px-1 outline-none"/></div></div>
+                       <div className="space-y-2"><label className="text-xs font-medium">Fundo do Card</label><div className="flex h-8 rounded-md border border-input overflow-hidden"><input type="color" value={currentPlayer.cardBgColor} onChange={(e) => updatePlayer("cardBgColor", e.target.value)} className="w-8 h-full cursor-pointer border-0 p-0" /><input type="text" value={currentPlayer.cardBgColor.toUpperCase()} readOnly className="w-full text-[10px] px-1 outline-none"/></div></div>
+                       <div className="space-y-2"><label className="text-xs font-medium">Cor Borda</label><div className="flex h-8 rounded-md border border-input overflow-hidden"><input type="color" value={currentPlayer.cardBorderColor} onChange={(e) => updatePlayer("cardBorderColor", e.target.value)} className="w-8 h-full cursor-pointer border-0 p-0" /><input type="text" value={currentPlayer.cardBorderColor.toUpperCase()} readOnly className="w-full text-[10px] px-1 outline-none"/></div></div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      <div className="space-y-2"><label className="text-xs font-medium">Largura Borda (px)</label><Input type="number" value={currentPlayer.cardBorderWidth} onChange={(e) => updatePlayer("cardBorderWidth", Number(e.target.value))} className="h-8 text-xs"/></div>
-                      <div className="space-y-2"><label className="text-xs font-medium">Raio Borda (px)</label><Input type="number" value={currentPlayer.cardBorderRadius} onChange={(e) => updatePlayer("cardBorderRadius", Number(e.target.value))} className="h-8 text-xs"/></div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="space-y-2"><label className="text-xs font-medium">Espessura (px)</label><Input type="number" value={currentPlayer.cardBorderWidth} onChange={(e) => updatePlayer("cardBorderWidth", Number(e.target.value))} className="h-8 text-xs" /></div>
+                      <div className="space-y-2"><label className="text-xs font-medium">Raio (px)</label><Input type="number" value={currentPlayer.cardBorderRadius} onChange={(e) => updatePlayer("cardBorderRadius", Number(e.target.value))} className="h-8 text-xs" /></div>
                     </div>
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-2 pt-2 border-t border-border/50">
-                      <div className="space-y-1"><label className="text-[10px] font-medium text-muted-foreground">Nome Prod. (Tamanho)</label><Input type="number" value={currentPlayer.productNameSize} onChange={(e) => updatePlayer("productNameSize", Number(e.target.value))} className="h-7 text-xs"/></div>
-                      <div className="space-y-1"><label className="text-[10px] font-medium text-muted-foreground">Cor</label><input type="color" value={currentPlayer.productNameColor} onChange={(e) => updatePlayer("productNameColor", e.target.value)} className="w-full h-7 rounded border border-input cursor-pointer p-0"/></div>
+                    
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-3 pt-4 border-t border-border/50">
+                      <div className="space-y-1"><label className="text-[10px] font-medium text-muted-foreground uppercase">Tamanho Nome (px)</label><Input type="number" value={currentPlayer.productNameSize} onChange={(e) => updatePlayer("productNameSize", Number(e.target.value))} className="h-8 text-xs" /></div>
+                      <div className="space-y-1"><label className="text-[10px] font-medium text-muted-foreground uppercase">Cor Nome</label><div className="flex h-8 rounded border border-input overflow-hidden"><input type="color" value={currentPlayer.productNameColor} onChange={(e) => updatePlayer("productNameColor", e.target.value)} className="w-full h-full cursor-pointer border-0 p-0" /></div></div>
                       
-                      <div className="space-y-1"><label className="text-[10px] font-medium text-muted-foreground">Preço (Tamanho)</label><Input type="number" value={currentPlayer.priceSize} onChange={(e) => updatePlayer("priceSize", Number(e.target.value))} className="h-7 text-xs"/></div>
-                      <div className="space-y-1"><label className="text-[10px] font-medium text-muted-foreground">Cor</label><input type="color" value={currentPlayer.priceColor} onChange={(e) => updatePlayer("priceColor", e.target.value)} className="w-full h-7 rounded border border-input cursor-pointer p-0"/></div>
+                      <div className="space-y-1"><label className="text-[10px] font-medium text-muted-foreground uppercase">Tamanho Preço (px)</label><Input type="number" value={currentPlayer.priceSize} onChange={(e) => updatePlayer("priceSize", Number(e.target.value))} className="h-8 text-xs" /></div>
+                      <div className="space-y-1"><label className="text-[10px] font-medium text-muted-foreground uppercase">Cor Preço</label><div className="flex h-8 rounded border border-input overflow-hidden"><input type="color" value={currentPlayer.priceColor} onChange={(e) => updatePlayer("priceColor", e.target.value)} className="w-full h-full cursor-pointer border-0 p-0" /></div></div>
                       
-                      <div className="space-y-1"><label className="text-[10px] font-medium text-muted-foreground">Cupom (Tamanho)</label><Input type="number" value={currentPlayer.couponSize} onChange={(e) => updatePlayer("couponSize", Number(e.target.value))} className="h-7 text-xs"/></div>
-                      <div className="space-y-1"><label className="text-[10px] font-medium text-muted-foreground">Cor</label><input type="color" value={currentPlayer.couponColor} onChange={(e) => updatePlayer("couponColor", e.target.value)} className="w-full h-7 rounded border border-input cursor-pointer p-0"/></div>
+                      <div className="space-y-1"><label className="text-[10px] font-medium text-muted-foreground uppercase">Tamanho Botão (px)</label><Input type="number" value={currentPlayer.couponSize} onChange={(e) => updatePlayer("couponSize", Number(e.target.value))} className="h-8 text-xs" /></div>
+                      <div className="space-y-1"><label className="text-[10px] font-medium text-muted-foreground uppercase">Cor Botão</label><div className="flex h-8 rounded border border-input overflow-hidden"><input type="color" value={currentPlayer.couponColor} onChange={(e) => updatePlayer("couponColor", e.target.value)} className="w-full h-full cursor-pointer border-0 p-0" /></div></div>
                     </div>
                   </Section>
                 </div>
@@ -325,125 +380,124 @@ export default function LiveAppearanceModal({
             </div>
           </div>
 
-          {/* ÁREA DE PREVIEW (DIREITA) */}
-          <div className="flex-1 flex flex-col bg-[#F3F4F6] relative border-l border-border/50">
-            {/* CONTROLES DE DISPOSITIVO NO TOPO DO PREVIEW */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 bg-background border border-border/80 rounded-lg shadow-sm z-20">
-              <button onClick={() => setDevice("desktop")} className={`p-2 rounded-md transition-all ${device === "desktop" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}><Monitor className="h-4 w-4" /></button>
-              <button onClick={() => setDevice("mobile")} className={`p-2 rounded-md transition-all ${device === "mobile" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}><Smartphone className="h-4 w-4" /></button>
-              <div className="w-[1px] h-4 bg-border mx-1"></div>
-              <button onClick={toggleLink} title={isLinked ? "Desvincular configurações" : "Vincular configurações"} className={`p-2 rounded-md transition-all flex items-center gap-1.5 text-xs font-medium ${isLinked ? "text-primary bg-primary/5 hover:bg-primary/10" : "text-muted-foreground hover:bg-muted"}`}>
-                {isLinked ? <><LinkIcon className="h-4 w-4"/> Linkado</> : <><Unlink className="h-4 w-4"/> Deslinkado</>}
+          {/* PAINEL DIREITO - PREVIEW */}
+          <div className="flex-1 flex flex-col bg-muted/30 relative">
+            
+            {/* Controles do Dispositivo e Link no topo */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 bg-background border border-border rounded-lg shadow-sm z-20">
+              <button onClick={() => setDevice("desktop")} className={`p-2 rounded-md transition-colors ${device === "desktop" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"}`} title="Visualizar no Desktop"><Monitor className="h-4 w-4" /></button>
+              <button onClick={() => setDevice("mobile")} className={`p-2 rounded-md transition-colors ${device === "mobile" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"}`} title="Visualizar no Mobile"><Smartphone className="h-4 w-4" /></button>
+              <div className="w-px h-6 bg-border mx-1"></div>
+              <button onClick={toggleLink} className={`p-2 rounded-md transition-colors hover:bg-muted/50 ${isLinked ? "text-primary" : "text-muted-foreground"}`} title={isLinked ? "Desvincular configurações" : "Vincular configurações"}>
+                {isLinked ? <LinkIcon className="h-4 w-4" /> : <Unlink className="h-4 w-4" />}
               </button>
             </div>
 
-            <div className="flex-1 flex items-center justify-center p-8 overflow-hidden w-full h-full relative">
-              {/* O CONTAINER FAKE DA LOJA */}
-              <div className={`relative bg-white shadow-2xl overflow-hidden transition-all duration-500 ease-in-out ${device === "desktop" ? "w-full max-w-[900px] h-full max-h-[600px] rounded-lg border border-border" : "w-[340px] h-[700px] rounded-[2.5rem] border-[8px] border-gray-900"}`}>
+            {/* Container Central de Preview */}
+            <div className="flex-1 flex items-center justify-center p-8 overflow-hidden bg-dot-pattern">
+              <div className={`relative bg-background border border-border shadow-xl overflow-hidden transition-all duration-500 flex flex-col bg-cover bg-center ${device === "desktop" ? "w-full max-w-[900px] aspect-video rounded-xl" : "w-[340px] h-[700px] rounded-[2.5rem] border-[8px] border-slate-900 shadow-2xl"}`} style={{ backgroundImage: activeTab === 'widget' ? `url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1600&auto=format&fit=crop')` : 'none', backgroundColor: activeTab === 'widget' ? 'transparent' : '#000' }}>
                 
-                {/* Header Fake da Loja */}
-                <div className="w-full h-14 border-b border-gray-100 bg-gray-50 flex items-center px-6">
-                  <div className="w-24 h-4 bg-gray-200 rounded-full"></div>
-                  <div className="ml-auto flex gap-4 hidden sm:flex">
-                    <div className="w-12 h-2 bg-gray-200 rounded-full"></div>
-                    <div className="w-12 h-2 bg-gray-200 rounded-full"></div>
-                  </div>
-                </div>
-
-                {/* --- PREVIEW DO WIDGET (DIVULGAÇÃO) --- */}
+                {/* PREVIEW DIVULGAÇÃO (WIDGET) */}
                 {activeTab === "widget" && (
-                  <div 
-                    className="absolute z-10 transition-all duration-300 shadow-xl overflow-hidden group cursor-pointer flex flex-col items-center justify-center"
-                    style={{
-                      width: `${currentWidget.width}px`,
-                      height: `${calcHeight(currentWidget.format, currentWidget.width)}px`,
-                      borderRadius: currentWidget.format === 'circular' ? '50%' : `${currentWidget.borderRadius}px`,
-                      border: `${currentWidget.borderWidth}px solid ${currentWidget.borderColor}`,
-                      bottom: currentWidget.position.includes('bottom') ? `${currentWidget.marginBottom}px` : 'auto',
-                      top: currentWidget.position.includes('top') ? `${currentWidget.marginTop}px` : 'auto',
-                      left: currentWidget.position.includes('left') ? `${currentWidget.marginSide}px` : 'auto',
-                      right: currentWidget.position.includes('right') ? `${currentWidget.marginSide}px` : 'auto',
-                      backgroundColor: '#000',
-                    }}
-                  >
-                    {/* Placeholder Video */}
-                    <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
-                       {currentWidget.playVideo ? <PlaySquare className="w-1/3 h-1/3 text-white/30" /> : <ImageIcon className="w-1/3 h-1/3 text-white/30" />}
+                  <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px]">
+                    {/* Header falso de loja */}
+                    <div className="w-full h-14 bg-background/95 backdrop-blur flex items-center px-6 shadow-sm justify-between">
+                       <div className="w-24 h-5 bg-muted-foreground/20 rounded"></div>
+                       <div className="flex gap-4"><div className="w-12 h-4 bg-muted-foreground/20 rounded"></div><div className="w-12 h-4 bg-muted-foreground/20 rounded"></div></div>
                     </div>
-
-                    {currentWidget.showCloseButton && (
-                      <div className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5"><div className="w-3 h-3 flex items-center justify-center text-[8px]">X</div></div>
-                    )}
                     
-                    {currentWidget.showCountdown && (
-                      <div className="absolute top-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span> 05:00
-                      </div>
-                    )}
+                    {/* O Widget Flutuante em si */}
+                    <div className="absolute transition-all duration-300 shadow-2xl group cursor-pointer" 
+                         style={{
+                           ...(currentWidget.position.includes('bottom') ? { bottom: currentWidget.marginBottom } : { top: 60 + currentWidget.marginTop }),
+                           ...(currentWidget.position.includes('left') ? { left: currentWidget.marginSide } : { right: currentWidget.marginSide }),
+                           width: currentWidget.width,
+                           height: calcHeight(currentWidget.format, currentWidget.width),
+                           border: `${currentWidget.borderWidth}px solid ${currentWidget.borderColor}`,
+                           borderRadius: currentWidget.format === 'circular' ? '50%' : currentWidget.borderRadius,
+                           overflow: 'hidden',
+                           backgroundColor: '#000'
+                         }}>
+                         
+                         {/* Imagem do Vídeo Dummy */}
+                         <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=400&auto=format&fit=crop" 
+                              className="w-full h-full" style={{ objectFit: currentWidget.objectFit }} alt="Video Preview" />
+                         
+                         {/* Overlay de gradiente */}
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
 
-                    {currentWidget.showCTA && currentWidget.format !== 'circular' && (
-                      <div className="absolute bottom-2 w-[90%] bg-primary text-primary-foreground text-center py-1 rounded-md text-[10px] font-bold shadow-md truncate px-1">
-                        {currentWidget.ctaText || "Participe"}
-                      </div>
-                    )}
+                         {/* Elementos */}
+                         {currentWidget.showCloseButton && <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white text-[10px] font-bold backdrop-blur-sm z-10 transition-colors">✕</div>}
+                         
+                         {currentWidget.playVideo && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"><PlaySquare className="w-4 h-4 ml-0.5 fill-white"/></div>}
+                         
+                         {currentWidget.showCountdown && <div className="absolute top-2 left-2 bg-rose-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10">00:15:30</div>}
+                         
+                         {currentWidget.showCTA && (
+                           <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap shadow-lg border border-white/20 z-20"
+                                style={{ backgroundColor: currentWidget.borderColor }}>
+                             {currentWidget.ctaText}
+                           </div>
+                         )}
+                    </div>
                   </div>
                 )}
 
-                {/* --- PREVIEW DO PLAYER --- */}
+                {/* PREVIEW PLAYER */}
                 {activeTab === "player" && (
-                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                     <div 
-                        className="bg-black relative overflow-hidden flex flex-col shadow-2xl transition-all"
-                        style={{
-                          width: device === "mobile" ? '100%' : '360px',
-                          height: device === "mobile" ? '100%' : '640px',
-                          border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
-                          borderRadius: `${currentPlayer.borderRadius}px`,
-                        }}
-                     >
-                        {/* Header Player */}
-                        <div className="p-3 flex justify-between items-start z-10 bg-gradient-to-b from-black/60 to-transparent absolute top-0 w-full">
-                          <div className="flex flex-col gap-2">
-                             <div className="flex gap-2">
-                               {currentPlayer.showBadge && <div className="w-8 h-8 rounded-full bg-white/20 border border-white/40 flex items-center justify-center text-[8px] text-white">Selo</div>}
-                               <div className="flex flex-col">
-                                 {currentPlayer.showTitle && <span className="text-white text-xs font-bold shadow-sm">Live Exclusiva</span>}
-                                 {currentPlayer.showViewerCount && <span className="text-white/80 text-[10px] flex items-center gap-1"><Users className="w-3 h-3" /> 1.2k</span>}
-                               </div>
-                             </div>
-                          </div>
-                          {currentPlayer.autoplayMuted && <div className="bg-black/40 backdrop-blur-md p-1.5 rounded-full text-white/90"><VolumeX className="w-3 h-3" /></div>}
+                  <div className="absolute inset-0 flex flex-col bg-[#111] overflow-hidden" 
+                       style={{
+                         border: currentPlayer.borderWidth > 0 ? `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}` : 'none',
+                         borderRadius: currentPlayer.borderRadius,
+                       }}>
+                       
+                       {/* Vídeo Dummy Fundo */}
+                       <div className="absolute inset-0 opacity-40"><img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover" /></div>
+
+                      {/* Header Overlay */}
+                      <div className="p-4 flex justify-between items-start z-10 bg-gradient-to-b from-black/80 to-transparent">
+                        <div className="flex gap-2 flex-wrap">
+                          {currentPlayer.showBadge && <div className="bg-amber-400 text-amber-950 text-xs font-extrabold px-2 py-1 rounded shadow-sm uppercase tracking-wider">Destaque</div>}
+                          <div className="bg-rose-600 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1 shadow-sm uppercase tracking-wider"><Radio className="w-3 h-3 animate-pulse"/> Ao Vivo</div>
+                          {currentPlayer.showViewerCount && <div className="bg-black/40 backdrop-blur-md text-white text-xs font-medium px-2 py-1 rounded flex items-center gap-1.5"><Users className="w-3.5 h-3.5"/> 1.2k</div>}
                         </div>
+                        {currentPlayer.autoplayMuted && <div className="bg-black/40 backdrop-blur-md p-1.5 rounded text-white"><VolumeX className="w-4 h-4"/></div>}
+                      </div>
 
-                        {/* Center Player */}
-                        <div className="flex-1 flex items-center justify-center text-white/10"><PlaySquare className="w-16 h-16" /></div>
+                      {/* Centro (Vazio p/ foco no vídeo) */}
+                      <div className="flex-1 flex items-center justify-center z-10 relative group cursor-pointer">
+                         <div className="w-16 h-16 bg-white/10 group-hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors">
+                           <PlaySquare className="w-6 h-6 text-white ml-1" />
+                         </div>
+                      </div>
 
-                        {/* Bottom Actions & Product Card */}
-                        <div className="p-3 flex flex-col gap-2 z-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent absolute bottom-0 w-full">
-                           <div className="flex justify-end gap-2 mb-1">
-                             {currentPlayer.showChat && <div className="bg-black/50 p-2 rounded-full text-white border border-white/20"><MessageSquare className="w-4 h-4" /></div>}
-                             <div className="bg-black/50 p-2 rounded-full text-white border border-white/20"><Maximize className="w-4 h-4" /></div>
-                           </div>
-                           
-                           {/* Product Card Preview */}
-                           <div 
-                             className="flex items-center gap-3 p-2 w-full shadow-lg"
+                      {/* Footer Overlay */}
+                      <div className="p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent flex flex-col gap-3 z-10">
+                        {currentPlayer.showTitle && <h2 className="text-white font-bold text-xl drop-shadow-md">Lançamento Exclusivo Nova Coleção</h2>}
+
+                        {/* Card Produto */}
+                        <div className="flex items-center p-2 rounded-lg gap-3 shadow-lg" 
                              style={{
                                backgroundColor: currentPlayer.cardBgColor,
                                border: `${currentPlayer.cardBorderWidth}px solid ${currentPlayer.cardBorderColor}`,
-                               borderRadius: `${currentPlayer.cardBorderRadius}px`
-                             }}
-                           >
-                              <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0"></div>
-                              <div className="flex flex-col flex-1 truncate">
-                                <span className="font-bold truncate" style={{ fontSize: `${currentPlayer.productNameSize}px`, color: currentPlayer.productNameColor }}>Super Tênis Esportivo</span>
-                                <span className="font-black" style={{ fontSize: `${currentPlayer.priceSize}px`, color: currentPlayer.priceColor }}>R$ 199,90</span>
-                                <span className="font-medium mt-0.5 px-1.5 py-0.5 rounded bg-gray-100 self-start inline-block" style={{ fontSize: `${currentPlayer.couponSize}px`, color: currentPlayer.couponColor }}>LIVE20</span>
-                              </div>
-                              <Button size="sm" className="h-8 text-xs px-2">Comprar</Button>
-                           </div>
+                               borderRadius: currentPlayer.cardBorderRadius
+                             }}>
+                            <div className="w-14 h-14 bg-muted rounded object-cover overflow-hidden shrink-0"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=200&auto=format&fit=crop" className="w-full h-full object-cover"/></div>
+                            <div className="flex-1 min-w-0">
+                                <div style={{ fontSize: currentPlayer.productNameSize, color: currentPlayer.productNameColor }} className="font-semibold truncate">Tênis Nike Revolution 6</div>
+                                <div style={{ fontSize: currentPlayer.priceSize, color: currentPlayer.priceColor }} className="font-black mt-0.5">R$ 299,90</div>
+                            </div>
+                            <button style={{ backgroundColor: currentPlayer.couponColor, fontSize: currentPlayer.couponSize }} className="px-4 py-2 rounded text-white font-bold shrink-0 shadow-sm transition-transform hover:scale-105 uppercase tracking-wider">Comprar</button>
                         </div>
-                     </div>
+
+                        {/* Fake Chat */}
+                        {currentPlayer.showChat && (
+                            <div className="flex gap-2 items-center mt-1">
+                                <div className="flex-1 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-4 py-2.5 text-white/60 text-sm">Comente na live...</div>
+                                <div className="bg-rose-600 p-2.5 rounded-full text-white shadow-md"><MessageSquare className="w-5 h-5"/></div>
+                            </div>
+                        )}
+                      </div>
                   </div>
                 )}
               </div>
@@ -454,10 +508,3 @@ export default function LiveAppearanceModal({
     </Dialog>
   );
 }
-'@
-
-$code | Out-File -FilePath "src\components\live\LiveAppearanceModal.tsx" -Encoding utf8
-
-git add src/components/live/LiveAppearanceModal.tsx
-git commit -m "feat: modal de aparencia completo com link device e abas reais"
-git push
