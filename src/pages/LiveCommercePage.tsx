@@ -302,7 +302,7 @@ export function LiveCommercePage() {
             <div>
               <h3 className="font-semibold text-foreground">Recurso Exclusivo dos Planos Pro e Scale</h3>
               <p className="text-sm text-muted-foreground">
-                Seu plano atual ({planName || "Starter"}) não inclui Live Shopping.
+                Seu plano atual ({planName || "Starter"}) não inclui Live Commerce.
               </p>
             </div>
           </div>
