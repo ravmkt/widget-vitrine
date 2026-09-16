@@ -80,7 +80,7 @@ export function LiveCommercePage() {
 
         const { data: prods } = await supabase
           .from("products")
-          .select("id, name, price, image_url, url")
+.select("id, name, price, image_url, product_url")
           .eq("store_id", store.id)
           .order("name", { ascending: true });
         if (prods) setProducts(prods);
