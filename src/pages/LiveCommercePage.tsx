@@ -6,16 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Radio, Plus, Search, AlertCircle, RefreshCw, Clock, Trash2, Pencil, Share2,
+  Radio, Plus, Search, AlertCircle, RefreshCw, Clock, Trash2, Pencil, Share2, Palette,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { LiveFormDialog } from "@/components/live/LiveFormDialog";
 import { ShareLiveModal } from "@/components/live/ShareLiveModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Palette } from "lucide-react";
 import LiveAppearanceTab, { LiveWidgetConfig, LivePlayerConfig } from "@/components/live/LiveAppearanceTab";
-
 
 interface Product {
   id: string;
@@ -55,23 +53,23 @@ export function LiveCommercePage() {
 
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareLive, setShareLive] = useState<LiveRow | null>(null);
-  const [appearanceOpen, setAppearanceOpen] = useState(false);
-const [savingAppearance, setSavingAppearance] = useState(false);
-const [widgetConfig, setWidgetConfig] = useState<LiveWidgetConfig>({
-  enabled: true,
-  position: "bottom-right",
-  bubble_color: "#e11d48",
-  text_color: "#ffffff",
-  label_text: "🔴 AO VIVO AGORA",
-});
-const [playerConfig, setPlayerConfig] = useState<LivePlayerConfig>({
-  primary_color: "#e11d48",
-  background_color: "#000000",
-  show_viewer_count: true,
-  show_chat: true,
-  autoplay_muted: true,
-});
 
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [savingAppearance, setSavingAppearance] = useState(false);
+  const [widgetConfig, setWidgetConfig] = useState<LiveWidgetConfig>({
+    enabled: true,
+    position: "bottom-right",
+    bubble_color: "#e11d48",
+    text_color: "#ffffff",
+    label_text: "🔴 AO VIVO AGORA",
+  });
+  const [playerConfig, setPlayerConfig] = useState<LivePlayerConfig>({
+    primary_color: "#e11d48",
+    background_color: "#000000",
+    show_viewer_count: true,
+    show_chat: true,
+    autoplay_muted: true,
+  });
 
   useEffect(() => {
     async function loadStoreAndPlan() {
@@ -101,7 +99,7 @@ const [playerConfig, setPlayerConfig] = useState<LivePlayerConfig>({
 
         const { data: prods } = await supabase
           .from("products")
-.select("id, name, price, image_url, product_url")
+          .select("id, name, price, image_url, product_url")
           .eq("store_id", store.id)
           .order("name", { ascending: true });
         if (prods) setProducts(prods);
@@ -124,6 +122,48 @@ const [playerConfig, setPlayerConfig] = useState<LivePlayerConfig>({
       .order("scheduled_at", { ascending: true, nullsFirst: false });
 
     if (!error && data) setLives(data as LiveRow[]);
+  }
+
+  async function loadAppearanceConfig(currentStoreId: string) {
+    const { data, error } = await supabase
+      .from("store_settings")
+      .select("live_widget_config, live_player_config")
+      .eq("store_id", currentStoreId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Erro ao carregar aparência da live:", error);
+      return;
+    }
+    if (data?.live_widget_config && Object.keys(data.live_widget_config).length > 0) {
+      setWidgetConfig(data.live_widget_config as LiveWidgetConfig);
+    }
+    if (data?.live_player_config && Object.keys(data.live_player_config).length > 0) {
+      setPlayerConfig(data.live_player_config as LivePlayerConfig);
+    }
+  }
+
+  async function handleSaveAppearance() {
+    if (!storeId) return;
+    try {
+      setSavingAppearance(true);
+      const { error } = await supabase
+        .from("store_settings")
+        .update({
+          live_widget_config: widgetConfig,
+          live_player_config: playerConfig,
+        })
+        .eq("store_id", storeId);
+
+      if (error) throw error;
+      toast.success("Aparência da Live salva com sucesso!");
+      setAppearanceOpen(false);
+    } catch (err) {
+      console.error("Erro ao salvar aparência:", err);
+      toast.error("Erro ao salvar aparência da Live.");
+    } finally {
+      setSavingAppearance(false);
+    }
   }
 
   const filteredLives = useMemo(() => {
@@ -209,10 +249,23 @@ const [playerConfig, setPlayerConfig] = useState<LivePlayerConfig>({
           </div>
         </div>
 
-        <Button onClick={handleCreateNew} disabled={!allowsLive} className="gap-2 bg-rose-600 hover:bg-rose-700 text-white">
-          <Plus className="h-4 w-4" />
-          Nova Live
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (storeId) loadAppearanceConfig(storeId);
+              setAppearanceOpen(true);
+            }}
+            className="gap-2"
+          >
+            <Palette className="h-4 w-4" />
+            Aparência
+          </Button>
+          <Button onClick={handleCreateNew} disabled={!allowsLive} className="gap-2 bg-rose-600 hover:bg-rose-700 text-white">
+            <Plus className="h-4 w-4" />
+            Nova Live
+          </Button>
+        </div>
       </div>
 
       {!allowsLive && (
@@ -331,6 +384,28 @@ const [playerConfig, setPlayerConfig] = useState<LivePlayerConfig>({
           isLiveNow={Boolean(shareLive.is_active && shareLive.status === "live")}
         />
       )}
+
+      <Dialog open={appearanceOpen} onOpenChange={setAppearanceOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Aparência da Live</DialogTitle>
+          </DialogHeader>
+          <LiveAppearanceTab
+            widgetConfig={widgetConfig}
+            playerConfig={playerConfig}
+            onWidgetChange={setWidgetConfig}
+            onPlayerChange={setPlayerConfig}
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setAppearanceOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveAppearance} disabled={savingAppearance} className="bg-rose-600 hover:bg-rose-700 text-white">
+              {savingAppearance ? "Salvando..." : "Salvar Aparência"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
