@@ -628,10 +628,12 @@ var mediaUrl = live.promo_media_url || live.youtube_thumbnail_url || '';
   var badge = document.createElement('div');
   badge.className = 'vl-live-badge' + (isLive ? '' : ' scheduled');
   if (isLive) {
+    badge.style.background = liveWidgetConfig.bubble_color || '#ef4444';
+    badge.style.color = liveWidgetConfig.text_color || '#fff';
     var dot = document.createElement('span');
     dot.className = 'vl-live-dot';
     badge.appendChild(dot);
-    badge.appendChild(document.createTextNode('AO VIVO'));
+    badge.appendChild(document.createTextNode(liveWidgetConfig.label_text || 'AO VIVO'));
   } else {
     badge.textContent = 'EM BREVE';
   }
