@@ -583,7 +583,7 @@ function renderLiveWidget(live) {
     'top-right': 'top:20px;right:20px;',
     'top-left': 'top:20px;left:20px;'
   };
-  var posCss = posMap[liveWidgetConfig.position] || posMap['bottom-right'];
+var posCss = posMap[normalizeFloatingPosition(liveWidgetConfig.position)] || posMap['bottom-right'];
 
   var host = document.createElement('div');
   host.id = 'vidlytics-live-root';
