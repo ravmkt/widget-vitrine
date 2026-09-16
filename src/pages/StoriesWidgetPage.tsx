@@ -320,7 +320,7 @@ const getProductImageUrl = (product?: any): string => {
 
 const getProductUrl = (product?: any): string => {
   if (!product) return '#';
-  return product.product_url || product.productUrl || product.url || '#';
+return product.product_url || product.productUrl || '#';
 };
 
 const getProductPrice = (product?: any): number => {
