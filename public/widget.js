@@ -724,6 +724,7 @@ function openLiveModal(live) {
 
   var modal = document.createElement('div');
   modal.className = 'vl-live-modal';
+  modal.style.background = livePlayerConfig.background_color || '#0f172a';
 
   var closeBtn = document.createElement('button');
   closeBtn.className = 'vl-live-modal-close';
