@@ -516,8 +516,9 @@ function fetchActiveLive() {
   var path = 'lives?select=*&store_id=eq.' + encodeURIComponent(cleanId) +
     '&status=in.(scheduled,live)&order=created_at.desc&limit=1';
     
-  return fetchJson(path).then(function (rows) {
-    if (!rows || !rows.length) return null;
+return fetchJson(path).then(function (rows) {
+  console.log('[VIDLYTICS DEBUG] path:', path, 'rows:', rows);
+  if (!rows || !rows.length) return null;
     var live = rows[0];
 
     // Valida janela de divulgação (se configurada)
