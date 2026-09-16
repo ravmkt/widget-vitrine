@@ -268,7 +268,7 @@ export function LiveCommercePage() {
             <Radio className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Live Shopping</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Live Commerce</h1>
             <p className="text-muted-foreground text-sm">
               Programe, divulgue e gerencie todas as suas lives em um só lugar.
             </p>
