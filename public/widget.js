@@ -1442,6 +1442,8 @@ whatsapp_message_template: store.whatsapp_message_template || '',
 whatsapp_enabled: store.whatsapp_enabled !== false,
           store_logo_url: store.logo_url || '',
           store_name: store.store_name || '',
+          live_widget_config: store.live_widget_config || null,
+          live_player_config: store.live_player_config || null,
           app_enabled: store.app_enabled !== false,
           widget_enabled: store.widget_enabled !== false
         };
