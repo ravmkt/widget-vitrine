@@ -1,5 +1,5 @@
 (function () {
-  var WIDGET_VERSION = '2026.09.16-00';
+  var WIDGET_VERSION = '2026.09.16-20';
 
   console.info(
     '%cVidlytics Widget carregado — versão ' + WIDGET_VERSION,
