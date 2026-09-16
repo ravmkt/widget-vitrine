@@ -3,7 +3,6 @@ import { supabase } from "@/lib/supabase";
 import { useTenant } from "@/context/TenantContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import LiveAppearanceModal from "@/components/live/LiveAppearanceModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
