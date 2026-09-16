@@ -16,6 +16,14 @@
 
   var hasSupabase = Boolean(supabaseUrl && supabaseAnonKey && storeId);
 
+  function cleanUuid(val) {
+    if (!val) return null;
+    var s = String(val).trim();
+    if (!s || s === 'null' || s === 'undefined' || s === '""') return null;
+    var isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+    return isUuid ? s : null;
+  }
+
   if (window.__vidlytics_widget_loaded_version === WIDGET_VERSION) return;
   window.__vidlytics_widget_loaded_version = WIDGET_VERSION;
 
