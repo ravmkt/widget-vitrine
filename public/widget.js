@@ -6910,11 +6910,6 @@ if (appDisabledBySettings) {
   return Promise.resolve();
 }
 
-// 🆕 LIVE COMMERCE — divulgação flutuante independente do restante do fluxo
-fetchActiveLive().then(function (live) {
-  if (live) renderLiveWidget(live);
-});
-
 // 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
 if (!storeId || !hasSupabase) {
   return Promise.resolve();
