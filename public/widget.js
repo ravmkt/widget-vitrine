@@ -6906,14 +6906,19 @@ storeWhatsappEnabled = settings.whatsapp_enabled !== false;
       videoLikeCounts = likes.likeCounts || {};
 
       // 🔒 Aplicativo desativado nas Configurações (Online/Offline) → não renderiza NADA na loja
-      if (appDisabledBySettings) {
-        return Promise.resolve();
-      }
+if (appDisabledBySettings) {
+  return Promise.resolve();
+}
 
-      // 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
-      if (!storeId || !hasSupabase) {
-        return Promise.resolve();
-      }
+// 🆕 LIVE COMMERCE — divulgação flutuante independente do restante do fluxo
+fetchActiveLive().then(function (live) {
+  if (live) renderLiveWidget(live);
+});
+
+// 🆕 LER DISPLAY LOCATIONS E INJETAR CARROSSEL NOS SELETORES
+if (!storeId || !hasSupabase) {
+  return Promise.resolve();
+}
 
       return readDisplayLocations().then(function (locations) {
         return readPageRules().then(function (rules) {
