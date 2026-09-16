@@ -12,9 +12,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { LiveFormDialog } from "@/components/live/LiveFormDialog";
 import { ShareLiveModal } from "@/components/live/ShareLiveModal";
-
-// 1. Importamos o novo Modal no lugar do LiveAppearanceTab e do Dialog padrão
-import LiveAppearanceModal from "@/components/live/LiveAppearanceModal"; 
+import { LiveAppearanceModal } from "@/components/live/LiveAppearanceModal";
 
 // Se as interfaces estiverem no arquivo do Modal, importe de lá. Caso contrário, mantenha do arquivo de tipos.
 export interface LiveWidgetConfig {
