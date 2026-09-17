@@ -48,6 +48,7 @@ export interface LivePlayerSettings {
   titleText: string;
   titleColor: string;
 
+  showCoupon: boolean;
   couponCode: string;
   couponCodeColor: string;
   couponCodeBgColor: string;
@@ -55,6 +56,7 @@ export interface LivePlayerSettings {
   couponTextColor: string;
   couponTextBgColor: string;
 
+  showInfo: boolean;
   infoText1: string;
   infoText2: string;
   infoSize1: number;
@@ -62,14 +64,15 @@ export interface LivePlayerSettings {
   infoTextColor: string;
   infoBgColor: string;
 
+  showShare: boolean;
   shareTextColor: string;
   shareBgColor: string;
 
   showViewerCount: boolean;
   showChat: boolean;
   autoplayMuted: boolean;
+  
   showProducts: boolean;
-
   productNameSize: number;
   productNameColor: string;
   productPriceSize: number;
@@ -139,6 +142,7 @@ export const defaultPlayerSettings: LivePlayerSettings = {
   titleText: "Live Shop",
   titleColor: "#FFFFFF",
 
+  showCoupon: true,
   couponCode: "CÓDIGO",
   couponCodeColor: "#FFFFFF",
   couponCodeBgColor: "#e7191f",
@@ -146,24 +150,26 @@ export const defaultPlayerSettings: LivePlayerSettings = {
   couponTextColor: "#000000",
   couponTextBgColor: "#FFFFFF",
 
+  showInfo: true,
   infoText1: "FRETE GRÁTIS",
   infoText2: "Acima de R$200",
-  infoSize1: 20,
-  infoSize2: 14,
+  infoSize1: 18,
+  infoSize2: 12,
   infoTextColor: "#000000",
   infoBgColor: "#FFFFFF",
 
+  showShare: true,
   shareTextColor: "#000000",
   shareBgColor: "#FFFFFF",
 
   showViewerCount: true,
   showChat: true,
   autoplayMuted: true,
+  
   showProducts: true,
-
-  productNameSize: 12,
+  productNameSize: 11,
   productNameColor: "#000000",
-  productPriceSize: 12,
+  productPriceSize: 11,
   productPriceColor: "#e7191f",
 };
 
@@ -347,7 +353,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
           <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
             <CustomSwitch checked={config.showCTA} onChange={(v) => updateFn("showCTA", v)} label="Exibir CTA" />
             {config.showCTA && (
-              <div className="mt-3 space-y-3">
+              <div className="mt-3 space-y-3 pt-3 border-t border-slate-200">
                 <Input value={config.ctaText} onChange={(e) => updateFn("ctaText", e.target.value)} placeholder="Texto" className="h-9 rounded-lg text-[13px]" />
                 <div className="grid grid-cols-2 gap-3">
                   <ColorInput label="Fundo" value={config.ctaBgColor} onChange={(v) => updateFn("ctaBgColor", v)} />
@@ -365,7 +371,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
             <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
               <CustomSwitch checked={config.showCountdown} onChange={(v) => updateFn("showCountdown", v)} label="Contador Regressivo" />
               {config.showCountdown && (
-                <div className="mt-3 space-y-3">
+                <div className="mt-3 space-y-3 pt-3 border-t border-slate-200">
                   <div className="grid grid-cols-2 gap-3">
                     <ColorInput label="Fundo" value={config.countdownBgColor} onChange={(v) => updateFn("countdownBgColor", v)} />
                     <ColorInput label="Texto" value={config.countdownTextColor} onChange={(v) => updateFn("countdownTextColor", v)} />
@@ -409,9 +415,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
           {/* PAINEL ESQUERDO */}
           <div className="w-[380px] min-w-[380px] bg-white border-r border-slate-200 flex flex-col z-10 overflow-hidden">
             <div className="pt-6 pb-4 px-6 flex justify-between items-center">
-              <h3 className="text-[15px] font-bold text-slate-800 tracking-tight">
-                Configurações
-              </h3>
+              <h3 className="text-[15px] font-bold text-slate-800 tracking-tight">Configurações</h3>
                <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-0.5">
                   <button onClick={() => setDevice("desktop")} className={`p-1.5 rounded-md transition-colors ${device === "desktop" ? "bg-white shadow-sm text-rose-600" : "text-slate-400"}`}><Monitor className="h-3.5 w-3.5" /></button>
                   <button onClick={toggleLink} className={`p-1.5 rounded-md hover:bg-slate-200/50 ${isLinked ? "text-rose-600" : "text-slate-400"}`}>{isLinked ? <LinkIcon className="h-3 w-3" /> : <Unlink className="h-3 w-3" />}</button>
@@ -426,7 +430,8 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
               {/* ABA PLAYER CONFIG */}
               {activeTab === "player" && (
                 <div className="animate-in fade-in duration-300">
-                  <AccordionItem id="player_borda" title="1. Borda" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
+                  
+                  <AccordionItem id="player_borda" title="1. Borda (Aplica a todos os cards)" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <ColorInput label="Cor da Borda" value={currentPlayer.borderColor} onChange={(v) => updateConfig(setPlayerConfig, "borderColor", v, playerConfig.linked)} />
                       <div className="space-y-1.5">
@@ -442,65 +447,23 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
                   <AccordionItem id="player_visibilidade" title="2. Elementos Visíveis" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
                     <div className="space-y-4">
-                      {/* Titulo */}
+                      
+                      {/* Titulo do Vídeo */}
                       <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
-                        <CustomSwitch checked={currentPlayer.showTitle} onChange={(v) => updateConfig(setPlayerConfig, "showTitle", v, playerConfig.linked)} label="Exibir Título" />
+                        <CustomSwitch checked={currentPlayer.showTitle} onChange={(v) => updateConfig(setPlayerConfig, "showTitle", v, playerConfig.linked)} label="Exibir Título no Vídeo" />
                         {currentPlayer.showTitle && (
-                          <div className="mt-3 space-y-3">
+                          <div className="mt-3 space-y-3 pt-3 border-t border-slate-200">
                             <Input value={currentPlayer.titleText} onChange={(e) => updateConfig(setPlayerConfig, "titleText", e.target.value)} className="h-8 rounded-lg text-[13px]" />
                             <ColorInput label="Cor do Texto" value={currentPlayer.titleColor} onChange={(v) => updateConfig(setPlayerConfig, "titleColor", v, playerConfig.linked)} />
                           </div>
                         )}
                       </div>
 
-                      {/* Card Cupom */}
-                      <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50 space-y-3">
-                        <span className="text-[12px] font-bold text-slate-700">Estilo do Cupom</span>
-                        <div className="grid grid-cols-2 gap-3">
-                          <Input value={currentPlayer.couponCode} onChange={(e) => updateConfig(setPlayerConfig, "couponCode", e.target.value)} placeholder="Código" className="h-8 rounded-lg text-[12px]" />
-                          <Input value={currentPlayer.couponText} onChange={(e) => updateConfig(setPlayerConfig, "couponText", e.target.value)} placeholder="Texto" className="h-8 rounded-lg text-[12px]" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 mt-2">
-                           <ColorInput label="Cor Cód." value={currentPlayer.couponCodeColor} onChange={(v) => updateConfig(setPlayerConfig, "couponCodeColor", v, playerConfig.linked)} />
-                           <ColorInput label="Fundo Cód." value={currentPlayer.couponCodeBgColor} onChange={(v) => updateConfig(setPlayerConfig, "couponCodeBgColor", v, playerConfig.linked)} />
-                           <ColorInput label="Cor Texto" value={currentPlayer.couponTextColor} onChange={(v) => updateConfig(setPlayerConfig, "couponTextColor", v, playerConfig.linked)} />
-                           <ColorInput label="Fundo Texto" value={currentPlayer.couponTextBgColor} onChange={(v) => updateConfig(setPlayerConfig, "couponTextBgColor", v, playerConfig.linked)} />
-                        </div>
-                      </div>
-
-                      {/* Card Informativo */}
-                      <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50 space-y-3">
-                        <span className="text-[12px] font-bold text-slate-700">Card Informativo</span>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <Input value={currentPlayer.infoText1} onChange={(e) => updateConfig(setPlayerConfig, "infoText1", e.target.value)} className="h-8 rounded-lg text-[12px]" />
-                            <Input type="number" placeholder="Tam. px" value={currentPlayer.infoSize1} onChange={(e) => updateConfig(setPlayerConfig, "infoSize1", Number(e.target.value), playerConfig.linked)} className="h-7 rounded-md text-[11px]" />
-                          </div>
-                          <div className="space-y-1">
-                            <Input value={currentPlayer.infoText2} onChange={(e) => updateConfig(setPlayerConfig, "infoText2", e.target.value)} className="h-8 rounded-lg text-[12px]" />
-                            <Input type="number" placeholder="Tam. px" value={currentPlayer.infoSize2} onChange={(e) => updateConfig(setPlayerConfig, "infoSize2", Number(e.target.value), playerConfig.linked)} className="h-7 rounded-md text-[11px]" />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 mt-2">
-                           <ColorInput label="Cor Texto" value={currentPlayer.infoTextColor} onChange={(v) => updateConfig(setPlayerConfig, "infoTextColor", v, playerConfig.linked)} />
-                           <ColorInput label="Cor Fundo" value={currentPlayer.infoBgColor} onChange={(v) => updateConfig(setPlayerConfig, "infoBgColor", v, playerConfig.linked)} />
-                        </div>
-                      </div>
-
-                      {/* Card Compartilhar */}
-                      <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50 space-y-3">
-                         <span className="text-[12px] font-bold text-slate-700">Botão Compartilhar</span>
-                         <div className="grid grid-cols-2 gap-3 mt-1">
-                           <ColorInput label="Cor Texto" value={currentPlayer.shareTextColor} onChange={(v) => updateConfig(setPlayerConfig, "shareTextColor", v, playerConfig.linked)} />
-                           <ColorInput label="Cor Fundo" value={currentPlayer.shareBgColor} onChange={(v) => updateConfig(setPlayerConfig, "shareBgColor", v, playerConfig.linked)} />
-                         </div>
-                      </div>
-
                       {/* Produtos */}
                       <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
-                        <CustomSwitch checked={currentPlayer.showProducts} onChange={(v) => updateConfig(setPlayerConfig, "showProducts", v, playerConfig.linked)} label="Exibir Produtos" />
+                        <CustomSwitch checked={currentPlayer.showProducts} onChange={(v) => updateConfig(setPlayerConfig, "showProducts", v, playerConfig.linked)} label="Produtos" />
                         {currentPlayer.showProducts && (
-                          <div className="mt-4 grid grid-cols-2 gap-4">
+                          <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-2 gap-4">
                             <div className="space-y-3">
                                <ColorInput label="Cor Nome" value={currentPlayer.productNameColor} onChange={(v) => updateConfig(setPlayerConfig, "productNameColor", v, playerConfig.linked)} />
                                <div className="space-y-1.5">
@@ -519,6 +482,59 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         )}
                       </div>
 
+                      {/* Card do Cupom */}
+                      <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
+                        <CustomSwitch checked={currentPlayer.showCoupon} onChange={(v) => updateConfig(setPlayerConfig, "showCoupon", v, playerConfig.linked)} label="Card do Cupom" />
+                        {currentPlayer.showCoupon && (
+                          <div className="mt-3 pt-3 border-t border-slate-200 space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <Input value={currentPlayer.couponCode} onChange={(e) => updateConfig(setPlayerConfig, "couponCode", e.target.value)} placeholder="Código" className="h-8 rounded-lg text-[12px]" />
+                              <Input value={currentPlayer.couponText} onChange={(e) => updateConfig(setPlayerConfig, "couponText", e.target.value)} placeholder="Texto" className="h-8 rounded-lg text-[12px]" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 mt-2">
+                               <ColorInput label="Cor Cód." value={currentPlayer.couponCodeColor} onChange={(v) => updateConfig(setPlayerConfig, "couponCodeColor", v, playerConfig.linked)} />
+                               <ColorInput label="Fundo Cód." value={currentPlayer.couponCodeBgColor} onChange={(v) => updateConfig(setPlayerConfig, "couponCodeBgColor", v, playerConfig.linked)} />
+                               <ColorInput label="Cor Texto" value={currentPlayer.couponTextColor} onChange={(v) => updateConfig(setPlayerConfig, "couponTextColor", v, playerConfig.linked)} />
+                               <ColorInput label="Fundo Texto" value={currentPlayer.couponTextBgColor} onChange={(v) => updateConfig(setPlayerConfig, "couponTextBgColor", v, playerConfig.linked)} />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Card Informativo */}
+                      <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
+                        <CustomSwitch checked={currentPlayer.showInfo} onChange={(v) => updateConfig(setPlayerConfig, "showInfo", v, playerConfig.linked)} label="Card Informativo" />
+                        {currentPlayer.showInfo && (
+                          <div className="mt-3 pt-3 border-t border-slate-200 space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <Input value={currentPlayer.infoText1} onChange={(e) => updateConfig(setPlayerConfig, "infoText1", e.target.value)} className="h-8 rounded-lg text-[12px]" />
+                                <Input type="number" placeholder="Tam. px" value={currentPlayer.infoSize1} onChange={(e) => updateConfig(setPlayerConfig, "infoSize1", Number(e.target.value), playerConfig.linked)} className="h-7 rounded-md text-[11px]" />
+                              </div>
+                              <div className="space-y-1">
+                                <Input value={currentPlayer.infoText2} onChange={(e) => updateConfig(setPlayerConfig, "infoText2", e.target.value)} className="h-8 rounded-lg text-[12px]" />
+                                <Input type="number" placeholder="Tam. px" value={currentPlayer.infoSize2} onChange={(e) => updateConfig(setPlayerConfig, "infoSize2", Number(e.target.value), playerConfig.linked)} className="h-7 rounded-md text-[11px]" />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 mt-2">
+                               <ColorInput label="Cor Texto" value={currentPlayer.infoTextColor} onChange={(v) => updateConfig(setPlayerConfig, "infoTextColor", v, playerConfig.linked)} />
+                               <ColorInput label="Cor Fundo" value={currentPlayer.infoBgColor} onChange={(v) => updateConfig(setPlayerConfig, "infoBgColor", v, playerConfig.linked)} />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Card Compartilhar */}
+                      <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
+                         <CustomSwitch checked={currentPlayer.showShare} onChange={(v) => updateConfig(setPlayerConfig, "showShare", v, playerConfig.linked)} label="Card Compartilhar" />
+                         {currentPlayer.showShare && (
+                           <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-2 gap-3">
+                             <ColorInput label="Cor Texto" value={currentPlayer.shareTextColor} onChange={(v) => updateConfig(setPlayerConfig, "shareTextColor", v, playerConfig.linked)} />
+                             <ColorInput label="Cor Fundo" value={currentPlayer.shareBgColor} onChange={(v) => updateConfig(setPlayerConfig, "shareBgColor", v, playerConfig.linked)} />
+                           </div>
+                         )}
+                      </div>
+
                       <CustomSwitch checked={currentPlayer.showViewerCount} onChange={(v) => updateConfig(setPlayerConfig, "showViewerCount", v, playerConfig.linked)} label="Contador de espectadores" />
                       <CustomSwitch checked={currentPlayer.showChat} onChange={(v) => updateConfig(setPlayerConfig, "showChat", v, playerConfig.linked)} label="Chat ao vivo" />
                       <CustomSwitch checked={currentPlayer.autoplayMuted} onChange={(v) => updateConfig(setPlayerConfig, "autoplayMuted", v, playerConfig.linked)} label="Iniciar com som desativado" />
@@ -531,7 +547,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
           {/* PAINEL DIREITO - PREVIEW */}
           <div className="flex-1 flex flex-col relative items-center justify-center p-4 sm:p-6 bg-slate-50/60 overflow-hidden min-h-0">
-            <div className="w-full h-full bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center p-2 sm:p-4 relative overflow-hidden min-h-0">
+            <div className="w-full h-full bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center p-4 relative overflow-hidden min-h-0">
                 
                 {activeTab !== "player" ? (
                   
@@ -588,19 +604,18 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                 ) : (
                   
                   // ==========================================
-                  // PREVIEW DO PLAYER (ALINHAMENTO 100% CORRIGIDO)
+                  // PREVIEW DO PLAYER (ADAPTÁVEL / SEM CORTAR)
                   // ==========================================
                   <div className={`w-full h-full flex justify-center items-center ${device === 'mobile' ? 'overflow-y-auto' : ''}`}>
                     
-                    {/* CONTAINER PRINCIPAL DO PLAYER - Largura máxima ampliada e alturas fixas proporcionais no desktop */}
-                    <div className={`flex gap-3 sm:gap-4 w-full max-w-[1050px] mx-auto ${device === 'mobile' ? 'flex-col h-auto' : 'h-[600px] justify-center'}`}>
+                    {/* Alterado para h-full max-h-[550px] para encaixar proporcionalmente na tela do usuário sem cortar, usando flex-1 para preencher */}
+                    <div className={`flex gap-3 sm:gap-4 w-full max-w-[1050px] mx-auto ${device === 'mobile' ? 'flex-col h-auto' : 'h-full max-h-[550px] justify-center'}`}>
                       
                       {/* --- COLUNA 1: Produtos + Info --- */}
-                      {/* Estrutura: flex-1 (ocupa topo) + h-[60px] (ocupa base) */}
                       <div className={`flex flex-col gap-3 sm:gap-4 ${device === 'mobile' ? 'w-full order-3' : 'w-full max-w-[310px] flex-1'}`}>
                         
                         {currentPlayer.showProducts && (
-                          <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border shadow-sm overflow-hidden" style={{ borderColor: currentPlayer.borderColor }}>
+                          <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden shadow-sm" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
                             <div className="text-white text-center py-2 font-medium text-[13px] tracking-wide" style={{ backgroundColor: currentPlayer.borderColor }}>PRODUTOS</div>
                             
                             <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 scrollbar-thin">
@@ -622,7 +637,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                               ))}
                             </div>
 
-                            {/* Rodapé dos Produtos com Icone de Link Externo corrigido */}
                             <div className="border-t p-2.5 flex justify-between items-center bg-slate-50" style={{ borderColor: `${currentPlayer.borderColor}40` }}>
                                 <div className="flex items-center text-[11px] font-medium text-slate-600">
                                   <ShoppingCart className="w-3.5 h-3.5 mr-1.5" style={{ color: currentPlayer.borderColor }}/> 
@@ -635,17 +649,17 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                           </div>
                         )}
 
-                        {/* Base Fixa - Exatamente 60px */}
-                        <div className="h-[60px] flex-shrink-0 flex flex-col items-center justify-center rounded-xl border shadow-sm transition-all w-full" 
-                              style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor, borderColor: currentPlayer.borderColor }}>
-                            <div className="font-black tracking-tight leading-none" style={{ fontSize: currentPlayer.infoSize1 }}>{currentPlayer.infoText1}</div>
-                            <div className="font-medium opacity-80 mt-1" style={{ fontSize: currentPlayer.infoSize2 }}>{currentPlayer.infoText2}</div>
-                        </div>
+                        {currentPlayer.showInfo && (
+                          <div className="h-[55px] xl:h-[60px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm transition-all w-full overflow-hidden" 
+                                style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor, border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
+                              <div className="font-black tracking-tight leading-none" style={{ fontSize: currentPlayer.infoSize1 }}>{currentPlayer.infoText1}</div>
+                              <div className="font-medium opacity-80 mt-1" style={{ fontSize: currentPlayer.infoSize2 }}>{currentPlayer.infoText2}</div>
+                          </div>
+                        )}
 
                       </div>
 
                       {/* --- COLUNA 2: Video + Cupom --- */}
-                      {/* Mantém flex-1 (ocupa topo) + h-[60px] (ocupa base) garantindo o tamanho idêntico às laterais */}
                       <div className={`flex flex-col gap-3 sm:gap-4 ${device === 'mobile' ? 'w-full order-1' : 'w-full max-w-[310px] flex-1'}`}>
                           
                           <div className="flex-1 min-h-0 relative bg-black overflow-hidden shadow-lg w-full" style={{
@@ -670,24 +684,24 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                             )}
                           </div>
 
-                          {/* Base Fixa - Exatamente 60px */}
-                          <div className="h-[60px] flex-shrink-0 flex rounded-xl overflow-hidden shadow-sm border w-full" style={{ borderColor: currentPlayer.borderColor }}>
-                            <div className="flex items-center justify-center px-4 font-black tracking-widest text-[16px]" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor, width: '50%' }}>
-                              {currentPlayer.couponCode}
+                          {currentPlayer.showCoupon && (
+                            <div className="h-[55px] xl:h-[60px] flex-shrink-0 flex overflow-hidden shadow-sm w-full" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
+                              <div className="flex items-center justify-center px-4 font-black tracking-widest text-[16px]" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor, width: '50%' }}>
+                                {currentPlayer.couponCode}
+                              </div>
+                              <div className="flex items-center justify-center px-4 font-black text-[18px]" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor, width: '50%' }}>
+                                {currentPlayer.couponText}
+                              </div>
                             </div>
-                            <div className="flex items-center justify-center px-4 font-black text-[18px]" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor, width: '50%' }}>
-                              {currentPlayer.couponText}
-                            </div>
-                          </div>
+                          )}
 
                       </div>
 
                       {/* --- COLUNA 3: Chat + Compartilhar --- */}
-                      {/* Estrutura: flex-1 (ocupa topo) + h-[60px] (ocupa base) */}
                       <div className={`flex flex-col gap-3 sm:gap-4 ${device === 'mobile' ? 'w-full order-2' : 'w-full max-w-[310px] flex-1'}`}>
                         
                         {currentPlayer.showChat && (
-                          <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border shadow-sm overflow-hidden" style={{ borderColor: currentPlayer.borderColor }}>
+                          <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden shadow-sm" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
                             <div className="text-white text-center py-2 font-medium text-[13px] tracking-wide" style={{ backgroundColor: currentPlayer.borderColor }}>CHAT</div>
                             
                             <div className="flex-1 flex flex-col overflow-hidden relative bg-white">
@@ -714,11 +728,12 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                           </div>
                         )}
 
-                        {/* Base Fixa - Exatamente 60px */}
-                        <button className="h-[60px] flex-shrink-0 w-full flex items-center justify-center gap-2 rounded-xl border shadow-sm font-bold text-[16px] transition-transform hover:scale-[1.02]" 
-                                style={{ backgroundColor: currentPlayer.shareBgColor, color: currentPlayer.shareTextColor, borderColor: currentPlayer.borderColor }}>
-                            Compartilhar <Share2 className="w-4 h-4 ml-1" />
-                        </button>
+                        {currentPlayer.showShare && (
+                          <button className="h-[55px] xl:h-[60px] flex-shrink-0 w-full flex items-center justify-center gap-2 shadow-sm font-bold text-[16px] transition-transform hover:scale-[1.02] overflow-hidden" 
+                                  style={{ backgroundColor: currentPlayer.shareBgColor, color: currentPlayer.shareTextColor, border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
+                              Compartilhar <Share2 className="w-4 h-4 ml-1" />
+                          </button>
+                        )}
 
                       </div>
 
