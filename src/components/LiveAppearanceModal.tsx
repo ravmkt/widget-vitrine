@@ -398,169 +398,169 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                 
                 {/* --- TOPO ESQUERDA: Logo da Loja e Título --- */}
                 <div className="absolute top-8 left-4 right-20 flex items-center gap-2 z-10">
-                   <div className="w-10 h-10 rounded-full bg-slate-800/80 overflow-hidden border border-white/20 shrink-0 flex items-center justify-center shadow-md">
-                     <span className="text-[10px] text-white/70">LOGO</span>
+                   <div className="w-9 h-9 rounded-full bg-slate-800/80 overflow-hidden border border-white/20 shrink-0 flex items-center justify-center shadow-md">
+                     <span className="text-[9px] text-white/70">LOGO</span>
                    </div>
                    {currentPlayer.showTitle && (
-                     <div style={{ color: currentPlayer.titleColor }} className="font-bold text-[18px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate">
+                     <div style={{ color: currentPlayer.titleColor }} className="font-bold text-[16px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate">
                        {currentPlayer.titleText}
                      </div>
                    )}
                 </div>
 
                 {/* --- TOPO DIREITA: Live, Viewers, Mudo --- */}
-                <div className="absolute top-8 right-4 flex flex-col items-end gap-2 z-10">
-                   <div className="flex items-center gap-1 bg-red-600 text-white text-[12px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shadow-md">
-                      <PlaySquare className="w-3.5 h-3.5 fill-white"/> LIVE
+                <div className="absolute top-8 right-3 flex flex-col items-end gap-2 z-10">
+                   <div className="flex items-center gap-1 bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shadow-md">
+                      <PlaySquare className="w-3 h-3 fill-white"/> LIVE
                    </div>
                    
                    {currentPlayer.showViewerCount && (
-                      <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-sm text-white text-[13px] font-medium px-3 py-1 rounded-full shadow-md border border-white/10">
-                        <Eye className="w-4 h-4" /> 1.2k
+                      <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-sm text-white text-[12px] font-medium px-2 py-0.5 rounded-full shadow-md border border-white/10">
+                        <Eye className="w-3.5 h-3.5" /> 1.2k
                       </div>
                    )}
 
                    {currentPlayer.autoplayMuted && (
-                      <button className="w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white mt-1 border border-white/10 shadow-md hover:bg-black/70 transition">
-                        <VolumeX className="w-5 h-5"/>
+                      <button className="w-8 h-8 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white mt-1 border border-white/10 shadow-md hover:bg-black/70 transition">
+                        <VolumeX className="w-4 h-4"/>
                       </button>
                    )}
                 </div>
 
                 {/* --- ABAIXO DO LOGO: Cupom --- */}
                 {currentPlayer.showCoupon && (
-                  <div className="absolute top-20 left-4 rounded overflow-hidden shadow-lg border border-white/20 flex flex-col w-[90px] z-10">
-                    <div className="text-center py-1 text-[11px] font-black tracking-wider" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor }}>
+                  <div className="absolute top-20 left-4 rounded overflow-hidden shadow-lg border border-white/20 flex flex-col w-[85px] z-10">
+                    <div className="text-center py-1 text-[10px] font-black tracking-wider" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor }}>
                       {currentPlayer.couponCode}
                     </div>
-                    <div className="text-center py-1 text-[11px] font-bold" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor }}>
+                    <div className="text-center py-1 text-[10px] font-bold" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor }}>
                       {currentPlayer.couponText}
                     </div>
                   </div>
                 )}
 
-                {/* --- MENU LATERAL DIREITO (Ações) --- */}
-                <div className="absolute bottom-36 right-3 flex flex-col items-center gap-4 z-10">
+                {/* --- MENU LATERAL DIREITO (Ações) - REDUZIDO --- */}
+                <div className="absolute bottom-[95px] right-2.5 flex flex-col items-center gap-3 z-10">
                   {currentPlayer.showChat && (
-                    <button onClick={() => setPreviewChatOpen(!previewChatOpen)} className="w-11 h-11 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg hover:bg-black/70 transition">
-                      <MessageCircle className="w-5 h-5" />
+                    <button onClick={() => setPreviewChatOpen(!previewChatOpen)} className="w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg hover:bg-black/70 transition">
+                      <MessageCircle className="w-[18px] h-[18px]" />
                     </button>
                   )}
                   {currentPlayer.showShare && (
-                    <button className="w-11 h-11 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg hover:bg-black/70 transition">
-                      <Send className="w-5 h-5" />
+                    <button className="w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg hover:bg-black/70 transition">
+                      <Send className="w-[18px] h-[18px]" />
                     </button>
                   )}
                   {currentPlayer.showProducts && (
-                    <button onClick={() => setPreviewProductsOpen(true)} className="w-11 h-11 bg-black/50 backdrop-blur-sm rounded-full flex flex-col items-center justify-center text-white border border-white/10 shadow-lg hover:bg-black/70 transition">
-                      <ShoppingBag className="w-5 h-5 mb-0.5" />
+                    <button onClick={() => setPreviewProductsOpen(true)} className="w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex flex-col items-center justify-center text-white border border-white/10 shadow-lg hover:bg-black/70 transition">
+                      <ShoppingBag className="w-[18px] h-[18px] mb-0.5" />
                     </button>
                   )}
-                  <button className="w-11 h-11 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg relative hover:bg-black/70 transition">
-                    <ShoppingCart className="w-5 h-5" />
-                    <span className="absolute -bottom-2 text-[12px] font-bold text-white drop-shadow-md">3</span>
+                  <button className="w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 shadow-lg relative hover:bg-black/70 transition">
+                    <ShoppingCart className="w-[18px] h-[18px]" />
+                    <span className="absolute -bottom-1.5 text-[10px] font-bold text-white drop-shadow-md">3</span>
                   </button>
-                  <button className="w-11 h-11 bg-[#25D366] rounded-full flex items-center justify-center text-white shadow-[0_0_10px_rgba(37,211,102,0.5)] hover:scale-105 transition-transform border-2 border-white">
-                    <Phone className="w-5 h-5 fill-white" />
+                  <button className="w-9 h-9 bg-[#25D366] rounded-full flex items-center justify-center text-white shadow-[0_0_10px_rgba(37,211,102,0.5)] hover:scale-105 transition-transform border-2 border-white">
+                    <Phone className="w-[18px] h-[18px] fill-white" />
                   </button>
                 </div>
 
-                {/* --- CHAT OVERLAY (Print 3) --- */}
+                {/* --- CHAT OVERLAY - REPOSICIONADO --- */}
                 {currentPlayer.showChat && previewChatOpen && !previewProductsOpen && (
-                  <div className="absolute bottom-32 left-4 right-16 flex flex-col justify-end z-20 animate-in slide-in-from-bottom-5 fade-in">
-                     <div className="space-y-3 mb-3 max-h-[160px] overflow-hidden flex flex-col justify-end mask-image-top">
+                  <div className="absolute bottom-[88px] left-3 right-14 flex flex-col justify-end z-20 animate-in slide-in-from-bottom-5 fade-in">
+                     <div className="space-y-2 mb-2 max-h-[140px] overflow-hidden flex flex-col justify-end mask-image-top">
                        {[1,2,3].map(i => (
                          <div key={i} className="flex gap-2 items-center">
-                           <div className="w-7 h-7 rounded-full bg-slate-200 border border-white overflow-hidden shrink-0">
+                           <div className="w-6 h-6 rounded-full bg-slate-200 border border-white overflow-hidden shrink-0">
                               <img src={`https://i.pravatar.cc/100?img=${i+12}`} className="w-full h-full object-cover"/>
                            </div>
-                           <div className="text-white text-[12px] font-medium drop-shadow-md bg-black/20 px-2 py-0.5 rounded-lg">
+                           <div className="text-white text-[11px] font-medium drop-shadow-md bg-black/20 px-2 py-0.5 rounded-lg">
                              Nonononononono
                            </div>
                          </div>
                        ))}
                      </div>
-                     <div className="bg-white/90 backdrop-blur-md rounded-full px-4 py-2.5 flex justify-between items-center shadow-lg">
-                        <span className="text-slate-500 text-[13px]">Chat...</span>
-                        <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
+                     <div className="bg-white/90 backdrop-blur-md rounded-full px-3 py-2 flex justify-between items-center shadow-lg">
+                        <span className="text-slate-500 text-[12px]">Chat...</span>
+                        <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
                      </div>
                   </div>
                 )}
 
-                {/* --- CARD DO PRODUTO ATUAL (Fundo - Print 1 & 3) --- */}
+                {/* --- CARD DO PRODUTO ATUAL - REDUZIDO --- */}
                 {!previewProductsOpen && currentPlayer.showProducts && (
-                  <div className="absolute bottom-4 left-4 right-4 bg-white shadow-2xl z-10 flex items-center p-2.5 transition-all hover:scale-[1.02] cursor-pointer" 
+                  <div className="absolute bottom-4 left-3 right-3 bg-white shadow-2xl z-10 flex items-center p-2 transition-all hover:scale-[1.02] cursor-pointer" 
                        style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
-                    <div className="w-16 h-20 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-100">
+                    <div className="w-[52px] h-[68px] bg-slate-100 rounded-md overflow-hidden shrink-0 border border-slate-100">
                       <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=200&auto=format&fit=crop" className="w-full h-full object-cover" alt="Produto" />
                     </div>
                     <div className="ml-3 flex-1 flex flex-col justify-center">
-                      <h4 style={{ fontSize: currentPlayer.productNameSize, color: currentPlayer.productNameColor }} className="font-bold leading-tight line-clamp-2">
+                      <h4 style={{ fontSize: `${currentPlayer.productNameSize - 1}px`, color: currentPlayer.productNameColor }} className="font-bold leading-tight line-clamp-2">
                         Blusa Life Rosê em Malha Tecnológica
                       </h4>
-                      <div className="text-[11px] text-slate-400 line-through mt-1">De: R$ 149,90</div>
-                      <div style={{ fontSize: currentPlayer.productPriceSize, color: currentPlayer.productPriceColor }} className="font-black leading-none">
+                      <div className="text-[10px] text-slate-400 line-through mt-0.5">De: R$ 149,90</div>
+                      <div style={{ fontSize: `${currentPlayer.productPriceSize - 1}px`, color: currentPlayer.productPriceColor }} className="font-black leading-none mt-0.5">
                         Por: R$ 149,90
                       </div>
                     </div>
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md ml-2" style={{ backgroundColor: currentPlayer.borderColor }}>
-                      <ShoppingCart className="w-5 h-5" />
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 shadow-md ml-1" style={{ backgroundColor: currentPlayer.borderColor }}>
+                      <ShoppingCart className="w-4 h-4" />
                     </div>
                   </div>
                 )}
 
                 {/* ==================================================== */}
-                {/* MODAL LISTA DE PRODUTOS (Print 2) */}
+                {/* MODAL LISTA DE PRODUTOS */}
                 {/* ==================================================== */}
                 {previewProductsOpen && (
                   <div className="absolute inset-x-2 top-10 bottom-10 bg-white rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
                     
                     {/* Header Azul */}
-                    <div className="bg-[#0ea5e9] text-white text-center py-4 text-[18px] font-medium tracking-wide relative shrink-0">
+                    <div className="bg-[#0ea5e9] text-white text-center py-3 text-[16px] font-medium tracking-wide relative shrink-0">
                       PRODUTOS
                       <button onClick={() => setPreviewProductsOpen(false)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white">✕</button>
                     </div>
 
                     {/* Lista de Produtos (Scroll) */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 scrollbar-hide">
+                    <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-slate-50 scrollbar-hide">
                       {[1,2,3,4,5].map((i) => (
-                        <div key={i} className="flex gap-3 p-2.5 bg-white border border-[#0ea5e9]/30 rounded-xl relative">
-                           <div className="font-bold text-[18px] w-6 pt-1 text-center text-[#0ea5e9]">0{i}</div>
-                           <div className="w-[60px] h-[75px] bg-slate-100 rounded-lg overflow-hidden shrink-0">
+                        <div key={i} className="flex gap-3 p-2 bg-white border border-[#0ea5e9]/30 rounded-xl relative">
+                           <div className="font-bold text-[16px] w-5 pt-1 text-center text-[#0ea5e9]">0{i}</div>
+                           <div className="w-[50px] h-[65px] bg-slate-100 rounded-md overflow-hidden shrink-0">
                              <img src={`https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=150&auto=format&fit=crop&sig=${i}`} className="w-full h-full object-cover" />
                            </div>
-                           <div className="flex-1 pt-0.5 pr-8">
-                             <div className="text-[13px] text-slate-800 leading-tight font-medium">Blusa Life Rosê em Malha Tecnológica</div>
-                             <div className="text-[11px] text-slate-400 mt-1">De: R$ 149,90</div>
-                             <div className="text-[14px] font-bold text-[#0ea5e9] leading-none">Por: R$ 149,90</div>
+                           <div className="flex-1 pt-0.5 pr-7">
+                             <div className="text-[12px] text-slate-800 leading-tight font-medium">Blusa Life Rosê em Malha Tecnológica</div>
+                             <div className="text-[10px] text-slate-400 mt-0.5">De: R$ 149,90</div>
+                             <div className="text-[13px] font-bold text-[#0ea5e9] leading-none mt-0.5">Por: R$ 149,90</div>
                            </div>
                            {i === 1 && (
-                             <div className="absolute right-3 top-3 text-red-600">
-                               <Radio className="w-4 h-4 animate-pulse" />
+                             <div className="absolute right-2 top-2 text-red-600">
+                               <Radio className="w-3.5 h-3.5 animate-pulse" />
                              </div>
                            )}
-                           <div className="absolute right-3 bottom-3 w-7 h-7 rounded-full flex items-center justify-center text-white bg-[#0ea5e9]">
-                             <ShoppingCart className="w-3.5 h-3.5" />
+                           <div className="absolute right-2 bottom-2 w-6 h-6 rounded-full flex items-center justify-center text-white bg-[#0ea5e9]">
+                             <ShoppingCart className="w-3 h-3" />
                            </div>
                         </div>
                       ))}
                     </div>
 
-                    {/* Setinha pra baixo (Scroll indicator fake) */}
-                    <div className="h-8 bg-white flex items-center justify-center shrink-0">
-                      <ChevronDownIcon className="w-8 h-8 text-[#0ea5e9]" />
+                    {/* Setinha pra baixo */}
+                    <div className="h-6 bg-white flex items-center justify-center shrink-0">
+                      <ChevronDownIcon className="w-6 h-6 text-[#0ea5e9]" />
                     </div>
 
                     {/* Footer do Modal */}
-                    <div className="border-t border-slate-100 p-4 flex justify-between items-center bg-white shrink-0">
-                        <div className="flex items-center text-[13px] font-medium text-slate-600">
-                          <div className="w-8 h-8 rounded-full bg-[#0ea5e9] flex items-center justify-center text-white mr-2">
-                             <ShoppingCart className="w-4 h-4" />
+                    <div className="border-t border-slate-100 p-3 flex justify-between items-center bg-white shrink-0">
+                        <div className="flex items-center text-[12px] font-medium text-slate-600">
+                          <div className="w-7 h-7 rounded-full bg-[#0ea5e9] flex items-center justify-center text-white mr-2">
+                             <ShoppingCart className="w-3.5 h-3.5" />
                           </div>
-                          6 Produtos adicionados
+                          6 Produtos
                         </div>
-                        <div className="text-[14px] font-medium flex items-center cursor-pointer text-slate-700 hover:text-black">
-                          Finalizar <ExternalLink className="w-4 h-4 ml-1.5 text-[#0ea5e9]" />
+                        <div className="text-[13px] font-medium flex items-center cursor-pointer text-slate-700 hover:text-black">
+                          Finalizar <ExternalLink className="w-3.5 h-3.5 ml-1 text-[#0ea5e9]" />
                         </div>
                     </div>
                   </div>
