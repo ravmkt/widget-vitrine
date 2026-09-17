@@ -667,26 +667,36 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                           }}>
                             <video src="/demo-videos/demo2.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover opacity-90" />
                             
-                            <div className="absolute top-4 left-4 flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20">🦋</div>
-                                {currentPlayer.showTitle && <span style={{ color: currentPlayer.titleColor }} className="font-bold text-[13px] drop-shadow-md">{currentPlayer.titleText}</span>}
+                            {/* TOP BAR REORGANIZADA PARA EVITAR SOBREPOSIÇÃO */}
+                            <div className="absolute top-4 left-4 right-4 flex justify-between items-start gap-2">
+                               {/* ESQUERDA: Avatar, Título e Contador */}
+                               <div className="flex flex-col gap-2 w-3/4">
+                                  <div className="flex items-center gap-2">
+                                     <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20 text-[14px] shrink-0">🦋</div>
+                                     {currentPlayer.showTitle && (
+                                       <span style={{ color: currentPlayer.titleColor }} className="font-bold text-[13px] drop-shadow-md truncate leading-tight">
+                                         {currentPlayer.titleText}
+                                       </span>
+                                     )}
+                                  </div>
+                                  
+                                  {currentPlayer.showViewerCount && (
+                                     <div className="flex items-center gap-1.5 w-fit bg-black/40 backdrop-blur-md text-white text-[10px] font-semibold px-2.5 py-1 rounded-full border border-white/20 shadow-sm ml-[40px]">
+                                       <Eye className="w-3 h-3" />
+                                       1.2K
+                                     </div>
+                                  )}
+                               </div>
+
+                               {/* DIREITA: Tag "AO VIVO" exclusiva para evitar encavalamento */}
+                               <div className="flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full uppercase tracking-wider shadow-sm shrink-0">
+                                  <Radio className="w-3 h-3 animate-pulse"/> Ao Vivo
+                               </div>
                             </div>
 
-                            {/* CONTAINER DIREITO (AO VIVO + CONTADOR) */}
-                            <div className="absolute top-4 right-4 flex items-center gap-1.5">
-                              {currentPlayer.showViewerCount && (
-                                <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-1 rounded-full border border-white/20 shadow-sm">
-                                  <Eye className="w-3 h-3" />
-                                  1.2K
-                                </div>
-                              )}
-                              <div className="flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
-                                <Radio className="w-3 h-3 animate-pulse"/> Ao Vivo
-                              </div>
-                            </div>
-
+                            {/* Mute button descido para top-16 */}
                             {currentPlayer.autoplayMuted && (
-                              <div className="absolute top-14 right-4 bg-black/40 backdrop-blur-md p-1.5 rounded text-white border border-white/20">
+                              <div className="absolute top-16 right-4 bg-black/40 backdrop-blur-md p-1.5 rounded text-white border border-white/20 mt-2">
                                 <VolumeX className="w-3.5 h-3.5"/>
                               </div>
                             )}
