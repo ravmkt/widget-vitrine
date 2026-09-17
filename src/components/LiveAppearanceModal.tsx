@@ -538,46 +538,47 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                     <div className="absolute inset-0 bg-white">
                       <div className="w-full h-full opacity-10" style={{backgroundImage: "url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800&auto=format')", backgroundSize: "cover"}}></div>
                       
-                      {/* O WIDGET EM SI */}
-                      {(activeTab === "divulgacao" || activeTab === "aovivo") && (() => {
-                        const config = activeTab === "divulgacao" ? currentDivulgacao : currentAoVivo;
-                        return (
-                          <div className="absolute transition-all duration-300 shadow-[0_10px_40px_rgba(0,0,0,0.15)] flex flex-col items-center group cursor-pointer" 
-                              style={{
-                                ...(config.position.includes('bottom') ? { bottom: config.marginBottom } : { top: config.marginTop }),
-                                ...(config.position.includes('left') ? { left: config.marginSide } : { right: config.marginSide }),
-                              }}>
-                              
-                              {/* Container do Video */}
-                              <div className="relative overflow-hidden bg-black z-20" style={{
-                                width: config.width,
-                                height: calcHeight(config.format, config.width),
-                                border: `${config.borderWidth}px solid ${config.borderColor}`,
-                                borderRadius: config.format === 'circular' ? '50%' : config.borderRadius,
-                              }}>
-                                <video src="/demo-videos/demo1.mp4" autoPlay loop muted playsInline className="w-full h-full" style={{ objectFit: config.objectFit }} />
-                                {config.showCloseButton && <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-black/40 rounded-full flex items-center justify-center text-white text-[10px] font-bold z-10">✕</div>}
-                                {config.playVideo && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center"><PlaySquare className="w-3.5 h-3.5 ml-0.5 fill-white text-white"/></div>}
-                                
-                                {/* Contador (Apenas Divulgação) */}
-                                {activeTab === "divulgacao" && currentDivulgacao.showCountdown && (
-                                  <div className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10"
-                                       style={{ backgroundColor: currentDivulgacao.countdownBgColor, color: currentDivulgacao.countdownTextColor }}>
-                                    02d 10h 01m
-                                  </div>
-                                )}
-                              </div>
+{/* O WIDGET EM SI */}
+{(activeTab === "divulgacao" || activeTab === "aovivo") && (() => {
+  const config = activeTab === "divulgacao" ? currentDivulgacao : currentAoVivo;
+  return (
+    {/* AQUI: Removida a sombra do pai e adicionado 'gap-2.5' para separar os itens */}
+    <div className="absolute transition-all duration-300 flex flex-col items-center group cursor-pointer gap-2.5" 
+        style={{
+          ...(config.position.includes('bottom') ? { bottom: config.marginBottom } : { top: config.marginTop }),
+          ...(config.position.includes('left') ? { left: config.marginSide } : { right: config.marginSide }),
+        }}>
+        
+        {/* Container do Video: Sombra movida para cá */}
+        <div className="relative overflow-hidden bg-black shadow-[0_8px_30px_rgba(0,0,0,0.15)]" style={{
+          width: config.width,
+          height: calcHeight(config.format, config.width),
+          border: `${config.borderWidth}px solid ${config.borderColor}`,
+          borderRadius: config.format === 'circular' ? '50%' : config.borderRadius,
+        }}>
+          <video src="/demo-videos/demo1.mp4" autoPlay loop muted playsInline className="w-full h-full" style={{ objectFit: config.objectFit }} />
+          {config.showCloseButton && <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-black/40 rounded-full flex items-center justify-center text-white text-[10px] font-bold z-10">✕</div>}
+          {config.playVideo && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center"><PlaySquare className="w-3.5 h-3.5 ml-0.5 fill-white text-white"/></div>}
+          
+          {/* Contador (Apenas Divulgação) */}
+          {activeTab === "divulgacao" && currentDivulgacao.showCountdown && (
+            <div className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10"
+                 style={{ backgroundColor: currentDivulgacao.countdownBgColor, color: currentDivulgacao.countdownTextColor }}>
+              02d 10h 01m
+            </div>
+          )}
+        </div>
 
-                              {/* CTA Embaixo */}
-                              {config.showCTA && (
-                                <div className="text-[11px] font-bold px-3 py-1 rounded-md shadow-md text-center relative z-10 -mt-2" 
-                                     style={{ backgroundColor: config.ctaBgColor, color: config.ctaTextColor, width: '100%', minWidth: 'max-content' }}>
-                                  {config.ctaText}
-                                </div>
-                              )}
-                          </div>
-                        )
-                      })()}
+        {/* CTA Embaixo: Removido o '-mt-2', arredondado por completo (rounded-full) e com sombra própria */}
+        {config.showCTA && (
+          <div className="text-[12px] font-bold px-4 py-1.5 rounded-full shadow-lg text-center transition-transform hover:scale-105" 
+               style={{ backgroundColor: config.ctaBgColor, color: config.ctaTextColor, width: '90%', minWidth: 'max-content' }}>
+            {config.ctaText}
+          </div>
+        )}
+    </div>
+  )
+})()}
                     </div>
                   </div>
                 ) : (
