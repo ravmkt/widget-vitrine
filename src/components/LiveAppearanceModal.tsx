@@ -130,6 +130,8 @@ export const defaultAoVivoSettings: WidgetAoVivoSettings = {
   ctaBgColor: "#E11D48"
 };
 
+export const defaultWidgetSettings = defaultDivulgacaoSettings;
+
 export const defaultPlayerSettings: LivePlayerSettings = {
   borderColor: "#e7191f",
   borderWidth: 2,
