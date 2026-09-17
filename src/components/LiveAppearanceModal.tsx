@@ -132,7 +132,7 @@ export const defaultAoVivoSettings: WidgetAoVivoSettings = {
   ctaBgColor: "#e7191f"
 };
 
-// Export necessário para compatibilidade com LiveCommercePage
+// Export de compatibilidade
 export const defaultWidgetSettings: WidgetDivulgacaoSettings = {
   ...defaultDivulgacaoSettings
 };
@@ -156,11 +156,11 @@ export const defaultPlayerSettings: LivePlayerSettings = {
 
   showInfo: true,
   infoText1: "FRETE GRÁTIS",
-  infoText2: "Acima de R$200",
+  infoText2: "Acima de R$200,00",
   infoSize1: 18,
   infoSize2: 12,
-  infoTextColor: "#000000",
-  infoBgColor: "#FFFFFF",
+  infoTextColor: "#FFFFFF",
+  infoBgColor: "#e7191f",
 
   showShare: true,
   shareTextColor: "#000000",
@@ -649,17 +649,35 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 )}
                               </div>
 
-                              {/* CUPOM */}
-                              {currentPlayer.showCoupon && (
-                                <div className="absolute top-11 left-2.5 rounded-[5px] overflow-hidden flex flex-col w-[54px] z-20 shadow-md border" style={{ borderColor: currentPlayer.borderColor }}>
-                                  <div className="text-center py-0.5 text-[7px] font-black uppercase tracking-tight" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor }}>
-                                    {currentPlayer.couponCode}
+                              {/* COLUNA ESQUERDA: CUPOM + CARD INFORMATIVO */}
+                              <div className="absolute top-11 left-2.5 flex flex-col gap-1.5 z-20">
+                                {/* CUPOM */}
+                                {currentPlayer.showCoupon && (
+                                  <div className="rounded-[5px] overflow-hidden flex flex-col w-[54px] shadow-md border" style={{ borderColor: currentPlayer.borderColor }}>
+                                    <div className="text-center py-0.5 text-[7px] font-black uppercase tracking-tight" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor }}>
+                                      {currentPlayer.couponCode}
+                                    </div>
+                                    <div className="text-center py-0.5 text-[7px] font-bold" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor }}>
+                                      {currentPlayer.couponText}
+                                    </div>
                                   </div>
-                                  <div className="text-center py-0.5 text-[7px] font-bold" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor }}>
-                                    {currentPlayer.couponText}
+                                )}
+
+                                {/* CARD INFORMATIVO */}
+                                {currentPlayer.showInfo && (
+                                  <div className="rounded-[5px] overflow-hidden flex flex-col w-[54px] shadow-md border text-center" style={{ borderColor: currentPlayer.borderColor }}>
+                                    <div 
+                                      className="py-0.5 text-[6.5px] font-black uppercase tracking-tight px-0.5 leading-tight" 
+                                      style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor }}
+                                    >
+                                      {currentPlayer.infoText1}
+                                    </div>
+                                    <div className="py-0.5 text-[6px] font-semibold bg-white text-slate-700 px-0.5 leading-tight">
+                                      {currentPlayer.infoText2}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
+                              </div>
 
                               {/* COLUNA LATERAL DIREITA DE AÇÕES */}
                               <div className="absolute top-3.5 right-2 flex flex-col items-center gap-1.5 z-20">
