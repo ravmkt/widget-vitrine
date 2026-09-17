@@ -617,86 +617,87 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                       // ----------------------------------------------------
                       // PREVIEW MOBILE - EXATO COMO NOS PRINTS (NATIVO TIPO TIKTOK/IG)
                       // ----------------------------------------------------
-                      <div className="relative w-[320px] h-[650px] bg-slate-900 rounded-[2.5rem] shadow-2xl border-[8px] border-[#1e1e1e] overflow-hidden flex flex-col shrink-0 mx-auto">
-                         {/* Notch Mobile Fake */}
-                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[20px] bg-[#1e1e1e] rounded-b-[1rem] z-[100]"></div>
+                      <div className="relative h-full max-h-[700px] w-full max-w-[320px] aspect-[9/19.5] bg-[#0a0a0a] rounded-[2rem] shadow-[0_0_0_3px_#f4d1c0] border-[6px] border-[#0a0a0a] overflow-hidden flex flex-col shrink-0 mx-auto">
                          
-                         {/* Fundo do Vídeo */}
+                         {/* Notch Mobile Fake (A mesma que os widgets usam) */}
+                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] max-w-[120px] h-[20px] bg-[#0a0a0a] rounded-b-[1rem] z-[100]"></div>
+                         
+                         {/* Fundo do Vídeo (Ocupa a tela inteira/Corta em cima) */}
                          <video src="https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4" autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-90" />
                          
-                         {/* Gradiente escuro no topo e na base para legibilidade */}
+                         {/* Gradiente escuro para legibilidade */}
                          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60 pointer-events-none z-0"></div>
 
-                         {/* CONTEÚDO SUPERIOR ESQUERDO: Avatar + Titulo */}
-                         <div className="absolute top-7 left-3 flex items-center gap-2 z-10">
-                            <div className="w-9 h-9 rounded-full bg-slate-800 border-2 border-white/30 overflow-hidden flex items-center justify-center text-[10px] text-white">
-                               LOGO
-                            </div>
+                         {/* CONTEÚDO SUPERIOR ESQUERDO: Avatar + Titulo (Print 2 logic) e Cupom (Print 1) */}
+                         <div className="absolute top-8 left-3 flex flex-col gap-2 z-10 pt-1">
+                            {/* Avatar / Título opcional */}
                             {currentPlayer.showTitle && (
-                              <span className="font-bold text-[15px] drop-shadow-md text-white shadow-black" style={{ color: currentPlayer.titleColor }}>
-                                {currentPlayer.titleText}
-                              </span>
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-white/30 overflow-hidden flex items-center justify-center text-[9px] text-white font-bold">
+                                   LOGO
+                                </div>
+                                <span className="font-bold text-[14px] drop-shadow-md text-white" style={{ color: currentPlayer.titleColor }}>
+                                  {currentPlayer.titleText}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* CUPOM - Exato como Print 1 (canto superior esquerdo) */}
+                            {currentPlayer.showCoupon && (
+                               <div className="rounded-[8px] overflow-hidden flex flex-col w-[85px] z-10 shadow-lg border-2 mt-1" style={{ borderColor: currentPlayer.borderColor }}>
+                                  <div className="text-center py-1.5 text-[11px] font-black uppercase tracking-tight" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor }}>
+                                    {currentPlayer.couponCode}
+                                  </div>
+                                  <div className="text-center py-1.5 text-[11px] font-bold leading-none" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor }}>
+                                    {currentPlayer.couponText}
+                                  </div>
+                               </div>
                             )}
                          </div>
 
-                         {/* CONTEÚDO SUPERIOR DIREITO: Live + Viewers */}
-                         <div className="absolute top-7 right-3 flex flex-col items-end gap-2 z-10">
-                            <div className="flex items-center gap-1 bg-red-600 text-white text-[11px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm">
-                               <PlaySquare className="w-3.5 h-3.5"/> LIVE
-                            </div>
+                         {/* CONTEÚDO SUPERIOR DIREITO: Viewers (Print 1) */}
+                         <div className="absolute top-9 right-3 flex flex-col items-end gap-2 z-10">
                             {currentPlayer.showViewerCount && (
-                              <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md text-white text-[11px] font-semibold px-2.5 py-1 rounded-full border border-white/20 shadow-sm">
-                                 <Eye className="w-3.5 h-3.5" /> 1.2k
+                              <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-sm text-white text-[11px] font-medium px-3 py-1.5 rounded-full border border-white/10 shadow-sm">
+                                 <Eye className="w-3.5 h-3.5 opacity-90" /> 1.2k
                               </div>
                             )}
                          </div>
 
-                         {/* CUPOM (Abaixo do Título) */}
-                         {currentPlayer.showCoupon && (
-                            <div className="absolute top-[75px] left-3 rounded-lg overflow-hidden flex flex-col w-[85px] z-10 shadow-lg border-2" style={{ borderColor: currentPlayer.borderColor }}>
-                               <div className="text-center py-1 text-[11px] font-black uppercase tracking-tight" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor }}>
-                                 {currentPlayer.couponCode}
-                               </div>
-                               <div className="text-center py-1 text-[11px] font-bold" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor }}>
-                                 {currentPlayer.couponText}
-                               </div>
-                            </div>
-                         )}
-
-                         {/* MENU LATERAL DIREITO (Ações Flutuantes) */}
-                         <div className={`absolute right-3 flex flex-col items-center gap-4 z-20 transition-all duration-300 ${previewProductsOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} ${previewChatOpen ? 'bottom-[140px]' : 'bottom-[110px]'}`}>
+                         {/* MENU LATERAL DIREITO (Ações Flutuantes) - Proporcional ao Print 1 */}
+                         <div className={`absolute right-3 flex flex-col items-center gap-3.5 z-20 transition-all duration-300 ${previewProductsOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} ${previewChatOpen ? 'bottom-[140px]' : 'bottom-5'}`}>
                             {currentPlayer.autoplayMuted && (
-                              <button className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-md">
-                                 <VolumeX className="w-5 h-5"/>
+                              <button className="w-9 h-9 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-md">
+                                 <VolumeX className="w-4 h-4"/>
                               </button>
                             )}
                             {currentPlayer.showChat && (
-                              <button onClick={() => setPreviewChatOpen(!previewChatOpen)} className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-md">
-                                 <MessageCircle className="w-5 h-5"/>
+                              <button onClick={() => setPreviewChatOpen(!previewChatOpen)} className="w-9 h-9 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-md">
+                                 <MessageCircle className="w-4 h-4"/>
                               </button>
                             )}
                             {currentPlayer.showShare && (
-                              <button className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-md">
+                              <button className="w-9 h-9 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-md">
                                  <Send className="w-4 h-4 -ml-0.5 mt-0.5 transform -rotate-12"/>
                               </button>
                             )}
                             {currentPlayer.showProducts && (
-                              <div className="flex flex-col items-center gap-0.5 cursor-pointer" onClick={() => setPreviewProductsOpen(true)}>
-                                <button className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-md relative">
-                                   <Package className="w-5 h-5"/>
+                              <div className="flex flex-col items-center gap-1 cursor-pointer mt-1" onClick={() => setPreviewProductsOpen(true)}>
+                                <button className="w-9 h-9 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-md relative">
+                                   <Package className="w-4 h-4"/>
                                 </button>
-                                <span className="text-white text-[11px] font-bold drop-shadow-md">3</span>
+                                <span className="text-white text-[10px] font-bold drop-shadow-md">3</span>
                               </div>
                             )}
-                            {/* Botão de WhatsApp fixo (simulação do print) */}
-                            <button className="w-10 h-10 bg-[#25D366] rounded-full flex items-center justify-center text-white border-2 border-white shadow-lg mt-1">
-                               <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.489-1.761-1.663-2.06-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                            {/* Botão de WhatsApp fixo alinhado na base do right stack */}
+                            <button className="w-11 h-11 bg-[#25D366] rounded-full flex items-center justify-center text-white border-2 border-white shadow-xl mt-2 hover:bg-[#20b858] transition">
+                               <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.489-1.761-1.663-2.06-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
                             </button>
                          </div>
 
-                         {/* CHAT OVERLAY INFERIOR (Print 3) */}
+                         {/* CHAT OVERLAY INFERIOR */}
                          {currentPlayer.showChat && previewChatOpen && !previewProductsOpen && (
-                            <div className="absolute bottom-[95px] left-3 right-3 z-10 flex flex-col justify-end pointer-events-auto">
+                            <div className="absolute bottom-[90px] left-3 right-[65px] z-10 flex flex-col justify-end pointer-events-auto">
                                {/* Mensagens do chat */}
                                <div className="flex flex-col gap-3 mb-3 max-h-[160px] overflow-hidden" style={{ maskImage: 'linear-gradient(to top, black 60%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to top, black 60%, transparent 100%)' }}>
                                   {[1,2,3].map(i => (
@@ -719,26 +720,20 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                             </div>
                          )}
 
-                         {/* PRODUTO FLUTUANTE NA BASE (Print 1) */}
+                         {/* PRODUTO FLUTUANTE NA BASE (Print 1) - Ajustado proporção deixando espaço no canto direito */}
                          {currentPlayer.showProducts && (
-                           <div className={`absolute left-3 right-3 transition-all duration-300 z-10 ${previewProductsOpen ? '-bottom-32 opacity-0' : 'bottom-4 opacity-100'}`}>
-                              <div className="bg-white rounded-[14px] p-2 flex gap-2 shadow-xl border-2" style={{ borderColor: currentPlayer.borderColor }}>
-                                 <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=100&auto=format" className="w-[65px] h-[80px] rounded-lg object-cover bg-slate-100 shrink-0"/>
+                           <div className={`absolute left-3 right-[65px] transition-all duration-300 z-10 ${previewProductsOpen ? '-bottom-32 opacity-0' : 'bottom-5 opacity-100'}`}>
+                              <div className="bg-white rounded-[14px] p-2 flex gap-2.5 shadow-xl border-2" style={{ borderColor: currentPlayer.borderColor }}>
+                                 <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=100&auto=format" className="w-[50px] h-[55px] rounded-[10px] object-cover bg-slate-100 shrink-0"/>
                                  <div className="flex-1 flex flex-col justify-center py-0.5">
-                                    <div className="text-[13px] font-bold leading-tight line-clamp-2" style={{ color: currentPlayer.productNameColor }}>Blusa Life Rosê em Malha Tecnológica</div>
-                                    <div className="text-[10px] text-slate-400 line-through mt-1">De: R$ 199,90</div>
-                                    <div className="text-[14px] font-black leading-none mt-0.5" style={{ color: currentPlayer.productPriceColor }}>Por: R$ 149,90</div>
-                                 </div>
-                                 <div className="self-end pb-1.5 pr-1.5">
-                                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md" style={{ backgroundColor: currentPlayer.borderColor }}>
-                                       <ShoppingCart className="w-4 h-4" />
-                                    </div>
+                                    <div className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: currentPlayer.productNameColor }}>Blusa Life Rosê em Malha Tecnológica</div>
+                                    <div className="text-[13px] font-black leading-none mt-1.5" style={{ color: currentPlayer.productPriceColor }}>R$ 149,90</div>
                                  </div>
                               </div>
                            </div>
                          )}
 
-                         {/* MODAL DE PRODUTOS FULL SCREEN (Print 2) */}
+                         {/* MODAL DE PRODUTOS FULL SCREEN (Lógica do Print 2) */}
                          {previewProductsOpen && (
                             <div className="absolute inset-x-2 bottom-2 top-10 z-50 flex flex-col overflow-hidden bg-transparent animate-in slide-in-from-bottom-10 duration-300">
                                <div className="bg-white flex-1 rounded-2xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden relative">
@@ -791,7 +786,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                       </div>
                     ) : (
                       // ----------------------------------------------------
-                      // PREVIEW DESKTOP - Layout de 3 colunas padrão
+                      // PREVIEW DESKTOP - Layout de 3 colunas padrão (Não modificado)
                       // ----------------------------------------------------
                       <div className="flex gap-3 sm:gap-4 w-full max-w-[1050px] mx-auto h-full max-h-[550px] justify-center">
                         
