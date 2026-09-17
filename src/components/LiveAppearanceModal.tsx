@@ -562,8 +562,14 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                   }}
                 >
                   <video 
+                    // Callback ref mágico para controlar play/pause sem precisar de useEffect
+                    ref={(el) => {
+                      if (el) {
+                        if (config.playVideo) el.play().catch(() => {});
+                        else el.pause();
+                      }
+                    }}
                     src="/demo-videos/demo1.mp4" 
-                    autoPlay 
                     loop 
                     muted 
                     playsInline 
@@ -575,8 +581,9 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                     <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-black/40 rounded-full flex items-center justify-center text-white text-[10px] font-bold z-10">✕</div>
                   )}
                   
-                  {config.playVideo && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center">
+                  {/* Botão de Play: Mostra apenas quando NÃO está reproduzindo (pausado) */}
+                  {!config.playVideo && (
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center z-10">
                       <PlaySquare className="w-3.5 h-3.5 ml-0.5 fill-white text-white"/>
                     </div>
                   )}
@@ -584,10 +591,12 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                   {/* Contador (Apenas Divulgação) */}
                   {activeTab === "divulgacao" && currentDivulgacao.showCountdown && (
                     <div 
-                      className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10"
+                      className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 shadow-sm z-10"
                       style={{ 
                         backgroundColor: currentDivulgacao.countdownBgColor, 
-                        color: currentDivulgacao.countdownTextColor 
+                        color: currentDivulgacao.countdownTextColor,
+                        // Aplica o raio da borda dinâmico (fallback para 4px se não existir)
+                        borderRadius: currentDivulgacao.countdownBorderRadius || '4px' 
                       }}
                     >
                       02d 10h 01m
@@ -595,15 +604,17 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                   )}
                 </div>
 
-                {/* CTA Embaixo: Solto, sem margem negativa, com gap do pai e sombra própria */}
+                {/* CTA Embaixo */}
                 {config.showCTA && (
                   <div 
-                    className="text-[12px] font-bold px-4 py-1.5 rounded-full shadow-lg text-center transition-transform hover:scale-105" 
+                    className="text-[12px] font-bold px-4 py-1.5 shadow-lg text-center transition-transform hover:scale-105" 
                     style={{ 
                       backgroundColor: config.ctaBgColor, 
                       color: config.ctaTextColor, 
                       width: '90%', 
-                      minWidth: 'max-content' 
+                      minWidth: 'max-content',
+                      // Aplica o raio da borda dinâmico (fallback para 9999px/pílula se não existir)
+                      borderRadius: config.ctaBorderRadius || '9999px'
                     }}
                   >
                     {config.ctaText}
