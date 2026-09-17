@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import {
   Monitor, Smartphone, Link as LinkIcon, Unlink, Radio, Save, LayoutTemplate, PlaySquare,
   VolumeX, ChevronDown, RotateCcw, Info, Share2, ShoppingCart, ExternalLink, Eye,
-  MessageCircle, Send, Heart, Package, X
+  MessageCircle, Send, Heart, Package
 } from "lucide-react";
 
 // --- INTERFACES ---
