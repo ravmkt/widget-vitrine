@@ -637,102 +637,146 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                     </div>
                   </div>
                 ) : (
-                  // PREVIEW DO PLAYER
-                  <div className={`w-full h-full bg-slate-50 flex ${device === 'mobile' ? 'flex-col overflow-y-auto rounded-xl border border-slate-200' : 'gap-4 p-4'}`}>
+                // PREVIEW DO PLAYER
+                <div className={`w-full h-full flex justify-center items-center ${device === 'mobile' ? 'overflow-y-auto' : 'p-2 sm:p-4'}`}>
+                  
+                  <div className={`flex gap-3 sm:gap-4 w-full max-w-[950px] h-full ${device === 'mobile' ? 'flex-col h-auto' : 'max-h-[650px]'}`}>
                     
-                    {/* COLUNA ESQUERDA: Produtos */}
-                    {currentPlayer.showProducts && (
-                      <div className={`${device === 'mobile' ? 'w-full order-3 p-4' : 'w-[280px] flex-shrink-0 flex flex-col'}`}>
-                        <div className="text-white text-center py-2.5 rounded-t-xl font-medium text-sm" style={{ backgroundColor: currentPlayer.borderColor }}>PRODUTOS</div>
-                        <div className="border border-t-0 rounded-b-xl bg-white p-2 space-y-2 flex-1 overflow-y-auto" style={{ borderColor: currentPlayer.borderColor }}>
-                          {[1,2,3].map(i => (
-                            <div key={i} className="flex gap-2 p-2 border border-slate-100 rounded-lg shadow-sm relative">
-                               <div className="absolute left-1 top-1 font-bold text-xs" style={{ color: currentPlayer.borderColor }}>{`0${i}`}</div>
-                               <div className="w-12 h-14 bg-slate-100 rounded mt-3 ml-2 overflow-hidden"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=100&auto=format&fit=crop" className="w-full h-full object-cover"/></div>
-                               <div className="flex-1 pt-1">
-                                  <div style={{ fontSize: currentPlayer.productNameSize, color: currentPlayer.productNameColor }} className="leading-tight line-clamp-2">Blusa Life Rosê em Malha Tecnológica</div>
-                                  <div style={{ fontSize: currentPlayer.productPriceSize, color: currentPlayer.productPriceColor }} className="font-bold mt-1">Por: R$ 149,90</div>
-                               </div>
-                               <div className="absolute right-2 bottom-2" style={{ color: currentPlayer.borderColor }}><ShoppingCart className="w-4 h-4" /></div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    {/* COLUNA ESQUERDA: Produtos + Info */}
+                    <div className={`flex flex-col gap-3 sm:gap-4 ${device === 'mobile' ? 'w-full order-3' : 'w-[240px] xl:w-[280px] flex-shrink-0'}`}>
+                      
+                      {currentPlayer.showProducts && (
+                        <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border shadow-sm overflow-hidden" style={{ borderColor: currentPlayer.borderColor }}>
+                          <div className="text-white text-center py-2 font-medium text-[13px] tracking-wide" style={{ backgroundColor: currentPlayer.borderColor }}>
+                            PRODUTOS
+                          </div>
+                          
+                          <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 scrollbar-thin">
+                            {[1,2,3,4,5].map(i => (
+                              <div key={i} className="flex gap-2 p-1.5 bg-white border rounded-lg relative transition-all hover:shadow-md" style={{ borderColor: currentPlayer.borderColor }}>
+                                 <div className="font-bold text-[11px] w-4 pt-1 text-center" style={{ color: currentPlayer.borderColor }}>0{i}</div>
+                                 <div className="w-[50px] h-[60px] bg-slate-100 rounded overflow-hidden shrink-0">
+                                   <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=100&auto=format&fit=crop" className="w-full h-full object-cover"/>
+                                 </div>
+                                 <div className="flex-1 pt-0.5 pr-6">
+                                    <div style={{ fontSize: currentPlayer.productNameSize, color: currentPlayer.productNameColor }} className="leading-tight line-clamp-2 font-medium">Blusa Life Rosê em Malha Tecnológica</div>
+                                    <div className="text-[10px] text-slate-400 line-through mt-0.5">De: R$ 199,90</div>
+                                    <div style={{ fontSize: currentPlayer.productPriceSize, color: currentPlayer.productPriceColor }} className="font-bold leading-none">Por: R$ 149,90</div>
+                                 </div>
+                                 <div className="absolute right-2 bottom-2 w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: currentPlayer.borderColor }}>
+                                   <ShoppingCart className="w-3.5 h-3.5" />
+                                 </div>
+                              </div>
+                            ))}
+                          </div>
 
-                    {/* COLUNA CENTRAL: Video + Cards */}
-                    <div className={`flex flex-col gap-4 ${device === 'mobile' ? 'w-full order-1 p-4 pb-0' : 'flex-1 max-w-[400px] mx-auto'}`}>
-                       {/* Video */}
-                       <div className="relative bg-black overflow-hidden flex-shrink-0" style={{
+                          {/* Rodapé dos Produtos (Conforme Mockup 2) */}
+                          <div className="border-t p-2.5 flex justify-between items-center bg-slate-50" style={{ borderColor: `${currentPlayer.borderColor}40` }}>
+                             <div className="flex items-center text-[11px] font-medium text-slate-600">
+                               <ShoppingCart className="w-3.5 h-3.5 mr-1.5" style={{ color: currentPlayer.borderColor }}/> 
+                               6 Produtos adicionados
+                             </div>
+                             <div className="text-[11px] font-bold flex items-center cursor-pointer hover:underline" style={{ color: currentPlayer.borderColor }}>
+                               Finalizar <Share2 className="w-3 h-3 ml-1" />
+                             </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Card Informativo (Movido para a coluna da esquerda) */}
+                      <div className="h-[65px] flex-shrink-0 flex flex-col items-center justify-center rounded-xl border shadow-sm transition-all" 
+                           style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor, borderColor: currentPlayer.borderColor }}>
+                         <div className="font-black tracking-tight leading-none" style={{ fontSize: currentPlayer.infoSize1 }}>{currentPlayer.infoText1}</div>
+                         <div className="font-medium opacity-80 mt-1" style={{ fontSize: currentPlayer.infoSize2 }}>{currentPlayer.infoText2}</div>
+                      </div>
+
+                    </div>
+
+                    {/* COLUNA CENTRAL: Video + Cupom */}
+                    <div className={`flex flex-col gap-3 sm:gap-4 ${device === 'mobile' ? 'w-full order-1' : 'flex-1 min-w-[280px] max-w-[360px] mx-auto'}`}>
+                       
+                       {/* Video Player */}
+                       <div className="flex-1 relative bg-black overflow-hidden shadow-lg" style={{
                          border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
                          borderRadius: currentPlayer.borderRadius,
-                         aspectRatio: '9/16'
                        }}>
-                          <video src="/demo-videos/demo2.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover opacity-80" />
+                          <video src="/demo-videos/demo2.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover opacity-90" />
                           
                           {/* Elementos no video */}
                           <div className="absolute top-4 left-4 flex items-center gap-2">
-                             <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">🦋</div>
-                             {currentPlayer.showTitle && <span style={{ color: currentPlayer.titleColor }} className="font-bold text-sm drop-shadow-md">{currentPlayer.titleText}</span>}
+                             <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20">🦋</div>
+                             {currentPlayer.showTitle && <span style={{ color: currentPlayer.titleColor }} className="font-bold text-[13px] drop-shadow-md">{currentPlayer.titleText}</span>}
                           </div>
 
-                          <div className="absolute top-4 right-4 flex items-center gap-2">
-                            <div className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 uppercase"><Radio className="w-3 h-3 animate-pulse"/> Ao Vivo</div>
+                          <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                            <Radio className="w-3 h-3 animate-pulse"/> Ao Vivo
                           </div>
 
-                          {currentPlayer.autoplayMuted && <div className="absolute top-14 right-4 bg-black/40 backdrop-blur-md p-1.5 rounded text-white"><VolumeX className="w-3.5 h-3.5"/></div>}
+                          {currentPlayer.autoplayMuted && (
+                            <div className="absolute top-14 right-4 bg-black/40 backdrop-blur-md p-1.5 rounded text-white border border-white/20">
+                              <VolumeX className="w-3.5 h-3.5"/>
+                            </div>
+                          )}
                        </div>
 
-                       {/* Card Cupom */}
-                       <div className="flex rounded-lg overflow-hidden border border-slate-200 shadow-sm" style={{ height: '48px' }}>
-                          <div className="flex items-center justify-center px-4 font-bold tracking-wide" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor, width: '50%' }}>
+                       {/* Card Cupom (Mantido no centro) */}
+                       <div className="h-[55px] flex-shrink-0 flex rounded-xl overflow-hidden shadow-sm border" style={{ borderColor: currentPlayer.borderColor }}>
+                          <div className="flex items-center justify-center px-4 font-black tracking-widest text-[16px]" 
+                               style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor, width: '50%' }}>
                             {currentPlayer.couponCode}
                           </div>
-                          <div className="flex items-center justify-center px-4 font-bold" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor, width: '50%' }}>
+                          <div className="flex items-center justify-center px-4 font-black text-[18px]" 
+                               style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor, width: '50%' }}>
                             {currentPlayer.couponText}
                           </div>
                        </div>
 
-                       {/* Card Informativo */}
-                       <div className="flex flex-col items-center justify-center rounded-lg border border-slate-200 shadow-sm py-2" style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor }}>
-                          <div className="font-black tracking-tight" style={{ fontSize: currentPlayer.infoSize1 }}>{currentPlayer.infoText1}</div>
-                          <div className="font-medium opacity-80" style={{ fontSize: currentPlayer.infoSize2 }}>{currentPlayer.infoText2}</div>
-                       </div>
                     </div>
 
                     {/* COLUNA DIREITA: Chat + Compartilhar */}
-                    <div className={`${device === 'mobile' ? 'w-full order-2 p-4 pb-0' : 'w-[280px] flex-shrink-0 flex flex-col gap-4'}`}>
+                    <div className={`flex flex-col gap-3 sm:gap-4 ${device === 'mobile' ? 'w-full order-2' : 'w-[240px] xl:w-[280px] flex-shrink-0'}`}>
+                      
                       {currentPlayer.showChat && (
-                        <div className="flex-1 flex flex-col h-full max-h-[500px]">
-                          <div className="text-white text-center py-2.5 rounded-t-xl font-medium text-sm" style={{ backgroundColor: currentPlayer.borderColor }}>CHAT</div>
-                          <div className="border border-t-0 rounded-b-xl bg-white p-3 flex-1 flex flex-col overflow-hidden relative" style={{ borderColor: currentPlayer.borderColor }}>
-                             <div className="flex-1 overflow-y-auto space-y-3 pb-12">
-                                {[1,2,3,4].map(i => (
-                                  <div key={i} className="flex gap-2 items-start text-xs">
-                                    <div className="w-6 h-6 rounded-full bg-slate-200 shrink-0"></div>
-                                    <div className="text-slate-600"><span className="font-bold text-slate-700">@usuario{i}</span> Oi, qual o valor?</div>
+                        <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border shadow-sm overflow-hidden" style={{ borderColor: currentPlayer.borderColor }}>
+                          <div className="text-white text-center py-2 font-medium text-[13px] tracking-wide" style={{ backgroundColor: currentPlayer.borderColor }}>
+                            CHAT
+                          </div>
+                          
+                          <div className="flex-1 flex flex-col overflow-hidden relative bg-white">
+                             <div className="flex-1 overflow-y-auto p-3 space-y-4 pb-14 scrollbar-thin">
+                                {[1,2,3,4,5].map(i => (
+                                  <div key={i} className="flex gap-2.5 items-start text-[11px] leading-tight">
+                                    <img src={`https://i.pravatar.cc/100?img=${i+10}`} className="w-6 h-6 rounded-full border border-slate-200 shrink-0" />
+                                    <div className="text-slate-600 pt-0.5">
+                                      <span className="font-bold text-slate-800">@usuario{i}</span> Oi, qual o valor? Vocês entregam para SP?
+                                    </div>
                                   </div>
                                 ))}
                              </div>
-                             <div className="absolute bottom-2 left-2 right-2 bg-slate-50 border border-slate-200 rounded-full py-2 px-3 text-xs text-slate-400 flex justify-between items-center">
-                                Chat...
-                                <div className="w-5 h-5 rounded-full" style={{ backgroundColor: currentPlayer.borderColor }}></div>
+                             
+                             {/* Input do Chat */}
+                             <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-transparent">
+                               <div className="bg-white border rounded-full py-2 px-3.5 text-[12px] text-slate-400 flex justify-between items-center shadow-sm" style={{ borderColor: currentPlayer.borderColor }}>
+                                  Chat...
+                                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white cursor-pointer" style={{ backgroundColor: currentPlayer.borderColor }}>
+                                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                  </div>
+                               </div>
                              </div>
                           </div>
                         </div>
                       )}
 
                       {/* Botão Compartilhar */}
-                      <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 shadow-sm font-bold text-[15px] transition-transform hover:scale-[1.02]" 
-                              style={{ backgroundColor: currentPlayer.shareBgColor, color: currentPlayer.shareTextColor }}>
-                         Compartilhar <Share2 className="w-4 h-4" />
+                      <button className="h-[55px] flex-shrink-0 w-full flex items-center justify-center gap-2 rounded-xl border shadow-sm font-bold text-[16px] transition-transform hover:scale-[1.02]" 
+                              style={{ backgroundColor: currentPlayer.shareBgColor, color: currentPlayer.shareTextColor, borderColor: currentPlayer.borderColor }}>
+                         Compartilhar <Share2 className="w-4 h-4 ml-1" />
                       </button>
+
                     </div>
 
                   </div>
-                )}
-            </div>
-          </div>
+                </div>
         </div>
 
         {/* RODAPÉ */}
