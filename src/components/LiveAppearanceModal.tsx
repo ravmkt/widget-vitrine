@@ -25,12 +25,14 @@ export interface BaseWidgetSettings {
   ctaText: string;
   ctaBgColor: string;
   ctaTextColor: string;
+  ctaBorderRadius: string; // Novo: Arredondamento do CTA
 }
 
 export interface WidgetDivulgacaoSettings extends BaseWidgetSettings {
   showCountdown: boolean;
   countdownBgColor: string;
   countdownTextColor: string;
+  countdownBorderRadius: string; // Novo: Arredondamento do Contador
 }
 
 export interface WidgetAoVivoSettings extends BaseWidgetSettings {
@@ -113,14 +115,16 @@ const defaultWidgetBase: BaseWidgetSettings = {
   showCTA: true,
   ctaText: "Participe",
   ctaBgColor: "#000000",
-  ctaTextColor: "#FFFFFF"
+  ctaTextColor: "#FFFFFF",
+  ctaBorderRadius: "9999px" // Default: Pílula
 };
 
 export const defaultDivulgacaoSettings: WidgetDivulgacaoSettings = {
   ...defaultWidgetBase,
   showCountdown: true,
   countdownBgColor: "#e7191f",
-  countdownTextColor: "#FFFFFF"
+  countdownTextColor: "#FFFFFF",
+  countdownBorderRadius: "4px" // Default: Borda leve
 };
 
 export const defaultAoVivoSettings: WidgetAoVivoSettings = {
@@ -169,7 +173,7 @@ export const defaultPlayerSettings: LivePlayerSettings = {
   productPriceColor: "#e7191f",
 };
 
-// --- COMPONENTES VISUAIS CUSTOMIZADOS (AGORA TODOS FORA DO COMPONENTE PRINCIPAL) ---
+// --- COMPONENTES VISUAIS CUSTOMIZADOS ---
 const ColorInput = ({ value, onChange, label }: { value: string, onChange: (v: string) => void, label?: string }) => (
   <div className="space-y-1.5">
     {label && <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</label>}
@@ -355,6 +359,10 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                   <ColorInput label="Fundo" value={config.ctaBgColor} onChange={(v) => updateFn("ctaBgColor", v)} />
                   <ColorInput label="Texto" value={config.ctaTextColor} onChange={(v) => updateFn("ctaTextColor", v)} />
                 </div>
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Raio da Borda do CTA</label>
+                  <Input type="text" value={config.ctaBorderRadius || '9999px'} onChange={(e) => updateFn("ctaBorderRadius", e.target.value)} placeholder="ex: 8px ou 9999px" className="h-8 rounded-lg text-[13px]" />
+                </div>
               </div>
             )}
           </div>
@@ -363,9 +371,15 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
             <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
               <CustomSwitch checked={config.showCountdown} onChange={(v) => updateFn("showCountdown", v)} label="Contador Regressivo" />
               {config.showCountdown && (
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                  <ColorInput label="Fundo" value={config.countdownBgColor} onChange={(v) => updateFn("countdownBgColor", v)} />
-                  <ColorInput label="Texto" value={config.countdownTextColor} onChange={(v) => updateFn("countdownTextColor", v)} />
+                <div className="mt-3 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <ColorInput label="Fundo" value={config.countdownBgColor} onChange={(v) => updateFn("countdownBgColor", v)} />
+                    <ColorInput label="Texto" value={config.countdownTextColor} onChange={(v) => updateFn("countdownTextColor", v)} />
+                  </div>
+                  <div className="space-y-1.5 pt-1">
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Raio da Borda do Contador</label>
+                    <Input type="text" value={config.countdownBorderRadius || '4px'} onChange={(e) => updateFn("countdownBorderRadius", e.target.value)} placeholder="ex: 4px" className="h-8 rounded-lg text-[13px]" />
+                  </div>
                 </div>
               )}
             </div>
@@ -486,7 +500,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                          <div className="grid grid-cols-2 gap-3 mt-1">
                            <ColorInput label="Cor Texto" value={currentPlayer.shareTextColor} onChange={(v) => updateConfig(setPlayerConfig, "shareTextColor", v, playerConfig.linked)} />
                            <ColorInput label="Cor Fundo" value={currentPlayer.shareBgColor} onChange={(v) => updateConfig(setPlayerConfig, "shareBgColor", v, playerConfig.linked)} />
-                        </div>
+                         </div>
                       </div>
 
                       {/* Produtos */}
@@ -538,90 +552,88 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                     <div className="absolute inset-0 bg-white">
                       <div className="w-full h-full opacity-10" style={{backgroundImage: "url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800&auto=format')", backgroundSize: "cover"}}></div>
                       
-          {/* O WIDGET EM SI */}
-          {(activeTab === "divulgacao" || activeTab === "aovivo") && 
-            [activeTab === "divulgacao" ? currentDivulgacao : currentAoVivo].map((config, i) => (
-              <div 
-                key={i}
-                className="absolute transition-all duration-300 flex flex-col items-center group cursor-pointer gap-2.5" 
-                style={{
-                  ...(config.position.includes('bottom') ? { bottom: config.marginBottom } : { top: config.marginTop }),
-                  ...(config.position.includes('left') ? { left: config.marginSide } : { right: config.marginSide }),
-                  zIndex: 50
-                }}
-              >
-                
-                {/* Container do Video */}
-                <div 
-                  className="relative overflow-hidden bg-black shadow-[0_8px_30px_rgba(0,0,0,0.15)]" 
-                  style={{
-                    width: config.width,
-                    height: calcHeight(config.format, config.width),
-                    border: `${config.borderWidth}px solid ${config.borderColor}`,
-                    borderRadius: config.format === 'circular' ? '50%' : config.borderRadius,
-                  }}
-                >
-                  <video 
-                    // Callback ref mágico para controlar play/pause sem precisar de useEffect
-                    ref={(el) => {
-                      if (el) {
-                        if (config.playVideo) el.play().catch(() => {});
-                        else el.pause();
-                      }
-                    }}
-                    src="/demo-videos/demo1.mp4" 
-                    loop 
-                    muted 
-                    playsInline 
-                    className="w-full h-full" 
-                    style={{ objectFit: config.objectFit }} 
-                  />
-                  
-                  {config.showCloseButton && (
-                    <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-black/40 rounded-full flex items-center justify-center text-white text-[10px] font-bold z-10">✕</div>
-                  )}
-                  
-                  {/* Botão de Play: Mostra apenas quando NÃO está reproduzindo (pausado) */}
-                  {!config.playVideo && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center z-10">
-                      <PlaySquare className="w-3.5 h-3.5 ml-0.5 fill-white text-white"/>
-                    </div>
-                  )}
-                  
-                  {/* Contador (Apenas Divulgação) */}
-                  {activeTab === "divulgacao" && currentDivulgacao.showCountdown && (
-                    <div 
-                      className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 shadow-sm z-10"
-                      style={{ 
-                        backgroundColor: currentDivulgacao.countdownBgColor, 
-                        color: currentDivulgacao.countdownTextColor,
-                        // Aplica o raio da borda dinâmico (fallback para 4px se não existir)
-                        borderRadius: currentDivulgacao.countdownBorderRadius || '4px' 
-                      }}
-                    >
-                      02d 10h 01m
-                    </div>
-                  )}
-                </div>
+                      {/* O WIDGET EM SI */}
+                      {(activeTab === "divulgacao" || activeTab === "aovivo") && 
+                        [activeTab === "divulgacao" ? currentDivulgacao : currentAoVivo].map((config, i) => (
+                          <div 
+                            key={i}
+                            className="absolute transition-all duration-300 flex flex-col items-center group cursor-pointer gap-2.5" 
+                            style={{
+                              ...(config.position.includes('bottom') ? { bottom: config.marginBottom } : { top: config.marginTop }),
+                              ...(config.position.includes('left') ? { left: config.marginSide } : { right: config.marginSide }),
+                              zIndex: 50
+                            }}
+                          >
+                            
+                            {/* Container do Video */}
+                            <div 
+                              className="relative overflow-hidden bg-black shadow-[0_8px_30px_rgba(0,0,0,0.15)]" 
+                              style={{
+                                width: config.width,
+                                height: calcHeight(config.format, config.width),
+                                border: `${config.borderWidth}px solid ${config.borderColor}`,
+                                borderRadius: config.format === 'circular' ? '50%' : config.borderRadius,
+                              }}
+                            >
+                              <video 
+                                // Callback ref mágico para controlar play/pause sem precisar de useEffect
+                                ref={(el) => {
+                                  if (el) {
+                                    if (config.playVideo) el.play().catch(() => {});
+                                    else el.pause();
+                                  }
+                                }}
+                                src="/demo-videos/demo1.mp4" 
+                                loop 
+                                muted 
+                                playsInline 
+                                className="w-full h-full" 
+                                style={{ objectFit: config.objectFit }} 
+                              />
+                              
+                              {config.showCloseButton && (
+                                <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-black/40 rounded-full flex items-center justify-center text-white text-[10px] font-bold z-10">✕</div>
+                              )}
+                              
+                              {/* Botão de Play: Mostra apenas quando NÃO está reproduzindo (pausado) */}
+                              {!config.playVideo && (
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center z-10">
+                                  <PlaySquare className="w-3.5 h-3.5 ml-0.5 fill-white text-white"/>
+                                </div>
+                              )}
+                              
+                              {/* Contador (Apenas Divulgação) */}
+                              {activeTab === "divulgacao" && (config as WidgetDivulgacaoSettings).showCountdown && (
+                                <div 
+                                  className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 shadow-sm z-10"
+                                  style={{ 
+                                    backgroundColor: (config as WidgetDivulgacaoSettings).countdownBgColor, 
+                                    color: (config as WidgetDivulgacaoSettings).countdownTextColor,
+                                    borderRadius: (config as WidgetDivulgacaoSettings).countdownBorderRadius || '4px' 
+                                  }}
+                                >
+                                  02d 10h 01m
+                                </div>
+                              )}
+                            </div>
 
-                {/* CTA Embaixo */}
-                {config.showCTA && (
-                  <div 
-                    className="text-[12px] font-bold px-4 py-1.5 shadow-lg text-center transition-transform hover:scale-105" 
-                    style={{ 
-                      backgroundColor: config.ctaBgColor, 
-                      color: config.ctaTextColor, 
-                      width: '90%', 
-                      minWidth: 'max-content',
-                      // Aplica o raio da borda dinâmico (fallback para 9999px/pílula se não existir)
-                      borderRadius: config.ctaBorderRadius || '9999px'
-                    }}
-                  >
-                    {config.ctaText}
-                  </div>
-                )}
-              </div>
-            ))}
+                            {/* CTA Embaixo */}
+                            {config.showCTA && (
+                              <div 
+                                className="text-[12px] font-bold px-4 py-1.5 shadow-lg text-center transition-transform hover:scale-105" 
+                                style={{ 
+                                  backgroundColor: config.ctaBgColor, 
+                                  color: config.ctaTextColor, 
+                                  width: '90%', 
+                                  minWidth: 'max-content',
+                                  borderRadius: config.ctaBorderRadius || '9999px'
+                                }}
+                              >
+                                {config.ctaText}
+                              </div>
+                            )}
+                          </div>
+                        ))}
                     </div>
                   </div>
                 ) : (
