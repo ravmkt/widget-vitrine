@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Monitor, Smartphone, Link as LinkIcon, Unlink, Radio, Save, LayoutTemplate, PlaySquare,
-  VolumeX, ChevronDown, RotateCcw, Info, Share2, ShoppingCart, ExternalLink, Eye,
+  VolumeX, ChevronDown, RotateCcw, Info, ShoppingCart, ExternalLink, Eye,
   MessageCircle, Send, ShoppingBag, Phone, Heart, ChevronDown as ChevronDownIcon
 } from "lucide-react";
 
@@ -116,6 +116,9 @@ const defaultWidgetBase: BaseWidgetSettings = {
   ctaBorderRadius: "9999px"
 };
 
+// EXPORT ADICIONADO AQUI: Resolve o [MISSING_EXPORT] defaultWidgetSettings da Vercel
+export const defaultWidgetSettings = defaultWidgetBase;
+
 export const defaultDivulgacaoSettings: WidgetDivulgacaoSettings = {
   ...defaultWidgetBase,
   showCountdown: true,
@@ -192,7 +195,7 @@ const CustomSwitch = ({ checked, onChange, label }: { checked: boolean, onChange
   </label>
 );
 
-const AccordionItem = ({ id, title, children, openAccordion, setOpenAccordion }: any) => {
+const AccordionItem = ({ id, title, children, openAccordion, setOpenAccordion }: { id: string, title: string, children: React.ReactNode, openAccordion: string, setOpenAccordion: (id: string) => void }) => {
   const isOpen = openAccordion === id;
   return (
     <div className="mb-2 bg-white border border-slate-200 rounded-[14px] overflow-hidden shadow-sm transition-all duration-300">
@@ -234,7 +237,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     if (activeTab === "player") setPlayerConfig({ desktop: { ...defaultPlayerSettings }, mobile: { ...defaultPlayerSettings }, linked: true });
   };
 
-  const updateConfig = (stateSetter: any, key: string, value: any, currentLinked: boolean) => {
+  const updateConfig = (stateSetter: React.Dispatch<React.SetStateAction<any>>, key: string, value: any, currentLinked: boolean) => {
     stateSetter((prev: any) => {
       const newState = { ...prev };
       newState[device] = { ...newState[device], [key]: value };
@@ -246,8 +249,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     });
   };
 
-  const currentDivulgacao = divulgacaoConfig[device];
-  const currentAoVivo = aoVivoConfig[device];
   const currentPlayer = playerConfig[device];
 
   const toggleLink = () => {
@@ -257,22 +258,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
   };
 
   const isLinked = activeTab === "divulgacao" ? divulgacaoConfig.linked : activeTab === "aovivo" ? aoVivoConfig.linked : playerConfig.linked;
-
-  const calcHeight = (format: string, width: number) => {
-    if (format === "square" || format === "circular") return width;
-    if (format === "portrait") return Math.round(width * 16 / 9);
-    if (format === "landscape") return Math.round(width * 9 / 16);
-    return width;
-  };
-
-  const renderWidgetSettings = (config: any, updateFn: any, isDivulgacao: boolean) => (
-    <div className="animate-in fade-in duration-300">
-      {/* ... (Mesmo código das abas Divulgação e Ao Vivo do arquivo original) ... */}
-      <div className="p-4 text-center text-sm text-slate-500 border border-dashed rounded-xl border-slate-200">
-        Configurações do widget flutuante
-      </div>
-    </div>
-  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -306,8 +291,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-thin">
-              {/* Abas Anteriores omitidas para focar no Player */}
-              
               {activeTab === "player" && (
                 <div className="animate-in fade-in duration-300">
                   <AccordionItem id="player_borda" title="1. Aparência Global (Card Principal)" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
