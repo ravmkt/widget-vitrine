@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Monitor, Smartphone, Link as LinkIcon, Unlink, Radio, Save, LayoutTemplate, PlaySquare,
-  MessageSquare, Users, VolumeX, ChevronDown, RotateCcw, Info, Share2, ShoppingCart
+  VolumeX, ChevronDown, RotateCcw, Info, Share2, ShoppingCart
 } from "lucide-react";
 
 // --- INTERFACES ---
@@ -34,7 +34,7 @@ export interface WidgetDivulgacaoSettings extends BaseWidgetSettings {
 }
 
 export interface WidgetAoVivoSettings extends BaseWidgetSettings {
-  // Herda as configurações base (sem countdown)
+  // Herda as configurações base
 }
 
 export interface LivePlayerSettings {
@@ -71,7 +71,6 @@ export interface LivePlayerSettings {
   showChat: boolean;
   autoplayMuted: boolean;
   showProducts: boolean;
-  
 
   // Produto
   productNameSize: number;
@@ -106,7 +105,7 @@ const defaultWidgetBase: BaseWidgetSettings = {
   marginBottom: 0,
   marginTop: 0,
   marginSide: 5,
-  borderColor: "#0094EB",
+  borderColor: "#e7191f",
   borderWidth: 2,
   borderRadius: 12,
   playVideo: true,
@@ -120,16 +119,17 @@ const defaultWidgetBase: BaseWidgetSettings = {
 export const defaultDivulgacaoSettings: WidgetDivulgacaoSettings = {
   ...defaultWidgetBase,
   showCountdown: true,
-  countdownBgColor: "#E11D48",
+  countdownBgColor: "#e7191f",
   countdownTextColor: "#FFFFFF"
 };
 
 export const defaultAoVivoSettings: WidgetAoVivoSettings = {
   ...defaultWidgetBase,
   ctaText: "AO VIVO",
-  ctaBgColor: "#E11D48"
+  ctaBgColor: "#e7191f"
 };
 
+// MANTIDO PARA EVITAR ERRO DE BUILD NA PÁGINA LIVECOMMERCEPAGE
 export const defaultWidgetSettings = defaultDivulgacaoSettings;
 
 export const defaultPlayerSettings: LivePlayerSettings = {
@@ -260,7 +260,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     );
   };
 
-  // Renderiza as opções de widget (compartilhado entre Divulgação e Ao Vivo)
   const renderWidgetSettings = (config: any, updateFn: any, isDivulgacao: boolean) => (
     <div className="animate-in fade-in duration-300">
       <AccordionItem id="formato" title="1. Formato & Dimensões">
@@ -422,7 +421,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                     </div>
                   </AccordionItem>
 
-                  <AccordionItem id="player_visibilidade" title="2. Elementos & Cards">
+                  <AccordionItem id="player_visibilidade" title="2. Elementos Visíveis">
                     <div className="space-y-4">
                       {/* Titulo */}
                       <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
@@ -478,30 +477,33 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         </div>
                       </div>
 
+                      {/* Produtos (movido para Elementos Visíveis) */}
+                      <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
+                        <CustomSwitch checked={currentPlayer.showProducts} onChange={(v) => updateConfig(setPlayerConfig, "showProducts", v, playerConfig.linked)} label="Exibir Produtos" />
+                        {currentPlayer.showProducts && (
+                          <div className="mt-4 grid grid-cols-2 gap-4">
+                            <div className="space-y-3">
+                               <ColorInput label="Cor Nome" value={currentPlayer.productNameColor} onChange={(v) => updateConfig(setPlayerConfig, "productNameColor", v, playerConfig.linked)} />
+                               <div className="space-y-1.5">
+                                 <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tamanho Nome (px)</label>
+                                 <Input type="number" value={currentPlayer.productNameSize} onChange={(e) => updateConfig(setPlayerConfig, "productNameSize", Number(e.target.value), playerConfig.linked)} className="h-8 rounded-lg text-[13px]" />
+                               </div>
+                            </div>
+                            <div className="space-y-3">
+                               <ColorInput label="Cor Preço" value={currentPlayer.productPriceColor} onChange={(v) => updateConfig(setPlayerConfig, "productPriceColor", v, playerConfig.linked)} />
+                               <div className="space-y-1.5">
+                                 <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tamanho Preço (px)</label>
+                                 <Input type="number" value={currentPlayer.productPriceSize} onChange={(e) => updateConfig(setPlayerConfig, "productPriceSize", Number(e.target.value), playerConfig.linked)} className="h-8 rounded-lg text-[13px]" />
+                               </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       <CustomSwitch checked={currentPlayer.showViewerCount} onChange={(v) => updateConfig(setPlayerConfig, "showViewerCount", v, playerConfig.linked)} label="Contador de espectadores" />
                       <CustomSwitch checked={currentPlayer.showChat} onChange={(v) => updateConfig(setPlayerConfig, "showChat", v, playerConfig.linked)} label="Chat ao vivo" />
                       <CustomSwitch checked={currentPlayer.autoplayMuted} onChange={(v) => updateConfig(setPlayerConfig, "autoplayMuted", v, playerConfig.linked)} label="Iniciar com som desativado" />
-                      <CustomSwitch checked={currentPlayer.showProducts} onChange={(v) => updateConfig(setPlayerConfig, "showProducts", v, playerConfig.linked)} label="Exibir Produtos" />
                     </div>
-                  </AccordionItem>
-
-                  <AccordionItem id="player_produtos" title="3. Card de Produto">
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-3">
-                           <ColorInput label="Cor Nome" value={currentPlayer.productNameColor} onChange={(v) => updateConfig(setPlayerConfig, "productNameColor", v, playerConfig.linked)} />
-                           <div className="space-y-1.5">
-                             <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tamanho (px)</label>
-                             <Input type="number" value={currentPlayer.productNameSize} onChange={(e) => updateConfig(setPlayerConfig, "productNameSize", Number(e.target.value), playerConfig.linked)} className="h-8 rounded-lg text-[13px]" />
-                           </div>
-                        </div>
-                        <div className="space-y-3">
-                           <ColorInput label="Cor Preço" value={currentPlayer.productPriceColor} onChange={(v) => updateConfig(setPlayerConfig, "productPriceColor", v, playerConfig.linked)} />
-                           <div className="space-y-1.5">
-                             <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tamanho (px)</label>
-                             <Input type="number" value={currentPlayer.productPriceSize} onChange={(e) => updateConfig(setPlayerConfig, "productPriceSize", Number(e.target.value), playerConfig.linked)} className="h-8 rounded-lg text-[13px]" />
-                           </div>
-                        </div>
-                     </div>
                   </AccordionItem>
                 </div>
               )}
@@ -514,7 +516,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                 
                 {/* --- MOCKUP DO DISPOSITIVO --- */}
                 {activeTab !== "player" ? (
-                  // PREVIEW DOS WIDGETS FLUTUANTES (Usa o celular responsivo)
+                  // PREVIEW DOS WIDGETS FLUTUANTES
                   <div className={`relative bg-[#0a0a0a] transition-all duration-500 flex flex-col shrink-0 ${
                     device === "desktop" 
                       ? "w-full max-w-[850px] aspect-video rounded-xl border-4 border-[#0a0a0a] overflow-hidden shadow-xl" 
@@ -522,21 +524,20 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                   }`}>
                     {device === "mobile" && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] max-w-[120px] h-[20px] bg-[#0a0a0a] rounded-b-[1rem] z-[100]"></div>}
                     <div className="absolute inset-0 bg-white">
-                      {/* Simulação do fundo do site */}
                       <div className="w-full h-full opacity-10" style={{backgroundImage: "url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800&auto=format')", backgroundSize: "cover"}}></div>
                       
-                      {/* O WIDGET EM SI */}
+                      {/* O WIDGET EM SI - Removido gap-2 para colar CTA */}
                       {(activeTab === "divulgacao" || activeTab === "aovivo") && (() => {
                         const config = activeTab === "divulgacao" ? currentDivulgacao : currentAoVivo;
                         return (
-                          <div className="absolute transition-all duration-300 shadow-[0_10px_40px_rgba(0,0,0,0.15)] flex flex-col items-center gap-2 group cursor-pointer" 
+                          <div className="absolute transition-all duration-300 shadow-[0_10px_40px_rgba(0,0,0,0.15)] flex flex-col items-center group cursor-pointer" 
                               style={{
                                 ...(config.position.includes('bottom') ? { bottom: config.marginBottom } : { top: config.marginTop }),
                                 ...(config.position.includes('left') ? { left: config.marginSide } : { right: config.marginSide }),
                               }}>
                               
                               {/* Container do Video */}
-                              <div className="relative overflow-hidden bg-black" style={{
+                              <div className="relative overflow-hidden bg-black z-20" style={{
                                 width: config.width,
                                 height: calcHeight(config.format, config.width),
                                 border: `${config.borderWidth}px solid ${config.borderColor}`,
@@ -555,9 +556,9 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 )}
                               </div>
 
-                              {/* CTA Embaixo */}
+                              {/* CTA Embaixo (-mt-2 para evitar borda branca vazando) */}
                               {config.showCTA && (
-                                <div className="text-[11px] font-bold px-3 py-1 rounded-md shadow-md text-center" 
+                                <div className="text-[11px] font-bold px-3 py-1 rounded-md shadow-md text-center relative z-10 -mt-2" 
                                      style={{ backgroundColor: config.ctaBgColor, color: config.ctaTextColor, width: '100%', minWidth: 'max-content' }}>
                                   {config.ctaText}
                                 </div>
@@ -568,23 +569,23 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                     </div>
                   </div>
                 ) : (
-                  // PREVIEW DO PLAYER (Simula a página da loja)
+                  // PREVIEW DO PLAYER
                   <div className={`w-full h-full bg-slate-50 flex ${device === 'mobile' ? 'flex-col overflow-y-auto rounded-xl border border-slate-200' : 'gap-4 p-4'}`}>
                     
                     {/* COLUNA ESQUERDA: Produtos */}
                     {currentPlayer.showProducts && (
                       <div className={`${device === 'mobile' ? 'w-full order-3 p-4' : 'w-[280px] flex-shrink-0 flex flex-col'}`}>
-                        <div className="bg-[#0094EB] text-white text-center py-2.5 rounded-t-xl font-medium text-sm">PRODUTOS</div>
-                        <div className="border border-t-0 border-[#0094EB] rounded-b-xl bg-white p-2 space-y-2 flex-1 overflow-y-auto">
+                        <div className="text-white text-center py-2.5 rounded-t-xl font-medium text-sm" style={{ backgroundColor: currentPlayer.borderColor }}>PRODUTOS</div>
+                        <div className="border border-t-0 rounded-b-xl bg-white p-2 space-y-2 flex-1 overflow-y-auto" style={{ borderColor: currentPlayer.borderColor }}>
                           {[1,2,3].map(i => (
                             <div key={i} className="flex gap-2 p-2 border border-slate-100 rounded-lg shadow-sm relative">
-                               <div className="absolute left-1 top-1 text-[#0094EB] font-bold text-xs">{`0${i}`}</div>
+                               <div className="absolute left-1 top-1 font-bold text-xs" style={{ color: currentPlayer.borderColor }}>{`0${i}`}</div>
                                <div className="w-12 h-14 bg-slate-100 rounded mt-3 ml-2 overflow-hidden"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=100&auto=format&fit=crop" className="w-full h-full object-cover"/></div>
                                <div className="flex-1 pt-1">
                                   <div style={{ fontSize: currentPlayer.productNameSize, color: currentPlayer.productNameColor }} className="leading-tight line-clamp-2">Blusa Life Rosê em Malha Tecnológica</div>
                                   <div style={{ fontSize: currentPlayer.productPriceSize, color: currentPlayer.productPriceColor }} className="font-bold mt-1">Por: R$ 149,90</div>
                                </div>
-                               <div className="absolute right-2 bottom-2 text-[#0094EB]"><ShoppingCart className="w-4 h-4" /></div>
+                               <div className="absolute right-2 bottom-2" style={{ color: currentPlayer.borderColor }}><ShoppingCart className="w-4 h-4" /></div>
                             </div>
                           ))}
                         </div>
@@ -635,10 +636,9 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                     <div className={`${device === 'mobile' ? 'w-full order-2 p-4 pb-0' : 'w-[280px] flex-shrink-0 flex flex-col gap-4'}`}>
                       {currentPlayer.showChat && (
                         <div className="flex-1 flex flex-col h-full max-h-[500px]">
-                          <div className="bg-[#0094EB] text-white text-center py-2.5 rounded-t-xl font-medium text-sm">CHAT</div>
-                          <div className="border border-t-0 border-[#0094EB] rounded-b-xl bg-white p-3 flex-1 flex flex-col overflow-hidden relative">
+                          <div className="text-white text-center py-2.5 rounded-t-xl font-medium text-sm" style={{ backgroundColor: currentPlayer.borderColor }}>CHAT</div>
+                          <div className="border border-t-0 rounded-b-xl bg-white p-3 flex-1 flex flex-col overflow-hidden relative" style={{ borderColor: currentPlayer.borderColor }}>
                              <div className="flex-1 overflow-y-auto space-y-3 pb-12">
-                                {/* Mensagens Fakes */}
                                 {[1,2,3,4].map(i => (
                                   <div key={i} className="flex gap-2 items-start text-xs">
                                     <div className="w-6 h-6 rounded-full bg-slate-200 shrink-0"></div>
@@ -648,7 +648,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                              </div>
                              <div className="absolute bottom-2 left-2 right-2 bg-slate-50 border border-slate-200 rounded-full py-2 px-3 text-xs text-slate-400 flex justify-between items-center">
                                 Chat...
-                                <div className="w-5 h-5 bg-rose-500 rounded-full"></div>
+                                <div className="w-5 h-5 rounded-full" style={{ backgroundColor: currentPlayer.borderColor }}></div>
                              </div>
                           </div>
                         </div>
