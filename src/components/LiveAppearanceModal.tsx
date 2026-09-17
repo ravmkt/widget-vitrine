@@ -109,6 +109,10 @@ const MOCK_PRODUCTS = [
   { id: 10, name: "Relógio Minimalista Pulseira Aço", oldPrice: "R$ 499,00", price: "R$ 349,90", img: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?q=80&w=200&auto=format" },
 ];
 
+// IDs dos 6 produtos selecionados no carrinho e o produto em exibição na Live
+const CART_PRODUCT_IDS = [1, 3, 5, 6, 8, 10];
+const CURRENT_LIVE_PRODUCT_ID = 5;
+
 // --- DEFAULTS ---
 export const defaultWidgetBase: BaseWidgetSettings = {
   format: "portrait",
@@ -849,30 +853,41 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                   >
                                     {/* Foto Sangrada: sem margem/gap, encosta de cima a baixo */}
                                     <img 
-                                      src={MOCK_PRODUCTS[0].img} 
+                                      src={MOCK_PRODUCTS[4].img} 
                                       className="w-[50px] h-full object-cover shrink-0"
                                       alt="Produto"
                                     />
                                     
                                     <div className="flex-1 min-w-0 px-2.5 py-1">
-                                      <div
-                                        className="font-bold leading-tight line-clamp-1"
-                                        style={{ fontSize: `${currentPlayer.productNameSize * 0.9}px`, color: currentPlayer.productNameColor }}
-                                      >
-                                        {MOCK_PRODUCTS[0].name}
+                                      <div className="flex items-center gap-1">
+                                        <div
+                                          className="font-bold leading-tight line-clamp-1 flex-1"
+                                          style={{ fontSize: `${currentPlayer.productNameSize * 0.9}px`, color: currentPlayer.productNameColor }}
+                                        >
+                                          {MOCK_PRODUCTS[4].name}
+                                        </div>
+                                        <span 
+                                          className="px-1 py-0.2 rounded text-[7.5px] font-black uppercase text-white shrink-0 animate-pulse leading-tight"
+                                          style={{ backgroundColor: currentPlayer.borderColor }}
+                                        >
+                                          Na Live
+                                        </span>
                                       </div>
-                                      <div className="text-[8px] text-slate-400 line-through mt-0.5 leading-none">De: {MOCK_PRODUCTS[0].oldPrice}</div>
+                                      <div className="text-[8px] text-slate-400 line-through mt-0.5 leading-none">De: {MOCK_PRODUCTS[4].oldPrice}</div>
                                       <div
                                         className="font-extrabold leading-tight mt-0.5"
                                         style={{ fontSize: `${currentPlayer.productPriceSize * 0.9}px`, color: currentPlayer.productPriceColor }}
                                       >
-                                        Por: {MOCK_PRODUCTS[0].price}
+                                        Por: {MOCK_PRODUCTS[4].price}
                                       </div>
                                     </div>
 
                                     <div className="shrink-0 pr-2">
-                                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-white shadow" style={{ backgroundColor: currentPlayer.borderColor }}>
-                                        <ShoppingCart className="w-3 h-3" />
+                                      <div 
+                                        className="w-6 h-6 rounded-full flex items-center justify-center shadow" 
+                                        style={{ backgroundColor: currentPlayer.borderColor }}
+                                      >
+                                        <ShoppingCart className="w-3 h-3 text-white" />
                                       </div>
                                     </div>
                                   </div>
@@ -899,58 +914,80 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
                                     {/* LISTA DE PRODUTOS CADASTRADOS NA LIVE */}
                                     <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-thin bg-slate-50">
-                                      {MOCK_PRODUCTS.map((prod, idx) => (
-                                        <div
-                                          key={prod.id}
-                                          className="bg-white flex items-center shadow-sm overflow-hidden h-[54px]"
-                                          style={{
-                                            border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
-                                            borderRadius: `${currentPlayer.borderRadius}px`
-                                          }}
-                                        >
-                                          {/* Bloco de Número */}
-                                          <div 
-                                            className="w-[30px] h-full flex items-center justify-center font-black text-[12px] text-white shrink-0 tracking-tight"
-                                            style={{ backgroundColor: currentPlayer.borderColor }}
+                                      {MOCK_PRODUCTS.map((prod, idx) => {
+                                        const isInCart = CART_PRODUCT_IDS.includes(prod.id);
+                                        const isLiveActive = prod.id === CURRENT_LIVE_PRODUCT_ID;
+
+                                        return (
+                                          <div
+                                            key={prod.id}
+                                            className="bg-white flex items-center shadow-sm overflow-hidden h-[54px]"
+                                            style={{
+                                              border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
+                                              borderRadius: `${currentPlayer.borderRadius}px`
+                                            }}
                                           >
-                                            {String(idx + 1).padStart(2, '0')}
-                                          </div>
-
-                                          {/* Foto Sangrada: encostada no bloco do número e de cima a baixo */}
-                                          <img 
-                                            src={prod.img} 
-                                            className="w-[48px] h-full object-cover shrink-0"
-                                            alt={prod.name}
-                                          />
-
-                                          {/* Título e Preço */}
-                                          <div className="flex-1 min-w-0 px-2 py-0.5">
-                                            <div
-                                              className="font-bold leading-tight line-clamp-1"
-                                              style={{ fontSize: `${currentPlayer.productNameSize * 0.9}px`, color: currentPlayer.productNameColor }}
-                                            >
-                                              {prod.name}
-                                            </div>
-                                            <div className="text-[8px] text-slate-400 line-through mt-0.5 leading-none">De: {prod.oldPrice}</div>
-                                            <div
-                                              className="font-extrabold leading-tight mt-0.5"
-                                              style={{ fontSize: `${currentPlayer.productPriceSize * 0.9}px`, color: currentPlayer.productPriceColor }}
-                                            >
-                                              Por: {prod.price}
-                                            </div>
-                                          </div>
-
-                                          {/* Botão Carrinho */}
-                                          <div className="pr-2 pl-0.5 shrink-0">
+                                            {/* Bloco de Número */}
                                             <div 
-                                              className="w-5 h-5 rounded-full flex items-center justify-center text-white shadow-sm" 
+                                              className="w-[30px] h-full flex items-center justify-center font-black text-[12px] text-white shrink-0 tracking-tight"
                                               style={{ backgroundColor: currentPlayer.borderColor }}
                                             >
-                                              <ShoppingCart className="w-2.5 h-2.5"/>
+                                              {String(idx + 1).padStart(2, '0')}
+                                            </div>
+
+                                            {/* Foto Sangrada: encostada no bloco do número e de cima a baixo */}
+                                            <img 
+                                              src={prod.img} 
+                                              className="w-[48px] h-full object-cover shrink-0"
+                                              alt={prod.name}
+                                            />
+
+                                            {/* Título e Preço */}
+                                            <div className="flex-1 min-w-0 px-2 py-0.5">
+                                              <div className="flex items-center gap-1">
+                                                <div
+                                                  className="font-bold leading-tight line-clamp-1 flex-1"
+                                                  style={{ fontSize: `${currentPlayer.productNameSize * 0.9}px`, color: currentPlayer.productNameColor }}
+                                                >
+                                                  {prod.name}
+                                                </div>
+                                                {isLiveActive && (
+                                                  <span 
+                                                    className="px-1 py-0.2 rounded text-[7px] font-black uppercase text-white shrink-0 animate-pulse leading-tight"
+                                                    style={{ backgroundColor: currentPlayer.borderColor }}
+                                                  >
+                                                    Na Live
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <div className="text-[8px] text-slate-400 line-through mt-0.5 leading-none">De: {prod.oldPrice}</div>
+                                              <div
+                                                className="font-extrabold leading-tight mt-0.5"
+                                                style={{ fontSize: `${currentPlayer.productPriceSize * 0.9}px`, color: currentPlayer.productPriceColor }}
+                                              >
+                                                Por: {prod.price}
+                                              </div>
+                                            </div>
+
+                                            {/* Botão Carrinho com lógica de cores invertidas */}
+                                            <div className="pr-2 pl-0.5 shrink-0">
+                                              <div 
+                                                className="w-5 h-5 rounded-full flex items-center justify-center shadow-sm" 
+                                                style={{ 
+                                                  backgroundColor: isInCart ? currentPlayer.borderColor : "#f1f5f9"
+                                                }}
+                                              >
+                                                <ShoppingCart 
+                                                  className="w-2.5 h-2.5"
+                                                  style={{
+                                                    color: isInCart ? "#FFFFFF" : currentPlayer.borderColor
+                                                  }}
+                                                />
+                                              </div>
                                             </div>
                                           </div>
-                                        </div>
-                                      ))}
+                                        );
+                                      })}
                                     </div>
 
                                     {/* Rodapé da Gaveta: Fixado em 6 Produtos adicionados ao carrinho */}
@@ -983,41 +1020,72 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 PRODUTOS DA LIVE
                               </div>
                               <div className="flex-1 overflow-y-auto p-2.5 space-y-2 scrollbar-thin bg-slate-50">
-                                {MOCK_PRODUCTS.map((prod, idx) => (
-                                  <div 
-                                    key={prod.id} 
-                                    className="flex items-center bg-white shadow-sm overflow-hidden h-[62px]" 
-                                    style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: `${currentPlayer.borderRadius}px` }}
-                                  >
-                                      {/* Bloco de Número */}
-                                      <div 
-                                        className="w-[32px] h-full flex items-center justify-center font-black text-[13px] text-white shrink-0 tracking-tight"
-                                        style={{ backgroundColor: currentPlayer.borderColor }}
-                                      >
-                                        {String(idx + 1).padStart(2, '0')}
-                                      </div>
+                                {MOCK_PRODUCTS.map((prod, idx) => {
+                                  const isInCart = CART_PRODUCT_IDS.includes(prod.id);
+                                  const isLiveActive = prod.id === CURRENT_LIVE_PRODUCT_ID;
 
-                                      {/* Foto Sangrada: de ponta a ponta sem recuos */}
-                                      <img 
-                                        src={prod.img} 
-                                        className="w-[56px] h-full object-cover shrink-0" 
-                                        alt={prod.name} 
-                                      />
-
-                                      {/* Informações */}
-                                      <div className="flex-1 min-w-0 px-2.5 py-1">
-                                        <div style={{ fontSize: currentPlayer.productNameSize, color: currentPlayer.productNameColor }} className="leading-tight line-clamp-1 font-bold">{prod.name}</div>
-                                        <div className="text-[10px] text-slate-400 line-through mt-0.5">De: {prod.oldPrice}</div>
-                                        <div style={{ fontSize: currentPlayer.productPriceSize, color: currentPlayer.productPriceColor }} className="font-extrabold leading-none mt-0.5">Por: {prod.price}</div>
-                                      </div>
-
-                                      <div className="pr-2.5 shrink-0">
-                                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-white shadow-sm" style={{ backgroundColor: currentPlayer.borderColor }}>
-                                          <ShoppingCart className="w-3.5 h-3.5" />
+                                  return (
+                                    <div 
+                                      key={prod.id} 
+                                      className="flex items-center bg-white shadow-sm overflow-hidden h-[62px]" 
+                                      style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: `${currentPlayer.borderRadius}px` }}
+                                    >
+                                        {/* Bloco de Número */}
+                                        <div 
+                                          className="w-[32px] h-full flex items-center justify-center font-black text-[13px] text-white shrink-0 tracking-tight"
+                                          style={{ backgroundColor: currentPlayer.borderColor }}
+                                        >
+                                          {String(idx + 1).padStart(2, '0')}
                                         </div>
-                                      </div>
-                                  </div>
-                                ))}
+
+                                        {/* Foto Sangrada: de ponta a ponta sem recuos */}
+                                        <img 
+                                          src={prod.img} 
+                                          className="w-[56px] h-full object-cover shrink-0" 
+                                          alt={prod.name} 
+                                        />
+
+                                        {/* Informações */}
+                                        <div className="flex-1 min-w-0 px-2.5 py-1">
+                                          <div className="flex items-center gap-1.5">
+                                            <div 
+                                              style={{ fontSize: currentPlayer.productNameSize, color: currentPlayer.productNameColor }} 
+                                              className="leading-tight line-clamp-1 font-bold flex-1"
+                                            >
+                                              {prod.name}
+                                            </div>
+                                            {isLiveActive && (
+                                              <span 
+                                                className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase text-white shrink-0 animate-pulse leading-none"
+                                                style={{ backgroundColor: currentPlayer.borderColor }}
+                                              >
+                                                Na Live
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div className="text-[10px] text-slate-400 line-through mt-0.5">De: {prod.oldPrice}</div>
+                                          <div style={{ fontSize: currentPlayer.productPriceSize, color: currentPlayer.productPriceColor }} className="font-extrabold leading-none mt-0.5">Por: {prod.price}</div>
+                                        </div>
+
+                                        {/* Botão Carrinho com lógica invertida */}
+                                        <div className="pr-2.5 shrink-0">
+                                          <div 
+                                            className="w-6 h-6 rounded-full flex items-center justify-center shadow-sm" 
+                                            style={{ 
+                                              backgroundColor: isInCart ? currentPlayer.borderColor : "#f1f5f9"
+                                            }}
+                                          >
+                                            <ShoppingCart 
+                                              className="w-3.5 h-3.5" 
+                                              style={{
+                                                color: isInCart ? "#FFFFFF" : currentPlayer.borderColor
+                                              }}
+                                            />
+                                          </div>
+                                        </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                               <div className="border-t p-2 flex justify-between items-center bg-white shrink-0" style={{ borderColor: `${currentPlayer.borderColor}40` }}>
                                   <div className="flex items-center text-[11px] font-bold text-slate-600">
