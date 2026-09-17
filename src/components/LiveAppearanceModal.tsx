@@ -373,12 +373,12 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
               {config.showCountdown && (
                 <div className="mt-3 space-y-3 pt-3 border-t border-slate-200">
                   <div className="grid grid-cols-2 gap-3">
-                    <ColorInput label="Fundo" value={config.countdownBgColor} onChange={(v) => updateFn("countdownBgColor", v)} />
-                    <ColorInput label="Texto" value={config.countdownTextColor} onChange={(v) => updateFn("countdownTextColor", v)} />
+                    <ColorInput label="Fundo" value={config.countdownBgColor} onChange={(v) => updateConfig(setDivulgacaoConfig, "countdownBgColor", v, divulgacaoConfig.linked)} />
+                    <ColorInput label="Texto" value={config.countdownTextColor} onChange={(v) => updateConfig(setDivulgacaoConfig, "countdownTextColor", v, divulgacaoConfig.linked)} />
                   </div>
                   <div className="space-y-1.5 pt-1">
                     <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Raio da Borda do Contador</label>
-                    <Input type="text" value={config.countdownBorderRadius || '4px'} onChange={(e) => updateFn("countdownBorderRadius", e.target.value)} placeholder="ex: 4px" className="h-8 rounded-lg text-[13px]" />
+                    <Input type="text" value={config.countdownBorderRadius || '4px'} onChange={(e) => updateConfig(setDivulgacaoConfig, "countdownBorderRadius", e.target.value, divulgacaoConfig.linked)} placeholder="ex: 4px" className="h-8 rounded-lg text-[13px]" />
                   </div>
                 </div>
               )}
@@ -667,39 +667,42 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                           }}>
                             <video src="/demo-videos/demo2.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover opacity-90" />
                             
-                            {/* TOP BAR REORGANIZADA PARA EVITAR SOBREPOSIÇÃO */}
+                            {/* TOP BAR REORGANIZADA EM COLUNAS */}
                             <div className="absolute top-4 left-4 right-4 flex justify-between items-start gap-2">
-                               {/* ESQUERDA: Avatar, Título e Contador */}
-                               <div className="flex flex-col gap-2 w-3/4">
-                                  <div className="flex items-center gap-2">
-                                     <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20 text-[14px] shrink-0">🦋</div>
-                                     {currentPlayer.showTitle && (
-                                       <span style={{ color: currentPlayer.titleColor }} className="font-bold text-[13px] drop-shadow-md truncate leading-tight">
-                                         {currentPlayer.titleText}
-                                       </span>
-                                     )}
+                               {/* ESQUERDA: Avatar e Título */}
+                               <div className="flex items-center gap-2 max-w-[60%]">
+                                  <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20 text-[14px] shrink-0">🦋</div>
+                                  {currentPlayer.showTitle && (
+                                    <span style={{ color: currentPlayer.titleColor }} className="font-bold text-[13px] drop-shadow-md truncate leading-tight">
+                                      {currentPlayer.titleText}
+                                    </span>
+                                  )}
+                               </div>
+
+                               {/* DIREITA: Stack Vertical (Ao Vivo > Espectadores > Mudo) */}
+                               <div className="flex flex-col items-end gap-2 shrink-0">
+                                  
+                                  {/* 1. Tag Ao Vivo */}
+                                  <div className="flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                                     <Radio className="w-3 h-3 animate-pulse"/> Ao Vivo
                                   </div>
                                   
+                                  {/* 2. Contador de Espectadores (agora no meio) */}
                                   {currentPlayer.showViewerCount && (
-                                     <div className="flex items-center gap-1.5 w-fit bg-black/40 backdrop-blur-md text-white text-[10px] font-semibold px-2.5 py-1 rounded-full border border-white/20 shadow-sm ml-[40px]">
+                                     <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md text-white text-[10px] font-semibold px-2.5 py-1 rounded-full border border-white/20 shadow-sm">
                                        <Eye className="w-3 h-3" />
                                        1.2K
                                      </div>
                                   )}
-                               </div>
 
-                               {/* DIREITA: Tag "AO VIVO" exclusiva para evitar encavalamento */}
-                               <div className="flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full uppercase tracking-wider shadow-sm shrink-0">
-                                  <Radio className="w-3 h-3 animate-pulse"/> Ao Vivo
+                                  {/* 3. Botão de Mudo (embaixo) */}
+                                  {currentPlayer.autoplayMuted && (
+                                     <div className="bg-black/40 backdrop-blur-md p-1.5 rounded-full text-white border border-white/20 mt-1">
+                                       <VolumeX className="w-3.5 h-3.5"/>
+                                     </div>
+                                  )}
                                </div>
                             </div>
-
-                            {/* Mute button descido para top-16 */}
-                            {currentPlayer.autoplayMuted && (
-                              <div className="absolute top-16 right-4 bg-black/40 backdrop-blur-md p-1.5 rounded text-white border border-white/20 mt-2">
-                                <VolumeX className="w-3.5 h-3.5"/>
-                              </div>
-                            )}
                           </div>
 
                           {currentPlayer.showCoupon && (
