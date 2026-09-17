@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import {
   Monitor, Smartphone, Link as LinkIcon, Unlink, Radio, Save, LayoutTemplate, PlaySquare,
   VolumeX, ChevronDown, RotateCcw, Info, Share2, ShoppingCart, ExternalLink, Eye,
-  MessageCircle, Send, Heart, ShoppingBag
+  MessageCircle, Send, Heart, ShoppingBag, SlidersHorizontal
 } from "lucide-react";
 
 // --- INTERFACES ---
@@ -36,9 +36,7 @@ export interface WidgetDivulgacaoSettings extends BaseWidgetSettings {
   countdownBorderRadius: string;
 }
 
-export interface WidgetAoVivoSettings extends BaseWidgetSettings {
-  // Herda configurações base
-}
+export interface WidgetAoVivoSettings extends BaseWidgetSettings {}
 
 export interface LivePlayerSettings {
   borderColor: string;
@@ -132,7 +130,6 @@ export const defaultAoVivoSettings: WidgetAoVivoSettings = {
   ctaBgColor: "#e7191f"
 };
 
-// Export de compatibilidade
 export const defaultWidgetSettings: WidgetDivulgacaoSettings = {
   ...defaultDivulgacaoSettings
 };
@@ -179,24 +176,15 @@ export const defaultPlayerSettings: LivePlayerSettings = {
 
 // --- COMPONENTES AUXILIARES ---
 const ColorInput = ({ value, onChange, label }: { value: string; onChange: (v: string) => void; label?: string }) => (
-  <div className="space-y-1.5">
+  <div className="space-y-1">
     {label && <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</label>}
     <div className="flex items-center gap-2">
-      <div className="relative w-8 h-8 rounded-lg overflow-hidden shrink-0 shadow-sm border border-slate-200 bg-slate-50">
+      <div className="relative w-7 h-7 rounded-lg overflow-hidden shrink-0 shadow-sm border border-slate-200 bg-slate-50">
         <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="absolute inset-[-25%] w-[150%] h-[150%] cursor-pointer border-0 p-0" />
       </div>
-      <input type="text" value={value.toUpperCase()} onChange={(e) => onChange(e.target.value)} className="h-8 w-full min-w-[70px] rounded-lg border border-slate-200 bg-slate-50/50 px-2 text-[12px] text-slate-600 shadow-sm outline-none focus:border-rose-500 focus:bg-white transition-colors" />
+      <input type="text" value={value.toUpperCase()} onChange={(e) => onChange(e.target.value)} className="h-7 w-full min-w-[70px] rounded-md border border-slate-200 bg-slate-50/50 px-2 text-[11px] font-mono text-slate-600 shadow-sm outline-none focus:border-rose-500 focus:bg-white transition-colors" />
     </div>
   </div>
-);
-
-const CustomSwitch = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
-  <label className="flex items-center justify-between cursor-pointer py-2.5 px-3 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 transition-colors">
-    <span className="text-[13px] text-slate-700 font-medium">{label}</span>
-    <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${checked ? 'bg-rose-600' : 'bg-slate-200'}`} onClick={() => onChange(!checked)}>
-      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${checked ? 'translate-x-4' : 'translate-x-1'}`} />
-    </div>
-  </label>
 );
 
 const AccordionItem = ({
@@ -214,20 +202,95 @@ const AccordionItem = ({
 }) => {
   const isOpen = openAccordion === id;
   return (
-    <div className="mb-2 bg-white border border-slate-200 rounded-[14px] overflow-hidden shadow-sm transition-all duration-300">
-      <button onClick={() => setOpenAccordion(isOpen ? "" : id)} className="w-full bg-white hover:bg-slate-50 px-4 py-3.5 flex justify-between items-center transition-colors">
-        <h4 className="text-[14px] font-medium text-slate-700">{title}</h4>
-        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
+    <div className="mb-2 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm transition-all duration-200">
+      <button onClick={() => setOpenAccordion(isOpen ? "" : id)} className="w-full bg-white hover:bg-slate-50 px-3.5 py-2.5 flex justify-between items-center transition-colors">
+        <h4 className="text-[13px] font-semibold text-slate-700">{title}</h4>
+        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
       </button>
-      {isOpen && <div className="p-4 space-y-4 border-t border-slate-100 bg-white animate-in slide-in-from-top-2 duration-200">{children}</div>}
+      {isOpen && <div className="p-3 space-y-3 border-t border-slate-100 bg-white animate-in slide-in-from-top-1 duration-150">{children}</div>}
+    </div>
+  );
+};
+
+// Item sanfona exclusivo para configurações internas de cada elemento
+interface SubItemProps {
+  id: string;
+  label: string;
+  checked: boolean;
+  onToggle: (checked: boolean) => void;
+  openSubItem: string;
+  setOpenSubItem: (id: string) => void;
+  hasSettings?: boolean;
+  children?: React.ReactNode;
+}
+
+const ElementSubItem = ({
+  id,
+  label,
+  checked,
+  onToggle,
+  openSubItem,
+  setOpenSubItem,
+  hasSettings = true,
+  children
+}: SubItemProps) => {
+  const isOpen = openSubItem === id;
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextState = !checked;
+    onToggle(nextState);
+    if (nextState && hasSettings) {
+      setOpenSubItem(id);
+    } else if (!nextState && isOpen) {
+      setOpenSubItem("");
+    }
+  };
+
+  const toggleExpand = () => {
+    if (!hasSettings) return;
+    setOpenSubItem(isOpen ? "" : id);
+  };
+
+  return (
+    <div className={`rounded-xl border transition-all duration-200 ${isOpen ? "border-rose-200 bg-rose-50/20 shadow-sm" : "border-slate-100 bg-slate-50/50 hover:bg-slate-100/40"}`}>
+      <div 
+        onClick={toggleExpand}
+        className={`flex items-center justify-between p-2.5 ${hasSettings ? 'cursor-pointer' : ''}`}
+      >
+        <div className="flex items-center gap-2">
+          {hasSettings && (
+            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180 text-rose-600" : ""}`} />
+          )}
+          <span className={`text-[12.5px] font-medium transition-colors ${isOpen ? "text-rose-900 font-semibold" : "text-slate-700"}`}>
+            {label}
+          </span>
+        </div>
+
+        {/* Switch toggle */}
+        <div 
+          onClick={handleToggle}
+          className={`relative inline-flex h-4.5 w-8 items-center rounded-full transition-colors cursor-pointer shrink-0 ${checked ? 'bg-rose-600' : 'bg-slate-300'}`}
+        >
+          <span className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-4' : 'translate-x-0.5'}`} />
+        </div>
+      </div>
+
+      {/* Conteúdo Exclusivo */}
+      {hasSettings && isOpen && (
+        <div className="px-3 pb-3 pt-1 border-t border-rose-100 animate-in slide-in-from-top-1 duration-150 space-y-2.5">
+          {children}
+        </div>
+      )}
     </div>
   );
 };
 
 export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving }: Props) {
   const [activeTab, setActiveTab] = useState<"divulgacao" | "aovivo" | "player">("player");
-  const [device, setDevice] = useState<"desktop" | "mobile">("mobile");
-  const [openAccordion, setOpenAccordion] = useState<string>("player_borda");
+  const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+  const [openAccordion, setOpenAccordion] = useState<string>("player_visibilidade");
+  const [openSubItem, setOpenSubItem] = useState<string>(""); // Sub-accordions começam FECHADOS
 
   const [divulgacaoConfig, setDivulgacaoConfig] = useState<DeviceConfig<WidgetDivulgacaoSettings>>({
     desktop: { ...defaultDivulgacaoSettings }, mobile: { ...defaultDivulgacaoSettings, width: 80 }, linked: false
@@ -244,6 +307,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
   const handleSave = () => { onSave(divulgacaoConfig, aoVivoConfig, playerConfig); };
 
   const handleReset = () => {
+    setOpenSubItem("");
     if (activeTab === "divulgacao") setDivulgacaoConfig({ desktop: { ...defaultDivulgacaoSettings }, mobile: { ...defaultDivulgacaoSettings, width: 80 }, linked: false });
     if (activeTab === "aovivo") setAoVivoConfig({ desktop: { ...defaultAoVivoSettings }, mobile: { ...defaultAoVivoSettings, width: 80 }, linked: false });
     if (activeTab === "player") setPlayerConfig({ desktop: { ...defaultPlayerSettings }, mobile: { ...defaultPlayerSettings }, linked: true });
@@ -281,116 +345,122 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
   };
 
   const renderWidgetSettings = (config: any, updateFn: any, isDivulgacao: boolean) => (
-    <div className="animate-in fade-in duration-300">
+    <div className="animate-in fade-in duration-200">
       <AccordionItem id="formato" title="1. Formato & Dimensões" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
-        <div className="space-y-1.5">
-          <label className="text-[12px] font-medium text-slate-600">Formato</label>
-          <select className="w-full h-9 rounded-[14px] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none" value={config.format} onChange={(e) => updateFn("format", e.target.value)}>
+        <div className="space-y-1">
+          <label className="text-[11px] font-medium text-slate-600">Formato</label>
+          <select className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 outline-none" value={config.format} onChange={(e) => updateFn("format", e.target.value)}>
             <option value="portrait">Retrato 9:16</option>
             <option value="landscape">Paisagem 16:9</option>
             <option value="square">Quadrado</option>
             <option value="circular">Circular</option>
           </select>
         </div>
-        <div className="space-y-1.5">
-          <label className="text-[12px] font-medium text-slate-600">Ajuste da Imagem</label>
-          <select className="w-full h-9 rounded-[14px] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none" value={config.objectFit} onChange={(e) => updateFn("objectFit", e.target.value)}>
+        <div className="space-y-1">
+          <label className="text-[11px] font-medium text-slate-600">Ajuste da Imagem</label>
+          <select className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 outline-none" value={config.objectFit} onChange={(e) => updateFn("objectFit", e.target.value)}>
             <option value="cover">Cover (Preencher)</option>
             <option value="contain">Contain (Ajustar)</option>
             <option value="fill">Fill (Esticar)</option>
           </select>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <label className="text-[12px] font-medium text-slate-600">Largura (px)</label>
-            <Input type="number" value={config.width} onChange={(e) => updateFn("width", Number(e.target.value))} className="h-9 rounded-[14px] text-[13px]" />
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-600">Largura (px)</label>
+            <Input type="number" value={config.width} onChange={(e) => updateFn("width", Number(e.target.value))} className="h-8 rounded-lg text-[12px]" />
           </div>
-          <div className="space-y-1.5">
-            <label className="text-[12px] font-medium text-slate-400">Altura (calc)</label>
-            <Input disabled value={calcHeight(config.format, config.width)} className="h-9 rounded-[14px] text-[13px] bg-slate-100/50" />
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-400">Altura (calc)</label>
+            <Input disabled value={calcHeight(config.format, config.width)} className="h-8 rounded-lg text-[12px] bg-slate-100/50" />
           </div>
         </div>
       </AccordionItem>
 
       <AccordionItem id="posicao" title="2. Posição & Margens" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
-        <div className="space-y-1.5">
-          <label className="text-[12px] font-medium text-slate-600">Posição na Tela</label>
-          <select className="w-full h-9 rounded-[14px] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none" value={config.position} onChange={(e) => updateFn("position", e.target.value)}>
+        <div className="space-y-1">
+          <label className="text-[11px] font-medium text-slate-600">Posição na Tela</label>
+          <select className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 outline-none" value={config.position} onChange={(e) => updateFn("position", e.target.value)}>
             <option value="bottom-left">Inferior Esquerda</option>
             <option value="bottom-right">Inferior Direita</option>
             <option value="top-left">Superior Esquerda</option>
             <option value="top-right">Superior Direita</option>
           </select>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <label className="text-[12px] font-medium text-slate-600">Margem Inferior (px)</label>
-            <Input type="number" value={config.marginBottom} onChange={(e) => updateFn("marginBottom", Number(e.target.value))} className="h-9 rounded-[14px] text-[13px]" />
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-600">Margem Inferior</label>
+            <Input type="number" value={config.marginBottom} onChange={(e) => updateFn("marginBottom", Number(e.target.value))} className="h-8 rounded-lg text-[12px]" />
           </div>
-          <div className="space-y-1.5">
-            <label className="text-[12px] font-medium text-slate-600">Margem Superior (px)</label>
-            <Input type="number" value={config.marginTop} onChange={(e) => updateFn("marginTop", Number(e.target.value))} className="h-9 rounded-[14px] text-[13px]" />
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-slate-600">Margem Superior</label>
+            <Input type="number" value={config.marginTop} onChange={(e) => updateFn("marginTop", Number(e.target.value))} className="h-8 rounded-lg text-[12px]" />
           </div>
-          <div className="space-y-1.5 col-span-2">
-            <label className="text-[12px] font-medium text-slate-600">Margem Lateral (px)</label>
-            <Input type="number" value={config.marginSide} onChange={(e) => updateFn("marginSide", Number(e.target.value))} className="h-9 rounded-[14px] text-[13px]" />
+          <div className="space-y-1 col-span-2">
+            <label className="text-[11px] font-medium text-slate-600">Margem Lateral</label>
+            <Input type="number" value={config.marginSide} onChange={(e) => updateFn("marginSide", Number(e.target.value))} className="h-8 rounded-lg text-[12px]" />
           </div>
         </div>
       </AccordionItem>
 
       <AccordionItem id="bordas" title="3. Bordas" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-2 gap-3 mb-2">
           <ColorInput label="Cor da Borda" value={config.borderColor} onChange={(v) => updateFn("borderColor", v)} />
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Espessura (px)</label>
-            <Input type="number" value={config.borderWidth} onChange={(e) => updateFn("borderWidth", Number(e.target.value))} className="h-8 rounded-lg text-[13px]" />
+            <Input type="number" value={config.borderWidth} onChange={(e) => updateFn("borderWidth", Number(e.target.value))} className="h-7 rounded-md text-[12px]" />
           </div>
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Raio (Arredondamento)</label>
-          <Input type="number" value={config.borderRadius} onChange={(e) => updateFn("borderRadius", Number(e.target.value))} disabled={config.format === 'circular'} className="h-9 rounded-[14px] text-[13px] disabled:opacity-50" />
+          <Input type="number" value={config.borderRadius} onChange={(e) => updateFn("borderRadius", Number(e.target.value))} disabled={config.format === 'circular'} className="h-8 rounded-lg text-[12px] disabled:opacity-50" />
         </div>
       </AccordionItem>
 
       <AccordionItem id="elementos" title="4. Elementos Visíveis" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
-        <div className="space-y-4">
-          <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
-            <CustomSwitch checked={config.showCTA} onChange={(v) => updateFn("showCTA", v)} label="Exibir CTA" />
-            {config.showCTA && (
-              <div className="mt-3 space-y-3 pt-3 border-t border-slate-200">
-                <Input value={config.ctaText} onChange={(e) => updateFn("ctaText", e.target.value)} placeholder="Texto" className="h-9 rounded-lg text-[13px]" />
-                <div className="grid grid-cols-2 gap-3">
-                  <ColorInput label="Fundo" value={config.ctaBgColor} onChange={(v) => updateFn("ctaBgColor", v)} />
-                  <ColorInput label="Texto" value={config.ctaTextColor} onChange={(v) => updateFn("ctaTextColor", v)} />
-                </div>
-                <div className="space-y-1.5 pt-1">
-                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Raio da Borda do CTA</label>
-                  <Input type="text" value={config.ctaBorderRadius || '9999px'} onChange={(e) => updateFn("ctaBorderRadius", e.target.value)} placeholder="ex: 8px ou 9999px" className="h-8 rounded-lg text-[13px]" />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {isDivulgacao && (
-            <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
-              <CustomSwitch checked={config.showCountdown} onChange={(v) => updateFn("showCountdown", v)} label="Contador Regressivo" />
-              {config.showCountdown && (
-                <div className="mt-3 space-y-3 pt-3 border-t border-slate-200">
-                  <div className="grid grid-cols-2 gap-3">
-                    <ColorInput label="Fundo" value={config.countdownBgColor} onChange={(v) => updateConfig(setDivulgacaoConfig, "countdownBgColor", v, divulgacaoConfig.linked)} />
-                    <ColorInput label="Texto" value={config.countdownTextColor} onChange={(v) => updateConfig(setDivulgacaoConfig, "countdownTextColor", v, divulgacaoConfig.linked)} />
-                  </div>
-                  <div className="space-y-1.5 pt-1">
-                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Raio da Borda do Contador</label>
-                    <Input type="text" value={config.countdownBorderRadius || '4px'} onChange={(e) => updateConfig(setDivulgacaoConfig, "countdownBorderRadius", e.target.value, divulgacaoConfig.linked)} placeholder="ex: 4px" className="h-8 rounded-lg text-[13px]" />
-                  </div>
-                </div>
-              )}
+        <div className="space-y-2">
+          {/* Sub-accordion CTA */}
+          <ElementSubItem
+            id="sub_cta"
+            label="Botão de Ação (CTA)"
+            checked={config.showCTA}
+            onToggle={(v) => updateFn("showCTA", v)}
+            openSubItem={openSubItem}
+            setOpenSubItem={setOpenSubItem}
+          >
+            <Input value={config.ctaText} onChange={(e) => updateFn("ctaText", e.target.value)} placeholder="Texto CTA" className="h-7 rounded-md text-[12px]" />
+            <div className="grid grid-cols-2 gap-2">
+              <ColorInput label="Fundo" value={config.ctaBgColor} onChange={(v) => updateFn("ctaBgColor", v)} />
+              <ColorInput label="Texto" value={config.ctaTextColor} onChange={(v) => updateFn("ctaTextColor", v)} />
             </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Raio da Borda</label>
+              <Input type="text" value={config.ctaBorderRadius || '9999px'} onChange={(e) => updateFn("ctaBorderRadius", e.target.value)} placeholder="ex: 8px ou 9999px" className="h-7 rounded-md text-[12px]" />
+            </div>
+          </ElementSubItem>
+
+          {/* Sub-accordion Contador (apenas divulgação) */}
+          {isDivulgacao && (
+            <ElementSubItem
+              id="sub_countdown"
+              label="Contador Regressivo"
+              checked={config.showCountdown}
+              onToggle={(v) => updateFn("showCountdown", v)}
+              openSubItem={openSubItem}
+              setOpenSubItem={setOpenSubItem}
+            >
+              <div className="grid grid-cols-2 gap-2">
+                <ColorInput label="Fundo" value={config.countdownBgColor} onChange={(v) => updateConfig(setDivulgacaoConfig, "countdownBgColor", v, divulgacaoConfig.linked)} />
+                <ColorInput label="Texto" value={config.countdownTextColor} onChange={(v) => updateConfig(setDivulgacaoConfig, "countdownTextColor", v, divulgacaoConfig.linked)} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Raio da Borda</label>
+                <Input type="text" value={config.countdownBorderRadius || '4px'} onChange={(e) => updateConfig(setDivulgacaoConfig, "countdownBorderRadius", e.target.value, divulgacaoConfig.linked)} placeholder="ex: 4px" className="h-7 rounded-md text-[12px]" />
+              </div>
+            </ElementSubItem>
           )}
 
-          <CustomSwitch checked={config.playVideo} onChange={(v) => updateFn("playVideo", v)} label="Reproduzir Vídeo" />
-          <CustomSwitch checked={config.showCloseButton} onChange={(v) => updateFn("showCloseButton", v)} label="Exibir Botão Fechar (X)" />
+          <ElementSubItem id="sub_video" label="Reproduzir Vídeo" checked={config.playVideo} onToggle={(v) => updateFn("playVideo", v)} openSubItem={openSubItem} setOpenSubItem={setOpenSubItem} hasSettings={false} />
+          <ElementSubItem id="sub_close" label="Exibir Botão Fechar (X)" checked={config.showCloseButton} onToggle={(v) => updateFn("showCloseButton", v)} openSubItem={openSubItem} setOpenSubItem={setOpenSubItem} hasSettings={false} />
         </div>
       </AccordionItem>
     </div>
@@ -398,150 +468,181 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[1300px] w-full h-[92vh] p-0 flex flex-col overflow-hidden bg-white">
+      <DialogContent className="max-w-[97vw] w-[97vw] h-[95vh] p-0 flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border-0">
         
-        {/* CABEÇALHO */}
-        <div className="px-8 py-5 border-b border-slate-200 bg-white flex flex-col gap-5 sticky top-0 z-20">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[22px] font-bold tracking-tight text-slate-800">Estilo da Experiência Ao Vivo</h2>
-            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full">✕</button>
+        {/* CABEÇALHO COMPACTO UNIFICADO (1 LINHA) */}
+        <div className="px-5 py-2.5 border-b border-slate-200 bg-white flex items-center justify-between shrink-0 z-20">
+          <div className="flex items-center gap-4">
+            <h2 className="text-[17px] font-bold tracking-tight text-slate-800">Estilo da Experiência Ao Vivo</h2>
+            <div className="flex gap-1.5 bg-slate-100 p-1 rounded-full">
+              <button 
+                onClick={() => { setActiveTab("divulgacao"); setOpenAccordion("formato"); setOpenSubItem(""); }} 
+                className={`px-3.5 py-1 rounded-full text-[12px] font-medium transition-all flex items-center gap-1.5 ${activeTab === "divulgacao" ? "bg-rose-600 text-white shadow-sm font-semibold" : "text-slate-600 hover:text-slate-900"}`}
+              >
+                <LayoutTemplate className="w-3 h-3" /> Divulgação
+              </button>
+              <button 
+                onClick={() => { setActiveTab("aovivo"); setOpenAccordion("formato"); setOpenSubItem(""); }} 
+                className={`px-3.5 py-1 rounded-full text-[12px] font-medium transition-all flex items-center gap-1.5 ${activeTab === "aovivo" ? "bg-rose-600 text-white shadow-sm font-semibold" : "text-slate-600 hover:text-slate-900"}`}
+              >
+                <Radio className="w-3 h-3" /> Ao Vivo
+              </button>
+              <button 
+                onClick={() => { setActiveTab("player"); setOpenAccordion("player_visibilidade"); setOpenSubItem(""); }} 
+                className={`px-3.5 py-1 rounded-full text-[12px] font-medium transition-all flex items-center gap-1.5 ${activeTab === "player" ? "bg-rose-600 text-white shadow-sm font-semibold" : "text-slate-600 hover:text-slate-900"}`}
+              >
+                <PlaySquare className="w-3 h-3" /> Player
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-             <Button variant="outline" onClick={() => { setActiveTab("divulgacao"); setOpenAccordion("formato"); }} className={`rounded-full px-5 h-9 text-[13px] font-medium transition-all ${activeTab === "divulgacao" ? "bg-rose-600 hover:bg-rose-700 text-white shadow-md border-transparent" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"}`}><LayoutTemplate className="w-3.5 h-3.5 mr-2" /> Divulgação</Button>
-             <Button variant="outline" onClick={() => { setActiveTab("aovivo"); setOpenAccordion("formato"); }} className={`rounded-full px-5 h-9 text-[13px] font-medium transition-all ${activeTab === "aovivo" ? "bg-rose-600 hover:bg-rose-700 text-white shadow-md border-transparent" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"}`}><Radio className="w-3.5 h-3.5 mr-2" /> Ao Vivo</Button>
-             <Button variant="outline" onClick={() => { setActiveTab("player"); setOpenAccordion("player_borda"); }} className={`rounded-full px-5 h-9 text-[13px] font-medium transition-all ${activeTab === "player" ? "bg-rose-600 hover:bg-rose-700 text-white shadow-md border-transparent" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"}`}><PlaySquare className="w-3.5 h-3.5 mr-2" /> Player</Button>
-          </div>
+
+          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors">
+            ✕
+          </button>
         </div>
 
         {/* CORPO PRINCIPAL */}
         <div className="flex flex-1 overflow-hidden min-h-0">
           
-          {/* PAINEL ESQUERDO */}
-          <div className="w-[380px] min-w-[380px] bg-white border-r border-slate-200 flex flex-col z-10 overflow-hidden">
-            <div className="pt-6 pb-4 px-6 flex justify-between items-center">
-              <h3 className="text-[15px] font-bold text-slate-800 tracking-tight">Configurações</h3>
-               <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-0.5">
-                  <button onClick={() => setDevice("desktop")} className={`p-1.5 rounded-md transition-colors ${device === "desktop" ? "bg-white shadow-sm text-rose-600" : "text-slate-400"}`}><Monitor className="h-3.5 w-3.5" /></button>
-                  <button onClick={toggleLink} className={`p-1.5 rounded-md hover:bg-slate-200/50 ${isLinked ? "text-rose-600" : "text-slate-400"}`}>{isLinked ? <LinkIcon className="h-3 w-3" /> : <Unlink className="h-3 w-3" />}</button>
-                  <button onClick={() => setDevice("mobile")} className={`p-1.5 rounded-md transition-colors ${device === "mobile" ? "bg-white shadow-sm text-rose-600" : "text-slate-400"}`}><Smartphone className="h-3.5 w-3.5" /></button>
-                </div>
+          {/* PAINEL ESQUERDO: CONFIGURAÇÕES COMPACTO */}
+          <div className="w-[340px] min-w-[340px] bg-white border-r border-slate-200 flex flex-col z-10 overflow-hidden shrink-0">
+            <div className="py-2.5 px-4 flex justify-between items-center border-b border-slate-100">
+              <span className="text-[13px] font-bold text-slate-800">Configurações</span>
+              <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+                <button onClick={() => setDevice("desktop")} title="Desktop" className={`p-1 rounded-md transition-colors ${device === "desktop" ? "bg-white shadow-sm text-rose-600" : "text-slate-400 hover:text-slate-600"}`}><Monitor className="h-3.5 w-3.5" /></button>
+                <button onClick={toggleLink} title={isLinked ? "Vinculado" : "Desvinculado"} className={`p-1 rounded-md hover:bg-slate-200/50 ${isLinked ? "text-rose-600" : "text-slate-400"}`}>{isLinked ? <LinkIcon className="h-3 w-3" /> : <Unlink className="h-3 w-3" />}</button>
+                <button onClick={() => setDevice("mobile")} title="Mobile" className={`p-1 rounded-md transition-colors ${device === "mobile" ? "bg-white shadow-sm text-rose-600" : "text-slate-400 hover:text-slate-600"}`}><Smartphone className="h-3.5 w-3.5" /></button>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-thin">
+            <div className="flex-1 overflow-y-auto p-3.5 scrollbar-thin">
               {activeTab === "divulgacao" && renderWidgetSettings(currentDivulgacao, (k:any, v:any) => updateConfig(setDivulgacaoConfig, k, v, divulgacaoConfig.linked), true)}
               {activeTab === "aovivo" && renderWidgetSettings(currentAoVivo, (k:any, v:any) => updateConfig(setAoVivoConfig, k, v, aoVivoConfig.linked), false)}
 
               {/* ABA PLAYER CONFIG */}
               {activeTab === "player" && (
-                <div className="animate-in fade-in duration-300">
+                <div className="animate-in fade-in duration-200">
                   
                   <AccordionItem id="player_borda" title="1. Borda (Aplica a todos os cards)" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-2 gap-3 mb-2">
                       <ColorInput label="Cor da Borda" value={currentPlayer.borderColor} onChange={(v) => updateConfig(setPlayerConfig, "borderColor", v, playerConfig.linked)} />
-                      <div className="space-y-1.5">
+                      <div className="space-y-1">
                         <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Espessura (px)</label>
-                        <Input type="number" value={currentPlayer.borderWidth} onChange={(e) => updateConfig(setPlayerConfig, "borderWidth", Number(e.target.value), playerConfig.linked)} className="h-8 rounded-lg text-[13px]" />
+                        <Input type="number" value={currentPlayer.borderWidth} onChange={(e) => updateConfig(setPlayerConfig, "borderWidth", Number(e.target.value), playerConfig.linked)} className="h-7 rounded-md text-[12px]" />
                       </div>
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Raio da Borda (px)</label>
-                      <Input type="number" value={currentPlayer.borderRadius} onChange={(e) => updateConfig(setPlayerConfig, "borderRadius", Number(e.target.value), playerConfig.linked)} className="h-8 rounded-lg text-[13px]" />
+                      <Input type="number" value={currentPlayer.borderRadius} onChange={(e) => updateConfig(setPlayerConfig, "borderRadius", Number(e.target.value), playerConfig.linked)} className="h-8 rounded-lg text-[12px]" />
                     </div>
                   </AccordionItem>
 
                   <AccordionItem id="player_visibilidade" title="2. Elementos Visíveis" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                       
-                      {/* Titulo do Vídeo */}
-                      <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
-                        <CustomSwitch checked={currentPlayer.showTitle} onChange={(v) => updateConfig(setPlayerConfig, "showTitle", v, playerConfig.linked)} label="Exibir Título no Vídeo" />
-                        {currentPlayer.showTitle && (
-                          <div className="mt-3 space-y-3 pt-3 border-t border-slate-200">
-                            <Input value={currentPlayer.titleText} onChange={(e) => updateConfig(setPlayerConfig, "titleText", e.target.value)} className="h-8 rounded-lg text-[13px]" />
-                            <ColorInput label="Cor do Texto" value={currentPlayer.titleColor} onChange={(v) => updateConfig(setPlayerConfig, "titleColor", v, playerConfig.linked)} />
+                      {/* SUB 1: Título */}
+                      <ElementSubItem
+                        id="sub_title"
+                        label="Exibir Título no Vídeo"
+                        checked={currentPlayer.showTitle}
+                        onToggle={(v) => updateConfig(setPlayerConfig, "showTitle", v, playerConfig.linked)}
+                        openSubItem={openSubItem}
+                        setOpenSubItem={setOpenSubItem}
+                      >
+                        <Input value={currentPlayer.titleText} onChange={(e) => updateConfig(setPlayerConfig, "titleText", e.target.value)} placeholder="Título da Live" className="h-7 rounded-md text-[12px]" />
+                        <ColorInput label="Cor do Texto" value={currentPlayer.titleColor} onChange={(v) => updateConfig(setPlayerConfig, "titleColor", v, playerConfig.linked)} />
+                      </ElementSubItem>
+
+                      {/* SUB 2: Produtos */}
+                      <ElementSubItem
+                        id="sub_products"
+                        label="Produtos"
+                        checked={currentPlayer.showProducts}
+                        onToggle={(v) => updateConfig(setPlayerConfig, "showProducts", v, playerConfig.linked)}
+                        openSubItem={openSubItem}
+                        setOpenSubItem={setOpenSubItem}
+                      >
+                        <div className="grid grid-cols-2 gap-2">
+                          <ColorInput label="Cor Nome" value={currentPlayer.productNameColor} onChange={(v) => updateConfig(setPlayerConfig, "productNameColor", v, playerConfig.linked)} />
+                          <ColorInput label="Cor Preço" value={currentPlayer.productPriceColor} onChange={(v) => updateConfig(setPlayerConfig, "productPriceColor", v, playerConfig.linked)} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Tam. Nome (px)</label>
+                            <Input type="number" value={currentPlayer.productNameSize} onChange={(e) => updateConfig(setPlayerConfig, "productNameSize", Number(e.target.value), playerConfig.linked)} className="h-7 rounded-md text-[12px]" />
                           </div>
-                        )}
-                      </div>
-
-                      {/* Produtos */}
-                      <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
-                        <CustomSwitch checked={currentPlayer.showProducts} onChange={(v) => updateConfig(setPlayerConfig, "showProducts", v, playerConfig.linked)} label="Produtos" />
-                        {currentPlayer.showProducts && (
-                          <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-2 gap-4">
-                            <div className="space-y-3">
-                               <ColorInput label="Cor Nome" value={currentPlayer.productNameColor} onChange={(v) => updateConfig(setPlayerConfig, "productNameColor", v, playerConfig.linked)} />
-                               <div className="space-y-1.5">
-                                 <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tamanho Nome (px)</label>
-                                 <Input type="number" value={currentPlayer.productNameSize} onChange={(e) => updateConfig(setPlayerConfig, "productNameSize", Number(e.target.value), playerConfig.linked)} className="h-8 rounded-lg text-[13px]" />
-                               </div>
-                            </div>
-                            <div className="space-y-3">
-                               <ColorInput label="Cor Preço" value={currentPlayer.productPriceColor} onChange={(v) => updateConfig(setPlayerConfig, "productPriceColor", v, playerConfig.linked)} />
-                               <div className="space-y-1.5">
-                                 <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tamanho Preço (px)</label>
-                                 <Input type="number" value={currentPlayer.productPriceSize} onChange={(e) => updateConfig(setPlayerConfig, "productPriceSize", Number(e.target.value), playerConfig.linked)} className="h-8 rounded-lg text-[13px]" />
-                               </div>
-                            </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Tam. Preço (px)</label>
+                            <Input type="number" value={currentPlayer.productPriceSize} onChange={(e) => updateConfig(setPlayerConfig, "productPriceSize", Number(e.target.value), playerConfig.linked)} className="h-7 rounded-md text-[12px]" />
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      </ElementSubItem>
 
-                      {/* Card do Cupom */}
-                      <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
-                        <CustomSwitch checked={currentPlayer.showCoupon} onChange={(v) => updateConfig(setPlayerConfig, "showCoupon", v, playerConfig.linked)} label="Card do Cupom" />
-                        {currentPlayer.showCoupon && (
-                          <div className="mt-3 pt-3 border-t border-slate-200 space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                              <Input value={currentPlayer.couponCode} onChange={(e) => updateConfig(setPlayerConfig, "couponCode", e.target.value)} placeholder="Código" className="h-8 rounded-lg text-[12px]" />
-                              <Input value={currentPlayer.couponText} onChange={(e) => updateConfig(setPlayerConfig, "couponText", e.target.value)} placeholder="Texto" className="h-8 rounded-lg text-[12px]" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3 mt-2">
-                               <ColorInput label="Cor Cód." value={currentPlayer.couponCodeColor} onChange={(v) => updateConfig(setPlayerConfig, "couponCodeColor", v, playerConfig.linked)} />
-                               <ColorInput label="Fundo Cód." value={currentPlayer.couponCodeBgColor} onChange={(v) => updateConfig(setPlayerConfig, "couponCodeBgColor", v, playerConfig.linked)} />
-                               <ColorInput label="Cor Texto" value={currentPlayer.couponTextColor} onChange={(v) => updateConfig(setPlayerConfig, "couponTextColor", v, playerConfig.linked)} />
-                               <ColorInput label="Fundo Texto" value={currentPlayer.couponTextBgColor} onChange={(v) => updateConfig(setPlayerConfig, "couponTextBgColor", v, playerConfig.linked)} />
-                            </div>
+                      {/* SUB 3: Card do Cupom */}
+                      <ElementSubItem
+                        id="sub_coupon"
+                        label="Card do Cupom"
+                        checked={currentPlayer.showCoupon}
+                        onToggle={(v) => updateConfig(setPlayerConfig, "showCoupon", v, playerConfig.linked)}
+                        openSubItem={openSubItem}
+                        setOpenSubItem={setOpenSubItem}
+                      >
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input value={currentPlayer.couponCode} onChange={(e) => updateConfig(setPlayerConfig, "couponCode", e.target.value)} placeholder="Código" className="h-7 rounded-md text-[11px]" />
+                          <Input value={currentPlayer.couponText} onChange={(e) => updateConfig(setPlayerConfig, "couponText", e.target.value)} placeholder="Desconto" className="h-7 rounded-md text-[11px]" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <ColorInput label="Cor Cód." value={currentPlayer.couponCodeColor} onChange={(v) => updateConfig(setPlayerConfig, "couponCodeColor", v, playerConfig.linked)} />
+                          <ColorInput label="Fundo Cód." value={currentPlayer.couponCodeBgColor} onChange={(v) => updateConfig(setPlayerConfig, "couponCodeBgColor", v, playerConfig.linked)} />
+                          <ColorInput label="Cor Texto" value={currentPlayer.couponTextColor} onChange={(v) => updateConfig(setPlayerConfig, "couponTextColor", v, playerConfig.linked)} />
+                          <ColorInput label="Fundo Texto" value={currentPlayer.couponTextBgColor} onChange={(v) => updateConfig(setPlayerConfig, "couponTextBgColor", v, playerConfig.linked)} />
+                        </div>
+                      </ElementSubItem>
+
+                      {/* SUB 4: Card Informativo */}
+                      <ElementSubItem
+                        id="sub_info"
+                        label="Card Informativo"
+                        checked={currentPlayer.showInfo}
+                        onToggle={(v) => updateConfig(setPlayerConfig, "showInfo", v, playerConfig.linked)}
+                        openSubItem={openSubItem}
+                        setOpenSubItem={setOpenSubItem}
+                      >
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Input value={currentPlayer.infoText1} onChange={(e) => updateConfig(setPlayerConfig, "infoText1", e.target.value)} placeholder="Texto 1" className="h-7 rounded-md text-[11px]" />
+                            <Input type="number" placeholder="Tam. px" value={currentPlayer.infoSize1} onChange={(e) => updateConfig(setPlayerConfig, "infoSize1", Number(e.target.value), playerConfig.linked)} className="h-6 rounded-md text-[11px]" />
                           </div>
-                        )}
-                      </div>
-
-                      {/* Card Informativo */}
-                      <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
-                        <CustomSwitch checked={currentPlayer.showInfo} onChange={(v) => updateConfig(setPlayerConfig, "showInfo", v, playerConfig.linked)} label="Card Informativo" />
-                        {currentPlayer.showInfo && (
-                          <div className="mt-3 pt-3 border-t border-slate-200 space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <Input value={currentPlayer.infoText1} onChange={(e) => updateConfig(setPlayerConfig, "infoText1", e.target.value)} className="h-8 rounded-lg text-[12px]" />
-                                <Input type="number" placeholder="Tam. px" value={currentPlayer.infoSize1} onChange={(e) => updateConfig(setPlayerConfig, "infoSize1", Number(e.target.value), playerConfig.linked)} className="h-7 rounded-md text-[11px]" />
-                              </div>
-                              <div className="space-y-1">
-                                <Input value={currentPlayer.infoText2} onChange={(e) => updateConfig(setPlayerConfig, "infoText2", e.target.value)} className="h-8 rounded-lg text-[12px]" />
-                                <Input type="number" placeholder="Tam. px" value={currentPlayer.infoSize2} onChange={(e) => updateConfig(setPlayerConfig, "infoSize2", Number(e.target.value), playerConfig.linked)} className="h-7 rounded-md text-[11px]" />
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3 mt-2">
-                               <ColorInput label="Cor Texto" value={currentPlayer.infoTextColor} onChange={(v) => updateConfig(setPlayerConfig, "infoTextColor", v, playerConfig.linked)} />
-                               <ColorInput label="Cor Fundo" value={currentPlayer.infoBgColor} onChange={(v) => updateConfig(setPlayerConfig, "infoBgColor", v, playerConfig.linked)} />
-                            </div>
+                          <div className="space-y-1">
+                            <Input value={currentPlayer.infoText2} onChange={(e) => updateConfig(setPlayerConfig, "infoText2", e.target.value)} placeholder="Texto 2" className="h-7 rounded-md text-[11px]" />
+                            <Input type="number" placeholder="Tam. px" value={currentPlayer.infoSize2} onChange={(e) => updateConfig(setPlayerConfig, "infoSize2", Number(e.target.value), playerConfig.linked)} className="h-6 rounded-md text-[11px]" />
                           </div>
-                        )}
-                      </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <ColorInput label="Cor Texto" value={currentPlayer.infoTextColor} onChange={(v) => updateConfig(setPlayerConfig, "infoTextColor", v, playerConfig.linked)} />
+                          <ColorInput label="Cor Fundo" value={currentPlayer.infoBgColor} onChange={(v) => updateConfig(setPlayerConfig, "infoBgColor", v, playerConfig.linked)} />
+                        </div>
+                      </ElementSubItem>
 
-                      {/* Card Compartilhar */}
-                      <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
-                         <CustomSwitch checked={currentPlayer.showShare} onChange={(v) => updateConfig(setPlayerConfig, "showShare", v, playerConfig.linked)} label="Card Compartilhar" />
-                         {currentPlayer.showShare && (
-                           <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-2 gap-3">
-                             <ColorInput label="Cor Texto" value={currentPlayer.shareTextColor} onChange={(v) => updateConfig(setPlayerConfig, "shareTextColor", v, playerConfig.linked)} />
-                             <ColorInput label="Cor Fundo" value={currentPlayer.shareBgColor} onChange={(v) => updateConfig(setPlayerConfig, "shareBgColor", v, playerConfig.linked)} />
-                           </div>
-                         )}
-                      </div>
+                      {/* SUB 5: Card Compartilhar */}
+                      <ElementSubItem
+                        id="sub_share"
+                        label="Card Compartilhar"
+                        checked={currentPlayer.showShare}
+                        onToggle={(v) => updateConfig(setPlayerConfig, "showShare", v, playerConfig.linked)}
+                        openSubItem={openSubItem}
+                        setOpenSubItem={setOpenSubItem}
+                      >
+                        <div className="grid grid-cols-2 gap-2">
+                          <ColorInput label="Cor Texto" value={currentPlayer.shareTextColor} onChange={(v) => updateConfig(setPlayerConfig, "shareTextColor", v, playerConfig.linked)} />
+                          <ColorInput label="Cor Fundo" value={currentPlayer.shareBgColor} onChange={(v) => updateConfig(setPlayerConfig, "shareBgColor", v, playerConfig.linked)} />
+                        </div>
+                      </ElementSubItem>
 
-                      <CustomSwitch checked={currentPlayer.showViewerCount} onChange={(v) => updateConfig(setPlayerConfig, "showViewerCount", v, playerConfig.linked)} label="Contador de espectadores" />
-                      <CustomSwitch checked={currentPlayer.showChat} onChange={(v) => updateConfig(setPlayerConfig, "showChat", v, playerConfig.linked)} label="Chat ao vivo" />
-                      <CustomSwitch checked={currentPlayer.autoplayMuted} onChange={(v) => updateConfig(setPlayerConfig, "autoplayMuted", v, playerConfig.linked)} label="Iniciar com som desativado" />
+                      {/* Switches simples */}
+                      <ElementSubItem id="sub_viewers" label="Contador de espectadores" checked={currentPlayer.showViewerCount} onToggle={(v) => updateConfig(setPlayerConfig, "showViewerCount", v, playerConfig.linked)} openSubItem={openSubItem} setOpenSubItem={setOpenSubItem} hasSettings={false} />
+                      <ElementSubItem id="sub_chat" label="Chat ao vivo" checked={currentPlayer.showChat} onToggle={(v) => updateConfig(setPlayerConfig, "showChat", v, playerConfig.linked)} openSubItem={openSubItem} setOpenSubItem={setOpenSubItem} hasSettings={false} />
+                      <ElementSubItem id="sub_mute" label="Iniciar com som desativado" checked={currentPlayer.autoplayMuted} onToggle={(v) => updateConfig(setPlayerConfig, "autoplayMuted", v, playerConfig.linked)} openSubItem={openSubItem} setOpenSubItem={setOpenSubItem} hasSettings={false} />
                     </div>
                   </AccordionItem>
                 </div>
@@ -549,21 +650,18 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
             </div>
           </div>
 
-          {/* PAINEL DIREITO - PREVIEW */}
-          <div className="flex-1 flex flex-col relative items-center justify-center p-4 sm:p-6 bg-slate-50/60 overflow-hidden min-h-0">
-            <div className="w-full h-full bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center p-3 relative overflow-hidden min-h-0">
+          {/* PAINEL DIREITO: PREVIEW EXPANDIDO (MAXIMIZADO) */}
+          <div className="flex-1 flex flex-col items-center justify-center p-2.5 sm:p-4 bg-slate-100/60 overflow-hidden min-h-0">
+            <div className="w-full h-full bg-white rounded-xl border border-slate-200/90 shadow-sm flex items-center justify-center p-2 sm:p-3 relative overflow-hidden min-h-0">
                 
                 {activeTab !== "player" ? (
-                  
-                  // ==========================================
-                  // PREVIEW DOS WIDGETS FLUTUANTES
-                  // ==========================================
-                  <div className={`relative bg-[#0a0a0a] transition-all duration-500 flex flex-col shrink-0 ${
+                  // PREVIEW WIDGETS FLUTUANTES
+                  <div className={`relative bg-[#0a0a0a] transition-all duration-300 flex flex-col shrink-0 ${
                     device === "desktop" 
-                      ? "w-full max-w-[850px] aspect-video rounded-xl border-4 border-[#0a0a0a] overflow-hidden shadow-xl" 
-                      : "h-full max-h-[700px] max-w-[95%] aspect-[9/19.5] rounded-[2rem] shadow-[0_0_0_3px_#f4d1c0] border-[6px] border-[#0a0a0a] overflow-hidden"
+                      ? "w-full max-w-[1050px] aspect-video rounded-xl border-4 border-[#0a0a0a] overflow-hidden shadow-xl" 
+                      : "h-full max-h-[92%] aspect-[9/19.5] rounded-[2.2rem] shadow-[0_0_0_3px_#e2e8f0] border-[6px] border-[#0a0a0a] overflow-hidden"
                   }`}>
-                    {device === "mobile" && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] max-w-[120px] h-[20px] bg-[#0a0a0a] rounded-b-[1rem] z-[100]"></div>}
+                    {device === "mobile" && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] max-w-[120px] h-[18px] bg-[#0a0a0a] rounded-b-[0.9rem] z-[100]"></div>}
                     <div className="absolute inset-0 bg-white">
                       <div className="w-full h-full opacity-10" style={{backgroundImage: "url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800&auto=format')", backgroundSize: "cover"}}></div>
                       
@@ -571,7 +669,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         [activeTab === "divulgacao" ? currentDivulgacao : currentAoVivo].map((config, i) => (
                           <div 
                             key={i}
-                            className="absolute transition-all duration-300 flex flex-col items-center group cursor-pointer gap-2.5" 
+                            className="absolute transition-all duration-300 flex flex-col items-center group cursor-pointer gap-2" 
                             style={{
                               ...(config.position.includes('bottom') ? { bottom: config.marginBottom } : { top: config.marginTop }),
                               ...(config.position.includes('left') ? { left: config.marginSide } : { right: config.marginSide }),
@@ -607,31 +705,23 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
                 ) : (
                   
-                  // ==========================================
                   // PREVIEW DO PLAYER
-                  // ==========================================
                   <div className="w-full h-full flex justify-center items-center overflow-hidden">
                     {device === 'mobile' ? (
-                      // ==========================================================
-                      // PREVIEW MOBILE - 3 CELULARES ADAPTADOS SEM SCROLL VERTICAL
-                      // ==========================================================
-                      <div className="w-full h-full flex items-center justify-center gap-3 sm:gap-6 overflow-x-auto overflow-y-hidden px-2 select-none">
+                      // PREVIEW MOBILE: 3 SMARTPHONES AMPLOS
+                      <div className="w-full h-full flex items-center justify-center gap-3 md:gap-6 overflow-x-auto overflow-y-hidden px-2 select-none">
                         {[
                           { id: "normal",   label: "Player" },
                           { id: "products", label: "Com Produtos" },
                           { id: "chat",     label: "Com Chat" },
                         ].map((phone) => (
-                          <div key={phone.id} className="flex flex-col items-center gap-2 shrink-0 h-full justify-center">
-                            
-                            {/* MOLDURA DO SMARTPHONE */}
+                          <div key={phone.id} className="flex flex-col items-center shrink-0 h-full justify-center">
                             <div
-                              className="relative bg-[#0a0a0a] rounded-[2.2rem] border-[6px] border-slate-200 shadow-xl overflow-hidden shrink-0"
-                              style={{ height: 'min(54vh, 490px)', aspectRatio: '9 / 19' }}
+                              className="relative bg-[#0a0a0a] rounded-[2.3rem] border-[6px] border-slate-200 shadow-xl overflow-hidden shrink-0"
+                              style={{ height: 'min(72vh, 600px)', aspectRatio: '9 / 19' }}
                             >
-                              {/* Notch / Speaker central */}
-                              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[34%] max-w-[95px] h-[15px] bg-slate-200 rounded-b-[0.7rem] z-30"></div>
+                              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[34%] max-w-[100px] h-[16px] bg-slate-200 rounded-b-[0.8rem] z-30"></div>
 
-                              {/* VÍDEO DE FUNDO */}
                               <video
                                 src="/demo-videos/demo1.mp4"
                                 autoPlay loop muted playsInline
@@ -639,7 +729,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                               />
                               <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-black/75 pointer-events-none z-10"></div>
 
-                              {/* TOPO ESQUERDO: Logo + Título */}
+                              {/* Topo Esquerdo */}
                               <div className="absolute top-3.5 left-2.5 flex items-center gap-1.5 z-20">
                                 <div className="w-5 h-5 rounded-full bg-[#1b4332] border border-white/40 flex items-center justify-center text-[6px] font-bold text-white shadow shrink-0">USE</div>
                                 {currentPlayer.showTitle && (
@@ -649,9 +739,8 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 )}
                               </div>
 
-                              {/* COLUNA ESQUERDA: CUPOM + CARD INFORMATIVO */}
+                              {/* Coluna Esquerda: Cupom + Informativo */}
                               <div className="absolute top-11 left-2.5 flex flex-col gap-1.5 z-20">
-                                {/* CUPOM */}
                                 {currentPlayer.showCoupon && (
                                   <div className="rounded-[5px] overflow-hidden flex flex-col w-[54px] shadow-md border" style={{ borderColor: currentPlayer.borderColor }}>
                                     <div className="text-center py-0.5 text-[7px] font-black uppercase tracking-tight" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor }}>
@@ -663,13 +752,9 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                   </div>
                                 )}
 
-                                {/* CARD INFORMATIVO */}
                                 {currentPlayer.showInfo && (
                                   <div className="rounded-[5px] overflow-hidden flex flex-col w-[54px] shadow-md border text-center" style={{ borderColor: currentPlayer.borderColor }}>
-                                    <div 
-                                      className="py-0.5 text-[6.5px] font-black uppercase tracking-tight px-0.5 leading-tight" 
-                                      style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor }}
-                                    >
+                                    <div className="py-0.5 text-[6.5px] font-black uppercase tracking-tight px-0.5 leading-tight" style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor }}>
                                       {currentPlayer.infoText1}
                                     </div>
                                     <div className="py-0.5 text-[6px] font-semibold bg-white text-slate-700 px-0.5 leading-tight">
@@ -679,7 +764,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 )}
                               </div>
 
-                              {/* COLUNA LATERAL DIREITA DE AÇÕES */}
+                              {/* Coluna Direita: Ações */}
                               <div className="absolute top-3.5 right-2 flex flex-col items-center gap-1.5 z-20">
                                 <div className="flex items-center gap-1 bg-[#e7191f] text-white text-[7px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
                                   <PlaySquare className="w-2 h-2 fill-white"/> LIVE
@@ -727,7 +812,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               </div>
 
-                              {/* CHAT ABERTO */}
+                              {/* Chat */}
                               {phone.id === 'chat' && currentPlayer.showChat && (
                                 <div className="absolute bottom-[60px] left-2 right-9 z-20 flex flex-col justify-end pointer-events-none">
                                   <div className="flex flex-col gap-1 mb-1.5 overflow-hidden" style={{ maskImage: 'linear-gradient(to top, black 70%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to top, black 70%, transparent 100%)' }}>
@@ -745,7 +830,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               )}
 
-                              {/* CARD DO PRODUTO NA BASE */}
+                              {/* Card do Produto na Base */}
                               {phone.id !== 'products' && currentPlayer.showProducts && (
                                 <div className="absolute bottom-2 left-2 right-2 z-20">
                                   <div
@@ -780,7 +865,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               )}
 
-                              {/* GAVETA DE PRODUTOS ABERTA */}
+                              {/* Gaveta de Produtos Aberta */}
                               {phone.id === 'products' && currentPlayer.showProducts && (
                                 <div className="absolute inset-x-1.5 bottom-1.5 top-6 z-50 flex flex-col overflow-hidden">
                                   <div
@@ -841,7 +926,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                         <span className="text-slate-600 flex items-center">Finalizar <ExternalLink className="w-2 h-2 ml-0.5"/></span>
                                       </div>
                                     </div>
-
                                   </div>
                                 </div>
                               )}
@@ -850,35 +934,33 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         ))}
                       </div>
                     ) : (
-                      // ----------------------------------------------------
-                      // PREVIEW DESKTOP - Layout de 3 colunas
-                      // ----------------------------------------------------
-                      <div className="flex gap-3 sm:gap-4 w-full max-w-[1050px] mx-auto h-full max-h-[550px] justify-center">
+                      // PREVIEW DESKTOP: 3 COLUNAS MAXIMIZADAS
+                      <div className="flex gap-4 sm:gap-5 w-full max-w-[1150px] mx-auto h-full max-h-[640px] justify-center items-stretch py-1">
                         
                         {/* --- COLUNA 1: Produtos + Info --- */}
-                        <div className="flex flex-col gap-3 sm:gap-4 w-full max-w-[310px] flex-1">
+                        <div className="flex flex-col gap-3 w-full max-w-[340px] flex-1">
                           {currentPlayer.showProducts && (
                             <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden shadow-sm" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
-                              <div className="text-white text-center py-2 font-medium text-[13px] tracking-wide" style={{ backgroundColor: currentPlayer.borderColor }}>PRODUTOS</div>
+                              <div className="text-white text-center py-2 font-semibold text-[13px] tracking-wide" style={{ backgroundColor: currentPlayer.borderColor }}>PRODUTOS</div>
                               <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 scrollbar-thin">
                                 {[1,2,3,4,5].map(i => (
-                                  <div key={i} className="flex gap-2 p-1.5 bg-white border rounded-lg relative transition-all hover:shadow-md" style={{ borderColor: currentPlayer.borderColor }}>
+                                  <div key={i} className="flex gap-2 p-1.5 bg-white border rounded-lg relative transition-all hover:shadow-sm" style={{ borderColor: currentPlayer.borderColor }}>
                                       <div className="font-bold text-[11px] w-4 pt-1 text-center" style={{ color: currentPlayer.borderColor }}>0{i}</div>
                                       <div className="w-[50px] h-[60px] bg-slate-100 rounded overflow-hidden shrink-0">
                                         <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=100&auto=format&fit=crop" className="w-full h-full object-cover" alt="Produto" />
                                       </div>
-                                      <div className="flex-1 pt-0.5 pr-6">
+                                      <div className="flex-1 pt-0.5 pr-6 min-w-0">
                                         <div style={{ fontSize: currentPlayer.productNameSize, color: currentPlayer.productNameColor }} className="leading-tight line-clamp-2 font-medium">Blusa Life Rosê em Malha Tecnológica</div>
                                         <div className="text-[10px] text-slate-400 line-through mt-0.5">De: R$ 199,90</div>
-                                        <div style={{ fontSize: currentPlayer.productPriceSize, color: currentPlayer.productPriceColor }} className="font-bold leading-none">Por: R$ 149,90</div>
+                                        <div style={{ fontSize: currentPlayer.productPriceSize, color: currentPlayer.productPriceColor }} className="font-bold leading-none mt-0.5">Por: R$ 149,90</div>
                                       </div>
-                                      <div className="absolute right-2 bottom-2 w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: currentPlayer.borderColor }}>
+                                      <div className="absolute right-2 bottom-2 w-6 h-6 rounded-full flex items-center justify-center text-white shadow-sm" style={{ backgroundColor: currentPlayer.borderColor }}>
                                         <ShoppingCart className="w-3.5 h-3.5" />
                                       </div>
                                   </div>
                                 ))}
                               </div>
-                              <div className="border-t p-2.5 flex justify-between items-center bg-slate-50" style={{ borderColor: `${currentPlayer.borderColor}40` }}>
+                              <div className="border-t p-2 flex justify-between items-center bg-slate-50" style={{ borderColor: `${currentPlayer.borderColor}40` }}>
                                   <div className="flex items-center text-[11px] font-medium text-slate-600">
                                     <ShoppingCart className="w-3.5 h-3.5 mr-1.5" style={{ color: currentPlayer.borderColor }}/> 
                                     6 Produtos adicionados
@@ -891,42 +973,42 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                           )}
 
                           {currentPlayer.showInfo && (
-                            <div className="h-[55px] xl:h-[60px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm transition-all w-full overflow-hidden" 
+                            <div className="h-[58px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm w-full overflow-hidden" 
                                   style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor, border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
                                 <div className="font-black tracking-tight leading-none" style={{ fontSize: currentPlayer.infoSize1 }}>{currentPlayer.infoText1}</div>
-                                <div className="font-medium opacity-80 mt-1" style={{ fontSize: currentPlayer.infoSize2 }}>{currentPlayer.infoText2}</div>
+                                <div className="font-medium opacity-90 mt-1" style={{ fontSize: currentPlayer.infoSize2 }}>{currentPlayer.infoText2}</div>
                             </div>
                           )}
                         </div>
 
                         {/* --- COLUNA 2: Video + Cupom --- */}
-                        <div className="flex flex-col gap-3 sm:gap-4 w-full max-w-[310px] flex-1">
+                        <div className="flex flex-col gap-3 w-full max-w-[340px] flex-1">
                             <div className="flex-1 min-h-0 relative bg-black overflow-hidden shadow-lg w-full" style={{
                               border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
                               borderRadius: currentPlayer.borderRadius,
                             }}>
                               <video src="/demo-videos/demo1.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover opacity-90" />
-                              <div className="absolute top-4 left-4 right-4 flex justify-between items-start gap-2">
+                              <div className="absolute top-3 left-3 right-3 flex justify-between items-start gap-2">
                                  <div className="flex items-center gap-2 max-w-[60%]">
-                                    <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20 text-[14px] shrink-0">🦋</div>
+                                    <div className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20 text-[12px] shrink-0">🦋</div>
                                     {currentPlayer.showTitle && (
                                       <span style={{ color: currentPlayer.titleColor }} className="font-bold text-[13px] drop-shadow-md truncate leading-tight">
                                         {currentPlayer.titleText}
                                       </span>
                                     )}
                                  </div>
-                                 <div className="flex flex-col items-end gap-2 shrink-0">
-                                    <div className="flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                                       <Radio className="w-3 h-3 animate-pulse"/> Ao Vivo
+                                 <div className="flex flex-col items-end gap-1.5 shrink-0">
+                                    <div className="flex items-center gap-1.5 bg-red-600 text-white text-[9.5px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                                       <Radio className="w-2.5 h-2.5 animate-pulse"/> Ao Vivo
                                     </div>
                                     {currentPlayer.showViewerCount && (
-                                       <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md text-white text-[10px] font-semibold px-2.5 py-1 rounded-full border border-white/20 shadow-sm">
-                                         <Eye className="w-3 h-3" /> 1.2K
+                                       <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md text-white text-[9.5px] font-semibold px-2 py-0.5 rounded-full border border-white/20 shadow-sm">
+                                         <Eye className="w-2.5 h-2.5" /> 1.2K
                                        </div>
                                     )}
                                     {currentPlayer.autoplayMuted && (
-                                       <div className="bg-black/40 backdrop-blur-md p-1.5 rounded-full text-white border border-white/20 mt-1">
-                                         <VolumeX className="w-3.5 h-3.5"/>
+                                       <div className="bg-black/40 backdrop-blur-md p-1 rounded-full text-white border border-white/20">
+                                         <VolumeX className="w-3 h-3"/>
                                        </div>
                                     )}
                                  </div>
@@ -934,11 +1016,11 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                             </div>
 
                             {currentPlayer.showCoupon && (
-                              <div className="h-[55px] xl:h-[60px] flex-shrink-0 flex overflow-hidden shadow-sm w-full" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
+                              <div className="h-[58px] flex-shrink-0 flex overflow-hidden shadow-sm w-full" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
                                 <div className="flex items-center justify-center px-4 font-black tracking-widest text-[16px]" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor, width: '50%' }}>
                                   {currentPlayer.couponCode}
                                 </div>
-                                <div className="flex items-center justify-center px-4 font-black text-[18px]" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor, width: '50%' }}>
+                                <div className="flex items-center justify-center px-4 font-black text-[17px]" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor, width: '50%' }}>
                                   {currentPlayer.couponText}
                                 </div>
                               </div>
@@ -946,26 +1028,26 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         </div>
 
                         {/* --- COLUNA 3: Chat + Compartilhar --- */}
-                        <div className="flex flex-col gap-3 sm:gap-4 w-full max-w-[310px] flex-1">
+                        <div className="flex flex-col gap-3 w-full max-w-[340px] flex-1">
                           {currentPlayer.showChat && (
                             <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden shadow-sm" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
-                              <div className="text-white text-center py-2 font-medium text-[13px] tracking-wide" style={{ backgroundColor: currentPlayer.borderColor }}>CHAT</div>
+                              <div className="text-white text-center py-2 font-semibold text-[13px] tracking-wide" style={{ backgroundColor: currentPlayer.borderColor }}>CHAT</div>
                               <div className="flex-1 flex flex-col overflow-hidden relative bg-white">
-                                  <div className="flex-1 overflow-y-auto p-3 space-y-4 pb-14 scrollbar-thin">
+                                  <div className="flex-1 overflow-y-auto p-3 space-y-3.5 pb-12 scrollbar-thin">
                                     {[1,2,3,4,5].map(i => (
-                                      <div key={i} className="flex gap-2.5 items-start text-[11px] leading-tight">
-                                        <img src={`https://i.pravatar.cc/100?img=${i+10}`} className="w-6 h-6 rounded-full border border-slate-200 shrink-0" alt="Avatar" />
+                                      <div key={i} className="flex gap-2 items-start text-[11px] leading-tight">
+                                        <img src={`https://i.pravatar.cc/100?img=${i+10}`} className="w-5 h-5 rounded-full border border-slate-200 shrink-0" alt="Avatar" />
                                         <div className="text-slate-600 pt-0.5">
                                           <span className="font-bold text-slate-800">@usuario{i}</span> Oi, qual o valor? Vocês entregam para SP?
                                         </div>
                                       </div>
                                     ))}
                                   </div>
-                                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-transparent">
-                                    <div className="bg-white border rounded-full py-2 px-3.5 text-[12px] text-slate-400 flex justify-between items-center shadow-sm" style={{ borderColor: currentPlayer.borderColor }}>
+                                  <div className="absolute bottom-0 left-0 right-0 p-2.5 bg-gradient-to-t from-white via-white to-transparent">
+                                    <div className="bg-white border rounded-full py-1.5 px-3 text-[11.5px] text-slate-400 flex justify-between items-center shadow-sm" style={{ borderColor: currentPlayer.borderColor }}>
                                         Chat...
-                                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-white cursor-pointer" style={{ backgroundColor: currentPlayer.borderColor }}>
-                                          <Heart className="w-3.5 h-3.5 fill-current"/>
+                                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-white cursor-pointer" style={{ backgroundColor: currentPlayer.borderColor }}>
+                                          <Heart className="w-3 h-3 fill-current"/>
                                         </div>
                                     </div>
                                   </div>
@@ -974,7 +1056,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                           )}
 
                           {currentPlayer.showShare && (
-                            <button className="h-[55px] xl:h-[60px] flex-shrink-0 w-full flex items-center justify-center gap-2 shadow-sm font-bold text-[16px] transition-transform hover:scale-[1.02] overflow-hidden" 
+                            <button className="h-[58px] flex-shrink-0 w-full flex items-center justify-center gap-2 shadow-sm font-bold text-[15px] transition-transform hover:scale-[1.01] overflow-hidden" 
                                     style={{ backgroundColor: currentPlayer.shareBgColor, color: currentPlayer.shareTextColor, border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
                                 Compartilhar <Share2 className="w-4 h-4 ml-1" />
                             </button>
@@ -989,23 +1071,23 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
           </div>
         </div>
 
-        {/* RODAPÉ */}
-        <div className="px-8 py-4 border-t border-slate-200 bg-white flex items-center justify-between z-20">
-          <Button variant="ghost" onClick={handleReset} className="text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-semibold px-2">
-            <RotateCcw className="w-4 h-4 mr-2" /> RESETAR ESTA ABA
+        {/* RODAPÉ COMPACTO */}
+        <div className="px-5 py-2.5 border-t border-slate-200 bg-white flex items-center justify-between shrink-0 z-20">
+          <Button variant="ghost" onClick={handleReset} className="text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-semibold px-2 text-[12px] h-8">
+            <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> RESETAR ESTA ABA
           </Button>
 
-          <div className="flex items-center text-[12px] font-medium text-slate-500 bg-slate-50 border border-slate-100 px-4 py-2 rounded-full hidden sm:flex">
-            <Info className="w-4 h-4 mr-2 text-slate-400" /> 
-            O preview é visual. As dimensões e posições reais variam no site do cliente.
+          <div className="flex items-center text-[11.5px] font-medium text-slate-500 bg-slate-50 border border-slate-200/60 px-3 py-1 rounded-full hidden sm:flex">
+            <Info className="w-3.5 h-3.5 mr-1.5 text-slate-400" /> 
+            Preview ilustrativo. As proporções se adaptam ao tamanho de tela do seu visitante.
           </div>
 
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={onClose} disabled={isSaving} className="border-slate-200 text-slate-700 hover:bg-slate-50 h-10 px-6 font-medium rounded-full">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose} disabled={isSaving} className="border-slate-200 text-slate-700 hover:bg-slate-50 h-8 px-4 text-[12px] font-medium rounded-full">
               ✕ Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={isSaving} className="bg-rose-600 hover:bg-rose-700 text-white shadow-md h-10 px-6 font-medium rounded-full">
-              <Save className="h-4 w-4 mr-2" /> {isSaving ? "Salvando..." : "Salvar"}
+            <Button onClick={handleSave} disabled={isSaving} className="bg-rose-600 hover:bg-rose-700 text-white shadow-sm h-8 px-5 text-[12px] font-medium rounded-full">
+              <Save className="h-3.5 w-3.5 mr-1.5" /> {isSaving ? "Salvando..." : "Salvar"}
             </Button>
           </div>
         </div>
