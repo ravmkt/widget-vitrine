@@ -248,11 +248,11 @@ export default function LiveAppearanceModal({
           </div>
         </div>
 
-        {/* CORPO */}
-        <div className="flex flex-1 overflow-hidden">
+        {/* CORPO - Adicionado min-h-0 e flex-1 */}
+        <div className="flex flex-1 overflow-hidden min-h-0">
           
           {/* PAINEL ESQUERDO */}
-          <div className="w-[360px] min-w-[360px] bg-white border-r border-slate-200 flex flex-col z-10">
+          <div className="w-[360px] min-w-[360px] bg-white border-r border-slate-200 flex flex-col z-10 overflow-hidden">
             <div className="pt-6 pb-4 px-6">
               <h3 className="text-[15px] font-bold text-slate-800 tracking-tight">
                 Configurações do {activeTab === "widget" ? "Flutuante" : "Player"}
@@ -454,10 +454,11 @@ export default function LiveAppearanceModal({
             </div>
           </div>
 
-          {/* PAINEL DIREITO - PREVIEW */}
-          <div className="flex-1 flex flex-col relative items-center justify-center p-6 bg-slate-50/60 overflow-hidden">
+          {/* PAINEL DIREITO - PREVIEW (Totalmente Responsivo) */}
+          <div className="flex-1 flex flex-col relative items-center justify-center p-4 sm:p-6 bg-slate-50/60 overflow-hidden min-h-0">
             
-            <div className="w-full max-w-[1000px] h-full max-h-[750px] bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center p-6 relative overflow-hidden">
+            {/* Adicionado h-full e min-h-0 para garantir que ele respeite o tamanho da tela do usuário */}
+            <div className="w-full h-full max-w-[1000px] bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center p-4 sm:p-8 relative overflow-hidden min-h-0">
                 
                 <div className="absolute top-4 right-4 z-30 flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
                   <button onClick={() => setDevice("desktop")} className={`p-1.5 rounded-md transition-colors ${device === "desktop" ? "bg-rose-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-200"}`}><Monitor className="h-4 w-4" /></button>
@@ -465,16 +466,16 @@ export default function LiveAppearanceModal({
                   <button onClick={() => setDevice("mobile")} className={`p-1.5 rounded-md transition-colors ${device === "mobile" ? "bg-rose-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-200"}`}><Smartphone className="h-4 w-4" /></button>
                 </div>
 
-                {/* --- CAIXA DE PREVIEW REAJUSTADA AQUI --- */}
+                {/* --- MOCKUP DO DISPOSITIVO (AGORA RESPONSIVO COM ASPECT RATIO) --- */}
                 <div className={`relative bg-[#0a0a0a] transition-all duration-500 flex flex-col shrink-0 ${
                   device === "desktop" 
                     ? "w-full max-w-[850px] aspect-video rounded-xl border-4 border-[#0a0a0a] ring-2 ring-rose-500/30 overflow-hidden shadow-xl" 
-                    : "w-[280px] h-[600px] rounded-[3rem] shadow-[0_0_0_4px_#f4d1c0,0_20px_40px_rgba(0,0,0,0.15)] border-[8px] border-[#0a0a0a] overflow-hidden"
+                    : "h-full max-h-[700px] max-w-[95%] aspect-[9/19.5] rounded-[2rem] sm:rounded-[2.5rem] shadow-[0_0_0_3px_#f4d1c0,0_10px_30px_rgba(0,0,0,0.15)] border-[6px] sm:border-[8px] border-[#0a0a0a] overflow-hidden"
                 }`}>
                   
-                  {/* Notch do celular */}
+                  {/* Notch (Câmera do celular) */}
                   {device === "mobile" && (
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[100px] h-[22px] bg-[#0a0a0a] rounded-b-[1rem] z-[100]"></div>
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] max-w-[120px] h-[20px] bg-[#0a0a0a] rounded-b-[1rem] z-[100]"></div>
                   )}
 
                   {activeTab === "widget" && (
