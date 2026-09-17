@@ -95,6 +95,20 @@ interface Props {
   isSaving: boolean;
 }
 
+// --- DADOS MOCKADOS DIVERSIFICADOS PARA PREVIEW REALISTA ---
+const MOCK_PRODUCTS = [
+  { id: 1, name: "Blusa Life Rosê em Malha Tecnológica", oldPrice: "R$ 149,90", price: "R$ 149,90", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=150&auto=format" },
+  { id: 2, name: "Calça Alfaiataria Verde Oliva Premium", oldPrice: "R$ 219,00", price: "R$ 179,90", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=150&auto=format" },
+  { id: 3, name: "Vestido Midi Canelado Estampa Floral", oldPrice: "R$ 289,90", price: "R$ 199,90", img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?q=80&w=150&auto=format" },
+  { id: 4, name: "Tênis Street Casual Branco & Ouro", oldPrice: "R$ 349,00", price: "R$ 249,90", img: "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?q=80&w=150&auto=format" },
+  { id: 5, name: "Bolsa Couro Legítimo Alça Transversal", oldPrice: "R$ 399,90", price: "R$ 299,00", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=150&auto=format" },
+  { id: 6, name: "Jaqueta Corta-Vento Streetwear Rosa", oldPrice: "R$ 259,00", price: "R$ 189,90", img: "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=150&auto=format" },
+  { id: 7, name: "Camisa Linho Pura Fibra Bege Areia", oldPrice: "R$ 189,00", price: "R$ 139,90", img: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=150&auto=format" },
+  { id: 8, name: "Conjunto Moletom Soft Plush Inverno", oldPrice: "R$ 299,00", price: "R$ 219,90", img: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?q=80&w=150&auto=format" },
+  { id: 9, name: "Óculos de Sol Retrô Polarizado Black", oldPrice: "R$ 169,00", price: "R$ 119,90", img: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=150&auto=format" },
+  { id: 10, name: "Relógio Minimalista Rose Gold Pulseira", oldPrice: "R$ 499,00", price: "R$ 349,90", img: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?q=80&w=150&auto=format" },
+];
+
 // --- DEFAULTS ---
 export const defaultWidgetBase: BaseWidgetSettings = {
   format: "portrait",
@@ -106,7 +120,7 @@ export const defaultWidgetBase: BaseWidgetSettings = {
   marginSide: 5,
   borderColor: "#e7191f",
   borderWidth: 2,
-  borderRadius: 12,
+  borderRadius: 14,
   playVideo: true,
   showCloseButton: true,
   showCTA: true,
@@ -137,7 +151,7 @@ export const defaultWidgetSettings: WidgetDivulgacaoSettings = {
 export const defaultPlayerSettings: LivePlayerSettings = {
   borderColor: "#e7191f",
   borderWidth: 2,
-  borderRadius: 12,
+  borderRadius: 14,
   
   showTitle: true,
   titleText: "Black Friday",
@@ -465,7 +479,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[97vw] w-[97vw] h-[95vh] p-0 flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border-0">
         
-        {/* CABEÇALHO COMPACTO EM 1 LINHA */}
+        {/* CABEÇALHO */}
         <div className="px-5 py-2.5 border-b border-slate-200 bg-white flex items-center justify-between shrink-0 z-20">
           <div className="flex items-center gap-4">
             <h2 className="text-[17px] font-bold tracking-tight text-slate-800">Estilo da Experiência Ao Vivo</h2>
@@ -499,7 +513,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
         {/* CORPO PRINCIPAL */}
         <div className="flex flex-1 overflow-hidden min-h-0">
           
-          {/* CONFIGURAÇÕES ESQUERDA */}
+          {/* PAINEL DE CONFIGURAÇÕES */}
           <div className="w-[340px] min-w-[340px] bg-white border-r border-slate-200 flex flex-col z-10 overflow-hidden shrink-0">
             <div className="py-2.5 px-4 flex justify-between items-center border-b border-slate-100">
               <span className="text-[13px] font-bold text-slate-800">Configurações</span>
@@ -695,7 +709,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                   /* PLAYER */
                   <div className="w-full h-full flex justify-center items-center overflow-hidden">
                     {device === 'mobile' ? (
-                      /* MOBILE COM 3 SMARTPHONES AMPLOS E PROPORCIONAIS */
+                      /* MOBILE COM 3 SMARTPHONES PROPORCIONAIS */
                       <div className="w-full h-full flex items-center justify-center gap-4 md:gap-7 overflow-x-auto overflow-y-hidden px-2 select-none">
                         {[
                           { id: "normal",   label: "Player" },
@@ -715,7 +729,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 autoPlay loop muted playsInline
                                 className="absolute inset-0 w-full h-full object-cover"
                               />
-                              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none z-10"></div>
+                              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/85 pointer-events-none z-10"></div>
 
                               {/* TOPO ESQUERDO */}
                               <div className="absolute top-4 left-3 flex items-center gap-1.5 z-20">
@@ -754,7 +768,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
                               {/* COLUNA DIREITA: AÇÕES */}
                               <div className="absolute top-4 right-2.5 flex flex-col items-center gap-2 z-20">
-                                <div className="flex items-center gap-1 bg-[#e7191f] text-white text-[7.5px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow">
+                                <div className="flex items-center gap-1 text-white text-[7.5px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow" style={{ backgroundColor: currentPlayer.borderColor }}>
                                   <PlaySquare className="w-2.5 h-2.5 fill-white"/> LIVE
                                 </div>
 
@@ -791,7 +805,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white border shadow transition ${phone.id === 'products' ? 'bg-white/30 border-white' : 'bg-black/45 border-white/20'}`}>
                                       <ShoppingCart className="w-3 h-3"/>
                                     </div>
-                                    <span className="text-white text-[7px] font-bold drop-shadow mt-0.5">3</span>
+                                    <span className="text-white text-[7px] font-bold drop-shadow mt-0.5">{MOCK_PRODUCTS.length}</span>
                                   </div>
                                 )}
 
@@ -800,9 +814,9 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               </div>
 
-                              {/* CHAT: LARGURA EXATA DO CARD DE PRODUTOS + POSICIONADO ACIMA */}
+                              {/* CHAT: 100% ACIMA DO CARD, SEM ENCOSTAR E MESMA LARGURA */}
                               {phone.id === 'chat' && currentPlayer.showChat && (
-                                <div className="absolute bottom-[66px] left-2.5 right-2.5 z-20 flex flex-col justify-end pointer-events-none">
+                                <div className="absolute bottom-[82px] left-2.5 right-2.5 z-20 flex flex-col justify-end pointer-events-none">
                                   {/* Mensagens animadas */}
                                   <div className="flex flex-col gap-1.5 mb-2 overflow-hidden" style={{ maskImage: 'linear-gradient(to top, black 75%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to top, black 75%, transparent 100%)' }}>
                                     {[1,2,3].map(i => (
@@ -816,49 +830,53 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                   {/* Barra de input do Chat */}
                                   <div className="bg-white/95 backdrop-blur-md rounded-full flex items-center justify-between pl-3 pr-1.5 py-1 shadow-md border border-white/60">
                                     <span className="text-slate-400 text-[9px] font-medium">Chat...</span>
-                                    <div className="w-4 h-4 rounded-full bg-rose-500 flex items-center justify-center shrink-0">
+                                    <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: currentPlayer.borderColor }}>
                                       <Heart className="w-2.5 h-2.5 text-white fill-white" />
                                     </div>
                                   </div>
                                 </div>
                               )}
 
-                              {/* CARD DO PRODUTO FIXO NA BASE */}
+                              {/* CARD DO PRODUTO FIXO NA BASE (Fiel ao seu print) */}
                               {phone.id !== 'products' && currentPlayer.showProducts && (
                                 <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20">
                                   <div
-                                    className="bg-white p-1.5 flex gap-2 items-center shadow-lg"
+                                    className="bg-white p-1.5 flex gap-2 items-center shadow-lg overflow-hidden"
                                     style={{
                                       border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
                                       borderRadius: `${currentPlayer.borderRadius}px`
                                     }}
                                   >
-                                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=120&auto=format" className="w-[36px] h-[44px] rounded-md object-cover bg-slate-100 shrink-0"/>
+                                    <img 
+                                      src={MOCK_PRODUCTS[0].img} 
+                                      className="w-[44px] h-[48px] rounded-lg object-cover bg-slate-100 shrink-0"
+                                      alt="Produto"
+                                    />
                                     <div className="flex-1 min-w-0 pr-0.5">
                                       <div
                                         className="font-bold leading-tight line-clamp-1"
-                                        style={{ fontSize: `${currentPlayer.productNameSize * 0.85}px`, color: currentPlayer.productNameColor }}
+                                        style={{ fontSize: `${currentPlayer.productNameSize * 0.9}px`, color: currentPlayer.productNameColor }}
                                       >
-                                        Blusa Life Rosê em Malha Tecnológica
+                                        {MOCK_PRODUCTS[0].name}
                                       </div>
-                                      <div className="text-[7.5px] text-slate-400 line-through mt-0.5 leading-none">De: R$ 149,90</div>
+                                      <div className="text-[8px] text-slate-400 line-through mt-0.5 leading-none">De: {MOCK_PRODUCTS[0].oldPrice}</div>
                                       <div
                                         className="font-extrabold leading-tight mt-0.5"
-                                        style={{ fontSize: `${currentPlayer.productPriceSize * 0.85}px`, color: currentPlayer.productPriceColor }}
+                                        style={{ fontSize: `${currentPlayer.productPriceSize * 0.9}px`, color: currentPlayer.productPriceColor }}
                                       >
-                                        Por: R$ 149,90
+                                        Por: {MOCK_PRODUCTS[0].price}
                                       </div>
                                     </div>
                                     <div className="shrink-0 pr-1">
-                                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-white shadow" style={{ backgroundColor: currentPlayer.borderColor }}>
-                                        <ShoppingCart className="w-2.5 h-2.5" />
+                                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-white shadow" style={{ backgroundColor: currentPlayer.borderColor }}>
+                                        <ShoppingCart className="w-3 h-3" />
                                       </div>
                                     </div>
                                   </div>
                                 </div>
                               )}
 
-                              {/* GAVETA DE PRODUTOS COMPLETA COM CARD EXATAMENTE IGUAL AO SEU PRINT */}
+                              {/* GAVETA DE PRODUTOS COM CARD SEM VÃO BRANCO E SCROLL FUNCIONAL */}
                               {phone.id === 'products' && currentPlayer.showProducts && (
                                 <div className="absolute inset-x-2 bottom-2 top-7 z-50 flex flex-col overflow-hidden">
                                   <div
@@ -868,53 +886,60 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                       borderRadius: `${currentPlayer.borderRadius}px`
                                     }}
                                   >
+                                    {/* CABEÇALHO PRODUTOS TOTALMENTE ENCOSTADO */}
                                     <div
-                                      className="text-white text-center py-2 font-bold text-[11px] tracking-wide shadow-sm uppercase"
+                                      className="text-white text-center py-2 font-bold text-[11px] tracking-wide uppercase shrink-0"
                                       style={{ backgroundColor: currentPlayer.borderColor }}
                                     >
                                       PRODUTOS
                                     </div>
 
-                                    <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-hide bg-slate-50">
-                                      {[1,2,3,4,5,6].map(i => (
+                                    {/* LISTA COM 10 PRODUTOS E SCROLL REAL */}
+                                    <div className="flex-1 overflow-y-auto p-2 space-y-2.5 scrollbar-thin bg-slate-50">
+                                      {MOCK_PRODUCTS.map((prod, idx) => (
                                         <div
-                                          key={i}
-                                          className="bg-white flex items-center shadow-sm overflow-hidden"
+                                          key={prod.id}
+                                          className="bg-white flex items-center shadow-sm relative overflow-hidden"
                                           style={{
                                             border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
                                             borderRadius: `${currentPlayer.borderRadius}px`
                                           }}
                                         >
-                                          {/* Bloco Vermelho com Número (01, 02...) */}
+                                          {/* Bloco de Número: Perfeitamente colado na borda esquerda */}
                                           <div 
-                                            className="w-[28px] self-stretch flex items-center justify-center font-black text-[12px] text-white shrink-0 tracking-tight"
-                                            style={{ backgroundColor: currentPlayer.borderColor }}
+                                            className="w-[30px] self-stretch flex items-center justify-center font-black text-[12px] text-white shrink-0 tracking-tight"
+                                            style={{ 
+                                              backgroundColor: currentPlayer.borderColor,
+                                              borderTopLeftRadius: Math.max(0, currentPlayer.borderRadius - currentPlayer.borderWidth),
+                                              borderBottomLeftRadius: Math.max(0, currentPlayer.borderRadius - currentPlayer.borderWidth)
+                                            }}
                                           >
-                                            0{i}
+                                            {String(idx + 1).padStart(2, '0')}
                                           </div>
 
                                           {/* Imagem do Produto */}
                                           <div className="p-1 shrink-0">
                                             <img 
-                                              src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=140&auto=format" 
-                                              className="w-[36px] h-[46px] object-cover rounded-sm bg-slate-100"
+                                              src={prod.img} 
+                                              className="w-[40px] h-[48px] object-cover rounded-md bg-slate-100"
+                                              alt={prod.name}
                                             />
                                           </div>
 
                                           {/* Informações de Título e Preço */}
                                           <div className="flex-1 min-w-0 px-1 py-1">
                                             <div
-                                              className="font-bold leading-snug line-clamp-2"
-                                              style={{ fontSize: `${currentPlayer.productNameSize * 0.85}px`, color: currentPlayer.productNameColor }}
+                                              className="font-bold leading-tight line-clamp-1"
+                                              style={{ fontSize: `${currentPlayer.productNameSize * 0.9}px`, color: currentPlayer.productNameColor }}
                                             >
-                                              Blusa Life Rosê em Malha Tecnológica
+                                              {prod.name}
                                             </div>
-                                            <div className="text-[7.5px] text-slate-400 line-through mt-0.5 leading-none">De: R$ 149,90</div>
+                                            <div className="text-[8px] text-slate-400 line-through mt-0.5 leading-none">De: {prod.oldPrice}</div>
                                             <div
-                                              className="font-bold leading-tight mt-0.5"
-                                              style={{ fontSize: `${currentPlayer.productPriceSize * 0.85}px`, color: currentPlayer.productPriceColor }}
+                                              className="font-extrabold leading-tight mt-0.5"
+                                              style={{ fontSize: `${currentPlayer.productPriceSize * 0.9}px`, color: currentPlayer.productPriceColor }}
                                             >
-                                              Por: R$ 149,90
+                                              Por: {prod.price}
                                             </div>
                                           </div>
 
@@ -937,7 +962,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                       <div className="flex justify-between items-center w-full text-[9.5px] font-bold" style={{ color: currentPlayer.borderColor }}>
                                         <span className="flex items-center gap-1.5">
                                           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: currentPlayer.borderColor }}></span>
-                                          6 Produtos adicionados
+                                          {MOCK_PRODUCTS.length} Produtos adicionados
                                         </span>
                                         <span className="text-slate-600 flex items-center hover:underline cursor-pointer">Finalizar <ExternalLink className="w-2.5 h-2.5 ml-0.5"/></span>
                                       </div>
@@ -950,34 +975,40 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         ))}
                       </div>
                     ) : (
-                      /* DESKTOP COM 3 COLUNAS */
+                      /* DESKTOP COM 3 COLUNAS - BORDAS E CABEÇALHOS 100% SANG परिजनों SEM VÃO BRANCO */
                       <div className="flex gap-4 sm:gap-5 w-full max-w-[1150px] mx-auto h-full max-h-[640px] justify-center items-stretch py-1">
                         
                         {/* COLUNA 1: Produtos + Info */}
                         <div className="flex flex-col gap-3 w-full max-w-[340px] flex-1">
                           {currentPlayer.showProducts && (
-                            <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden shadow-sm" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
-                              <div className="text-white text-center py-2 font-semibold text-[13px] tracking-wide uppercase" style={{ backgroundColor: currentPlayer.borderColor }}>PRODUTOS</div>
-                              <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 scrollbar-thin">
-                                {[1,2,3,4,5].map(i => (
+                            <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden shadow-sm" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: `${currentPlayer.borderRadius}px` }}>
+                              <div className="text-white text-center py-2 font-bold text-[13px] tracking-wide uppercase shrink-0" style={{ backgroundColor: currentPlayer.borderColor }}>
+                                PRODUTOS
+                              </div>
+                              <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 scrollbar-thin bg-slate-50">
+                                {MOCK_PRODUCTS.map((prod, idx) => (
                                   <div 
-                                    key={i} 
+                                    key={prod.id} 
                                     className="flex items-center bg-white shadow-sm overflow-hidden" 
-                                    style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}
+                                    style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: `${currentPlayer.borderRadius}px` }}
                                   >
                                       <div 
                                         className="w-[32px] self-stretch flex items-center justify-center font-black text-[13px] text-white shrink-0 tracking-tight"
-                                        style={{ backgroundColor: currentPlayer.borderColor }}
+                                        style={{ 
+                                          backgroundColor: currentPlayer.borderColor,
+                                          borderTopLeftRadius: Math.max(0, currentPlayer.borderRadius - currentPlayer.borderWidth),
+                                          borderBottomLeftRadius: Math.max(0, currentPlayer.borderRadius - currentPlayer.borderWidth)
+                                        }}
                                       >
-                                        0{i}
+                                        {String(idx + 1).padStart(2, '0')}
                                       </div>
                                       <div className="p-1.5 shrink-0">
-                                        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=100&auto=format&fit=crop" className="w-[45px] h-[55px] object-cover rounded-sm bg-slate-100" alt="Produto" />
+                                        <img src={prod.img} className="w-[45px] h-[55px] object-cover rounded-md bg-slate-100" alt={prod.name} />
                                       </div>
                                       <div className="flex-1 min-w-0 px-2 py-1">
-                                        <div style={{ fontSize: currentPlayer.productNameSize, color: currentPlayer.productNameColor }} className="leading-tight line-clamp-2 font-medium">Blusa Life Rosê em Malha Tecnológica</div>
-                                        <div className="text-[10px] text-slate-400 line-through mt-0.5">De: R$ 199,90</div>
-                                        <div style={{ fontSize: currentPlayer.productPriceSize, color: currentPlayer.productPriceColor }} className="font-bold leading-none mt-0.5">Por: R$ 149,90</div>
+                                        <div style={{ fontSize: currentPlayer.productNameSize, color: currentPlayer.productNameColor }} className="leading-tight line-clamp-1 font-bold">{prod.name}</div>
+                                        <div className="text-[10px] text-slate-400 line-through mt-0.5">De: {prod.oldPrice}</div>
+                                        <div style={{ fontSize: currentPlayer.productPriceSize, color: currentPlayer.productPriceColor }} className="font-extrabold leading-none mt-0.5">Por: {prod.price}</div>
                                       </div>
                                       <div className="pr-2.5 shrink-0">
                                         <div className="w-6 h-6 rounded-full flex items-center justify-center text-white shadow-sm" style={{ backgroundColor: currentPlayer.borderColor }}>
@@ -987,10 +1018,10 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                   </div>
                                 ))}
                               </div>
-                              <div className="border-t p-2 flex justify-between items-center bg-slate-50" style={{ borderColor: `${currentPlayer.borderColor}40` }}>
-                                  <div className="flex items-center text-[11px] font-medium text-slate-600">
+                              <div className="border-t p-2 flex justify-between items-center bg-white shrink-0" style={{ borderColor: `${currentPlayer.borderColor}40` }}>
+                                  <div className="flex items-center text-[11px] font-bold text-slate-600">
                                     <ShoppingCart className="w-3.5 h-3.5 mr-1.5" style={{ color: currentPlayer.borderColor }}/> 
-                                    6 Produtos adicionados
+                                    {MOCK_PRODUCTS.length} Produtos adicionados
                                   </div>
                                   <div className="text-[11px] font-bold flex items-center cursor-pointer hover:underline" style={{ color: currentPlayer.borderColor }}>
                                     Finalizar <ExternalLink className="w-3 h-3 ml-1" />
@@ -1001,9 +1032,9 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
                           {currentPlayer.showInfo && (
                             <div className="h-[58px] flex-shrink-0 flex flex-col items-center justify-center shadow-sm w-full overflow-hidden" 
-                                  style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor, border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
+                                  style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor, border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: `${currentPlayer.borderRadius}px` }}>
                                 <div className="font-black tracking-tight leading-none" style={{ fontSize: currentPlayer.infoSize1 }}>{currentPlayer.infoText1}</div>
-                                <div className="font-medium opacity-90 mt-1" style={{ fontSize: currentPlayer.infoSize2 }}>{currentPlayer.infoText2}</div>
+                                <div className="font-semibold opacity-90 mt-1" style={{ fontSize: currentPlayer.infoSize2 }}>{currentPlayer.infoText2}</div>
                             </div>
                           )}
                         </div>
@@ -1012,7 +1043,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         <div className="flex flex-col gap-3 w-full max-w-[340px] flex-1">
                             <div className="flex-1 min-h-0 relative bg-black overflow-hidden shadow-lg w-full" style={{
                               border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
-                              borderRadius: currentPlayer.borderRadius,
+                              borderRadius: `${currentPlayer.borderRadius}px`,
                             }}>
                               <video src="/demo-videos/demo1.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover opacity-90" />
                               <div className="absolute top-3 left-3 right-3 flex justify-between items-start gap-2">
@@ -1025,7 +1056,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                     )}
                                  </div>
                                  <div className="flex flex-col items-end gap-1.5 shrink-0">
-                                    <div className="flex items-center gap-1.5 bg-red-600 text-white text-[9.5px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                                    <div className="flex items-center gap-1.5 text-white text-[9.5px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm" style={{ backgroundColor: currentPlayer.borderColor }}>
                                        <Radio className="w-2.5 h-2.5 animate-pulse"/> Ao Vivo
                                     </div>
                                     {currentPlayer.showViewerCount && (
@@ -1043,7 +1074,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                             </div>
 
                             {currentPlayer.showCoupon && (
-                              <div className="h-[58px] flex-shrink-0 flex overflow-hidden shadow-sm w-full" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
+                              <div className="h-[58px] flex-shrink-0 flex overflow-hidden shadow-sm w-full" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: `${currentPlayer.borderRadius}px` }}>
                                 <div className="flex items-center justify-center px-4 font-black tracking-widest text-[16px]" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor, width: '50%' }}>
                                   {currentPlayer.couponCode}
                                 </div>
@@ -1057,8 +1088,10 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         {/* COLUNA 3: Chat + Compartilhar */}
                         <div className="flex flex-col gap-3 w-full max-w-[340px] flex-1">
                           {currentPlayer.showChat && (
-                            <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden shadow-sm" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
-                              <div className="text-white text-center py-2 font-semibold text-[13px] tracking-wide uppercase" style={{ backgroundColor: currentPlayer.borderColor }}>CHAT</div>
+                            <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden shadow-sm" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: `${currentPlayer.borderRadius}px` }}>
+                              <div className="text-white text-center py-2 font-bold text-[13px] tracking-wide uppercase shrink-0" style={{ backgroundColor: currentPlayer.borderColor }}>
+                                CHAT
+                              </div>
                               <div className="flex-1 flex flex-col overflow-hidden relative bg-white">
                                   <div className="flex-1 overflow-y-auto p-3 space-y-3.5 pb-12 scrollbar-thin">
                                     {[1,2,3,4,5].map(i => (
@@ -1084,7 +1117,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
                           {currentPlayer.showShare && (
                             <button className="h-[58px] flex-shrink-0 w-full flex items-center justify-center gap-2 shadow-sm font-bold text-[15px] transition-transform hover:scale-[1.01] overflow-hidden" 
-                                    style={{ backgroundColor: currentPlayer.shareBgColor, color: currentPlayer.shareTextColor, border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: currentPlayer.borderRadius }}>
+                                    style={{ backgroundColor: currentPlayer.shareBgColor, color: currentPlayer.shareTextColor, border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: `${currentPlayer.borderRadius}px` }}>
                                 Compartilhar <Share2 className="w-4 h-4 ml-1" />
                             </button>
                           )}
