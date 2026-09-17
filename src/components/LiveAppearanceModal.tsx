@@ -95,18 +95,18 @@ interface Props {
   isSaving: boolean;
 }
 
-// --- DADOS MOCKADOS DIVERSIFICADOS PARA PREVIEW REALISTA ---
+// --- DADOS MOCKADOS DOS PRODUTOS DA LIVE ---
 const MOCK_PRODUCTS = [
-  { id: 1, name: "Blusa Life Rosê em Malha Tecnológica", oldPrice: "R$ 149,90", price: "R$ 149,90", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=150&auto=format" },
-  { id: 2, name: "Calça Alfaiataria Verde Oliva Premium", oldPrice: "R$ 219,00", price: "R$ 179,90", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=150&auto=format" },
-  { id: 3, name: "Vestido Midi Canelado Estampa Floral", oldPrice: "R$ 289,90", price: "R$ 199,90", img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?q=80&w=150&auto=format" },
-  { id: 4, name: "Tênis Street Casual Branco & Ouro", oldPrice: "R$ 349,00", price: "R$ 249,90", img: "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?q=80&w=150&auto=format" },
-  { id: 5, name: "Bolsa Couro Legítimo Alça Transversal", oldPrice: "R$ 399,90", price: "R$ 299,00", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=150&auto=format" },
-  { id: 6, name: "Jaqueta Corta-Vento Streetwear Rosa", oldPrice: "R$ 259,00", price: "R$ 189,90", img: "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=150&auto=format" },
-  { id: 7, name: "Camisa Linho Pura Fibra Bege Areia", oldPrice: "R$ 189,00", price: "R$ 139,90", img: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=150&auto=format" },
-  { id: 8, name: "Conjunto Moletom Soft Plush Inverno", oldPrice: "R$ 299,00", price: "R$ 219,90", img: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?q=80&w=150&auto=format" },
-  { id: 9, name: "Óculos de Sol Retrô Polarizado Black", oldPrice: "R$ 169,00", price: "R$ 119,90", img: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=150&auto=format" },
-  { id: 10, name: "Relógio Minimalista Rose Gold Pulseira", oldPrice: "R$ 499,00", price: "R$ 349,90", img: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?q=80&w=150&auto=format" },
+  { id: 1, name: "Blusa Life Rosê em Malha Tecnológica", oldPrice: "R$ 149,90", price: "R$ 149,90", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=200&auto=format" },
+  { id: 2, name: "Blusa Scrub Tecnológico Estampa Pet", oldPrice: "R$ 189,00", price: "R$ 149,90", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=200&auto=format" },
+  { id: 3, name: "Vestido Midi Canelado Estampa Floral", oldPrice: "R$ 289,90", price: "R$ 199,90", img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?q=80&w=200&auto=format" },
+  { id: 4, name: "Tênis Street Casual Branco & Caramelo", oldPrice: "R$ 349,00", price: "R$ 249,90", img: "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?q=80&w=200&auto=format" },
+  { id: 5, name: "Bolsa Couro Legítimo Alça Estruturada", oldPrice: "R$ 399,90", price: "R$ 299,00", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=200&auto=format" },
+  { id: 6, name: "Jaqueta Corta-Vento Street Casual", oldPrice: "R$ 259,00", price: "R$ 189,90", img: "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=200&auto=format" },
+  { id: 7, name: "Camisa Linho Pura Fibra Bege Areia", oldPrice: "R$ 189,00", price: "R$ 139,90", img: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=200&auto=format" },
+  { id: 8, name: "Conjunto Moletom Soft Plush Inverno", oldPrice: "R$ 299,00", price: "R$ 219,90", img: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?q=80&w=200&auto=format" },
+  { id: 9, name: "Óculos de Sol Retrô Polarizado Black", oldPrice: "R$ 169,00", price: "R$ 119,90", img: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=200&auto=format" },
+  { id: 10, name: "Relógio Minimalista Pulseira Aço", oldPrice: "R$ 499,00", price: "R$ 349,90", img: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?q=80&w=200&auto=format" },
 ];
 
 // --- DEFAULTS ---
@@ -142,10 +142,6 @@ export const defaultAoVivoSettings: WidgetAoVivoSettings = {
   ...defaultWidgetBase,
   ctaText: "AO VIVO",
   ctaBgColor: "#e7191f"
-};
-
-export const defaultWidgetSettings: WidgetDivulgacaoSettings = {
-  ...defaultDivulgacaoSettings
 };
 
 export const defaultPlayerSettings: LivePlayerSettings = {
@@ -709,7 +705,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                   /* PLAYER */
                   <div className="w-full h-full flex justify-center items-center overflow-hidden">
                     {device === 'mobile' ? (
-                      /* MOBILE COM 3 SMARTPHONES PROPORCIONAIS */
+                      /* MOBILE COM 3 SMARTPHONES */
                       <div className="w-full h-full flex items-center justify-center gap-4 md:gap-7 overflow-x-auto overflow-y-hidden px-2 select-none">
                         {[
                           { id: "normal",   label: "Player" },
@@ -814,14 +810,14 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               </div>
 
-                              {/* CHAT: 100% ACIMA DO CARD, SEM ENCOSTAR E MESMA LARGURA */}
+                              {/* CHAT: 100% ACIMA DO CARD, SEM ENCOSTAR */}
                               {phone.id === 'chat' && currentPlayer.showChat && (
-                                <div className="absolute bottom-[82px] left-2.5 right-2.5 z-20 flex flex-col justify-end pointer-events-none">
+                                <div className="absolute bottom-[78px] left-2.5 right-2.5 z-20 flex flex-col justify-end pointer-events-none">
                                   {/* Mensagens animadas */}
                                   <div className="flex flex-col gap-1.5 mb-2 overflow-hidden" style={{ maskImage: 'linear-gradient(to top, black 75%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to top, black 75%, transparent 100%)' }}>
                                     {[1,2,3].map(i => (
                                       <div key={i} className="flex items-center gap-1.5 drop-shadow">
-                                        <img src={`https://i.pravatar.cc/100?img=${i+14}`} className="w-4 h-4 rounded-full border border-white/40 shadow-sm shrink-0"/>
+                                        <img src={`https://i.pravatar.cc/100?img=${i+14}`} className="w-4 h-4 rounded-full border border-white/40 shadow-sm shrink-0" alt="Avatar"/>
                                         <span className="text-white text-[8.5px] font-medium drop-shadow leading-none">Nononononono</span>
                                       </div>
                                     ))}
@@ -837,22 +833,24 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               )}
 
-                              {/* CARD DO PRODUTO FIXO NA BASE (Fiel ao seu print) */}
+                              {/* CARD DO PRODUTO FIXO NA BASE - FOTO SANGRADA NA ESQUERDA */}
                               {phone.id !== 'products' && currentPlayer.showProducts && (
                                 <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20">
                                   <div
-                                    className="bg-white p-1.5 flex gap-2 items-center shadow-lg overflow-hidden"
+                                    className="bg-white flex items-center shadow-lg overflow-hidden h-[54px]"
                                     style={{
                                       border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
                                       borderRadius: `${currentPlayer.borderRadius}px`
                                     }}
                                   >
+                                    {/* Foto Sangrada: sem margem/gap, encosta de cima a baixo */}
                                     <img 
                                       src={MOCK_PRODUCTS[0].img} 
-                                      className="w-[44px] h-[48px] rounded-lg object-cover bg-slate-100 shrink-0"
+                                      className="w-[50px] h-full object-cover shrink-0"
                                       alt="Produto"
                                     />
-                                    <div className="flex-1 min-w-0 pr-0.5">
+                                    
+                                    <div className="flex-1 min-w-0 px-2.5 py-1">
                                       <div
                                         className="font-bold leading-tight line-clamp-1"
                                         style={{ fontSize: `${currentPlayer.productNameSize * 0.9}px`, color: currentPlayer.productNameColor }}
@@ -867,7 +865,8 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                         Por: {MOCK_PRODUCTS[0].price}
                                       </div>
                                     </div>
-                                    <div className="shrink-0 pr-1">
+
+                                    <div className="shrink-0 pr-2">
                                       <div className="w-6 h-6 rounded-full flex items-center justify-center text-white shadow" style={{ backgroundColor: currentPlayer.borderColor }}>
                                         <ShoppingCart className="w-3 h-3" />
                                       </div>
@@ -876,7 +875,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               )}
 
-                              {/* GAVETA DE PRODUTOS COM CARD SEM VÃO BRANCO E SCROLL FUNCIONAL */}
+                              {/* GAVETA DE PRODUTOS DA LIVE */}
                               {phone.id === 'products' && currentPlayer.showProducts && (
                                 <div className="absolute inset-x-2 bottom-2 top-7 z-50 flex flex-col overflow-hidden">
                                   <div
@@ -886,48 +885,42 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                       borderRadius: `${currentPlayer.borderRadius}px`
                                     }}
                                   >
-                                    {/* CABEÇALHO PRODUTOS TOTALMENTE ENCOSTADO */}
+                                    {/* CABEÇALHO PRODUTOS DA LIVE */}
                                     <div
                                       className="text-white text-center py-2 font-bold text-[11px] tracking-wide uppercase shrink-0"
                                       style={{ backgroundColor: currentPlayer.borderColor }}
                                     >
-                                      PRODUTOS
+                                      PRODUTOS DA LIVE
                                     </div>
 
-                                    {/* LISTA COM 10 PRODUTOS E SCROLL REAL */}
-                                    <div className="flex-1 overflow-y-auto p-2 space-y-2.5 scrollbar-thin bg-slate-50">
+                                    {/* LISTA DE PRODUTOS CADASTRADOS NA LIVE */}
+                                    <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-thin bg-slate-50">
                                       {MOCK_PRODUCTS.map((prod, idx) => (
                                         <div
                                           key={prod.id}
-                                          className="bg-white flex items-center shadow-sm relative overflow-hidden"
+                                          className="bg-white flex items-center shadow-sm overflow-hidden h-[54px]"
                                           style={{
                                             border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
                                             borderRadius: `${currentPlayer.borderRadius}px`
                                           }}
                                         >
-                                          {/* Bloco de Número: Perfeitamente colado na borda esquerda */}
+                                          {/* Bloco de Número */}
                                           <div 
-                                            className="w-[30px] self-stretch flex items-center justify-center font-black text-[12px] text-white shrink-0 tracking-tight"
-                                            style={{ 
-                                              backgroundColor: currentPlayer.borderColor,
-                                              borderTopLeftRadius: Math.max(0, currentPlayer.borderRadius - currentPlayer.borderWidth),
-                                              borderBottomLeftRadius: Math.max(0, currentPlayer.borderRadius - currentPlayer.borderWidth)
-                                            }}
+                                            className="w-[30px] h-full flex items-center justify-center font-black text-[12px] text-white shrink-0 tracking-tight"
+                                            style={{ backgroundColor: currentPlayer.borderColor }}
                                           >
                                             {String(idx + 1).padStart(2, '0')}
                                           </div>
 
-                                          {/* Imagem do Produto */}
-                                          <div className="p-1 shrink-0">
-                                            <img 
-                                              src={prod.img} 
-                                              className="w-[40px] h-[48px] object-cover rounded-md bg-slate-100"
-                                              alt={prod.name}
-                                            />
-                                          </div>
+                                          {/* Foto Sangrada: encostada no bloco do número e de cima a baixo */}
+                                          <img 
+                                            src={prod.img} 
+                                            className="w-[48px] h-full object-cover shrink-0"
+                                            alt={prod.name}
+                                          />
 
-                                          {/* Informações de Título e Preço */}
-                                          <div className="flex-1 min-w-0 px-1 py-1">
+                                          {/* Título e Preço */}
+                                          <div className="flex-1 min-w-0 px-2 py-0.5">
                                             <div
                                               className="font-bold leading-tight line-clamp-1"
                                               style={{ fontSize: `${currentPlayer.productNameSize * 0.9}px`, color: currentPlayer.productNameColor }}
@@ -943,8 +936,8 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                             </div>
                                           </div>
 
-                                          {/* Botão de Carrinho */}
-                                          <div className="pr-2 pl-1 shrink-0">
+                                          {/* Botão Carrinho */}
+                                          <div className="pr-2 pl-0.5 shrink-0">
                                             <div 
                                               className="w-5 h-5 rounded-full flex items-center justify-center text-white shadow-sm" 
                                               style={{ backgroundColor: currentPlayer.borderColor }}
@@ -956,13 +949,13 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                       ))}
                                     </div>
 
-                                    {/* Rodapé da Gaveta */}
+                                    {/* Rodapé da Gaveta: Fixado em 6 Produtos adicionados ao carrinho */}
                                     <div className="bg-white p-2 border-t flex flex-col items-center shrink-0" style={{ borderColor: `${currentPlayer.borderColor}30` }}>
                                       <ChevronDown className="w-3.5 h-3.5 mb-0.5" style={{ color: currentPlayer.borderColor }}/>
                                       <div className="flex justify-between items-center w-full text-[9.5px] font-bold" style={{ color: currentPlayer.borderColor }}>
                                         <span className="flex items-center gap-1.5">
                                           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: currentPlayer.borderColor }}></span>
-                                          {MOCK_PRODUCTS.length} Produtos adicionados
+                                          6 Produtos adicionados
                                         </span>
                                         <span className="text-slate-600 flex items-center hover:underline cursor-pointer">Finalizar <ExternalLink className="w-2.5 h-2.5 ml-0.5"/></span>
                                       </div>
@@ -975,41 +968,45 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         ))}
                       </div>
                     ) : (
-                      /* DESKTOP COM 3 COLUNAS - BORDAS E CABEÇALHOS 100% SANG परिजनों SEM VÃO BRANCO */
+                      /* DESKTOP COM 3 COLUNAS */
                       <div className="flex gap-4 sm:gap-5 w-full max-w-[1150px] mx-auto h-full max-h-[640px] justify-center items-stretch py-1">
                         
-                        {/* COLUNA 1: Produtos + Info */}
+                        {/* COLUNA 1: Produtos da Live + Info */}
                         <div className="flex flex-col gap-3 w-full max-w-[340px] flex-1">
                           {currentPlayer.showProducts && (
                             <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden shadow-sm" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: `${currentPlayer.borderRadius}px` }}>
                               <div className="text-white text-center py-2 font-bold text-[13px] tracking-wide uppercase shrink-0" style={{ backgroundColor: currentPlayer.borderColor }}>
-                                PRODUTOS
+                                PRODUTOS DA LIVE
                               </div>
-                              <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 scrollbar-thin bg-slate-50">
+                              <div className="flex-1 overflow-y-auto p-2.5 space-y-2 scrollbar-thin bg-slate-50">
                                 {MOCK_PRODUCTS.map((prod, idx) => (
                                   <div 
                                     key={prod.id} 
-                                    className="flex items-center bg-white shadow-sm overflow-hidden" 
+                                    className="flex items-center bg-white shadow-sm overflow-hidden h-[62px]" 
                                     style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: `${currentPlayer.borderRadius}px` }}
                                   >
+                                      {/* Bloco de Número */}
                                       <div 
-                                        className="w-[32px] self-stretch flex items-center justify-center font-black text-[13px] text-white shrink-0 tracking-tight"
-                                        style={{ 
-                                          backgroundColor: currentPlayer.borderColor,
-                                          borderTopLeftRadius: Math.max(0, currentPlayer.borderRadius - currentPlayer.borderWidth),
-                                          borderBottomLeftRadius: Math.max(0, currentPlayer.borderRadius - currentPlayer.borderWidth)
-                                        }}
+                                        className="w-[32px] h-full flex items-center justify-center font-black text-[13px] text-white shrink-0 tracking-tight"
+                                        style={{ backgroundColor: currentPlayer.borderColor }}
                                       >
                                         {String(idx + 1).padStart(2, '0')}
                                       </div>
-                                      <div className="p-1.5 shrink-0">
-                                        <img src={prod.img} className="w-[45px] h-[55px] object-cover rounded-md bg-slate-100" alt={prod.name} />
-                                      </div>
-                                      <div className="flex-1 min-w-0 px-2 py-1">
+
+                                      {/* Foto Sangrada: de ponta a ponta sem recuos */}
+                                      <img 
+                                        src={prod.img} 
+                                        className="w-[56px] h-full object-cover shrink-0" 
+                                        alt={prod.name} 
+                                      />
+
+                                      {/* Informações */}
+                                      <div className="flex-1 min-w-0 px-2.5 py-1">
                                         <div style={{ fontSize: currentPlayer.productNameSize, color: currentPlayer.productNameColor }} className="leading-tight line-clamp-1 font-bold">{prod.name}</div>
                                         <div className="text-[10px] text-slate-400 line-through mt-0.5">De: {prod.oldPrice}</div>
                                         <div style={{ fontSize: currentPlayer.productPriceSize, color: currentPlayer.productPriceColor }} className="font-extrabold leading-none mt-0.5">Por: {prod.price}</div>
                                       </div>
+
                                       <div className="pr-2.5 shrink-0">
                                         <div className="w-6 h-6 rounded-full flex items-center justify-center text-white shadow-sm" style={{ backgroundColor: currentPlayer.borderColor }}>
                                           <ShoppingCart className="w-3.5 h-3.5" />
@@ -1021,7 +1018,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                               <div className="border-t p-2 flex justify-between items-center bg-white shrink-0" style={{ borderColor: `${currentPlayer.borderColor}40` }}>
                                   <div className="flex items-center text-[11px] font-bold text-slate-600">
                                     <ShoppingCart className="w-3.5 h-3.5 mr-1.5" style={{ color: currentPlayer.borderColor }}/> 
-                                    {MOCK_PRODUCTS.length} Produtos adicionados
+                                    6 Produtos adicionados
                                   </div>
                                   <div className="text-[11px] font-bold flex items-center cursor-pointer hover:underline" style={{ color: currentPlayer.borderColor }}>
                                     Finalizar <ExternalLink className="w-3 h-3 ml-1" />
