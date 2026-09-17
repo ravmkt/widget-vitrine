@@ -71,6 +71,7 @@ export interface LivePlayerSettings {
   showChat: boolean;
   autoplayMuted: boolean;
   showProducts: boolean;
+  
 
   // Produto
   productNameSize: number;
