@@ -169,7 +169,7 @@ export const defaultPlayerSettings: LivePlayerSettings = {
   productPriceColor: "#e7191f",
 };
 
-// --- COMPONENTES VISUAIS CUSTOMIZADOS ---
+// --- COMPONENTES VISUAIS CUSTOMIZADOS (AGORA TODOS FORA DO COMPONENTE PRINCIPAL) ---
 const ColorInput = ({ value, onChange, label }: { value: string, onChange: (v: string) => void, label?: string }) => (
   <div className="space-y-1.5">
     {label && <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</label>}
@@ -190,6 +190,31 @@ const CustomSwitch = ({ checked, onChange, label }: { checked: boolean, onChange
     </div>
   </label>
 );
+
+const AccordionItem = ({
+  id,
+  title,
+  children,
+  openAccordion,
+  setOpenAccordion
+}: {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+  openAccordion: string;
+  setOpenAccordion: (id: string) => void;
+}) => {
+  const isOpen = openAccordion === id;
+  return (
+    <div className="mb-2 bg-white border border-slate-200 rounded-[14px] overflow-hidden shadow-sm transition-all duration-300">
+      <button onClick={() => setOpenAccordion(isOpen ? "" : id)} className="w-full bg-white hover:bg-slate-50 px-4 py-3.5 flex justify-between items-center transition-colors">
+        <h4 className="text-[14px] font-medium text-slate-700">{title}</h4>
+        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+      {isOpen && <div className="p-4 space-y-4 border-t border-slate-100 bg-white animate-in slide-in-from-top-2 duration-200">{children}</div>}
+    </div>
+  );
+};
 
 export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving }: Props) {
   const [activeTab, setActiveTab] = useState<"divulgacao" | "aovivo" | "player">("divulgacao");
@@ -247,22 +272,9 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     return width;
   };
 
-  const AccordionItem = ({ id, title, children }: { id: string, title: string, children: React.ReactNode }) => {
-    const isOpen = openAccordion === id;
-    return (
-      <div className="mb-2 bg-white border border-slate-200 rounded-[14px] overflow-hidden shadow-sm transition-all duration-300">
-        <button onClick={() => setOpenAccordion(isOpen ? "" : id)} className="w-full bg-white hover:bg-slate-50 px-4 py-3.5 flex justify-between items-center transition-colors">
-          <h4 className="text-[14px] font-medium text-slate-700">{title}</h4>
-          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
-        </button>
-        {isOpen && <div className="p-4 space-y-4 border-t border-slate-100 bg-white animate-in slide-in-from-top-2 duration-200">{children}</div>}
-      </div>
-    );
-  };
-
   const renderWidgetSettings = (config: any, updateFn: any, isDivulgacao: boolean) => (
     <div className="animate-in fade-in duration-300">
-      <AccordionItem id="formato" title="1. Formato & Dimensões">
+      <AccordionItem id="formato" title="1. Formato & Dimensões" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
         <div className="space-y-1.5">
           <label className="text-[12px] font-medium text-slate-600">Formato</label>
           <select className="w-full h-9 rounded-[14px] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none" value={config.format} onChange={(e) => updateFn("format", e.target.value)}>
@@ -292,7 +304,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
         </div>
       </AccordionItem>
 
-      <AccordionItem id="posicao" title="2. Posição & Margens">
+      <AccordionItem id="posicao" title="2. Posição & Margens" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
         <div className="space-y-1.5">
           <label className="text-[12px] font-medium text-slate-600">Posição na Tela</label>
           <select className="w-full h-9 rounded-[14px] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none" value={config.position} onChange={(e) => updateFn("position", e.target.value)}>
@@ -318,7 +330,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
         </div>
       </AccordionItem>
 
-      <AccordionItem id="bordas" title="3. Bordas">
+      <AccordionItem id="bordas" title="3. Bordas" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
         <div className="grid grid-cols-2 gap-4 mb-4">
           <ColorInput label="Cor da Borda" value={config.borderColor} onChange={(v) => updateFn("borderColor", v)} />
           <div className="space-y-1.5">
@@ -332,7 +344,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
         </div>
       </AccordionItem>
 
-      <AccordionItem id="elementos" title="4. Elementos Visíveis">
+      <AccordionItem id="elementos" title="4. Elementos Visíveis" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
         <div className="space-y-4">
           <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
             <CustomSwitch checked={config.showCTA} onChange={(v) => updateFn("showCTA", v)} label="Exibir CTA" />
@@ -407,7 +419,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
               {/* ABA PLAYER */}
               {activeTab === "player" && (
                 <div className="animate-in fade-in duration-300">
-                  <AccordionItem id="player_borda" title="1. Borda">
+                  <AccordionItem id="player_borda" title="1. Borda" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <ColorInput label="Cor da Borda" value={currentPlayer.borderColor} onChange={(v) => updateConfig(setPlayerConfig, "borderColor", v, playerConfig.linked)} />
                       <div className="space-y-1.5">
@@ -421,7 +433,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                     </div>
                   </AccordionItem>
 
-                  <AccordionItem id="player_visibilidade" title="2. Elementos Visíveis">
+                  <AccordionItem id="player_visibilidade" title="2. Elementos Visíveis" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
                     <div className="space-y-4">
                       {/* Titulo */}
                       <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
@@ -477,7 +489,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         </div>
                       </div>
 
-                      {/* Produtos (movido para Elementos Visíveis) */}
+                      {/* Produtos */}
                       <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
                         <CustomSwitch checked={currentPlayer.showProducts} onChange={(v) => updateConfig(setPlayerConfig, "showProducts", v, playerConfig.linked)} label="Exibir Produtos" />
                         {currentPlayer.showProducts && (
@@ -526,7 +538,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                     <div className="absolute inset-0 bg-white">
                       <div className="w-full h-full opacity-10" style={{backgroundImage: "url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800&auto=format')", backgroundSize: "cover"}}></div>
                       
-                      {/* O WIDGET EM SI - Removido gap-2 para colar CTA */}
+                      {/* O WIDGET EM SI */}
                       {(activeTab === "divulgacao" || activeTab === "aovivo") && (() => {
                         const config = activeTab === "divulgacao" ? currentDivulgacao : currentAoVivo;
                         return (
@@ -556,7 +568,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 )}
                               </div>
 
-                              {/* CTA Embaixo (-mt-2 para evitar borda branca vazando) */}
+                              {/* CTA Embaixo */}
                               {config.showCTA && (
                                 <div className="text-[11px] font-bold px-3 py-1 rounded-md shadow-md text-center relative z-10 -mt-2" 
                                      style={{ backgroundColor: config.ctaBgColor, color: config.ctaTextColor, width: '100%', minWidth: 'max-content' }}>
