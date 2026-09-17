@@ -105,8 +105,6 @@ export const defaultPlayerSettings: LivePlayerSettings = {
 };
 
 // --- COMPONENTES VISUAIS CUSTOMIZADOS ---
-
-// Componente exato do Print 1 para Seleção de Cores
 const ColorInput = ({ value, onChange }: { value: string, onChange: (v: string) => void }) => (
   <div className="flex items-center gap-2.5">
     <div className="relative w-9 h-9 rounded-[10px] overflow-hidden shrink-0 shadow-sm border border-slate-200 bg-slate-50">
@@ -126,7 +124,6 @@ const ColorInput = ({ value, onChange }: { value: string, onChange: (v: string) 
   </div>
 );
 
-// Switch Toggle
 const CustomSwitch = ({ checked, onChange, label }: { checked: boolean, onChange: (v: boolean) => void, label: string }) => (
   <label className="flex items-center justify-between cursor-pointer py-2.5 px-3 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 transition-colors">
     <span className="text-[13px] text-slate-700 font-medium">{label}</span>
@@ -162,9 +159,7 @@ export default function LiveAppearanceModal({
     }
   }, [isOpen, initialWidgetConfig, initialPlayerConfig]);
 
-  const handleSave = () => {
-    onSave(widgetConfig, playerConfig);
-  };
+  const handleSave = () => { onSave(widgetConfig, playerConfig); };
 
   const handleReset = () => {
     setWidgetConfig({
@@ -209,17 +204,9 @@ export default function LiveAppearanceModal({
 
   const toggleLink = () => {
     if (activeTab === "widget") {
-      setWidgetConfig(prev => ({
-        ...prev,
-        linked: !prev.linked,
-        mobile: !prev.linked ? { ...prev.desktop } : prev.mobile
-      }));
+      setWidgetConfig(prev => ({ ...prev, linked: !prev.linked, mobile: !prev.linked ? { ...prev.desktop } : prev.mobile }));
     } else {
-      setPlayerConfig(prev => ({
-        ...prev,
-        linked: !prev.linked,
-        mobile: !prev.linked ? { ...prev.desktop } : prev.mobile
-      }));
+      setPlayerConfig(prev => ({ ...prev, linked: !prev.linked, mobile: !prev.linked ? { ...prev.desktop } : prev.mobile }));
     }
   };
 
@@ -234,18 +221,11 @@ export default function LiveAppearanceModal({
     const isOpen = openAccordion === id;
     return (
       <div className="mb-2 bg-white border border-slate-200 rounded-[14px] overflow-hidden shadow-sm transition-all duration-300">
-        <button
-          onClick={() => setOpenAccordion(isOpen ? "" : id)}
-          className="w-full bg-white hover:bg-slate-50 px-4 py-3.5 flex justify-between items-center transition-colors"
-        >
+        <button onClick={() => setOpenAccordion(isOpen ? "" : id)} className="w-full bg-white hover:bg-slate-50 px-4 py-3.5 flex justify-between items-center transition-colors">
           <h4 className="text-[14px] font-medium text-slate-700">{title}</h4>
           <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
         </button>
-        {isOpen && (
-          <div className="p-4 space-y-4 border-t border-slate-100 bg-white animate-in slide-in-from-top-2 duration-200">
-            {children}
-          </div>
-        )}
+        {isOpen && <div className="p-4 space-y-4 border-t border-slate-100 bg-white animate-in slide-in-from-top-2 duration-200">{children}</div>}
       </div>
     );
   };
@@ -348,7 +328,6 @@ export default function LiveAppearanceModal({
                   </AccordionItem>
 
                   <AccordionItem id="bordas" title="3. Bordas">
-                    {/* Aqui reproduzimos perfeitamente a grade do Print 1 */}
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div className="space-y-1.5">
                         <label className="text-[12px] font-medium text-slate-600">Cor da Borda</label>
@@ -448,7 +427,6 @@ export default function LiveAppearanceModal({
                            <Input type="number" value={currentPlayer.productNameSize} onChange={(e) => updatePlayer("productNameSize", Number(e.target.value))} className="h-9 rounded-[14px] text-[13px] shadow-sm focus-visible:ring-rose-500" />
                         </div>
                       </div>
-                      
                       <div className="grid grid-cols-2 gap-4 items-end">
                          <div className="space-y-1.5">
                           <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Cor Preço</label>
@@ -459,7 +437,6 @@ export default function LiveAppearanceModal({
                            <Input type="number" value={currentPlayer.priceSize} onChange={(e) => updatePlayer("priceSize", Number(e.target.value))} className="h-9 rounded-[14px] text-[13px] shadow-sm focus-visible:ring-rose-500" />
                         </div>
                       </div>
-                      
                       <div className="grid grid-cols-2 gap-4 items-end">
                          <div className="space-y-1.5">
                           <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Cor Botão</label>
@@ -478,8 +455,9 @@ export default function LiveAppearanceModal({
           </div>
 
           {/* PAINEL DIREITO - PREVIEW */}
-          <div className="flex-1 flex flex-col relative items-center justify-center p-8 bg-slate-50/60 overflow-hidden">
-            <div className="w-full max-w-[1000px] h-full max-h-[750px] bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center p-8 relative">
+          <div className="flex-1 flex flex-col relative items-center justify-center p-6 bg-slate-50/60 overflow-hidden">
+            
+            <div className="w-full max-w-[1000px] h-full max-h-[750px] bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center p-6 relative overflow-hidden">
                 
                 <div className="absolute top-4 right-4 z-30 flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
                   <button onClick={() => setDevice("desktop")} className={`p-1.5 rounded-md transition-colors ${device === "desktop" ? "bg-rose-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-200"}`}><Monitor className="h-4 w-4" /></button>
@@ -487,8 +465,18 @@ export default function LiveAppearanceModal({
                   <button onClick={() => setDevice("mobile")} className={`p-1.5 rounded-md transition-colors ${device === "mobile" ? "bg-rose-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-200"}`}><Smartphone className="h-4 w-4" /></button>
                 </div>
 
-                <div className={`relative bg-[#0a0a0a] shadow-xl overflow-hidden transition-all duration-500 flex flex-col border-4 border-[#0a0a0a] ring-2 ring-rose-500/30 ${device === "desktop" ? "w-full max-w-[850px] aspect-video rounded-xl" : "w-[340px] h-[680px] rounded-[2.5rem]"}`}>
+                {/* --- CAIXA DE PREVIEW REAJUSTADA AQUI --- */}
+                <div className={`relative bg-[#0a0a0a] transition-all duration-500 flex flex-col shrink-0 ${
+                  device === "desktop" 
+                    ? "w-full max-w-[850px] aspect-video rounded-xl border-4 border-[#0a0a0a] ring-2 ring-rose-500/30 overflow-hidden shadow-xl" 
+                    : "w-[280px] h-[600px] rounded-[3rem] shadow-[0_0_0_4px_#f4d1c0,0_20px_40px_rgba(0,0,0,0.15)] border-[8px] border-[#0a0a0a] overflow-hidden"
+                }`}>
                   
+                  {/* Notch do celular */}
+                  {device === "mobile" && (
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[100px] h-[22px] bg-[#0a0a0a] rounded-b-[1rem] z-[100]"></div>
+                  )}
+
                   {activeTab === "widget" && (
                     <div className="absolute inset-0">
                       <div className="absolute transition-all duration-300 shadow-[0_10px_40px_rgba(225,29,72,0.15)] group cursor-pointer" 
