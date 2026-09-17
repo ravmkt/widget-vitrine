@@ -98,7 +98,7 @@ interface Props {
 }
 
 // --- DEFAULTS ---
-const defaultWidgetBase: BaseWidgetSettings = {
+export const defaultWidgetBase: BaseWidgetSettings = {
   format: "portrait",
   objectFit: "cover",
   width: 100,
@@ -130,6 +130,11 @@ export const defaultAoVivoSettings: WidgetAoVivoSettings = {
   ...defaultWidgetBase,
   ctaText: "AO VIVO",
   ctaBgColor: "#e7191f"
+};
+
+// Export necessário para compatibilidade com LiveCommercePage
+export const defaultWidgetSettings: WidgetDivulgacaoSettings = {
+  ...defaultDivulgacaoSettings
 };
 
 export const defaultPlayerSettings: LivePlayerSettings = {
@@ -618,7 +623,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         ].map((phone) => (
                           <div key={phone.id} className="flex flex-col items-center gap-2 shrink-0 h-full justify-center">
                             
-                            {/* MOLDURA DO SMARTPHONE (Idêntica ao design do print de referência) */}
+                            {/* MOLDURA DO SMARTPHONE */}
                             <div
                               className="relative bg-[#0a0a0a] rounded-[2.2rem] border-[6px] border-slate-200 shadow-xl overflow-hidden shrink-0"
                               style={{ height: 'min(54vh, 490px)', aspectRatio: '9 / 19' }}
@@ -704,7 +709,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               </div>
 
-                              {/* CHAT ABERTO (NO 3º CELULAR) */}
+                              {/* CHAT ABERTO */}
                               {phone.id === 'chat' && currentPlayer.showChat && (
                                 <div className="absolute bottom-[60px] left-2 right-9 z-20 flex flex-col justify-end pointer-events-none">
                                   <div className="flex flex-col gap-1 mb-1.5 overflow-hidden" style={{ maskImage: 'linear-gradient(to top, black 70%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to top, black 70%, transparent 100%)' }}>
@@ -722,7 +727,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               )}
 
-                              {/* CARD DO PRODUTO NA BASE (CELULARES 1 E 3) */}
+                              {/* CARD DO PRODUTO NA BASE */}
                               {phone.id !== 'products' && currentPlayer.showProducts && (
                                 <div className="absolute bottom-2 left-2 right-2 z-20">
                                   <div
@@ -757,7 +762,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               )}
 
-                              {/* GAVETA DE PRODUTOS ABERTA (2º CELULAR - SINCRONIZADA COM A COR DA CONFIGURAÇÃO) */}
+                              {/* GAVETA DE PRODUTOS ABERTA */}
                               {phone.id === 'products' && currentPlayer.showProducts && (
                                 <div className="absolute inset-x-1.5 bottom-1.5 top-6 z-50 flex flex-col overflow-hidden">
                                   <div
@@ -767,7 +772,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                       borderRadius: `${currentPlayer.borderRadius}px`
                                     }}
                                   >
-                                    {/* Cabeçalho da Gaveta com a cor configurada */}
                                     <div
                                       className="text-white text-center py-1.5 font-bold text-[10px] tracking-wide shadow-sm"
                                       style={{ backgroundColor: currentPlayer.borderColor }}
@@ -775,7 +779,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                       PRODUTOS
                                     </div>
 
-                                    {/* Lista de Produtos */}
                                     <div className="flex-1 overflow-y-auto p-1.5 space-y-1 scrollbar-hide bg-slate-50">
                                       {[1,2,3,4,5,6].map(i => (
                                         <div
@@ -810,7 +813,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                       ))}
                                     </div>
 
-                                    {/* Rodapé da Gaveta */}
                                     <div className="bg-white p-1.5 border-t flex flex-col items-center shrink-0" style={{ borderColor: `${currentPlayer.borderColor}30` }}>
                                       <ChevronDown className="w-3 h-3 mb-0.5" style={{ color: currentPlayer.borderColor }}/>
                                       <div className="flex justify-between items-center w-full text-[8.5px] font-bold" style={{ color: currentPlayer.borderColor }}>
