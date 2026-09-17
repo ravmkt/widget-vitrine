@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Monitor, Smartphone, Link as LinkIcon, Unlink, Radio, Save, LayoutTemplate, PlaySquare,
-  VolumeX, ChevronDown, RotateCcw, Info, Share2, ShoppingCart
+  VolumeX, ChevronDown, RotateCcw, Info, Share2, ShoppingCart, ExternalLink
 } from "lucide-react";
 
 // --- INTERFACES ---
@@ -388,7 +388,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[1250px] w-full h-[92vh] p-0 flex flex-col overflow-hidden bg-white">
+      <DialogContent className="max-w-[1300px] w-full h-[92vh] p-0 flex flex-col overflow-hidden bg-white">
         
         {/* CABEÇALHO */}
         <div className="px-8 py-5 border-b border-slate-200 bg-white flex flex-col gap-5 sticky top-0 z-20">
@@ -412,7 +412,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
               <h3 className="text-[15px] font-bold text-slate-800 tracking-tight">
                 Configurações
               </h3>
-               {/* Toggle Dispositivo */}
                <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-0.5">
                   <button onClick={() => setDevice("desktop")} className={`p-1.5 rounded-md transition-colors ${device === "desktop" ? "bg-white shadow-sm text-rose-600" : "text-slate-400"}`}><Monitor className="h-3.5 w-3.5" /></button>
                   <button onClick={toggleLink} className={`p-1.5 rounded-md hover:bg-slate-200/50 ${isLinked ? "text-rose-600" : "text-slate-400"}`}>{isLinked ? <LinkIcon className="h-3 w-3" /> : <Unlink className="h-3 w-3" />}</button>
@@ -532,9 +531,8 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
           {/* PAINEL DIREITO - PREVIEW */}
           <div className="flex-1 flex flex-col relative items-center justify-center p-4 sm:p-6 bg-slate-50/60 overflow-hidden min-h-0">
-            <div className="w-full h-full bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center p-4 sm:p-8 relative overflow-hidden min-h-0">
+            <div className="w-full h-full bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center p-2 sm:p-4 relative overflow-hidden min-h-0">
                 
-                {/* LÓGICA DE CONDICIONAL CORRIGIDA ABAIXO */}
                 {activeTab !== "player" ? (
                   
                   // ==========================================
@@ -549,7 +547,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                     <div className="absolute inset-0 bg-white">
                       <div className="w-full h-full opacity-10" style={{backgroundImage: "url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800&auto=format')", backgroundSize: "cover"}}></div>
                       
-                      {/* O WIDGET EM SI */}
                       {(activeTab === "divulgacao" || activeTab === "aovivo") && 
                         [activeTab === "divulgacao" ? currentDivulgacao : currentAoVivo].map((config, i) => (
                           <div 
@@ -561,8 +558,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                               zIndex: 50
                             }}
                           >
-                            
-                            {/* Container do Video */}
                             <div 
                               className="relative overflow-hidden bg-black shadow-[0_8px_30px_rgba(0,0,0,0.15)]" 
                               style={{
@@ -573,59 +568,17 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                               }}
                             >
                               <video 
-                                ref={(el) => {
-                                  if (el) {
-                                    if (config.playVideo) el.play().catch(() => {});
-                                    else el.pause();
-                                  }
-                                }}
-                                src="/demo-videos/demo1.mp4" 
-                                loop 
-                                muted 
-                                playsInline 
-                                className="w-full h-full" 
-                                style={{ objectFit: config.objectFit }} 
+                                ref={(el) => { if (el) { if (config.playVideo) el.play().catch(() => {}); else el.pause(); } }}
+                                src="/demo-videos/demo1.mp4" loop muted playsInline className="w-full h-full" style={{ objectFit: config.objectFit }} 
                               />
-                              
-                              {config.showCloseButton && (
-                                <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-black/40 rounded-full flex items-center justify-center text-white text-[10px] font-bold z-10">✕</div>
-                              )}
-                              
-                              {!config.playVideo && (
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center z-10">
-                                  <PlaySquare className="w-3.5 h-3.5 ml-0.5 fill-white text-white"/>
-                                </div>
-                              )}
-                              
-                              {/* Contador (Apenas Divulgação) */}
+                              {config.showCloseButton && <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-black/40 rounded-full flex items-center justify-center text-white text-[10px] font-bold z-10">✕</div>}
+                              {!config.playVideo && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center z-10"><PlaySquare className="w-3.5 h-3.5 ml-0.5 fill-white text-white"/></div>}
                               {activeTab === "divulgacao" && (config as WidgetDivulgacaoSettings).showCountdown && (
-                                <div 
-                                  className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 shadow-sm z-10"
-                                  style={{ 
-                                    backgroundColor: (config as WidgetDivulgacaoSettings).countdownBgColor, 
-                                    color: (config as WidgetDivulgacaoSettings).countdownTextColor,
-                                    borderRadius: (config as WidgetDivulgacaoSettings).countdownBorderRadius || '4px' 
-                                  }}
-                                >
-                                  02d 10h 01m
-                                </div>
+                                <div className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 shadow-sm z-10" style={{ backgroundColor: (config as WidgetDivulgacaoSettings).countdownBgColor, color: (config as WidgetDivulgacaoSettings).countdownTextColor, borderRadius: (config as WidgetDivulgacaoSettings).countdownBorderRadius || '4px' }}>02d 10h 01m</div>
                               )}
                             </div>
-
-                            {/* CTA Embaixo */}
                             {config.showCTA && (
-                              <div 
-                                className="text-[12px] font-bold px-4 py-1.5 shadow-lg text-center transition-transform hover:scale-105" 
-                                style={{ 
-                                  backgroundColor: config.ctaBgColor, 
-                                  color: config.ctaTextColor, 
-                                  width: '90%', 
-                                  minWidth: 'max-content',
-                                  borderRadius: config.ctaBorderRadius || '9999px'
-                                }}
-                              >
-                                {config.ctaText}
-                              </div>
+                              <div className="text-[12px] font-bold px-4 py-1.5 shadow-lg text-center transition-transform hover:scale-105" style={{ backgroundColor: config.ctaBgColor, color: config.ctaTextColor, width: '90%', minWidth: 'max-content', borderRadius: config.ctaBorderRadius || '9999px' }}>{config.ctaText}</div>
                             )}
                           </div>
                         ))}
@@ -635,20 +588,20 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                 ) : (
                   
                   // ==========================================
-                  // PREVIEW DO PLAYER
+                  // PREVIEW DO PLAYER (ALINHAMENTO 100% CORRIGIDO)
                   // ==========================================
-                  <div className={`w-full h-full flex justify-center items-center ${device === 'mobile' ? 'overflow-y-auto' : 'p-2 sm:p-4'}`}>
+                  <div className={`w-full h-full flex justify-center items-center ${device === 'mobile' ? 'overflow-y-auto' : ''}`}>
                     
-                    <div className={`flex gap-3 sm:gap-4 w-full max-w-[950px] h-full ${device === 'mobile' ? 'flex-col h-auto' : 'max-h-[650px]'}`}>
+                    {/* CONTAINER PRINCIPAL DO PLAYER - Largura máxima ampliada e alturas fixas proporcionais no desktop */}
+                    <div className={`flex gap-3 sm:gap-4 w-full max-w-[1050px] mx-auto ${device === 'mobile' ? 'flex-col h-auto' : 'h-[600px] justify-center'}`}>
                       
-                      {/* COLUNA ESQUERDA: Produtos + Info */}
-                      <div className={`flex flex-col gap-3 sm:gap-4 ${device === 'mobile' ? 'w-full order-3' : 'w-[240px] xl:w-[280px] flex-shrink-0'}`}>
+                      {/* --- COLUNA 1: Produtos + Info --- */}
+                      {/* Estrutura: flex-1 (ocupa topo) + h-[60px] (ocupa base) */}
+                      <div className={`flex flex-col gap-3 sm:gap-4 ${device === 'mobile' ? 'w-full order-3' : 'w-full max-w-[310px] flex-1'}`}>
                         
                         {currentPlayer.showProducts && (
                           <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border shadow-sm overflow-hidden" style={{ borderColor: currentPlayer.borderColor }}>
-                            <div className="text-white text-center py-2 font-medium text-[13px] tracking-wide" style={{ backgroundColor: currentPlayer.borderColor }}>
-                              PRODUTOS
-                            </div>
+                            <div className="text-white text-center py-2 font-medium text-[13px] tracking-wide" style={{ backgroundColor: currentPlayer.borderColor }}>PRODUTOS</div>
                             
                             <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 scrollbar-thin">
                               {[1,2,3,4,5].map(i => (
@@ -669,21 +622,21 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                               ))}
                             </div>
 
-                            {/* Rodapé dos Produtos */}
+                            {/* Rodapé dos Produtos com Icone de Link Externo corrigido */}
                             <div className="border-t p-2.5 flex justify-between items-center bg-slate-50" style={{ borderColor: `${currentPlayer.borderColor}40` }}>
                                 <div className="flex items-center text-[11px] font-medium text-slate-600">
                                   <ShoppingCart className="w-3.5 h-3.5 mr-1.5" style={{ color: currentPlayer.borderColor }}/> 
                                   6 Produtos adicionados
                                 </div>
                                 <div className="text-[11px] font-bold flex items-center cursor-pointer hover:underline" style={{ color: currentPlayer.borderColor }}>
-                                  Finalizar <Share2 className="w-3 h-3 ml-1" />
+                                  Finalizar <ExternalLink className="w-3 h-3 ml-1" />
                                 </div>
                             </div>
                           </div>
                         )}
 
-                        {/* Card Informativo */}
-                        <div className="h-[65px] flex-shrink-0 flex flex-col items-center justify-center rounded-xl border shadow-sm transition-all" 
+                        {/* Base Fixa - Exatamente 60px */}
+                        <div className="h-[60px] flex-shrink-0 flex flex-col items-center justify-center rounded-xl border shadow-sm transition-all w-full" 
                               style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor, borderColor: currentPlayer.borderColor }}>
                             <div className="font-black tracking-tight leading-none" style={{ fontSize: currentPlayer.infoSize1 }}>{currentPlayer.infoText1}</div>
                             <div className="font-medium opacity-80 mt-1" style={{ fontSize: currentPlayer.infoSize2 }}>{currentPlayer.infoText2}</div>
@@ -691,17 +644,16 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
                       </div>
 
-                      {/* COLUNA CENTRAL: Video + Cupom */}
-                      <div className={`flex flex-col gap-3 sm:gap-4 ${device === 'mobile' ? 'w-full order-1' : 'flex-1 min-w-[280px] max-w-[360px] mx-auto'}`}>
+                      {/* --- COLUNA 2: Video + Cupom --- */}
+                      {/* Mantém flex-1 (ocupa topo) + h-[60px] (ocupa base) garantindo o tamanho idêntico às laterais */}
+                      <div className={`flex flex-col gap-3 sm:gap-4 ${device === 'mobile' ? 'w-full order-1' : 'w-full max-w-[310px] flex-1'}`}>
                           
-                          {/* Video Player */}
-                          <div className="flex-1 relative bg-black overflow-hidden shadow-lg" style={{
+                          <div className="flex-1 min-h-0 relative bg-black overflow-hidden shadow-lg w-full" style={{
                             border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
                             borderRadius: currentPlayer.borderRadius,
                           }}>
                             <video src="/demo-videos/demo2.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover opacity-90" />
                             
-                            {/* Elementos no video */}
                             <div className="absolute top-4 left-4 flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20">🦋</div>
                                 {currentPlayer.showTitle && <span style={{ color: currentPlayer.titleColor }} className="font-bold text-[13px] drop-shadow-md">{currentPlayer.titleText}</span>}
@@ -718,28 +670,25 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                             )}
                           </div>
 
-                          {/* Card Cupom */}
-                          <div className="h-[55px] flex-shrink-0 flex rounded-xl overflow-hidden shadow-sm border" style={{ borderColor: currentPlayer.borderColor }}>
-                            <div className="flex items-center justify-center px-4 font-black tracking-widest text-[16px]" 
-                                  style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor, width: '50%' }}>
+                          {/* Base Fixa - Exatamente 60px */}
+                          <div className="h-[60px] flex-shrink-0 flex rounded-xl overflow-hidden shadow-sm border w-full" style={{ borderColor: currentPlayer.borderColor }}>
+                            <div className="flex items-center justify-center px-4 font-black tracking-widest text-[16px]" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor, width: '50%' }}>
                               {currentPlayer.couponCode}
                             </div>
-                            <div className="flex items-center justify-center px-4 font-black text-[18px]" 
-                                  style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor, width: '50%' }}>
+                            <div className="flex items-center justify-center px-4 font-black text-[18px]" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor, width: '50%' }}>
                               {currentPlayer.couponText}
                             </div>
                           </div>
 
                       </div>
 
-                      {/* COLUNA DIREITA: Chat + Compartilhar */}
-                      <div className={`flex flex-col gap-3 sm:gap-4 ${device === 'mobile' ? 'w-full order-2' : 'w-[240px] xl:w-[280px] flex-shrink-0'}`}>
+                      {/* --- COLUNA 3: Chat + Compartilhar --- */}
+                      {/* Estrutura: flex-1 (ocupa topo) + h-[60px] (ocupa base) */}
+                      <div className={`flex flex-col gap-3 sm:gap-4 ${device === 'mobile' ? 'w-full order-2' : 'w-full max-w-[310px] flex-1'}`}>
                         
                         {currentPlayer.showChat && (
                           <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border shadow-sm overflow-hidden" style={{ borderColor: currentPlayer.borderColor }}>
-                            <div className="text-white text-center py-2 font-medium text-[13px] tracking-wide" style={{ backgroundColor: currentPlayer.borderColor }}>
-                              CHAT
-                            </div>
+                            <div className="text-white text-center py-2 font-medium text-[13px] tracking-wide" style={{ backgroundColor: currentPlayer.borderColor }}>CHAT</div>
                             
                             <div className="flex-1 flex flex-col overflow-hidden relative bg-white">
                                 <div className="flex-1 overflow-y-auto p-3 space-y-4 pb-14 scrollbar-thin">
@@ -753,7 +702,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                   ))}
                                 </div>
                                 
-                                {/* Input do Chat */}
                                 <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-transparent">
                                   <div className="bg-white border rounded-full py-2 px-3.5 text-[12px] text-slate-400 flex justify-between items-center shadow-sm" style={{ borderColor: currentPlayer.borderColor }}>
                                       Chat...
@@ -766,19 +714,20 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                           </div>
                         )}
 
-                        {/* Botão Compartilhar */}
-                        <button className="h-[55px] flex-shrink-0 w-full flex items-center justify-center gap-2 rounded-xl border shadow-sm font-bold text-[16px] transition-transform hover:scale-[1.02]" 
+                        {/* Base Fixa - Exatamente 60px */}
+                        <button className="h-[60px] flex-shrink-0 w-full flex items-center justify-center gap-2 rounded-xl border shadow-sm font-bold text-[16px] transition-transform hover:scale-[1.02]" 
                                 style={{ backgroundColor: currentPlayer.shareBgColor, color: currentPlayer.shareTextColor, borderColor: currentPlayer.borderColor }}>
                             Compartilhar <Share2 className="w-4 h-4 ml-1" />
                         </button>
 
                       </div>
+
                     </div>
                   </div>
                 )}
             </div>
           </div>
-        </div> {/* FIM DO CORPO (Este fechamento estava faltando!) */}
+        </div>
 
         {/* RODAPÉ */}
         <div className="px-8 py-4 border-t border-slate-200 bg-white flex items-center justify-between z-20">
