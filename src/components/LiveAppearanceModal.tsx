@@ -130,6 +130,10 @@ export const defaultWidgetBase: BaseWidgetSettings = {
   ctaBorderRadius: "9999px"
 };
 
+// Exportação de compatibilidade para o LiveCommercePage.tsx
+export const defaultWidgetSettings = defaultWidgetBase;
+export type WidgetSettings = BaseWidgetSettings;
+
 export const defaultDivulgacaoSettings: WidgetDivulgacaoSettings = {
   ...defaultWidgetBase,
   showCountdown: true,
