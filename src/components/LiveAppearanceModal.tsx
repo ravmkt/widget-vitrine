@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Monitor, Smartphone, Link as LinkIcon, Unlink, Radio, Save, LayoutTemplate, PlaySquare,
-  VolumeX, ChevronDown, RotateCcw, Info, Share2, ShoppingCart, ExternalLink
+  VolumeX, ChevronDown, RotateCcw, Info, Share2, ShoppingCart, ExternalLink, Eye
 } from "lucide-react";
 
 // --- INTERFACES ---
@@ -608,7 +608,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                   // ==========================================
                   <div className={`w-full h-full flex justify-center items-center ${device === 'mobile' ? 'overflow-y-auto' : ''}`}>
                     
-                    {/* Alterado para h-full max-h-[550px] para encaixar proporcionalmente na tela do usuário sem cortar, usando flex-1 para preencher */}
                     <div className={`flex gap-3 sm:gap-4 w-full max-w-[1050px] mx-auto ${device === 'mobile' ? 'flex-col h-auto' : 'h-full max-h-[550px] justify-center'}`}>
                       
                       {/* --- COLUNA 1: Produtos + Info --- */}
@@ -673,8 +672,17 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 {currentPlayer.showTitle && <span style={{ color: currentPlayer.titleColor }} className="font-bold text-[13px] drop-shadow-md">{currentPlayer.titleText}</span>}
                             </div>
 
-                            <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
-                              <Radio className="w-3 h-3 animate-pulse"/> Ao Vivo
+                            {/* CONTAINER DIREITO (AO VIVO + CONTADOR) */}
+                            <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                              {currentPlayer.showViewerCount && (
+                                <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-1 rounded-full border border-white/20 shadow-sm">
+                                  <Eye className="w-3 h-3" />
+                                  1.2K
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                                <Radio className="w-3 h-3 animate-pulse"/> Ao Vivo
+                              </div>
                             </div>
 
                             {currentPlayer.autoplayMuted && (
