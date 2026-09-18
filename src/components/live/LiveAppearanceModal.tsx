@@ -552,8 +552,26 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving,
       setOpenAccordion("formato");
       setOpenSubItem("");
       setTemplateNameInput("");
+
+      if (initialData?.divulgacao) {
+        setDivulgacaoConfig(initialData.divulgacao);
+      } else {
+        setDivulgacaoConfig({ desktop: { ...defaultDivulgacaoSettings }, mobile: { ...defaultDivulgacaoSettings, width: 80 }, linked: false });
+      }
+
+      if (initialData?.aoVivo) {
+        setAoVivoConfig(initialData.aoVivo);
+      } else {
+        setAoVivoConfig({ desktop: { ...defaultAoVivoSettings }, mobile: { ...defaultAoVivoSettings, width: 80 }, linked: false });
+      }
+
+      if (initialData?.player) {
+        setPlayerConfig(initialData.player);
+      } else {
+        setPlayerConfig({ desktop: { ...defaultPlayerSettings }, mobile: { ...defaultPlayerSettings }, linked: true });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialData]);
 
   useEffect(() => {
     try {
