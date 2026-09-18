@@ -490,21 +490,19 @@ export function LiveFormDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[94vh] flex flex-col p-0 overflow-hidden bg-white shadow-2xl rounded-2xl border-0">
+        {/* [&>button]:hidden remove o 'X' nativo do shadcn */}
+        <DialogContent className="max-w-4xl max-h-[94vh] flex flex-col p-0 overflow-hidden bg-white shadow-2xl rounded-2xl border-0 [&>button]:hidden">
           
-          {/* CABEÇALHO */}
-          <div className="px-6 pt-5 pb-3 border-b border-slate-100 flex items-center justify-between">
+          {/* CABEÇALHO SEM O 'X' MANUAL */}
+          <div className="px-6 pt-5 pb-3 border-b border-slate-100 flex items-center">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
                 <Radio className="w-5 h-5" />
               </div>
               <DialogTitle className="text-lg font-bold text-slate-800">
-                {liveId ? "Editar Live" : "Nova Live"}
+                {liveId ? "Configurar Live" : "Configurar Nova Live"}
               </DialogTitle>
             </div>
-            <button onClick={() => onOpenChange(false)} className="text-slate-400 hover:text-slate-600 transition-colors text-sm">
-              ✕
-            </button>
           </div>
 
           {/* STEPPER VISUAL (EXATO AO PRINT) */}
