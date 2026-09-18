@@ -601,8 +601,9 @@ function renderLiveWidget(live) {
   if (currentCfg.enabled === false) return;
 
   var isLive = live.status === 'live';
-  var format = currentCfg.format || currentCfg.shape || 'portrait';
-  var isCircle = format === 'circular' || format === 'circle';
+  var shape = currentCfg.shape || currentCfg.format || 'portrait';
+  var format = shape;
+  var isCircle = shape === 'circular' || shape === 'circle';
   var width = Number(currentCfg.width) || (isCircle ? 90 : 180);
   var borderRadius = isCircle ? '999px' : (currentCfg.borderRadius !== undefined ? currentCfg.borderRadius + 'px' : '16px');
   var borderWidth = currentCfg.borderWidth !== undefined ? currentCfg.borderWidth + 'px' : '2px';
