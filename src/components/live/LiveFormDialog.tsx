@@ -13,7 +13,7 @@ import {
   ShoppingBag, ExternalLink, Tag, Gift, Sparkles, Image as ImageIcon
 } from "lucide-react";
 import { toast } from "sonner";
-import { fetchYouTubeOEmbed, extractYouTubeVideoId } from "@/services/youtube";
+import { fetchYouTubeLiveDetails, extractYouTubeVideoId } from "@/services/youtube";
 
 export interface Product {
   id: string;
