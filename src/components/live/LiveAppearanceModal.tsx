@@ -200,7 +200,7 @@ export const defaultPlayerSettings: LivePlayerSettings = {
 };
 
 // --- PRESETS DE FÁBRICA VIDLYTICS ---
-const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
+export const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
   {
     id: "preset_padrao",
     name: "Vidlytics (Azul e Branco)",
@@ -405,7 +405,7 @@ const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
   }
 ];
 
-const STORAGE_KEY_TEMPLATES = "vidlytics_live_appearance_templates_v2";
+export const STORAGE_KEY_TEMPLATES = "vidlytics_live_appearance_templates_v2";
 
 // --- COMPONENTES AUXILIARES ---
 const ColorInput = ({ value, onChange, label }: { value: string; onChange: (v: string) => void; label?: string }) => (
