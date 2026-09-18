@@ -203,11 +203,23 @@ export const defaultPlayerSettings: LivePlayerSettings = {
 const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
   {
     id: "preset_padrao",
-    name: "Padrão Vidlytics (Vermelho)",
+    name: "Padrão Vidlytics (Azul)",
     isDefault: true,
-    divulgacao: { desktop: { ...defaultDivulgacaoSettings }, mobile: { ...defaultDivulgacaoSettings, width: 80 }, linked: false },
-    aoVivo: { desktop: { ...defaultAoVivoSettings }, mobile: { ...defaultAoVivoSettings, width: 80 }, linked: false },
-    player: { desktop: { ...defaultPlayerSettings }, mobile: { ...defaultPlayerSettings }, linked: true }
+    divulgacao: {
+      desktop: { ...defaultDivulgacaoSettings, borderColor: "#0094ea", ctaBgColor: "#0094ea" },
+      mobile: { ...defaultDivulgacaoSettings, width: 80, borderColor: "#0094ea", ctaBgColor: "#0094ea" },
+      linked: false
+    },
+    aoVivo: {
+      desktop: { ...defaultAoVivoSettings, borderColor: "#0094ea", ctaBgColor: "#0094ea" },
+      mobile: { ...defaultAoVivoSettings, width: 80, borderColor: "#0094ea", ctaBgColor: "#0094ea" },
+      linked: false
+    },
+    player: {
+      desktop: { ...defaultPlayerSettings, borderColor: "#0094ea" },
+      mobile: { ...defaultPlayerSettings, borderColor: "#0094ea" },
+      linked: true
+    }
   },
   {
     id: "preset_blackfriday",
@@ -463,7 +475,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
   // --- CONTROLE DIRETO DE TEMPLATES ---
   const [templates, setTemplates] = useState<LiveAppearanceTemplate[]>(INITIAL_TEMPLATES);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("preset_padrao");
-  const [templateNameInput, setTemplateNameInput] = useState<string>("Padrão Vidlytics (Vermelho)");
+  const [templateNameInput, setTemplateNameInput] = useState<string>("Padrão Vidlytics (Azul)");
   const [bannerAlert, setBannerAlert] = useState<string>("");
 
   // Sempre ao abrir o modal, resetar para a aba Divulgação e visualização Mobile
@@ -572,7 +584,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(customs));
     setTemplates([...INITIAL_TEMPLATES, ...customs]);
     setSelectedTemplateId("preset_padrao");
-    setTemplateNameInput("Padrão Vidlytics (Vermelho)");
+    setTemplateNameInput("Padrão Vidlytics (Azul)");
     notify("Template excluído.");
   };
 
@@ -817,23 +829,15 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
               onClick={handleSaveCurrentTemplate}
               size="sm"
               variant="outline"
-              title="Salva as cores e ajustes no template com o nome acima"
-              className="h-8 text-[11.5px] font-bold text-slate-700 bg-white hover:bg-slate-50 border-slate-300 shadow-sm rounded-lg"
+              title={isCurrentTemplateCustom ? "Atualiza o template com as modificações atuais" : "Cria uma cópia personalizada com suas modificações"}
+              className={`h-8 text-[11.5px] font-bold shadow-sm rounded-lg transition-all ${
+                isCurrentTemplateCustom
+                  ? "text-slate-700 bg-white hover:bg-slate-50 border-slate-300"
+                  : "text-rose-600 bg-rose-50/50 hover:bg-rose-50 border-rose-200"
+              }`}
             >
-              <Save className="w-3.5 h-3.5 mr-1 text-slate-600" />
+              <Save className="w-3.5 h-3.5 mr-1.5" />
               {isCurrentTemplateCustom ? "Atualizar Template" : "Salvar Template"}
-            </Button>
-
-            {/* BOTÃO SALVAR COMO NOVO TEMPLATE */}
-            <Button
-              onClick={handleSaveAsNewTemplate}
-              size="sm"
-              variant="outline"
-              title="Cria um novo tema separado com o nome digitado"
-              className="h-8 text-[11.5px] font-bold text-rose-600 border-rose-200 hover:bg-rose-50 bg-white shadow-sm rounded-lg"
-            >
-              <Plus className="w-3.5 h-3.5 mr-1" />
-              Salvar como Novo
             </Button>
 
             {/* EXCLUIR SE FOR TEMPLATE CRIADO */}
@@ -1009,7 +1013,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                   <div className={`relative bg-[#0a0a0a] transition-all duration-300 flex flex-col shrink-0 ${
                     device === "desktop" 
                       ? "w-full max-w-[1050px] aspect-video rounded-xl border-4 border-[#0a0a0a] overflow-hidden shadow-xl" 
-                      : "h-full max-h-[92%] aspect-[9/19.5] rounded-[2.2rem] shadow-[0_0_0_3px_#e2e8f0] border-[6px] border-[#0a0a0a] overflow-hidden"
+                      : "h-full max-h-[96%] aspect-[9/18.5] rounded-[2rem] shadow-[0_0_0_3px_#e2e8f0] border-[6px] border-[#0a0a0a] overflow-hidden"
                   }`}>
                     {device === "mobile" && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] max-w-[120px] h-[18px] bg-[#0a0a0a] rounded-b-[0.9rem] z-[100]"></div>}
                     <div className="absolute inset-0 bg-white">
