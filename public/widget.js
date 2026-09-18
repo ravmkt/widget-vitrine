@@ -831,9 +831,16 @@ function openLiveModal(live) {
   liveOverlay = document.createElement('div');
   liveOverlay.className = 'vl-live-overlay';
 
+  var activePlayerCfg = getActiveLivePlayerConfig();
   var modal = document.createElement('div');
   modal.className = 'vl-live-modal';
-  modal.style.background = livePlayerConfig.background_color || '#0f172a';
+  modal.style.background = activePlayerCfg.backgroundColor || activePlayerCfg.background_color || '#0f172a';
+  if (activePlayerCfg.borderRadius !== undefined) {
+    modal.style.borderRadius = activePlayerCfg.borderRadius + 'px';
+  }
+  if (activePlayerCfg.borderWidth && activePlayerCfg.borderColor) {
+    modal.style.border = activePlayerCfg.borderWidth + 'px solid ' + activePlayerCfg.borderColor;
+  }
 
   var closeBtn = document.createElement('button');
   closeBtn.className = 'vl-live-modal-close';
