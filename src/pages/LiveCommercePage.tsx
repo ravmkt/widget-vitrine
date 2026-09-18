@@ -104,6 +104,27 @@ export function LiveCommercePage() {
           .order("name", { ascending: true });
         if (prods) setProducts(prods);
 
+        await loadLives(store.id);
+        await loadAppearance(store.id);
+      } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadStoreAndPlan();
+  }, [tenantStoreId]);
+
+  async function loadLives(currentStoreId: string) {
+    const { data, error } = await supabase
+      .from("lives")
+      .select("id, title, youtube_video_id, youtube_thumbnail_url, status, is_active, scheduled_at, created_at")
+      .eq("store_id", currentStoreId)
+      .order("scheduled_at", { ascending: true, nullsFirst: false });
+
+    if (!error && data) setLives(data as LiveRow[]);
+  }
+
   async function loadAppearance(currentStoreId: string) {
     const { data, error } = await supabase
       .from("live_settings")
