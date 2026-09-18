@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Radio, Plus, Search, AlertCircle, RefreshCw, Clock, Trash2, Pencil, Share2, Palette, TrendingUp,
 } from "lucide-react";
-import { toast } from "sonner";s
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { LiveFormDialog } from "@/components/live/LiveFormDialog";
 import { ShareLiveModal } from "@/components/live/ShareLiveModal";
