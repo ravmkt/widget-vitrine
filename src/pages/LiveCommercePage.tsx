@@ -105,6 +105,8 @@ export function LiveCommercePage() {
         if (prods) setProducts(prods);
 
         await loadLives(store.id);
+                await loadLives(store.id);
+        await loadAppearance(store.id);
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
       } finally {
