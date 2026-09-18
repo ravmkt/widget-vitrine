@@ -102,6 +102,11 @@ interface Props {
     player: DeviceConfig<LivePlayerSettings>
   ) => void;
   isSaving: boolean;
+  initialData?: {
+    divulgacao: DeviceConfig<WidgetDivulgacaoSettings> | null;
+    aoVivo: DeviceConfig<WidgetAoVivoSettings> | null;
+    player: DeviceConfig<LivePlayerSettings> | null;
+  } | null;
 }
 
 // --- DADOS MOCKADOS DOS PRODUTOS DA LIVE ---
