@@ -7,21 +7,53 @@ import {
   Save, LayoutTemplate, PlaySquare, Lock, Copy
 } from "lucide-react";
 
-export interface LiveWidgetConfig {
+export interface LiveWidgetSettings {
   enabled: boolean;
   position: string;
   bubble_color: string;
   text_color: string;
   label_text: string;
+  width?: number;
+  marginBottom?: number;
+  marginSide?: number;
 }
 
-export interface LivePlayerConfig {
+export interface LivePlayerSettings {
   primary_color: string;
   background_color: string;
   show_viewer_count: boolean;
   show_chat: boolean;
   autoplay_muted: boolean;
 }
+
+export interface DeviceConfig<T> {
+  desktop: T;
+  mobile: T;
+  linked: boolean;
+}
+
+export const defaultWidgetSettings: LiveWidgetSettings = {
+  enabled: true,
+  position: "bottom-right",
+  bubble_color: "#e11d48",
+  text_color: "#ffffff",
+  label_text: "🔴 AO VIVO AGORA",
+  width: 100,
+  marginBottom: 20,
+  marginSide: 20,
+};
+
+export const defaultPlayerSettings: LivePlayerSettings = {
+  primary_color: "#e11d48",
+  background_color: "#000000",
+  show_viewer_count: true,
+  show_chat: true,
+  autoplay_muted: true,
+};
+
+// Aliases para retrocompatibilidade
+export type LiveWidgetConfig = LiveWidgetSettings;
+export type LivePlayerConfig = LivePlayerSettings;
 
 // 4 Modelos Padrões do Sistema
 export const SYSTEM_THEMES = [
@@ -34,6 +66,9 @@ export const SYSTEM_THEMES = [
       bubble_color: "#e11d48",
       text_color: "#ffffff",
       label_text: "🔴 AO VIVO AGORA",
+      width: 100,
+      marginBottom: 20,
+      marginSide: 20,
     },
     player: {
       primary_color: "#e11d48",
@@ -52,6 +87,9 @@ export const SYSTEM_THEMES = [
       bubble_color: "#0094ea",
       text_color: "#ffffff",
       label_text: "🔴 ASSISTA AO VIVO",
+      width: 100,
+      marginBottom: 20,
+      marginSide: 20,
     },
     player: {
       primary_color: "#0094ea",
@@ -70,6 +108,9 @@ export const SYSTEM_THEMES = [
       bubble_color: "#111111",
       text_color: "#ffffff",
       label_text: "🔥 LIVE BLACK FRIDAY",
+      width: 100,
+      marginBottom: 20,
+      marginSide: 20,
     },
     player: {
       primary_color: "#ffffff",
@@ -88,6 +129,9 @@ export const SYSTEM_THEMES = [
       bubble_color: "#ec4899",
       text_color: "#ffffff",
       label_text: "🎉 LIVE ESPECIAL",
+      width: 100,
+      marginBottom: 20,
+      marginSide: 20,
     },
     player: {
       primary_color: "#ec4899",
@@ -102,22 +146,27 @@ export const SYSTEM_THEMES = [
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (widgetConfig: LiveWidgetConfig, playerConfig: LivePlayerConfig) => void;
-  initialWidgetConfig: LiveWidgetConfig;
-  initialPlayerConfig: LivePlayerConfig;
+  onSave: (widgetConfig: DeviceConfig<LiveWidgetSettings>, playerConfig: DeviceConfig<LivePlayerSettings>) => void;
+  initialWidgetConfig: DeviceConfig<LiveWidgetSettings>;
+  initialPlayerConfig: DeviceConfig<LivePlayerSettings>;
   isSaving: boolean;
 }
 
 export default function LiveAppearanceModal({
-  isOpen, onClose, onSave, initialWidgetConfig, initialPlayerConfig, isSaving
+  isOpen,
+  onClose,
+  onSave,
+  initialWidgetConfig,
+  initialPlayerConfig,
+  isSaving,
 }: Props) {
-  // 1. Sempre inicia na aba Divulgação
+  // 1. Sempre abre na aba Divulgação
   const [activeTab, setActiveTab] = useState<"widget" | "player">("widget");
-  // 2. Sempre inicia na visão Mobile
+  // 2. Sempre abre no preview Mobile
   const [device, setDevice] = useState<"desktop" | "mobile">("mobile");
 
-  const [widget, setWidget] = useState<LiveWidgetConfig>(initialWidgetConfig);
-  const [player, setPlayer] = useState<LivePlayerConfig>(initialPlayerConfig);
+  const [widget, setWidget] = useState<DeviceConfig<LiveWidgetSettings>>(initialWidgetConfig);
+  const [player, setPlayer] = useState<DeviceConfig<LivePlayerSettings>>(initialPlayerConfig);
 
   // Modelos de Temas
   const [selectedThemeId, setSelectedThemeId] = useState<string>("theme-live");
@@ -126,7 +175,6 @@ export default function LiveAppearanceModal({
 
   const isSystemTheme = selectedThemeId.startsWith("theme-");
 
-  // Toda vez que abre, reseta para Divulgação e Mobile
   useEffect(() => {
     if (isOpen) {
       setActiveTab("widget");
@@ -140,12 +188,22 @@ export default function LiveAppearanceModal({
     setSelectedThemeId(themeId);
     const theme = SYSTEM_THEMES.find((t) => t.id === themeId);
     if (!theme) return;
-    setWidget(theme.widget);
-    setPlayer(theme.player);
+
+    setWidget((prev) => ({
+      ...prev,
+      desktop: { ...prev.desktop, ...theme.widget },
+      mobile: { ...prev.mobile, ...theme.widget },
+    }));
+
+    setPlayer((prev) => ({
+      ...prev,
+      desktop: { ...prev.desktop, ...theme.player },
+      mobile: { ...prev.mobile, ...theme.player },
+    }));
   };
 
   const handleSaveClick = () => {
-    // 3. Se for tema padrão, bloqueia salvar por cima e pede outro nome
+    // 3. Bloqueia salvar por cima do tema padrão
     if (isSystemTheme) {
       setCustomThemeName("");
       setIsNewNameModalOpen(true);
@@ -161,14 +219,33 @@ export default function LiveAppearanceModal({
     onSave(widget, player);
   };
 
-  const CustomSwitch = ({ checked, onChange, label }: { checked: boolean, onChange: (v: boolean) => void, label: string }) => (
+  const currentWidget = widget[device] || defaultWidgetSettings;
+  const currentPlayer = player[device] || defaultPlayerSettings;
+
+  const updateWidget = (patch: Partial<LiveWidgetSettings>) => {
+    setWidget((prev) => ({
+      ...prev,
+      [device]: { ...prev[device], ...patch },
+      ...(prev.linked ? { [device === "desktop" ? "mobile" : "desktop"]: { ...prev[device === "desktop" ? "mobile" : "desktop"], ...patch } } : {}),
+    }));
+  };
+
+  const updatePlayer = (patch: Partial<LivePlayerSettings>) => {
+    setPlayer((prev) => ({
+      ...prev,
+      [device]: { ...prev[device], ...patch },
+      ...(prev.linked ? { [device === "desktop" ? "mobile" : "desktop"]: { ...prev[device === "desktop" ? "mobile" : "desktop"], ...patch } } : {}),
+    }));
+  };
+
+  const CustomSwitch = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
     <label className="flex items-center justify-between cursor-pointer p-3 rounded-lg border border-border/50 bg-background hover:bg-muted/30 transition-colors">
       <span className="text-sm font-medium">{label}</span>
       <div
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-primary' : 'bg-muted'}`}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? "bg-primary" : "bg-muted"}`}
         onClick={() => onChange(!checked)}
       >
-        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`} />
       </div>
     </label>
   );
@@ -183,7 +260,9 @@ export default function LiveAppearanceModal({
               Aparência da Live
             </DialogTitle>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={onClose} disabled={isSaving}>Cancelar</Button>
+              <Button variant="ghost" onClick={onClose} disabled={isSaving}>
+                Cancelar
+              </Button>
               <Button
                 onClick={handleSaveClick}
                 disabled={isSaving}
@@ -237,38 +316,151 @@ export default function LiveAppearanceModal({
 
               {/* Abas: Divulgação e Player */}
               <div className="flex p-2 gap-1 border-b border-border bg-background">
-                <button onClick={() => setActiveTab("widget")} className={`flex-1 py-2 px-3 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-colors ${activeTab === "widget" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}><LayoutTemplate className="h-4 w-4" />Divulgação</button>
-                <button onClick={() => setActiveTab("player")} className={`flex-1 py-2 px-3 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-colors ${activeTab === "player" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}><PlaySquare className="h-4 w-4" />Player</button>
+                <button
+                  onClick={() => setActiveTab("widget")}
+                  className={`flex-1 py-2 px-3 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === "widget" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  }`}
+                >
+                  <LayoutTemplate className="h-4 w-4" />
+                  Divulgação
+                </button>
+                <button
+                  onClick={() => setActiveTab("player")}
+                  className={`flex-1 py-2 px-3 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === "player" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  }`}
+                >
+                  <PlaySquare className="h-4 w-4" />
+                  Player
+                </button>
               </div>
 
               {/* Opções das Abas */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {activeTab === "widget" ? (
                   <div className="space-y-5">
-                    <div><h3 className="text-lg font-semibold mb-1">Widget Flutuante</h3></div>
-                    <CustomSwitch checked={widget.enabled} onChange={(v) => setWidget({...widget, enabled: v})} label="Habilitar Widget na loja" />
-                    {widget.enabled && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-1">Widget Flutuante</h3>
+                    </div>
+                    <CustomSwitch
+                      checked={currentWidget.enabled}
+                      onChange={(v) => updateWidget({ enabled: v })}
+                      label="Habilitar Widget na loja"
+                    />
+                    {currentWidget.enabled && (
                       <>
-                        <div className="space-y-2"><label className="text-sm font-medium">Texto do Balão</label><Input value={widget.label_text} onChange={(e) => setWidget({...widget, label_text: e.target.value})} placeholder="Ex: 🔴 AO VIVO AGORA"/></div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2"><label className="text-sm font-medium">Cor de Fundo</label><div className="flex gap-2"><Input type="color" value={widget.bubble_color} onChange={(e) => setWidget({...widget, bubble_color: e.target.value})} className="w-12 p-1 h-10 cursor-pointer"/><Input value={widget.bubble_color} onChange={(e) => setWidget({...widget, bubble_color: e.target.value})} className="flex-1 font-mono uppercase text-xs"/></div></div>
-                          <div className="space-y-2"><label className="text-sm font-medium">Cor do Texto</label><div className="flex gap-2"><Input type="color" value={widget.text_color} onChange={(e) => setWidget({...widget, text_color: e.target.value})} className="w-12 p-1 h-10 cursor-pointer"/><Input value={widget.text_color} onChange={(e) => setWidget({...widget, text_color: e.target.value})} className="flex-1 font-mono uppercase text-xs"/></div></div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Texto do Balão</label>
+                          <Input
+                            value={currentWidget.label_text}
+                            onChange={(e) => updateWidget({ label_text: e.target.value })}
+                            placeholder="Ex: 🔴 AO VIVO AGORA"
+                          />
                         </div>
-                        <div className="space-y-2"><label className="text-sm font-medium">Posição</label><select className="w-full h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm" value={widget.position} onChange={(e) => setWidget({...widget, position: e.target.value})}><option value="bottom-right">Inferior Direito</option><option value="bottom-left">Inferior Esquerdo</option></select></div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Cor de Fundo</label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="color"
+                                value={currentWidget.bubble_color}
+                                onChange={(e) => updateWidget({ bubble_color: e.target.value })}
+                                className="w-12 p-1 h-10 cursor-pointer"
+                              />
+                              <Input
+                                value={currentWidget.bubble_color}
+                                onChange={(e) => updateWidget({ bubble_color: e.target.value })}
+                                className="flex-1 font-mono uppercase text-xs"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Cor do Texto</label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="color"
+                                value={currentWidget.text_color}
+                                onChange={(e) => updateWidget({ text_color: e.target.value })}
+                                className="w-12 p-1 h-10 cursor-pointer"
+                              />
+                              <Input
+                                value={currentWidget.text_color}
+                                onChange={(e) => updateWidget({ text_color: e.target.value })}
+                                className="flex-1 font-mono uppercase text-xs"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Posição</label>
+                          <select
+                            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            value={currentWidget.position}
+                            onChange={(e) => updateWidget({ position: e.target.value })}
+                          >
+                            <option value="bottom-right">Inferior Direito</option>
+                            <option value="bottom-left">Inferior Esquerdo</option>
+                          </select>
+                        </div>
                       </>
                     )}
                   </div>
                 ) : (
                   <div className="space-y-5">
-                    <div><h3 className="text-lg font-semibold mb-1">Player da Live</h3></div>
+                    <div>
+                      <h3 className="text-lg font-semibold mb-1">Player da Live</h3>
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2"><label className="text-sm font-medium">Cor Principal</label><div className="flex gap-2"><Input type="color" value={player.primary_color} onChange={(e) => setPlayer({...player, primary_color: e.target.value})} className="w-12 p-1 h-10 cursor-pointer"/><Input value={player.primary_color} onChange={(e) => setPlayer({...player, primary_color: e.target.value})} className="flex-1 font-mono uppercase text-xs"/></div></div>
-                      <div className="space-y-2"><label className="text-sm font-medium">Fundo</label><div className="flex gap-2"><Input type="color" value={player.background_color} onChange={(e) => setPlayer({...player, background_color: e.target.value})} className="w-12 p-1 h-10 cursor-pointer"/><Input value={player.background_color} onChange={(e) => setPlayer({...player, background_color: e.target.value})} className="flex-1 font-mono uppercase text-xs"/></div></div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Cor Principal</label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={currentPlayer.primary_color}
+                            onChange={(e) => updatePlayer({ primary_color: e.target.value })}
+                            className="w-12 p-1 h-10 cursor-pointer"
+                          />
+                          <Input
+                            value={currentPlayer.primary_color}
+                            onChange={(e) => updatePlayer({ primary_color: e.target.value })}
+                            className="flex-1 font-mono uppercase text-xs"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Fundo</label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={currentPlayer.background_color}
+                            onChange={(e) => updatePlayer({ background_color: e.target.value })}
+                            className="w-12 p-1 h-10 cursor-pointer"
+                          />
+                          <Input
+                            value={currentPlayer.background_color}
+                            onChange={(e) => updatePlayer({ background_color: e.target.value })}
+                            className="flex-1 font-mono uppercase text-xs"
+                          />
+                        </div>
+                      </div>
                     </div>
                     <div className="space-y-3 pt-2 border-t border-border/50">
-                      <CustomSwitch checked={player.show_chat} onChange={(v) => setPlayer({...player, show_chat: v})} label="Exibir Chat" />
-                      <CustomSwitch checked={player.show_viewer_count} onChange={(v) => setPlayer({...player, show_viewer_count: v})} label="Exibir Número de Espectadores" />
-                      <CustomSwitch checked={player.autoplay_muted} onChange={(v) => setPlayer({...player, autoplay_muted: v})} label="Autoplay Mutado" />
+                      <CustomSwitch
+                        checked={currentPlayer.show_chat}
+                        onChange={(v) => updatePlayer({ show_chat: v })}
+                        label="Exibir Chat"
+                      />
+                      <CustomSwitch
+                        checked={currentPlayer.show_viewer_count}
+                        onChange={(v) => updatePlayer({ show_viewer_count: v })}
+                        label="Exibir Número de Espectadores"
+                      />
+                      <CustomSwitch
+                        checked={currentPlayer.autoplay_muted}
+                        onChange={(v) => updatePlayer({ autoplay_muted: v })}
+                        label="Autoplay Mutado"
+                      />
                     </div>
                   </div>
                 )}
@@ -282,27 +474,50 @@ export default function LiveAppearanceModal({
                 <button
                   onClick={() => setDevice("mobile")}
                   title="Mobile"
-                  className={`p-2 rounded-md transition-colors ${device === "mobile" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}
+                  className={`p-2 rounded-md transition-colors ${
+                    device === "mobile" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"
+                  }`}
                 >
                   <Smartphone className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setDevice("desktop")}
                   title="Desktop"
-                  className={`p-2 rounded-md transition-colors ${device === "desktop" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}
+                  className={`p-2 rounded-md transition-colors ${
+                    device === "desktop" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"
+                  }`}
                 >
                   <Monitor className="h-4 w-4" />
                 </button>
               </div>
 
               <div className="flex-1 flex items-center justify-center p-8 overflow-hidden">
-                <div className={`relative bg-background border border-border shadow-xl overflow-hidden transition-all duration-500 flex flex-col ${device === "desktop" ? "w-full max-w-[800px] aspect-video rounded-xl" : "w-[320px] h-[650px] rounded-[2rem] border-[6px]"}`} style={activeTab === "player" ? { backgroundColor: player.background_color } : {}}>
+                <div
+                  className={`relative bg-background border border-border shadow-xl overflow-hidden transition-all duration-500 flex flex-col ${
+                    device === "desktop"
+                      ? "w-full max-w-[800px] aspect-video rounded-xl"
+                      : "w-[320px] h-[650px] rounded-[2rem] border-[6px]"
+                  }`}
+                  style={activeTab === "player" ? { backgroundColor: currentPlayer.background_color } : {}}
+                >
                   {activeTab === "widget" && (
                     <div className="absolute inset-0 bg-muted/10">
-                      <div className="w-full h-12 border-b border-border bg-background flex items-center px-4 shadow-sm"><div className="w-24 h-4 bg-muted rounded-full"></div></div>
-                      {widget.enabled && (
-                        <div className="absolute p-3 px-4 rounded-full shadow-lg cursor-pointer flex items-center gap-2" style={{ backgroundColor: widget.bubble_color, color: widget.text_color, bottom: '24px', right: widget.position === 'bottom-right' ? '24px' : 'auto', left: widget.position === 'bottom-left' ? '24px' : 'auto' }}>
-                          <Radio className="h-5 w-5 animate-pulse" /><span className="font-bold text-sm tracking-wide">{widget.label_text}</span>
+                      <div className="w-full h-12 border-b border-border bg-background flex items-center px-4 shadow-sm">
+                        <div className="w-24 h-4 bg-muted rounded-full"></div>
+                      </div>
+                      {currentWidget.enabled && (
+                        <div
+                          className="absolute p-3 px-4 rounded-full shadow-lg cursor-pointer flex items-center gap-2"
+                          style={{
+                            backgroundColor: currentWidget.bubble_color,
+                            color: currentWidget.text_color,
+                            bottom: "24px",
+                            right: currentWidget.position === "bottom-right" ? "24px" : "auto",
+                            left: currentWidget.position === "bottom-left" ? "24px" : "auto",
+                          }}
+                        >
+                          <Radio className="h-5 w-5 animate-pulse" />
+                          <span className="font-bold text-sm tracking-wide">{currentWidget.label_text}</span>
                         </div>
                       )}
                     </div>
@@ -312,21 +527,43 @@ export default function LiveAppearanceModal({
                     <div className="absolute inset-0 flex flex-col">
                       <div className="p-4 flex justify-between items-start z-10 bg-gradient-to-b from-black/50 to-transparent">
                         <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full pr-3 border border-white/10">
-                          <div className="bg-rose-600 text-white text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1"><Radio className="w-3 h-3" /> Ao Vivo</div>
-                          {player.show_viewer_count && <div className="text-white text-xs font-medium flex items-center gap-1 opacity-90"><Users className="w-3 h-3" /> 1.2k</div>}
+                          <div className="bg-rose-600 text-white text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                            <Radio className="w-3 h-3" /> Ao Vivo
+                          </div>
+                          {currentPlayer.show_viewer_count && (
+                            <div className="text-white text-xs font-medium flex items-center gap-1 opacity-90">
+                              <Users className="w-3 h-3" /> 1.2k
+                            </div>
+                          )}
                         </div>
-                        {player.autoplay_muted && <div className="bg-black/40 backdrop-blur-md p-1.5 rounded-full text-white/90 border border-white/10"><VolumeX className="w-4 h-4" /></div>}
+                        {currentPlayer.autoplay_muted && (
+                          <div className="bg-black/40 backdrop-blur-md p-1.5 rounded-full text-white/90 border border-white/10">
+                            <VolumeX className="w-4 h-4" />
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex-1 flex items-center justify-center">
-                         <PlaySquare className="w-16 h-16 opacity-20" style={{ color: player.primary_color }} />
+                        <PlaySquare className="w-16 h-16 opacity-20" style={{ color: currentPlayer.primary_color }} />
                       </div>
 
                       <div className="p-4 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-between">
-                        <div className="flex-1"><h2 className="text-white font-bold text-lg mb-1 drop-shadow-md">Lançamento Exclusivo</h2><p className="text-white/80 text-sm">Compre agora com descontos imperdíveis!</p></div>
+                        <div className="flex-1">
+                          <h2 className="text-white font-bold text-lg mb-1 drop-shadow-md">Lançamento Exclusivo</h2>
+                          <p className="text-white/80 text-sm">Compre agora com descontos imperdíveis!</p>
+                        </div>
                         <div className="flex flex-col gap-2 items-end">
-                          {player.show_chat && <div className="bg-black/50 backdrop-blur-md p-2.5 rounded-full text-white cursor-pointer border border-white/10" style={{ backgroundColor: `${player.primary_color}40` }}><MessageSquare className="w-5 h-5" /></div>}
-                          <div className="bg-black/50 backdrop-blur-md p-2.5 rounded-full text-white cursor-pointer border border-white/10"><Maximize className="w-5 h-5" /></div>
+                          {currentPlayer.show_chat && (
+                            <div
+                              className="bg-black/50 backdrop-blur-md p-2.5 rounded-full text-white cursor-pointer border border-white/10"
+                              style={{ backgroundColor: `${currentPlayer.primary_color}40` }}
+                            >
+                              <MessageSquare className="w-5 h-5" />
+                            </div>
+                          )}
+                          <div className="bg-black/50 backdrop-blur-md p-2.5 rounded-full text-white cursor-pointer border border-white/10">
+                            <Maximize className="w-5 h-5" />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -338,7 +575,7 @@ export default function LiveAppearanceModal({
         </DialogContent>
       </Dialog>
 
-      {/* Janelinha para salvar com outro nome */}
+      {/* Janela de Confirmação para Salvar com Novo Nome */}
       <Dialog open={isNewNameModalOpen} onOpenChange={setIsNewNameModalOpen}>
         <DialogContent className="max-w-md bg-background">
           <DialogHeader>
@@ -359,7 +596,9 @@ export default function LiveAppearanceModal({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsNewNameModalOpen(false)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => setIsNewNameModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button
               onClick={handleConfirmSaveAsNew}
               disabled={!customThemeName.trim() || isSaving}
