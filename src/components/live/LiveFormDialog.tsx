@@ -5,15 +5,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Radio, Play, Trash2, RefreshCw, UploadCloud,
+  Radio, Trash2, RefreshCw, UploadCloud,
   Calendar, Check, Search, Plus, ArrowRight, ArrowLeft,
-  ShoppingBag, ExternalLink, Tag, Gift, Sparkles, Image as ImageIcon
+  ShoppingBag, Tag, Gift, Sparkles, Image as ImageIcon,
+  Palette, CheckCircle2, Layers
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchYouTubeLiveDetails, extractYouTubeVideoId } from "@/services/youtube";
+import {
+  INITIAL_TEMPLATES,
+  STORAGE_KEY_TEMPLATES,
+  LiveAppearanceTemplate
+} from "@/components/live/LiveAppearanceModal";
 
 export interface Product {
   id: string;
@@ -63,7 +69,7 @@ export function LiveFormDialog({
   products,
   onSaved,
 }: LiveFormDialogProps) {
-  // Controle de Etapas: 1 | 2 | 3 | 4
+  // Controle de Etapas: 1 | 2 | 3 | 4 | 5
   const [currentStep, setCurrentStep] = useState<number>(1);
 
   const [loadingLive, setLoadingLive] = useState(false);
@@ -106,6 +112,25 @@ export function LiveFormDialog({
   const [promoMediaUrl, setPromoMediaUrl] = useState("");
   const [promoMediaType, setPromoMediaType] = useState<"image" | "video" | "">("");
 
+  // --- PASSO 5: TEMA & APARÊNCIA ---
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("preset_padrao");
+  const [availableTemplates, setAvailableTemplates] = useState<LiveAppearanceTemplate[]>(INITIAL_TEMPLATES);
+
+  // Carrega templates disponíveis (presets + customizados do localStorage)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_TEMPLATES);
+      if (saved) {
+        const parsed: LiveAppearanceTemplate[] = JSON.parse(saved);
+        setAvailableTemplates([...INITIAL_TEMPLATES, ...parsed]);
+      } else {
+        setAvailableTemplates(INITIAL_TEMPLATES);
+      }
+    } catch {
+      setAvailableTemplates(INITIAL_TEMPLATES);
+    }
+  }, [open]);
+
   // Reseta formulário
   const resetForm = () => {
     setCurrentStep(1);
@@ -125,6 +150,7 @@ export function LiveFormDialog({
     setWhatsappGroupUrl("");
     setPromoMediaUrl("");
     setPromoMediaType("");
+    setSelectedTemplateId("preset_padrao");
   };
 
   // Carrega live se estiver editando
@@ -170,6 +196,7 @@ export function LiveFormDialog({
         setWhatsappGroupUrl(data.whatsapp_group_url || "");
         setPromoMediaUrl(data.promo_media_url || "");
         setPromoMediaType((data.promo_media_type as any) || "");
+        setSelectedTemplateId(data.appearance_template_id || "preset_padrao");
 
         // Carrega Cupons
         if (data.coupons && Array.isArray(data.coupons) && data.coupons.length > 0) {
@@ -210,7 +237,7 @@ export function LiveFormDialog({
     loadLive();
   }, [open, liveId]);
 
-  // Busca dados do YouTube automaticamente (Título, Capa e Data/Hora Programada)
+  // Busca dados do YouTube automaticamente
   useEffect(() => {
     const id = extractYouTubeVideoId(youtubeUrl);
     setExtractedVideoId(id || "");
@@ -221,17 +248,14 @@ export function LiveFormDialog({
         setFetchingYoutube(true);
         const data = await fetchYouTubeLiveDetails(youtubeUrl);
         
-        // Atualiza Thumbnail
         if (data.thumbnailUrl && !youtubeThumbnailUrl) {
           setYoutubeThumbnailUrl(data.thumbnailUrl);
         }
 
-        // Atualiza Título
         if (!title.trim() && data.title) {
           setTitle(data.title);
         }
 
-        // Atualiza Programação (Data e Hora) se disponível
         if (data.scheduledStartTime && !scheduledAt) {
           const date = new Date(data.scheduledStartTime);
           const tzOffset = date.getTimezoneOffset() * 60000;
@@ -250,12 +274,11 @@ export function LiveFormDialog({
     return () => clearTimeout(timeout);
   }, [youtubeUrl]);
 
-  // --- HANDLERS PASSO 2: AUTO-CRIAÇÃO DE LINHAS DE CUPONS & VANTAGENS ---
+  // --- HANDLERS PASSO 2 ---
   const handleCouponChange = (index: number, field: "code" | "description", val: string) => {
     const updated = [...coupons];
     updated[index] = { ...updated[index], [field]: field === "code" ? val.toUpperCase() : val };
 
-    // Se editou a última linha e ela tem algum valor, cria a próxima automaticamente
     const isLast = index === updated.length - 1;
     if (isLast && (updated[index].code.trim() || updated[index].description.trim())) {
       updated.push({ id: "c_" + Date.now(), code: "", description: "" });
@@ -292,7 +315,7 @@ export function LiveFormDialog({
     setAdvantages(updated);
   };
 
-  // --- HANDLERS PASSO 3: PRODUTOS & MODAL COM PAGINAÇÃO ---
+  // --- HANDLERS PASSO 3 ---
   const openProductSelectionModal = () => {
     const initialSet = new Set(liveProducts.map(p => p.product_id));
     setModalSelectedIds(initialSet);
@@ -329,7 +352,6 @@ export function LiveFormDialog({
     setLiveProducts(prev => prev.map(p => p.product_id === productId ? { ...p, coupon_code: couponCode } : p));
   };
 
-  // Filtros e paginação do modal
   const filteredModalProducts = useMemo(() => {
     return products.filter(p => {
       const matchSearch = p.name.toLowerCase().includes(modalSearch.toLowerCase()) || 
@@ -351,7 +373,6 @@ export function LiveFormDialog({
     return Array.from(cats);
   }, [products]);
 
-  // Lista de cupons válidos para o dropdown do produto
   const validCouponCodes = useMemo(() => {
     return coupons.map(c => c.code.trim()).filter(Boolean);
   }, [coupons]);
@@ -425,6 +446,9 @@ export function LiveFormDialog({
         if (p.cta_text) productCtaMap[p.product_id] = p.cta_text;
       });
 
+      // Busca o template selecionado para embutir as configs
+      const currentTpl = availableTemplates.find(t => t.id === selectedTemplateId) || availableTemplates[0];
+
       const payload: Record<string, any> = {
         store_id: storeId,
         title: title.trim(),
@@ -447,6 +471,13 @@ export function LiveFormDialog({
         promo_media_url: promoMediaUrl || null,
         promo_media_type: promoMediaType || null,
         whatsapp_group_url: whatsappGroupUrl.trim() || null,
+        // Configurações do Template Visual
+        appearance_template_id: selectedTemplateId,
+        live_widget_config: currentTpl ? {
+          divulgacao: currentTpl.divulgacao,
+          aoVivo: currentTpl.aoVivo,
+        } : null,
+        live_player_config: currentTpl?.player || null,
       };
 
       if (liveId) {
@@ -454,8 +485,7 @@ export function LiveFormDialog({
         if (error) throw error;
         toast.success("Live atualizada com sucesso!");
       } else {
-payload.is_active = true;
-        payload.is_active = false;
+        payload.is_active = true;
         const { error } = await supabase.from("lives").insert(payload);
         if (error) throw error;
         toast.success("Live criada com sucesso!");
@@ -470,7 +500,6 @@ payload.is_active = true;
     }
   };
 
-  // Navegações com validação
   const handleNextFromStep1 = () => {
     if (!title.trim()) {
       toast.error("Por favor, preencha o título da live.");
@@ -479,21 +508,12 @@ payload.is_active = true;
     setCurrentStep(2);
   };
 
-  const handleNextFromStep2 = () => {
-    setCurrentStep(3);
-  };
-
-  const handleNextFromStep3 = () => {
-    setCurrentStep(4);
-  };
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        {/* [&>button]:hidden remove o 'X' nativo do shadcn */}
         <DialogContent className="max-w-4xl max-h-[94vh] flex flex-col p-0 overflow-hidden bg-white shadow-2xl rounded-2xl border-0 [&>button]:hidden">
           
-          {/* CABEÇALHO SEM O 'X' MANUAL */}
+          {/* CABEÇALHO */}
           <div className="px-6 pt-5 pb-3 border-b border-slate-100 flex items-center">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
@@ -505,67 +525,91 @@ payload.is_active = true;
             </div>
           </div>
 
-          {/* STEPPER VISUAL (EXATO AO PRINT) */}
-          <div className="py-5 px-8 bg-slate-50/70 border-b border-slate-100 flex items-center justify-center">
-            <div className="flex items-center w-full max-w-md justify-between">
+          {/* STEPPER VISUAL (5 PASSOS) */}
+          <div className="py-5 px-6 sm:px-10 bg-slate-50/70 border-b border-slate-100 flex items-center justify-center">
+            <div className="flex items-center w-full max-w-lg justify-between">
               
               {/* PASSO 01 */}
               <button 
+                type="button"
                 onClick={() => setCurrentStep(1)}
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base transition-all shadow-sm ${
+                className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm transition-all shadow-sm ${
                   currentStep === 1 
                     ? "bg-[#e11d48] text-white ring-4 ring-rose-100 scale-105" 
                     : "bg-[#cbd5e1] text-slate-800 hover:bg-slate-300"
                 }`}
+                title="1. YouTube & Transmissão"
               >
                 01
               </button>
 
-              <div className="flex-1 mx-3 border-t-2 border-dashed border-slate-300" />
+              <div className="flex-1 mx-2 sm:mx-3 border-t-2 border-dashed border-slate-300" />
 
               {/* PASSO 02 */}
               <button 
+                type="button"
                 onClick={() => handleNextFromStep1()}
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base transition-all shadow-sm ${
+                className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm transition-all shadow-sm ${
                   currentStep === 2 
                     ? "bg-[#e11d48] text-white ring-4 ring-rose-100 scale-105" 
                     : "bg-[#cbd5e1] text-slate-800 hover:bg-slate-300"
                 }`}
+                title="2. Ações Promocionais"
               >
                 02
               </button>
 
-              <div className="flex-1 mx-3 border-t-2 border-dashed border-slate-300" />
+              <div className="flex-1 mx-2 sm:mx-3 border-t-2 border-dashed border-slate-300" />
 
               {/* PASSO 03 */}
               <button 
+                type="button"
                 onClick={() => { if (title.trim()) setCurrentStep(3); }}
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base transition-all shadow-sm ${
+                className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm transition-all shadow-sm ${
                   currentStep === 3 
                     ? "bg-[#e11d48] text-white ring-4 ring-rose-100 scale-105" 
                     : "bg-[#cbd5e1] text-slate-800 hover:bg-slate-300"
                 }`}
+                title="3. Produtos da Live"
               >
                 03
               </button>
 
-              <div className="flex-1 mx-3 border-t-2 border-dashed border-slate-300" />
+              <div className="flex-1 mx-2 sm:mx-3 border-t-2 border-dashed border-slate-300" />
 
               {/* PASSO 04 */}
               <button 
+                type="button"
                 onClick={() => { if (title.trim()) setCurrentStep(4); }}
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base transition-all shadow-sm ${
+                className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm transition-all shadow-sm ${
                   currentStep === 4 
                     ? "bg-[#e11d48] text-white ring-4 ring-rose-100 scale-105" 
                     : "bg-[#cbd5e1] text-slate-800 hover:bg-slate-300"
                 }`}
+                title="4. Divulgação da Live"
               >
                 04
+              </button>
+
+              <div className="flex-1 mx-2 sm:mx-3 border-t-2 border-dashed border-slate-300" />
+
+              {/* PASSO 05 */}
+              <button 
+                type="button"
+                onClick={() => { if (title.trim()) setCurrentStep(5); }}
+                className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm transition-all shadow-sm ${
+                  currentStep === 5 
+                    ? "bg-[#e11d48] text-white ring-4 ring-rose-100 scale-105" 
+                    : "bg-[#cbd5e1] text-slate-800 hover:bg-slate-300"
+                }`}
+                title="5. Tema & Aparência"
+              >
+                05
               </button>
             </div>
           </div>
 
-          {/* CORPO DO FORMULÁRIO (CONFORME A ETAPA ATIVA) */}
+          {/* CORPO DO FORMULÁRIO */}
           <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
             {loadingLive ? (
               <div className="flex h-64 items-center justify-center">
@@ -628,7 +672,7 @@ payload.is_active = true;
                         />
                       </div>
 
-                      {/* THUMBNAIL COM OPÇÃO DE ALTERAR */}
+                      {/* THUMBNAIL */}
                       <div className="pt-2">
                         <Label className="text-xs font-semibold text-slate-700 mb-2 block">Thumbnail / Capa da Live</Label>
                         <div className="flex flex-col sm:flex-row items-start gap-4 p-4 border rounded-xl bg-slate-50/50">
@@ -680,7 +724,7 @@ payload.is_active = true;
                 )}
 
                 {/* ========================================================
-                    2. AÇÕES PROMOCIONAIS (CUPONS & VANTAGENS COM AUTO-LINHA)
+                    2. AÇÕES PROMOCIONAIS
                    ======================================================== */}
                 {currentStep === 2 && (
                   <div className="space-y-6 animate-in fade-in duration-200">
@@ -1023,13 +1067,103 @@ payload.is_active = true;
                     </div>
                   </div>
                 )}
+
+                {/* ========================================================
+                    5. TEMA & APARÊNCIA DA LIVE (NOVO PASSO!)
+                   ======================================================== */}
+                {currentStep === 5 && (
+                  <div className="space-y-5 animate-in fade-in duration-200">
+                    <div className="border-b pb-3 flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                          <Palette className="w-4 h-4 text-rose-600" /> 5. Tema & Aparência da Live
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Escolha o visual do widget de divulgação, do botão ao vivo e do player que aparecerão na sua loja.
+                        </p>
+                      </div>
+
+                      <Badge variant="outline" className="border-slate-300 text-slate-600 text-xs">
+                        {availableTemplates.length} temas disponíveis
+                      </Badge>
+                    </div>
+
+                    {/* GRID DE TEMPLATES */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                      {availableTemplates.map((template) => {
+                        const isSelected = selectedTemplateId === template.id;
+                        const borderColor = template.divulgacao?.desktop?.borderColor || "#0094ea";
+                        const ctaBgColor = template.aoVivo?.desktop?.ctaBgColor || "#ef4444";
+                        const playerBorder = template.player?.desktop?.borderColor || borderColor;
+
+                        return (
+                          <div
+                            key={template.id}
+                            onClick={() => setSelectedTemplateId(template.id)}
+                            className={`p-4 rounded-xl border-2 transition-all cursor-pointer relative bg-white flex flex-col justify-between ${
+                              isSelected
+                                ? "border-rose-600 shadow-md ring-2 ring-rose-100"
+                                : "border-slate-200 hover:border-slate-300 hover:shadow-sm"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-4 h-4 rounded-full border border-black/10 shrink-0"
+                                  style={{ backgroundColor: borderColor }}
+                                />
+                                <div>
+                                  <h4 className="text-sm font-bold text-slate-800">{template.name}</h4>
+                                  <p className="text-[11px] text-slate-400">
+                                    {template.isDefault ? "Modelo de Fábrica" : "Tema Personalizado"}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {isSelected ? (
+                                <div className="w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                  <Check className="w-3.5 h-3.5" />
+                                </div>
+                              ) : (
+                                <div className="w-6 h-6 rounded-full border-2 border-slate-300 shrink-0" />
+                              )}
+                            </div>
+
+                            {/* AMOSTRA DE CORES DO TEMA */}
+                            <div className="bg-slate-50 rounded-lg p-2.5 flex items-center justify-between text-[11px] text-slate-600 border border-slate-100">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] uppercase font-bold text-slate-400">Paleta:</span>
+                                <div className="flex gap-1 items-center">
+                                  <span className="w-4 h-4 rounded-md border border-black/10 shadow-xs" style={{ backgroundColor: borderColor }} title="Borda do Widget" />
+                                  <span className="w-4 h-4 rounded-md border border-black/10 shadow-xs" style={{ backgroundColor: ctaBgColor }} title="Botão Ao Vivo" />
+                                  <span className="w-4 h-4 rounded-md border border-black/10 shadow-xs" style={{ backgroundColor: playerBorder }} title="Player" />
+                                </div>
+                              </div>
+
+                              <span className="text-[10px] font-semibold text-slate-500">
+                                {template.divulgacao?.desktop?.format === "circular" ? "Circular" : "Retrato 9:16"}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="rounded-lg bg-blue-50/60 p-3 border border-blue-100 text-xs text-blue-900 flex gap-2 items-center">
+                      <Layers className="h-4 w-4 text-blue-600 shrink-0" />
+                      <span>
+                        Dica: Você pode criar ou editar novos temas detalhados com logotipo, fontes e margens pelo menu <strong>Aparência da Live</strong>.
+                      </span>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
 
           {/* RODAPÉ COM NAVEGAÇÃO DOS PASSOS E BOTÃO SALVAR GLOBAL */}
           <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
-            {/* LADO ESQUERDO: VOLTAR */}
+            {/* VOLTAR */}
             {currentStep > 1 ? (
               <Button
                 type="button"
@@ -1043,7 +1177,7 @@ payload.is_active = true;
               <div />
             )}
 
-            {/* LADO DIREITO: CANCELAR, AVANÇAR E SALVAR */}
+            {/* DIREITA: CANCELAR, AVANÇAR E SALVAR */}
             <div className="flex items-center gap-2">
               <Button
                 type="button"
@@ -1054,15 +1188,16 @@ payload.is_active = true;
                 Cancelar
               </Button>
 
-              {/* BOTÃO AVANÇAR (Etapas 1, 2 e 3) */}
-              {currentStep < 4 && (
+              {/* BOTÃO AVANÇAR (Etapas 1, 2, 3 e 4) */}
+              {currentStep < 5 && (
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
                     if (currentStep === 1) handleNextFromStep1();
-                    else if (currentStep === 2) handleNextFromStep2();
-                    else if (currentStep === 3) handleNextFromStep3();
+                    else if (currentStep === 2) setCurrentStep(3);
+                    else if (currentStep === 3) setCurrentStep(4);
+                    else if (currentStep === 4) setCurrentStep(5);
                   }}
                   className="h-9 px-4 text-xs font-semibold rounded-xl flex items-center gap-1.5 border-slate-300 hover:bg-slate-100"
                 >
@@ -1091,9 +1226,7 @@ payload.is_active = true;
         </DialogContent>
       </Dialog>
 
-      {/* ========================================================
-          MODAL SECUNDÁRIO: SELEÇÃO DE PRODUTOS DO CATÁLOGO
-         ======================================================== */}
+      {/* MODAL SECUNDÁRIO: SELEÇÃO DE PRODUTOS */}
       <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
         <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden bg-white rounded-2xl shadow-2xl border-0 [&>button]:hidden">
           <div className="px-5 py-4 border-b">
@@ -1105,7 +1238,6 @@ payload.is_active = true;
             </p>
           </div>
 
-          {/* FILTROS & BUSCA */}
           <div className="p-4 border-b bg-slate-50 flex flex-wrap gap-2.5 items-center justify-between">
             <div className="flex items-center gap-2 flex-1 min-w-[220px]">
               <div className="relative flex-1">
@@ -1131,132 +1263,49 @@ payload.is_active = true;
             </div>
 
             <div className="flex items-center gap-1.5 text-xs text-slate-600">
-              <span>Exibir:</span>
-              <select
-                value={modalPageSize}
-                onChange={(e) => { setModalPageSize(Number(e.target.value)); setModalCurrentPage(1); }}
-                className="h-8 rounded-md border border-slate-200 bg-white text-xs px-2 font-bold"
-              >
-                <option value={10}>10</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
+              <span>Selecionados:</span>
+              <Badge variant="secondary" className="font-bold">{modalSelectedIds.size}</Badge>
             </div>
           </div>
 
-          {/* LISTA DE PRODUTOS PAGINADA */}
           <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
             {paginatedModalProducts.length === 0 ? (
-              <div className="py-12 text-center text-xs text-slate-400">
-                Nenhum produto encontrado com os filtros informados.
-              </div>
+              <p className="text-xs text-slate-400 text-center py-10">Nenhum produto encontrado com os filtros aplicados.</p>
             ) : (
-              <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 border-b text-slate-600 font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-3 w-10 text-center">✓</th>
-                      <th className="py-2.5 px-2 w-12 text-center">Thumb</th>
-                      <th className="py-2.5 px-3">Nome / SKU</th>
-                      <th className="py-2.5 px-3 w-28">Preço</th>
-                      <th className="py-2.5 px-3 w-24">Estoque</th>
-                      <th className="py-2.5 px-3 w-24 text-center">Ação</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {paginatedModalProducts.map(prod => {
-                      const isSelected = modalSelectedIds.has(prod.id);
-
-                      return (
-                        <tr 
-                          key={prod.id} 
-                          onClick={() => handleToggleModalProduct(prod.id)}
-                          className={`cursor-pointer transition-colors ${isSelected ? "bg-rose-50/40" : "hover:bg-slate-50/60"}`}
-                        >
-                          <td className="p-2 text-center" onClick={(e) => e.stopPropagation()}>
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => handleToggleModalProduct(prod.id)}
-                              className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 h-4 w-4 cursor-pointer"
-                            />
-                          </td>
-                          <td className="p-2 text-center">
-                            <div className="w-9 h-9 rounded-lg bg-slate-100 border overflow-hidden mx-auto flex items-center justify-center">
-                              {prod.image_url ? (
-                                <img src={prod.image_url} alt={prod.name} className="w-full h-full object-cover" />
-                              ) : (
-                                <ShoppingBag className="w-4 h-4 text-slate-400" />
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-2 font-medium text-slate-800">
-                            <div className="line-clamp-1">{prod.name}</div>
-                            {prod.sku && <span className="text-[10px] text-slate-400">SKU: {prod.sku}</span>}
-                          </td>
-                          <td className="p-2 font-bold text-slate-700">
-                            R$ {Number(prod.price || 0).toFixed(2).replace(".", ",")}
-                          </td>
-                          <td className="p-2 text-slate-500">
-                            {prod.stock !== undefined ? prod.stock : "Disponível"}
-                          </td>
-                          <td className="p-2 text-center" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant={isSelected ? "outline" : "default"}
-                              onClick={() => handleToggleModalProduct(prod.id)}
-                              className={`h-7 text-[11px] px-2.5 rounded-lg ${isSelected ? "text-rose-600 border-rose-200" : "bg-rose-600 hover:bg-rose-700 text-white"}`}
-                            >
-                              {isSelected ? "Remover" : "Adicionar"}
-                            </Button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {paginatedModalProducts.map(p => {
+                  const isChecked = modalSelectedIds.has(p.id);
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => handleToggleModalProduct(p.id)}
+                      className={`p-2.5 border rounded-xl flex items-center gap-3 cursor-pointer transition-colors ${isChecked ? 'border-rose-500 bg-rose-50/30' : 'border-slate-200 hover:bg-slate-50'}`}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden shrink-0 border flex items-center justify-center">
+                        {p.image_url ? (
+                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <ShoppingBag className="w-4 h-4 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-slate-800 truncate">{p.name}</p>
+                        <p className="text-xs font-bold text-rose-600">R$ {Number(p.price || 0).toFixed(2).replace(".", ",")}</p>
+                      </div>
+                      <div className={`w-5 h-5 rounded-md border flex items-center justify-center ${isChecked ? 'bg-rose-600 border-rose-600 text-white' : 'border-slate-300'}`}>
+                        {isChecked && <Check className="w-3.5 h-3.5" />}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
 
-          {/* RODAPÉ DO MODAL DE PRODUTOS */}
           <div className="px-5 py-3 border-t bg-slate-50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-slate-700 bg-white border px-2.5 py-1 rounded-lg">
-                {modalSelectedIds.size} {modalSelectedIds.size === 1 ? "selecionado" : "selecionados"}
-              </span>
-
-              {totalModalPages > 1 && (
-                <div className="flex items-center gap-1 text-xs text-slate-500">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={modalCurrentPage === 1}
-                    onClick={() => setModalCurrentPage(prev => Math.max(1, prev - 1))}
-                    className="h-7 text-xs px-2"
-                  >
-                    Ant.
-                  </Button>
-                  <span>{modalCurrentPage} / {totalModalPages}</span>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={modalCurrentPage === totalModalPages}
-                    onClick={() => setModalCurrentPage(prev => Math.min(totalModalPages, prev + 1))}
-                    className="h-7 text-xs px-2"
-                  >
-                    Próx.
-                  </Button>
-                </div>
-              )}
-            </div>
-
+            <span className="text-xs text-slate-500">Página {modalCurrentPage} de {totalModalPages}</span>
             <div className="flex items-center gap-2">
               <Button
-                type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setProductModalOpen(false)}
@@ -1265,16 +1314,14 @@ payload.is_active = true;
                 Cancelar
               </Button>
               <Button
-                type="button"
                 size="sm"
                 onClick={handleConfirmProductsFromModal}
-                className="h-8 text-xs bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 rounded-lg"
+                className="bg-rose-600 hover:bg-rose-700 text-white h-8 text-xs font-bold"
               >
-                ADICIONAR
+                Confirmar ({modalSelectedIds.size})
               </Button>
             </div>
           </div>
-
         </DialogContent>
       </Dialog>
     </>
