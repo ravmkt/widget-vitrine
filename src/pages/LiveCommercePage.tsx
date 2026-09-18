@@ -6,16 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Radio, Plus, Search, AlertCircle, RefreshCw, Clock, Trash2, Pencil, Share2, Palette,
+  Radio, Plus, Search, AlertCircle, RefreshCw, Clock, Trash2, Pencil, Share2, Palette, TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { LiveFormDialog } from "@/components/live/LiveFormDialog";
 import { ShareLiveModal } from "@/components/live/ShareLiveModal";
-import { TrendingUp } from "lucide-react";
 import { LiveMetricsModal } from "@/components/live/LiveMetricsModal";
 
-// AQUI: Importando o modal default e os novos tipos nomeados que criamos
+// Importando o modal de aparência e os tipos configurados
 import LiveAppearanceModal, {
   DeviceConfig,
   LiveWidgetSettings,
@@ -63,10 +62,14 @@ export function LiveCommercePage() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareLive, setShareLive] = useState<LiveRow | null>(null);
 
+  // Estados do Modal de Métricas da Live
+  const [metricsModalOpen, setMetricsModalOpen] = useState(false);
+  const [selectedLiveForMetrics, setSelectedLiveForMetrics] = useState<LiveRow | null>(null);
+
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [savingAppearance, setSavingAppearance] = useState(false);
   
-  // AQUI: Usando o novo formato DeviceConfig
+  // Usando o formato DeviceConfig
   const [widgetConfig, setWidgetConfig] = useState<DeviceConfig<LiveWidgetSettings>>({
     desktop: { ...defaultWidgetSettings },
     mobile: { ...defaultWidgetSettings, width: 90, marginBottom: 10, marginSide: 10 },
@@ -144,7 +147,7 @@ export function LiveCommercePage() {
       return;
     }
     
-    // AQUI: Proteção para garantir que os dados antigos não quebrem o formato novo
+    // Proteção para dados legados
     if (data?.live_widget_config && Object.keys(data.live_widget_config).length > 0) {
       if ('desktop' in (data.live_widget_config as any)) {
         setWidgetConfig(data.live_widget_config as DeviceConfig<LiveWidgetSettings>);
@@ -157,7 +160,6 @@ export function LiveCommercePage() {
     }
   }
 
-  // AQUI: Assinatura atualizada
   async function handleSaveAppearance(newWidgetConfig: DeviceConfig<LiveWidgetSettings>, newPlayerConfig: DeviceConfig<LivePlayerSettings>) {
     if (!storeId) return;
     try {
@@ -218,6 +220,11 @@ export function LiveCommercePage() {
   const handleShare = (live: LiveRow) => {
     setShareLive(live);
     setShareModalOpen(true);
+  };
+
+  const handleOpenMetrics = (live: LiveRow) => {
+    setSelectedLiveForMetrics(live);
+    setMetricsModalOpen(true);
   };
 
   const onFormSaved = async () => {
@@ -363,6 +370,15 @@ export function LiveCommercePage() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleOpenMetrics(live)}
+                    title="Métricas da Live"
+                    className="text-rose-600 hover:bg-rose-50 hover:border-rose-300"
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                  </Button>
                   <Button variant="outline" size="icon" onClick={() => handleShare(live)} title="Divulgar">
                     <Share2 className="h-4 w-4" />
                   </Button>
@@ -408,6 +424,13 @@ export function LiveCommercePage() {
         initialWidgetConfig={widgetConfig}
         initialPlayerConfig={playerConfig}
         isSaving={savingAppearance}
+      />
+
+      {/* Modal de Métricas com Linha do Tempo e KPIs */}
+      <LiveMetricsModal
+        open={metricsModalOpen}
+        onOpenChange={setMetricsModalOpen}
+        live={selectedLiveForMetrics}
       />
     </div>
   );
