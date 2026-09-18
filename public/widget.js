@@ -863,7 +863,7 @@ vidEl.src = live.stream_url;
     vidEl.controls = true;
     vidEl.autoplay = true;
     vidEl.playsInline = true;
-    vidEl.muted = livePlayerConfig.autoplay_muted !== false;
+    vidEl.muted = activePlayerCfg.autoplayMuted !== false && activePlayerCfg.autoplay_muted !== false;
     playerWrap.appendChild(vidEl);
   }
   modal.appendChild(playerWrap);
