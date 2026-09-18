@@ -196,14 +196,14 @@ export const defaultPlayerSettings: LivePlayerSettings = {
   productNameSize: 11,
   productNameColor: "#1e293b",
   productPriceSize: 12,
-  productPriceColor: "#0284c7",
+  productPriceColor: "#0094ea",
 };
 
 // --- PRESETS DE FÁBRICA VIDLYTICS ---
 const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
   {
     id: "preset_padrao",
-    name: "Padrão Vidlytics (Azul)",
+    name: "Vidlytics (Azul e Branco)",
     isDefault: true,
     divulgacao: {
       desktop: { ...defaultDivulgacaoSettings, borderColor: "#0094ea", ctaBgColor: "#0094ea", ctaTextColor: "#ffffff", countdownBgColor: "#0094ea", countdownTextColor: "#ffffff" },
@@ -243,39 +243,39 @@ const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
   },
   {
     id: "preset_blackfriday",
-    name: "Tema Black Friday (Dourado & Preto)",
+    name: "Black Friday (Preto e Dourado)",
     isDefault: true,
     divulgacao: {
-      desktop: { ...defaultDivulgacaoSettings, borderColor: "#eab308", ctaBgColor: "#000000", ctaTextColor: "#eab308", countdownBgColor: "#eab308", countdownTextColor: "#000000" },
-      mobile: { ...defaultDivulgacaoSettings, width: 80, borderColor: "#eab308", ctaBgColor: "#000000", ctaTextColor: "#eab308", countdownBgColor: "#eab308", countdownTextColor: "#000000" },
+      desktop: { ...defaultDivulgacaoSettings, borderColor: "#000000", ctaBgColor: "#eab308", ctaTextColor: "#000000", countdownBgColor: "#000000", countdownTextColor: "#eab308" },
+      mobile: { ...defaultDivulgacaoSettings, width: 80, borderColor: "#000000", ctaBgColor: "#eab308", ctaTextColor: "#000000", countdownBgColor: "#000000", countdownTextColor: "#eab308" },
       linked: false
     },
     aoVivo: {
-      desktop: { ...defaultAoVivoSettings, borderColor: "#eab308", ctaBgColor: "#000000", ctaTextColor: "#eab308" },
-      mobile: { ...defaultAoVivoSettings, width: 80, borderColor: "#eab308", ctaBgColor: "#000000", ctaTextColor: "#eab308" },
+      desktop: { ...defaultAoVivoSettings, borderColor: "#000000", ctaBgColor: "#eab308", ctaTextColor: "#000000" },
+      mobile: { ...defaultAoVivoSettings, width: 80, borderColor: "#000000", ctaBgColor: "#eab308", ctaTextColor: "#000000" },
       linked: false
     },
     player: {
       desktop: {
         ...defaultPlayerSettings,
-        borderColor: "#eab308",
-        couponCodeBgColor: "#000000",
-        couponCodeColor: "#eab308",
-        couponTextBgColor: "#eab308",
-        couponTextColor: "#000000",
-        infoBgColor: "#000000",
-        infoTextColor: "#eab308",
+        borderColor: "#000000",
+        couponCodeBgColor: "#eab308",
+        couponCodeColor: "#000000",
+        couponTextBgColor: "#000000",
+        couponTextColor: "#eab308",
+        infoBgColor: "#eab308",
+        infoTextColor: "#000000",
         productPriceColor: "#ca8a04",
       },
       mobile: {
         ...defaultPlayerSettings,
-        borderColor: "#eab308",
-        couponCodeBgColor: "#000000",
-        couponCodeColor: "#eab308",
-        couponTextBgColor: "#eab308",
-        couponTextColor: "#000000",
-        infoBgColor: "#000000",
-        infoTextColor: "#eab308",
+        borderColor: "#000000",
+        couponCodeBgColor: "#eab308",
+        couponCodeColor: "#000000",
+        couponTextBgColor: "#000000",
+        couponTextColor: "#eab308",
+        infoBgColor: "#eab308",
+        infoTextColor: "#000000",
         productPriceColor: "#ca8a04",
       },
       linked: true
@@ -283,7 +283,7 @@ const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
   },
   {
     id: "preset_live",
-    name: "Tema Live (Vermelho & Branco)",
+    name: "Live (Vermelho e Branco)",
     isDefault: true,
     divulgacao: {
       desktop: { ...defaultDivulgacaoSettings, borderColor: "#e7191f", ctaBgColor: "#e7191f", ctaTextColor: "#ffffff", countdownBgColor: "#e7191f", countdownTextColor: "#ffffff" },
@@ -327,7 +327,7 @@ const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
   },
   {
     id: "preset_aniversario",
-    name: "Tema Aniversário (Rosa & Branco)",
+    name: "Aniversário (Rosa e Branco)",
     isDefault: true,
     divulgacao: {
       desktop: { ...defaultDivulgacaoSettings, borderColor: "#ec4899", ctaBgColor: "#ec4899", ctaTextColor: "#ffffff", countdownBgColor: "#db2777", countdownTextColor: "#ffffff" },
@@ -500,23 +500,22 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     desktop: { ...defaultPlayerSettings }, mobile: { ...defaultPlayerSettings }, linked: true
   });
 
-  // --- CONTROLE DIRETO DE TEMPLATES ---
+  // --- CONTROLE DE TEMPLATES ---
   const [templates, setTemplates] = useState<LiveAppearanceTemplate[]>(INITIAL_TEMPLATES);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("preset_padrao");
-  const [templateNameInput, setTemplateNameInput] = useState<string>("Padrão Vidlytics (Azul)");
+  const [templateNameInput, setTemplateNameInput] = useState<string>("");
   const [bannerAlert, setBannerAlert] = useState<string>("");
 
-  // Sempre ao abrir o modal, reseta para a aba Divulgação e visualização Mobile
   useEffect(() => {
     if (isOpen) {
       setActiveTab("divulgacao");
       setDevice("mobile");
       setOpenAccordion("formato");
       setOpenSubItem("");
+      setTemplateNameInput("");
     }
   }, [isOpen]);
 
-  // Carrega templates salvos
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_TEMPLATES);
@@ -534,28 +533,29 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     setTimeout(() => setBannerAlert(""), 3500);
   };
 
-  // Seleção de template existente
+  // Ao selecionar um template, carrega a config e deixa o campo de nome vazio
   const handleSelectTemplate = (id: string) => {
     const tpl = templates.find(t => t.id === id);
     if (!tpl) return;
     setSelectedTemplateId(id);
-    setTemplateNameInput(tpl.name);
+    setTemplateNameInput(""); // Fica em branco propositalmente
     setDivulgacaoConfig(JSON.parse(JSON.stringify(tpl.divulgacao)));
     setAoVivoConfig(JSON.parse(JSON.stringify(tpl.aoVivo)));
     setPlayerConfig(JSON.parse(JSON.stringify(tpl.player)));
-    notify(`Template "${tpl.name}" carregado!`);
+    notify(`Template "${tpl.name}" carregado! Digite um nome para salvar.`);
   };
 
-  // Salvar atualizações no template selecionado
+  // Salvar atualizações no template
   const handleSaveCurrentTemplate = () => {
     const name = templateNameInput.trim();
     if (!name) {
-      notify("Informe um nome para o template antes de salvar!");
+      notify("Digite um nome para o tema antes de salvar!");
       return;
     }
 
     const currentTpl = templates.find(t => t.id === selectedTemplateId);
 
+    // Se for padrão de fábrica ou não existir, cria como um novo
     if (!currentTpl || currentTpl.isDefault) {
       handleSaveAsNewTemplate();
       return;
@@ -584,7 +584,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
   const handleSaveAsNewTemplate = () => {
     const name = templateNameInput.trim();
     if (!name) {
-      notify("Informe um nome para o novo template!");
+      notify("Digite um nome para o novo tema antes de salvar!");
       return;
     }
 
@@ -605,7 +605,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     notify(`Novo template "${name}" salvo!`);
   };
 
-  // Excluir template personalizado
   const handleDeleteCurrentTemplate = () => {
     const current = templates.find(t => t.id === selectedTemplateId);
     if (!current || current.isDefault) return;
@@ -616,7 +615,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(customs));
     setTemplates([...INITIAL_TEMPLATES, ...customs]);
     setSelectedTemplateId("preset_padrao");
-    setTemplateNameInput("Padrão Vidlytics (Azul)");
+    setTemplateNameInput("");
     notify("Template excluído.");
   };
 
@@ -851,8 +850,8 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
               <Input
                 value={templateNameInput}
                 onChange={(e) => setTemplateNameInput(e.target.value)}
-                placeholder="Nome do tema..."
-                className="h-8 w-[240px] text-[12px] bg-white rounded-lg border-slate-300 focus:border-rose-500"
+                placeholder="Digite o nome para salvar..."
+                className="h-8 w-[240px] text-[12px] bg-white rounded-lg border-slate-300 focus:border-rose-500 placeholder:text-slate-400"
               />
             </div>
 
@@ -860,7 +859,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
               onClick={handleSaveCurrentTemplate}
               size="sm"
               variant="outline"
-              title={isCurrentTemplateCustom ? "Atualiza o template com as modificações atuais" : "Cria uma cópia personalizada com suas modificações"}
+              title={isCurrentTemplateCustom ? "Atualiza o template com as modificações atuais" : "Salva suas modificações em um novo template"}
               className={`h-8 text-[11.5px] font-bold shadow-sm rounded-lg transition-all ${
                 isCurrentTemplateCustom
                   ? "text-slate-700 bg-white hover:bg-slate-50 border-slate-300"
@@ -872,16 +871,10 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
             </Button>
 
             <Button
-              onClick={() => {
-                const name = templateNameInput.trim();
-                if (!name || name === templates.find(t => t.id === selectedTemplateId)?.name) {
-                  setTemplateNameInput(`${name || "Meu Tema"} (Cópia)`);
-                }
-                handleSaveAsNewTemplate();
-              }}
+              onClick={handleSaveAsNewTemplate}
               size="sm"
               variant="ghost"
-              title="Salvar como um novo template independente"
+              title="Salva uma nova cópia independente"
               className="h-8 px-2 text-[11.5px] font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
             >
               <Plus className="w-3.5 h-3.5 mr-1" />
@@ -1049,16 +1042,16 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
             </div>
           </div>
 
-          {/* PREVIEW CENTRALIZADO E PROPORCIONAL */}
-          <div className="flex-1 flex flex-col items-center justify-center p-2.5 sm:p-4 bg-slate-100/60 overflow-hidden min-h-0">
-            <div className="w-full h-full bg-white rounded-xl border border-slate-200/90 shadow-sm flex items-center justify-center p-2 sm:p-3 relative overflow-hidden min-h-0">
+          {/* PREVIEW CENTRALIZADO COM ESCALA AUTOMÁTICA */}
+          <div className="flex-1 flex flex-col items-center justify-center p-3 bg-slate-100/60 overflow-hidden min-h-0">
+            <div className="w-full h-full bg-white rounded-xl border border-slate-200/90 shadow-sm flex items-center justify-center p-3 relative overflow-hidden min-h-0">
                 
                 {activeTab !== "player" ? (
                   /* WIDGET FLUTUANTE */
                   <div className={`relative bg-[#0a0a0a] transition-all duration-300 flex flex-col shrink-0 ${
                     device === "desktop" 
                       ? "w-full max-w-[1050px] aspect-video rounded-xl border-4 border-[#0a0a0a] overflow-hidden shadow-xl" 
-                      : "h-full max-h-[96%] aspect-[9/19] rounded-[2.2rem] shadow-[0_0_0_3px_#e2e8f0] border-[6px] border-[#0a0a0a] overflow-hidden"
+                      : "h-full max-h-[580px] aspect-[9/19] rounded-[2.2rem] shadow-[0_0_0_3px_#e2e8f0] border-[6px] border-[#0a0a0a] overflow-hidden"
                   }`}>
                     {device === "mobile" && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] max-w-[120px] h-[18px] bg-[#0a0a0a] rounded-b-[0.9rem] z-[100]"></div>}
                     <div className="absolute inset-0 bg-white">
@@ -1107,7 +1100,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                   /* PLAYER */
                   <div className="w-full h-full flex justify-center items-center overflow-hidden">
                     {device === 'mobile' ? (
-                      /* 3 MOCKUPS MOBILE */
+                      /* 3 MOCKUPS MOBILE SEM CORTE */
                       <div className="w-full h-full flex items-center justify-center gap-4 md:gap-7 overflow-x-auto overflow-y-hidden px-2 select-none">
                         {[
                           { id: "normal",   label: "Player" },
@@ -1116,10 +1109,10 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         ].map((phone) => (
                           <div key={phone.id} className="flex flex-col items-center shrink-0 h-full justify-center">
                             <div
-                              className="relative bg-[#0a0a0a] rounded-[2.5rem] border-[6px] border-slate-200 shadow-2xl overflow-hidden shrink-0"
-                              style={{ height: 'min(78vh, 660px)', aspectRatio: '9 / 19' }}
+                              className="relative bg-[#0a0a0a] rounded-[2.2rem] border-[5px] border-slate-300 shadow-2xl overflow-hidden shrink-0 h-[96%] max-h-[580px] aspect-[9/19]"
                             >
-                              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[36%] max-w-[110px] h-[18px] bg-slate-200 rounded-b-[0.9rem] z-30"></div>
+                              {/* NOTCH / DYNAMIC ISLAND */}
+                              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[36%] max-w-[105px] h-[16px] bg-slate-300 rounded-b-[0.8rem] z-30"></div>
 
                               <video
                                 src="/demo-videos/demo1.mp4"
@@ -1129,34 +1122,34 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                               <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/85 pointer-events-none z-10"></div>
 
                               {/* TÍTULO */}
-                              <div className="absolute top-4 left-3 flex items-center gap-1.5 z-20">
-                                <div className="w-6 h-6 rounded-full bg-[#0094ea] border border-white/50 flex items-center justify-center text-[7px] font-extrabold text-white shadow">USE</div>
+                              <div className="absolute top-3.5 left-3 flex items-center gap-1.5 z-20">
+                                <div className="w-5 h-5 rounded-full bg-[#0094ea] border border-white/50 flex items-center justify-center text-[7px] font-extrabold text-white shadow">USE</div>
                                 {currentPlayer.showTitle && (
-                                  <span className="font-bold text-[12.5px] drop-shadow-md tracking-tight leading-none" style={{ color: currentPlayer.titleColor }}>
+                                  <span className="font-bold text-[11.5px] drop-shadow-md tracking-tight leading-none" style={{ color: currentPlayer.titleColor }}>
                                     {currentPlayer.titleText}
                                   </span>
                                 )}
                               </div>
 
                               {/* CUPOM & INFO */}
-                              <div className="absolute top-12 left-3 flex flex-col gap-1.5 z-20">
+                              <div className="absolute top-11 left-3 flex flex-col gap-1.5 z-20">
                                 {currentPlayer.showCoupon && (
-                                  <div className="rounded-[6px] overflow-hidden flex flex-col w-[60px] shadow-md border" style={{ borderColor: currentPlayer.borderColor }}>
-                                    <div className="text-center py-0.5 text-[8px] font-black uppercase tracking-tight" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor }}>
+                                  <div className="rounded-[6px] overflow-hidden flex flex-col w-[58px] shadow-md border" style={{ borderColor: currentPlayer.borderColor }}>
+                                    <div className="text-center py-0.5 text-[7.5px] font-black uppercase tracking-tight" style={{ backgroundColor: currentPlayer.couponCodeBgColor, color: currentPlayer.couponCodeColor }}>
                                       {currentPlayer.couponCode}
                                     </div>
-                                    <div className="text-center py-0.5 text-[8px] font-bold" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor }}>
+                                    <div className="text-center py-0.5 text-[7.5px] font-bold" style={{ backgroundColor: currentPlayer.couponTextBgColor, color: currentPlayer.couponTextColor }}>
                                       {currentPlayer.couponText}
                                     </div>
                                   </div>
                                 )}
 
                                 {currentPlayer.showInfo && (
-                                  <div className="rounded-[6px] overflow-hidden flex flex-col w-[60px] shadow-md border text-center" style={{ borderColor: currentPlayer.borderColor }}>
-                                    <div className="py-1 text-[7px] font-black uppercase tracking-tight px-0.5 leading-tight" style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor }}>
+                                  <div className="rounded-[6px] overflow-hidden flex flex-col w-[58px] shadow-md border text-center" style={{ borderColor: currentPlayer.borderColor }}>
+                                    <div className="py-0.5 text-[7px] font-black uppercase tracking-tight px-0.5 leading-tight" style={{ backgroundColor: currentPlayer.infoBgColor, color: currentPlayer.infoTextColor }}>
                                       {currentPlayer.infoText1}
                                     </div>
-                                    <div className="py-0.5 text-[6.5px] font-semibold bg-white text-slate-800 px-0.5 leading-tight">
+                                    <div className="py-0.5 text-[6px] font-semibold bg-white text-slate-800 px-0.5 leading-tight">
                                       {currentPlayer.infoText2}
                                     </div>
                                   </div>
@@ -1164,69 +1157,69 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                               </div>
 
                               {/* BARRA LATERAL DIREITA */}
-                              <div className="absolute top-4 right-2.5 flex flex-col items-center gap-2 z-20">
-                                <div className="flex items-center gap-1 text-white text-[7.5px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow" style={{ backgroundColor: currentPlayer.borderColor }}>
-                                  <PlaySquare className="w-2.5 h-2.5 fill-white"/> LIVE
+                              <div className="absolute top-3.5 right-2 flex flex-col items-center gap-1.5 z-20">
+                                <div className="flex items-center gap-1 text-white text-[7px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow" style={{ backgroundColor: currentPlayer.borderColor }}>
+                                  <PlaySquare className="w-2 h-2 fill-white"/> LIVE
                                 </div>
 
                                 {currentPlayer.showViewerCount && (
-                                  <div className="flex items-center gap-1 bg-black/55 backdrop-blur-md text-white text-[7.5px] font-semibold px-1.5 py-0.5 rounded-full border border-white/15 shadow">
-                                    <Eye className="w-2.5 h-2.5 text-white/90" /> 1.2k
+                                  <div className="flex items-center gap-1 bg-black/55 backdrop-blur-md text-white text-[7px] font-semibold px-1.5 py-0.5 rounded-full border border-white/15 shadow">
+                                    <Eye className="w-2 h-2 text-white/90" /> 1.2k
                                   </div>
                                 )}
 
                                 {currentPlayer.autoplayMuted && (
-                                  <div className="w-6 h-6 bg-black/45 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow">
-                                    <VolumeX className="w-3 h-3"/>
+                                  <div className="w-5 h-5 bg-black/45 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow">
+                                    <VolumeX className="w-2.5 h-2.5"/>
                                   </div>
                                 )}
 
                                 {currentPlayer.showChat && (
-                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white border shadow transition ${phone.id === 'chat' ? 'bg-white/30 border-white' : 'bg-black/45 border-white/20'}`}>
-                                    <MessageCircle className="w-3 h-3"/>
+                                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white border shadow transition ${phone.id === 'chat' ? 'bg-white/30 border-white' : 'bg-black/45 border-white/20'}`}>
+                                    <MessageCircle className="w-2.5 h-2.5"/>
                                   </div>
                                 )}
 
                                 {currentPlayer.showShare && (
-                                  <div className="w-6 h-6 bg-black/45 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow">
-                                    <Send className="w-2.5 h-2.5 -ml-0.5 mt-0.5 transform -rotate-12"/>
+                                  <div className="w-5 h-5 bg-black/45 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow">
+                                    <Send className="w-2 h-2 -ml-0.5 mt-0.5 transform -rotate-12"/>
                                   </div>
                                 )}
 
-                                <div className="w-6 h-6 bg-black/45 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow">
-                                  <ShoppingBag className="w-3 h-3"/>
+                                <div className="w-5 h-5 bg-black/45 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow">
+                                  <ShoppingBag className="w-2.5 h-2.5"/>
                                 </div>
 
                                 {currentPlayer.showProducts && (
                                   <div className="flex flex-col items-center -mt-0.5">
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white border shadow transition ${phone.id === 'products' ? 'bg-white/30 border-white' : 'bg-black/45 border-white/20'}`}>
-                                      <ShoppingCart className="w-3 h-3"/>
+                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white border shadow transition ${phone.id === 'products' ? 'bg-white/30 border-white' : 'bg-black/45 border-white/20'}`}>
+                                      <ShoppingCart className="w-2.5 h-2.5"/>
                                     </div>
-                                    <span className="text-white text-[7px] font-bold drop-shadow mt-0.5">{MOCK_PRODUCTS.length}</span>
+                                    <span className="text-white text-[6.5px] font-bold drop-shadow mt-0.5">{MOCK_PRODUCTS.length}</span>
                                   </div>
                                 )}
 
-                                <div className="w-6 h-6 bg-[#25D366] rounded-full flex items-center justify-center text-white border border-white shadow-md">
-                                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.489-1.761-1.663-2.06-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                <div className="w-5 h-5 bg-[#25D366] rounded-full flex items-center justify-center text-white border border-white shadow-md">
+                                  <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.489-1.761-1.663-2.06-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
                                 </div>
                               </div>
 
                               {/* CHAT */}
                               {phone.id === 'chat' && currentPlayer.showChat && (
-                                <div className="absolute bottom-[78px] left-2.5 right-2.5 z-20 flex flex-col justify-end pointer-events-none">
-                                  <div className="flex flex-col gap-1.5 mb-2 overflow-hidden" style={{ maskImage: 'linear-gradient(to top, black 75%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to top, black 75%, transparent 100%)' }}>
+                                <div className="absolute bottom-[66px] left-2 right-2 z-20 flex flex-col justify-end pointer-events-none">
+                                  <div className="flex flex-col gap-1 mb-1.5 overflow-hidden" style={{ maskImage: 'linear-gradient(to top, black 75%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to top, black 75%, transparent 100%)' }}>
                                     {[1,2,3].map(i => (
-                                      <div key={i} className="flex items-center gap-1.5 drop-shadow">
-                                        <img src={`https://i.pravatar.cc/100?img=${i+14}`} className="w-4 h-4 rounded-full border border-white/40 shadow-sm shrink-0" alt="Avatar"/>
-                                        <span className="text-white text-[8.5px] font-medium drop-shadow leading-none">Nononononono</span>
+                                      <div key={i} className="flex items-center gap-1 drop-shadow">
+                                        <img src={`https://i.pravatar.cc/100?img=${i+14}`} className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-sm shrink-0" alt="Avatar"/>
+                                        <span className="text-white text-[8px] font-medium drop-shadow leading-none">Nononononono</span>
                                       </div>
                                     ))}
                                   </div>
 
-                                  <div className="bg-white/95 backdrop-blur-md rounded-full flex items-center justify-between pl-3 pr-1.5 py-1 shadow-md border border-white/60">
-                                    <span className="text-slate-400 text-[9px] font-medium">Chat...</span>
-                                    <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: currentPlayer.borderColor }}>
-                                      <Heart className="w-2.5 h-2.5 text-white fill-white" />
+                                  <div className="bg-white/95 backdrop-blur-md rounded-full flex items-center justify-between pl-2.5 pr-1 py-0.5 shadow-md border border-white/60">
+                                    <span className="text-slate-400 text-[8.5px] font-medium">Chat...</span>
+                                    <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: currentPlayer.borderColor }}>
+                                      <Heart className="w-2 h-2 text-white fill-white" />
                                     </div>
                                   </div>
                                 </div>
@@ -1234,9 +1227,9 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
                               {/* PRODUTO NA BASE */}
                               {phone.id !== 'products' && currentPlayer.showProducts && (
-                                <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20">
+                                <div className="absolute bottom-2 left-2 right-2 z-20">
                                   <div
-                                    className="bg-white flex items-center shadow-lg overflow-hidden h-[54px]"
+                                    className="bg-white flex items-center shadow-lg overflow-hidden h-[48px]"
                                     style={{
                                       border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
                                       borderRadius: `${currentPlayer.borderRadius}px`
@@ -1244,40 +1237,40 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                   >
                                     <img 
                                       src={MOCK_PRODUCTS[4].img} 
-                                      className="w-[50px] h-full object-cover shrink-0"
+                                      className="w-[44px] h-full object-cover shrink-0"
                                       alt="Produto"
                                     />
                                     
-                                    <div className="flex-1 min-w-0 px-2.5 py-1">
+                                    <div className="flex-1 min-w-0 px-2 py-0.5">
                                       <div className="flex items-center gap-1">
                                         <div
                                           className="font-bold leading-tight line-clamp-1 flex-1"
-                                          style={{ fontSize: `${currentPlayer.productNameSize * 0.9}px`, color: currentPlayer.productNameColor }}
+                                          style={{ fontSize: `${currentPlayer.productNameSize * 0.85}px`, color: currentPlayer.productNameColor }}
                                         >
                                           {MOCK_PRODUCTS[4].name}
                                         </div>
                                         <span 
-                                          className="px-1 py-0.2 rounded text-[7.5px] font-black uppercase text-white shrink-0 animate-pulse leading-tight"
+                                          className="px-1 py-0.2 rounded text-[7px] font-black uppercase text-white shrink-0 animate-pulse leading-tight"
                                           style={{ backgroundColor: currentPlayer.borderColor }}
                                         >
                                           Na Live
                                         </span>
                                       </div>
-                                      <div className="text-[8px] text-slate-400 line-through mt-0.5 leading-none">De: {MOCK_PRODUCTS[4].oldPrice}</div>
+                                      <div className="text-[7.5px] text-slate-400 line-through mt-0.5 leading-none">De: {MOCK_PRODUCTS[4].oldPrice}</div>
                                       <div
                                         className="font-extrabold leading-tight mt-0.5"
-                                        style={{ fontSize: `${currentPlayer.productPriceSize * 0.9}px`, color: currentPlayer.productPriceColor }}
+                                        style={{ fontSize: `${currentPlayer.productPriceSize * 0.85}px`, color: currentPlayer.productPriceColor }}
                                       >
                                         Por: {MOCK_PRODUCTS[4].price}
                                       </div>
                                     </div>
 
-                                    <div className="shrink-0 pr-2">
+                                    <div className="shrink-0 pr-1.5">
                                       <div 
-                                        className="w-6 h-6 rounded-full flex items-center justify-center shadow" 
+                                        className="w-5 h-5 rounded-full flex items-center justify-center shadow" 
                                         style={{ backgroundColor: currentPlayer.borderColor }}
                                       >
-                                        <ShoppingCart className="w-3 h-3 text-white" />
+                                        <ShoppingCart className="w-2.5 h-2.5 text-white" />
                                       </div>
                                     </div>
                                   </div>
@@ -1286,7 +1279,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
                               {/* GAVETA DE PRODUTOS */}
                               {phone.id === 'products' && currentPlayer.showProducts && (
-                                <div className="absolute inset-x-2 bottom-2 top-7 z-50 flex flex-col overflow-hidden">
+                                <div className="absolute inset-x-1.5 bottom-1.5 top-6 z-50 flex flex-col overflow-hidden">
                                   <div
                                     className="bg-white flex-1 flex flex-col shadow-2xl overflow-hidden"
                                     style={{
@@ -1295,13 +1288,13 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                     }}
                                   >
                                     <div
-                                      className="text-white text-center py-2 font-bold text-[11px] tracking-wide uppercase shrink-0"
+                                      className="text-white text-center py-1.5 font-bold text-[10px] tracking-wide uppercase shrink-0"
                                       style={{ backgroundColor: currentPlayer.borderColor }}
                                     >
                                       PRODUTOS DA LIVE
                                     </div>
 
-                                    <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-thin bg-slate-50">
+                                    <div className="flex-1 overflow-y-auto p-1.5 space-y-1.5 scrollbar-thin bg-slate-50">
                                       {MOCK_PRODUCTS.map((prod, idx) => {
                                         const isInCart = CART_PRODUCT_IDS.includes(prod.id);
                                         const isLiveActive = prod.id === CURRENT_LIVE_PRODUCT_ID;
@@ -1309,14 +1302,14 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                         return (
                                           <div
                                             key={prod.id}
-                                            className="bg-white flex items-center shadow-sm overflow-hidden h-[54px]"
+                                            className="bg-white flex items-center shadow-sm overflow-hidden h-[46px]"
                                             style={{
                                               border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
                                               borderRadius: `${currentPlayer.borderRadius}px`
                                             }}
                                           >
                                             <div 
-                                              className="w-[30px] h-full flex items-center justify-center font-black text-[12px] text-white shrink-0 tracking-tight"
+                                              className="w-[26px] h-full flex items-center justify-center font-black text-[10.5px] text-white shrink-0 tracking-tight"
                                               style={{ backgroundColor: currentPlayer.borderColor }}
                                             >
                                               {String(idx + 1).padStart(2, '0')}
@@ -1324,45 +1317,45 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
                                             <img 
                                               src={prod.img} 
-                                              className="w-[48px] h-full object-cover shrink-0"
+                                              className="w-[42px] h-full object-cover shrink-0"
                                               alt={prod.name}
                                             />
 
-                                            <div className="flex-1 min-w-0 px-2 py-0.5">
+                                            <div className="flex-1 min-w-0 px-1.5 py-0.5">
                                               <div className="flex items-center gap-1">
                                                 <div
                                                   className="font-bold leading-tight line-clamp-1 flex-1"
-                                                  style={{ fontSize: `${currentPlayer.productNameSize * 0.9}px`, color: currentPlayer.productNameColor }}
+                                                  style={{ fontSize: `${currentPlayer.productNameSize * 0.8}px`, color: currentPlayer.productNameColor }}
                                                 >
                                                   {prod.name}
                                                 </div>
                                                 {isLiveActive && (
                                                   <span 
-                                                    className="px-1 py-0.2 rounded text-[7px] font-black uppercase text-white shrink-0 animate-pulse leading-tight"
+                                                    className="px-1 py-0.2 rounded text-[6.5px] font-black uppercase text-white shrink-0 animate-pulse leading-tight"
                                                     style={{ backgroundColor: currentPlayer.borderColor }}
                                                   >
                                                     Na Live
                                                   </span>
                                                 )}
                                               </div>
-                                              <div className="text-[8px] text-slate-400 line-through mt-0.5 leading-none">De: {prod.oldPrice}</div>
+                                              <div className="text-[7px] text-slate-400 line-through mt-0.5 leading-none">De: {prod.oldPrice}</div>
                                               <div
                                                 className="font-extrabold leading-tight mt-0.5"
-                                                style={{ fontSize: `${currentPlayer.productPriceSize * 0.9}px`, color: currentPlayer.productPriceColor }}
+                                                style={{ fontSize: `${currentPlayer.productPriceSize * 0.8}px`, color: currentPlayer.productPriceColor }}
                                               >
                                                 Por: {prod.price}
                                               </div>
                                             </div>
 
-                                            <div className="pr-2 pl-0.5 shrink-0">
+                                            <div className="pr-1.5 shrink-0">
                                               <div 
-                                                className="w-5 h-5 rounded-full flex items-center justify-center shadow-sm" 
+                                                className="w-4 h-4 rounded-full flex items-center justify-center shadow-sm" 
                                                 style={{ 
                                                   backgroundColor: isInCart ? currentPlayer.borderColor : "#f1f5f9"
                                                 }}
                                               >
                                                 <ShoppingCart 
-                                                  className="w-2.5 h-2.5"
+                                                  className="w-2 h-2"
                                                   style={{
                                                     color: isInCart ? "#FFFFFF" : currentPlayer.borderColor
                                                   }}
@@ -1374,14 +1367,14 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                       })}
                                     </div>
 
-                                    <div className="bg-white p-2 border-t flex flex-col items-center shrink-0" style={{ borderColor: `${currentPlayer.borderColor}30` }}>
-                                      <ChevronDown className="w-3.5 h-3.5 mb-0.5" style={{ color: currentPlayer.borderColor }}/>
-                                      <div className="flex justify-between items-center w-full text-[9.5px] font-bold" style={{ color: currentPlayer.borderColor }}>
-                                        <span className="flex items-center gap-1.5">
-                                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: currentPlayer.borderColor }}></span>
-                                          6 Produtos adicionados
+                                    <div className="bg-white p-1.5 border-t flex flex-col items-center shrink-0" style={{ borderColor: `${currentPlayer.borderColor}30` }}>
+                                      <ChevronDown className="w-3 h-3 mb-0.5" style={{ color: currentPlayer.borderColor }}/>
+                                      <div className="flex justify-between items-center w-full text-[8.5px] font-bold" style={{ color: currentPlayer.borderColor }}>
+                                        <span className="flex items-center gap-1">
+                                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentPlayer.borderColor }}></span>
+                                          6 Adicionados
                                         </span>
-                                        <span className="text-slate-600 flex items-center hover:underline cursor-pointer">Finalizar <ExternalLink className="w-2.5 h-2.5 ml-0.5"/></span>
+                                        <span className="text-slate-600 flex items-center hover:underline cursor-pointer">Finalizar <ExternalLink className="w-2 h-2 ml-0.5"/></span>
                                       </div>
                                     </div>
                                   </div>
