@@ -1102,18 +1102,14 @@ export function LiveFormDialog({
           MODAL SECUNDÁRIO: SELEÇÃO DE PRODUTOS DO CATÁLOGO
          ======================================================== */}
       <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden bg-white rounded-2xl shadow-2xl border-0">
-          
-          <div className="px-5 py-4 border-b flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-base font-bold text-slate-800">
-                Selecionar Produtos do Catálogo
-              </DialogTitle>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Escolha os produtos que serão vinculados à transmissão
-              </p>
-            </div>
-            <button onClick={() => setProductModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-sm">✕</button>
+        <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden bg-white rounded-2xl shadow-2xl border-0 [&>button]:hidden">
+          <div className="px-5 py-4 border-b">
+            <DialogTitle className="text-base font-bold text-slate-800">
+              Selecionar Produtos do Catálogo
+            </DialogTitle>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Escolha os produtos que serão vinculados à transmissão
+            </p>
           </div>
 
           {/* FILTROS & BUSCA */}
