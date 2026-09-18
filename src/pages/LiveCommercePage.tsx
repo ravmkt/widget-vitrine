@@ -149,21 +149,22 @@ export function LiveCommercePage() {
     if (!storeId) return;
     try {
       setSavingAppearance(true);
-      const combinedWidgetConfig = {
-        divulgacao,
-        aoVivo,
-      };
 
       const { error } = await supabase
-        .from("store_settings")
-        .update({
-          live_widget_config: combinedWidgetConfig,
-          live_player_config: player,
-        })
-        .eq("store_id", storeId);
+        .from("live_settings")
+        .upsert(
+          {
+            store_id: storeId,
+            widget_divulgacao: divulgacao,
+            widget_aovivo: aoVivo,
+            player_settings: player,
+          },
+          { onConflict: "store_id" }
+        );
 
       if (error) throw error;
 
+      setAppearanceData({ divulgacao, aoVivo, player });
       toast.success("Aparência da Live salva com sucesso!");
       setAppearanceOpen(false);
     } catch (err) {
