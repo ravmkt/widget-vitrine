@@ -104,6 +104,21 @@ export function LiveCommercePage() {
           .order("name", { ascending: true });
         if (prods) setProducts(prods);
 
+  async function loadAppearance(currentStoreId: string) {
+    const { data, error } = await supabase
+      .from("live_settings")
+      .select("widget_divulgacao, widget_aovivo, player_settings")
+      .eq("store_id", currentStoreId)
+      .maybeSingle();
+
+    if (!error && data) {
+      setAppearanceData({
+        divulgacao: (data.widget_divulgacao as any) || null,
+        aoVivo: (data.widget_aovivo as any) || null,
+        player: (data.player_settings as any) || null,
+      });
+    }
+  }
         await loadLives(store.id);
                 await loadLives(store.id);
         await loadAppearance(store.id);
