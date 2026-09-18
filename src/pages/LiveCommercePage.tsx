@@ -216,6 +216,10 @@ export function LiveCommercePage() {
     setMetricsModalOpen(true);
   };
 
+  const handleOpenAdminPanel = (liveId: string) => {
+    window.open(`/live-commerce/${liveId}/administrar`, "_blank", "noopener,noreferrer");
+  };
+
   const onFormSaved = async () => {
     if (storeId) await loadLives(storeId);
   };
@@ -330,54 +334,68 @@ export function LiveCommercePage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {filteredLives.map((live) => (
-            <Card key={live.id} className="border-border/60 hover:border-border transition-colors">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="h-16 w-24 rounded-lg bg-muted overflow-hidden flex-shrink-0 flex items-center justify-center border border-border/40">
-                  {live.youtube_thumbnail_url ? (
-                    <img src={live.youtube_thumbnail_url} alt={live.title} className="h-full w-full object-cover" />
-                  ) : (
-                    <Radio className="h-6 w-6 text-muted-foreground" />
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    {statusBadge(live)}
+          {filteredLives.map((live) => {
+            const isLiveNow = Boolean(live.is_active && live.status === "live");
+            return (
+              <Card key={live.id} className="border-border/60 hover:border-border transition-colors">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="h-16 w-24 rounded-lg bg-muted overflow-hidden flex-shrink-0 flex items-center justify-center border border-border/40">
+                    {live.youtube_thumbnail_url ? (
+                      <img src={live.youtube_thumbnail_url} alt={live.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <Radio className="h-6 w-6 text-muted-foreground" />
+                    )}
                   </div>
-                  <p className="font-semibold text-sm truncate">{live.title}</p>
-                  {live.scheduled_at && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {new Date(live.scheduled_at).toLocaleString("pt-BR", {
-                        day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
-                      })}
-                    </p>
-                  )}
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleOpenMetrics(live)}
-                    title="Métricas da Live"
-                    className="text-rose-600 hover:bg-rose-50 hover:border-rose-300"
-                  >
-                    <TrendingUp className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleShare(live)} title="Divulgar">
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleEdit(live.id)} title="Editar">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleDelete(live.id)} title="Excluir" className="text-destructive hover:bg-destructive/10">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {statusBadge(live)}
+                    </div>
+                    <p className="font-semibold text-sm truncate">{live.title}</p>
+                    {live.scheduled_at && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(live.scheduled_at).toLocaleString("pt-BR", {
+                          day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+                        })}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {isLiveNow && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleOpenAdminPanel(live.id)}
+                        title="Administrar Live (Painel de Controle)"
+                        className="text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300"
+                      >
+                        <MonitorPlay className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleOpenMetrics(live)}
+                      title="Métricas da Live"
+                      className="text-rose-600 hover:bg-rose-50 hover:border-rose-300"
+                    >
+                      <TrendingUp className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => handleShare(live)} title="Divulgar">
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => handleEdit(live.id)} title="Editar">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => handleDelete(live.id)} title="Excluir" className="text-destructive hover:bg-destructive/10">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
