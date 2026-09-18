@@ -65,6 +65,11 @@ export function LiveCommercePage() {
 
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [savingAppearance, setSavingAppearance] = useState(false);
+  const [appearanceData, setAppearanceData] = useState<{
+    divulgacao: DeviceConfig<WidgetDivulgacaoSettings> | null;
+    aoVivo: DeviceConfig<WidgetAoVivoSettings> | null;
+    player: DeviceConfig<LivePlayerSettings> | null;
+  } | null>(null);
 
   useEffect(() => {
     async function loadStoreAndPlan() {
