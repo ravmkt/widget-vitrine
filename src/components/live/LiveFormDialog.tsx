@@ -454,7 +454,7 @@ export function LiveFormDialog({
         if (error) throw error;
         toast.success("Live atualizada com sucesso!");
       } else {
-        payload.status = "scheduled";
+payload.is_active = true;
         payload.is_active = false;
         const { error } = await supabase.from("lives").insert(payload);
         if (error) throw error;
