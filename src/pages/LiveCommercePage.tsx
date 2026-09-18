@@ -21,7 +21,7 @@ import LiveAppearanceModal, {
   LivePlayerSettings,
   defaultWidgetSettings,
   defaultPlayerSettings
-} from "@/components/LiveAppearanceModal";
+} from "@/components/live/LiveAppearanceModal";
 
 interface Product {
   id: string;

@@ -12,24 +12,26 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  console.log("[yampi-conversion] Requisição recebida:", req.method);
+  console.log("[universal-conversion] Requisição recebida:", req.method);
 
   try {
     const body = await req.json();
-    console.log("[yampi-conversion] Payload:", JSON.stringify(body));
+    console.log("[universal-conversion] Payload:", JSON.stringify(body));
 
     const {
       store_id,
       video_id,
+      live_id,
       product_id,
       visitor_id,
       order_id,
       order_value,
       status,
+      source,
     } = body;
 
     if (!store_id || !visitor_id) {
-      console.error("[yampi-conversion] Campos obrigatórios faltando:", {
+      console.error("[universal-conversion] Campos obrigatórios faltando:", {
         store_id: !!store_id,
         visitor_id: !!visitor_id,
       });
@@ -44,7 +46,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Verifica se esta conversão já existe (evita duplicatas)
+    // Verifica se esta conversão já existe (evita duplicatas de webhook / reload de página)
     if (order_id) {
       const { data: existing } = await supabase
         .from("conversions")
@@ -54,21 +56,23 @@ serve(async (req) => {
         .maybeSingle();
 
       if (existing) {
-        // Atualiza o status se a venda mudou (ex: pending → paid)
         const { data: updated, error: updateError } = await supabase
           .from("conversions")
           .update({
             status: status || "pending",
             order_value: order_value || 0,
+            ...(live_id ? { live_id } : {}),
+            ...(video_id ? { video_id } : {}),
+            ...(product_id ? { product_id } : {}),
           })
           .eq("id", existing.id)
           .select()
           .single();
 
         if (updateError) {
-          console.error("[yampi-conversion] Erro ao atualizar conversão:", updateError);
+          console.error("[universal-conversion] Erro ao atualizar conversão:", updateError);
         } else {
-          console.log("[yampi-conversion] Conversão atualizada:", updated.id);
+          console.log("[universal-conversion] Conversão atualizada:", updated.id);
         }
 
         return new Response(
@@ -78,38 +82,39 @@ serve(async (req) => {
       }
     }
 
-    // Insere nova conversão
+    // Insere nova conversão com suporte a live_id e source
     const { data, error } = await supabase
       .from("conversions")
       .insert({
         store_id,
         video_id: video_id || null,
+        live_id: live_id || null,
         product_id: product_id || null,
         visitor_id,
         order_id: order_id ? String(order_id) : null,
         order_value: Number(order_value) || 0,
         status: status || "pending",
-        source: "yampi",
+        source: source || "universal_tracker",
       })
       .select()
       .single();
 
     if (error) {
-      console.error("[yampi-conversion] Erro ao inserir conversão:", error);
+      console.error("[universal-conversion] Erro ao inserir conversão:", error);
       return new Response(
         JSON.stringify({ error: error.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("[yampi-conversion] Conversão criada:", data.id, "- R$", order_value);
+    console.log("[universal-conversion] Conversão criada:", data.id, "- R$", order_value, "Live:", live_id);
 
     return new Response(
       JSON.stringify({ success: true, action: "created", id: data.id }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("[yampi-conversion] Erro crítico:", error);
+    console.error("[universal-conversion] Erro crítico:", error);
     return new Response(
       JSON.stringify({ error: "Erro interno do servidor" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
