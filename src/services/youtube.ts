@@ -1,12 +1,14 @@
-export interface YouTubeOEmbedData {
+import { supabase } from "@/lib/supabase";
+
+export interface YouTubeLiveMetadata {
   title: string;
   thumbnailUrl: string;
   videoId: string;
+  scheduledStartTime?: string | null;
 }
 
 /**
- * Extrai o ID do video a partir de diferentes formatos de URL do YouTube
- * (watch?v=, youtu.be/, live/, embed/)
+ * Extrai o ID do vídeo a partir de URLs do YouTube
  */
 export const extractYouTubeVideoId = (url: string): string | null => {
   const patterns = [
@@ -22,32 +24,53 @@ export const extractYouTubeVideoId = (url: string): string | null => {
 };
 
 /**
- * Busca titulo e thumbnail de um video/live do YouTube via oEmbed publico
+ * Busca Título, Thumbnail e Data/Hora Programada da Live
  */
-export const fetchYouTubeOEmbed = async (url: string): Promise<YouTubeOEmbedData> => {
+export const fetchYouTubeLiveDetails = async (url: string): Promise<YouTubeLiveMetadata> => {
+  const videoId = extractYouTubeVideoId(url);
+  if (!videoId) {
+    throw new Error("URL do YouTube inválida");
+  }
+
+  // 1. Tenta buscar via Edge Function (que lê a data programada diretamente)
   try {
-    const videoId = extractYouTubeVideoId(url);
+    const { data, error } = await supabase.functions.invoke("fetch-youtube-live", {
+      body: { videoId },
+    });
 
-    if (!videoId) {
-      throw new Error('URL do YouTube invalida');
+    if (!error && data && (data.title || data.scheduledStartTime)) {
+      return {
+        videoId,
+        title: data.title || "Live sem título",
+        thumbnailUrl: data.thumbnailUrl || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+        scheduledStartTime: data.scheduledStartTime || null,
+      };
     }
+  } catch (e) {
+    console.warn("Falha ao consultar Edge Function do YouTube, usando fallback oEmbed:", e);
+  }
 
+  // 2. Fallback público via oEmbed (caso a função esteja offline ou em deploy)
+  try {
     const oEmbedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
     const response = await fetch(oEmbedUrl);
-
-    if (!response.ok) {
-      throw new Error('Nao foi possivel obter os dados do video do YouTube');
+    if (response.ok) {
+      const oembed = await response.json();
+      return {
+        videoId,
+        title: oembed.title || "Live sem título",
+        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+        scheduledStartTime: null,
+      };
     }
-
-    const data = await response.json();
-
-    return {
-      title: data.title || 'Live sem titulo',
-      thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-      videoId,
-    };
-  } catch (error) {
-    console.error('Erro no servico fetchYouTubeOEmbed:', error);
-    throw error;
+  } catch (err) {
+    console.error("Erro no oEmbed:", err);
   }
+
+  return {
+    videoId,
+    title: "",
+    thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+    scheduledStartTime: null,
+  };
 };
