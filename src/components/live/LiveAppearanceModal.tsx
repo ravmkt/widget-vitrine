@@ -199,7 +199,7 @@ export const defaultPlayerSettings: LivePlayerSettings = {
   productPriceColor: "#0284c7",
 };
 
-// --- PRESETS BÁSICOS DO VIDLYTICS ---
+// --- 4 PRESETS PADRÕES VIDLYTICS ---
 const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
   {
     id: "preset_padrao",
@@ -211,11 +211,11 @@ const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
   },
   {
     id: "preset_blackfriday",
-    name: "Tema Black Friday (Dourado)",
+    name: "Tema Black Friday (Dourado & Preto)",
     isDefault: true,
     divulgacao: {
-      desktop: { ...defaultDivulgacaoSettings, borderColor: "#eab308", ctaBgColor: "#eab308", ctaTextColor: "#000000", countdownBgColor: "#eab308", countdownTextColor: "#000000" },
-      mobile: { ...defaultDivulgacaoSettings, width: 80, borderColor: "#eab308", ctaBgColor: "#eab308", ctaTextColor: "#000000", countdownBgColor: "#eab308", countdownTextColor: "#000000" },
+      desktop: { ...defaultDivulgacaoSettings, borderColor: "#eab308", ctaBgColor: "#000000", ctaTextColor: "#eab308", countdownBgColor: "#eab308", countdownTextColor: "#000000" },
+      mobile: { ...defaultDivulgacaoSettings, width: 80, borderColor: "#eab308", ctaBgColor: "#000000", ctaTextColor: "#eab308", countdownBgColor: "#eab308", countdownTextColor: "#000000" },
       linked: false
     },
     aoVivo: {
@@ -245,6 +245,86 @@ const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
         infoBgColor: "#000000",
         infoTextColor: "#eab308",
         productPriceColor: "#ca8a04",
+      },
+      linked: true
+    }
+  },
+  {
+    id: "preset_live",
+    name: "Tema Live Especial (Roxo & Neon)",
+    isDefault: true,
+    divulgacao: {
+      desktop: { ...defaultDivulgacaoSettings, borderColor: "#8b5cf6", ctaBgColor: "#8b5cf6", ctaTextColor: "#ffffff", countdownBgColor: "#7c3aed", countdownTextColor: "#ffffff" },
+      mobile: { ...defaultDivulgacaoSettings, width: 80, borderColor: "#8b5cf6", ctaBgColor: "#8b5cf6", ctaTextColor: "#ffffff", countdownBgColor: "#7c3aed", countdownTextColor: "#ffffff" },
+      linked: false
+    },
+    aoVivo: {
+      desktop: { ...defaultAoVivoSettings, borderColor: "#8b5cf6", ctaBgColor: "#8b5cf6", ctaTextColor: "#ffffff" },
+      mobile: { ...defaultAoVivoSettings, width: 80, borderColor: "#8b5cf6", ctaBgColor: "#8b5cf6", ctaTextColor: "#ffffff" },
+      linked: false
+    },
+    player: {
+      desktop: {
+        ...defaultPlayerSettings,
+        borderColor: "#8b5cf6",
+        couponCodeBgColor: "#8b5cf6",
+        couponCodeColor: "#ffffff",
+        couponTextBgColor: "#4c1d95",
+        couponTextColor: "#ffffff",
+        infoBgColor: "#6d28d9",
+        infoTextColor: "#ffffff",
+        productPriceColor: "#7c3aed",
+      },
+      mobile: {
+        ...defaultPlayerSettings,
+        borderColor: "#8b5cf6",
+        couponCodeBgColor: "#8b5cf6",
+        couponCodeColor: "#ffffff",
+        couponTextBgColor: "#4c1d95",
+        couponTextColor: "#ffffff",
+        infoBgColor: "#6d28d9",
+        infoTextColor: "#ffffff",
+        productPriceColor: "#7c3aed",
+      },
+      linked: true
+    }
+  },
+  {
+    id: "preset_aniversario",
+    name: "Tema Aniversário (Rosa & Ouro)",
+    isDefault: true,
+    divulgacao: {
+      desktop: { ...defaultDivulgacaoSettings, borderColor: "#ec4899", ctaBgColor: "#ec4899", ctaTextColor: "#ffffff", countdownBgColor: "#db2777", countdownTextColor: "#ffffff" },
+      mobile: { ...defaultDivulgacaoSettings, width: 80, borderColor: "#ec4899", ctaBgColor: "#ec4899", ctaTextColor: "#ffffff", countdownBgColor: "#db2777", countdownTextColor: "#ffffff" },
+      linked: false
+    },
+    aoVivo: {
+      desktop: { ...defaultAoVivoSettings, borderColor: "#ec4899", ctaBgColor: "#ec4899", ctaTextColor: "#ffffff" },
+      mobile: { ...defaultAoVivoSettings, width: 80, borderColor: "#ec4899", ctaBgColor: "#ec4899", ctaTextColor: "#ffffff" },
+      linked: false
+    },
+    player: {
+      desktop: {
+        ...defaultPlayerSettings,
+        borderColor: "#ec4899",
+        couponCodeBgColor: "#ec4899",
+        couponCodeColor: "#ffffff",
+        couponTextBgColor: "#831843",
+        couponTextColor: "#fbcfe8",
+        infoBgColor: "#be185d",
+        infoTextColor: "#ffffff",
+        productPriceColor: "#db2777",
+      },
+      mobile: {
+        ...defaultPlayerSettings,
+        borderColor: "#ec4899",
+        couponCodeBgColor: "#ec4899",
+        couponCodeColor: "#ffffff",
+        couponTextBgColor: "#831843",
+        couponTextColor: "#fbcfe8",
+        infoBgColor: "#be185d",
+        infoTextColor: "#ffffff",
+        productPriceColor: "#db2777",
       },
       linked: true
     }
@@ -363,8 +443,8 @@ const ElementSubItem = ({
 };
 
 export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving }: Props) {
-  const [activeTab, setActiveTab] = useState<"divulgacao" | "aovivo" | "player">("player");
-  const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+  const [activeTab, setActiveTab] = useState<"divulgacao" | "aovivo" | "player">("divulgacao");
+  const [device, setDevice] = useState<"desktop" | "mobile">("mobile");
   const [openAccordion, setOpenAccordion] = useState<string>("player_visibilidade");
   const [openSubItem, setOpenSubItem] = useState<string>("");
 
@@ -385,6 +465,16 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("preset_padrao");
   const [templateNameInput, setTemplateNameInput] = useState<string>("Padrão Vidlytics (Vermelho)");
   const [bannerAlert, setBannerAlert] = useState<string>("");
+
+  // Sempre ao abrir o modal, resetar para a aba Divulgação e visualização Mobile
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab("divulgacao");
+      setDevice("mobile");
+      setOpenAccordion("formato");
+      setOpenSubItem("");
+    }
+  }, [isOpen]);
 
   // Carrega templates do usuário gravados no navegador
   useEffect(() => {
