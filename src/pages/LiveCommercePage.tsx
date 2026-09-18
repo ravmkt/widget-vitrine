@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { LiveFormDialog } from "@/components/live/LiveFormDialog";
 import { ShareLiveModal } from "@/components/live/ShareLiveModal";
+import { TrendingUp } from "lucide-react";
+import { LiveMetricsModal } from "@/components/live/LiveMetricsModal";
 
 // AQUI: Importando o modal default e os novos tipos nomeados que criamos
 import LiveAppearanceModal, {
