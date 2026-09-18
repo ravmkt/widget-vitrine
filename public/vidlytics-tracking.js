@@ -80,8 +80,9 @@
     }
   }
 
-  // Identificação do visitante e da mídia
+  // Identificação do visitante, mídia e live
   var videoId = getUrlParam("vly_v") || getCookie("vly_video_id") || null;
+  var liveId = getUrlParam("vly_l") || getCookie("vly_live_id") || null;
   var productId = getUrlParam("vly_p") || getCookie("vly_product_id") || null;
   var visitorId = getUrlParam("vly_u") || getCookie("vly_visitor_id");
 
@@ -91,6 +92,7 @@
   }
 
   if (getUrlParam("vly_v")) setCookie("vly_video_id", videoId, 30);
+  if (getUrlParam("vly_l")) setCookie("vly_live_id", liveId, 30);
   if (getUrlParam("vly_p")) setCookie("vly_product_id", productId, 30);
 
   // ---------- 3. Envio da conversão ----------
@@ -108,6 +110,7 @@
     var payload = {
       store_id: STORE_ID,
       video_id: videoId || null,
+      live_id: liveId || null,
       product_id: productId || null,
       visitor_id: visitorId,
       order_id: order.order_id ? String(order.order_id) : null,
