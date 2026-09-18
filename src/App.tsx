@@ -191,6 +191,7 @@ function App() {
             <Route path="/stories/:id" element={<ProtectedRoute><AppLayout><StoryDetailsPage /></AppLayout></ProtectedRoute>} />
             <Route path="/stories" element={<ProtectedRoute><AppLayout><StoriesPage /></AppLayout></ProtectedRoute>} />
             <Route path="/live-commerce" element={<ProtectedRoute><AppLayout><LiveCommercePage /></AppLayout></ProtectedRoute>} />
+<Route path="/live-commerce/:liveId/administrar" element={<ProtectedRoute><LiveAdminPage /></ProtectedRoute>} />
 
             {/* ── Vídeos (rotas específicas ANTES das genéricas) ── */}
             <Route path="/videos/performance" element={<ProtectedRoute><AppLayout><PerformancePage /></AppLayout></ProtectedRoute>} />
