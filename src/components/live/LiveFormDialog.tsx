@@ -210,7 +210,7 @@ export function LiveFormDialog({
     loadLive();
   }, [open, liveId]);
 
-  // Busca dados do YouTube automaticamente
+  // Busca dados do YouTube automaticamente (Título, Capa e Data/Hora Programada)
   useEffect(() => {
     const id = extractYouTubeVideoId(youtubeUrl);
     setExtractedVideoId(id || "");
@@ -219,12 +219,24 @@ export function LiveFormDialog({
     const timeout = setTimeout(async () => {
       try {
         setFetchingYoutube(true);
-        const data = await fetchYouTubeOEmbed(youtubeUrl);
+        const data = await fetchYouTubeLiveDetails(youtubeUrl);
+        
+        // Atualiza Thumbnail
         if (data.thumbnailUrl && !youtubeThumbnailUrl) {
           setYoutubeThumbnailUrl(data.thumbnailUrl);
         }
+
+        // Atualiza Título
         if (!title.trim() && data.title) {
           setTitle(data.title);
+        }
+
+        // Atualiza Programação (Data e Hora) se disponível
+        if (data.scheduledStartTime && !scheduledAt) {
+          const date = new Date(data.scheduledStartTime);
+          const tzOffset = date.getTimezoneOffset() * 60000;
+          const localIso = new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+          setScheduledAt(localIso);
         }
       } catch {
         if (!youtubeThumbnailUrl) {
