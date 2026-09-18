@@ -573,9 +573,9 @@ function trackLiveEvent(liveId, eventType, metadata) {
   }).catch(function () {});
 }
 
-function getActiveLiveWidgetConfig() {
+function getActiveLivePlayerConfig() {
   var isMobile = window.innerWidth < 768;
-  var cfg = liveWidgetConfig || {};
+  var cfg = livePlayerConfig || {};
   if (cfg.desktop || cfg.mobile) {
     var devCfg = isMobile ? (cfg.mobile || cfg.desktop) : (cfg.desktop || cfg.mobile);
     return Object.assign({}, devCfg);
@@ -583,16 +583,28 @@ function getActiveLiveWidgetConfig() {
   return cfg;
 }
 
+function getActiveLiveWidgetConfig(liveStatus) {
+  var isMobile = window.innerWidth < 768;
+  var rootCfg = liveWidgetConfig || {};
+  var target = (liveStatus === 'live' && rootCfg.aoVivo) ? rootCfg.aoVivo : (rootCfg.divulgacao || rootCfg);
+  if (target.desktop || target.mobile) {
+    var devCfg = isMobile ? (target.mobile || target.desktop) : (target.desktop || target.mobile);
+    return Object.assign({}, devCfg);
+  }
+  return target;
+}
+
 function renderLiveWidget(live) {
   if (!live || liveWidgetRoot) return;
 
-  var currentCfg = getActiveLiveWidgetConfig();
+  var currentCfg = getActiveLiveWidgetConfig(live.status);
   if (currentCfg.enabled === false) return;
 
   var isLive = live.status === 'live';
-  var shape = currentCfg.shape || 'portrait';
-  var width = Number(currentCfg.width) || (shape === 'circle' ? 90 : 180);
-  var borderRadius = shape === 'circle' ? '999px' : (currentCfg.borderRadius !== undefined ? currentCfg.borderRadius + 'px' : '16px');
+  var format = currentCfg.format || currentCfg.shape || 'portrait';
+  var isCircle = format === 'circular' || format === 'circle';
+  var width = Number(currentCfg.width) || (isCircle ? 90 : 180);
+  var borderRadius = isCircle ? '999px' : (currentCfg.borderRadius !== undefined ? currentCfg.borderRadius + 'px' : '16px');
   var borderWidth = currentCfg.borderWidth !== undefined ? currentCfg.borderWidth + 'px' : '2px';
   var borderColor = currentCfg.borderColor || '#e11d48';
   var position = currentCfg.position || 'bottom-right';
