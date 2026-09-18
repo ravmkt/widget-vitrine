@@ -52,7 +52,6 @@ export function LiveMetricsModal({ open, onOpenChange, live }: LiveMetricsModalP
       try {
         setLoading(true);
 
-        // 1. Busca eventos internos da live (cliques, views, pico)
         const { data: events } = await supabase
           .from("live_events")
           .select("event_type, metadata, created_at")
@@ -79,7 +78,6 @@ export function LiveMetricsModal({ open, onOpenChange, live }: LiveMetricsModalP
           });
         }
 
-        // 2. Busca dados do YouTube via Edge Function
         try {
           const res = await supabase.functions.invoke("fetch-youtube-live", {
             body: { videoId: live.youtube_video_id }
@@ -97,7 +95,6 @@ export function LiveMetricsModal({ open, onOpenChange, live }: LiveMetricsModalP
         setProductClicks(pClicks);
         setPeakViewers(Math.max(peak, Math.round(vCount * 0.35) || 12));
 
-        // 3. Linha do Tempo (Timeline de Audiência)
         const simulatedTimeline: TimelinePoint[] = [
           { time: "00:00", viewers: Math.round(peak * 0.2), clicks: 0 },
           { time: "00:05", viewers: Math.round(peak * 0.45), clicks: Math.round(pClicks * 0.1) },
@@ -109,7 +106,6 @@ export function LiveMetricsModal({ open, onOpenChange, live }: LiveMetricsModalP
         ];
         setTimelineData(simulatedTimeline);
 
-        // 4. Produtos da Live
         const { data: liveData } = await supabase
           .from("lives")
           .select("featured_product_ids")
