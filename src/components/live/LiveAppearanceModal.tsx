@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import {
   Monitor, Smartphone, Link as LinkIcon, Unlink, Radio, Save, LayoutTemplate, PlaySquare,
   VolumeX, ChevronDown, RotateCcw, Info, Share2, ShoppingCart, ExternalLink, Eye,
-  MessageCircle, Send, Heart, ShoppingBag, FolderOpen, Plus, Check, Trash2, Layers
+  MessageCircle, Send, Heart, ShoppingBag, Plus, Check, Trash2, Layers
 } from "lucide-react";
 
 // --- INTERFACES ---
@@ -121,7 +121,7 @@ const MOCK_PRODUCTS = [
 const CART_PRODUCT_IDS = [1, 3, 5, 6, 8, 10];
 const CURRENT_LIVE_PRODUCT_ID = 5;
 
-// --- DEFAULTS ---
+// --- CONFIGURAÇÕES BASE ---
 export const defaultWidgetBase: BaseWidgetSettings = {
   format: "portrait",
   objectFit: "cover",
@@ -130,14 +130,14 @@ export const defaultWidgetBase: BaseWidgetSettings = {
   marginBottom: 0,
   marginTop: 0,
   marginSide: 5,
-  borderColor: "#e7191f",
+  borderColor: "#0094ea",
   borderWidth: 2,
   borderRadius: 14,
   playVideo: true,
   showCloseButton: true,
   showCTA: true,
   ctaText: "Participe",
-  ctaBgColor: "#000000",
+  ctaBgColor: "#0094ea",
   ctaTextColor: "#FFFFFF",
   ctaBorderRadius: "9999px"
 };
@@ -148,7 +148,7 @@ export type WidgetSettings = BaseWidgetSettings;
 export const defaultDivulgacaoSettings: WidgetDivulgacaoSettings = {
   ...defaultWidgetBase,
   showCountdown: true,
-  countdownBgColor: "#e7191f",
+  countdownBgColor: "#0094ea",
   countdownTextColor: "#FFFFFF",
   countdownBorderRadius: "4px"
 };
@@ -156,33 +156,33 @@ export const defaultDivulgacaoSettings: WidgetDivulgacaoSettings = {
 export const defaultAoVivoSettings: WidgetAoVivoSettings = {
   ...defaultWidgetBase,
   ctaText: "AO VIVO",
-  ctaBgColor: "#e7191f"
+  ctaBgColor: "#0094ea"
 };
 
 export const defaultPlayerSettings: LivePlayerSettings = {
-  borderColor: "#e7191f",
+  borderColor: "#0094ea",
   borderWidth: 2,
   borderRadius: 14,
   
   showTitle: true,
-  titleText: "Black Friday",
+  titleText: "Vidlytics Live",
   titleColor: "#FFFFFF",
 
   showCoupon: true,
-  couponCode: "BLACK15",
+  couponCode: "VIDLYTICS10",
   couponCodeColor: "#FFFFFF",
-  couponCodeBgColor: "#e7191f",
-  couponText: "15%OFF",
+  couponCodeBgColor: "#0094ea",
+  couponText: "10% OFF",
   couponTextColor: "#000000",
   couponTextBgColor: "#FFFFFF",
 
   showInfo: true,
   infoText1: "FRETE GRÁTIS",
-  infoText2: "Acima de R$200,00",
+  infoText2: "Acima de R$199,00",
   infoSize1: 18,
   infoSize2: 12,
   infoTextColor: "#FFFFFF",
-  infoBgColor: "#e7191f",
+  infoBgColor: "#0094ea",
 
   showShare: true,
   shareTextColor: "#000000",
@@ -199,25 +199,45 @@ export const defaultPlayerSettings: LivePlayerSettings = {
   productPriceColor: "#0284c7",
 };
 
-// --- 4 PRESETS PADRÕES VIDLYTICS ---
+// --- PRESETS DE FÁBRICA VIDLYTICS ---
 const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
   {
     id: "preset_padrao",
     name: "Padrão Vidlytics (Azul)",
     isDefault: true,
     divulgacao: {
-      desktop: { ...defaultDivulgacaoSettings, borderColor: "#0094ea", ctaBgColor: "#0094ea" },
-      mobile: { ...defaultDivulgacaoSettings, width: 80, borderColor: "#0094ea", ctaBgColor: "#0094ea" },
+      desktop: { ...defaultDivulgacaoSettings, borderColor: "#0094ea", ctaBgColor: "#0094ea", ctaTextColor: "#ffffff", countdownBgColor: "#0094ea", countdownTextColor: "#ffffff" },
+      mobile: { ...defaultDivulgacaoSettings, width: 80, borderColor: "#0094ea", ctaBgColor: "#0094ea", ctaTextColor: "#ffffff", countdownBgColor: "#0094ea", countdownTextColor: "#ffffff" },
       linked: false
     },
     aoVivo: {
-      desktop: { ...defaultAoVivoSettings, borderColor: "#0094ea", ctaBgColor: "#0094ea" },
-      mobile: { ...defaultAoVivoSettings, width: 80, borderColor: "#0094ea", ctaBgColor: "#0094ea" },
+      desktop: { ...defaultAoVivoSettings, borderColor: "#0094ea", ctaBgColor: "#0094ea", ctaTextColor: "#ffffff" },
+      mobile: { ...defaultAoVivoSettings, width: 80, borderColor: "#0094ea", ctaBgColor: "#0094ea", ctaTextColor: "#ffffff" },
       linked: false
     },
     player: {
-      desktop: { ...defaultPlayerSettings, borderColor: "#0094ea" },
-      mobile: { ...defaultPlayerSettings, borderColor: "#0094ea" },
+      desktop: {
+        ...defaultPlayerSettings,
+        borderColor: "#0094ea",
+        couponCodeBgColor: "#0094ea",
+        couponCodeColor: "#ffffff",
+        couponTextBgColor: "#ffffff",
+        couponTextColor: "#0094ea",
+        infoBgColor: "#0094ea",
+        infoTextColor: "#ffffff",
+        productPriceColor: "#0094ea"
+      },
+      mobile: {
+        ...defaultPlayerSettings,
+        borderColor: "#0094ea",
+        couponCodeBgColor: "#0094ea",
+        couponCodeColor: "#ffffff",
+        couponTextBgColor: "#ffffff",
+        couponTextColor: "#0094ea",
+        infoBgColor: "#0094ea",
+        infoTextColor: "#ffffff",
+        productPriceColor: "#0094ea"
+      },
       linked: true
     }
   },
@@ -231,18 +251,18 @@ const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
       linked: false
     },
     aoVivo: {
-      desktop: { ...defaultAoVivoSettings, borderColor: "#eab308", ctaBgColor: "#eab308", ctaTextColor: "#000000" },
-      mobile: { ...defaultAoVivoSettings, width: 80, borderColor: "#eab308", ctaBgColor: "#eab308", ctaTextColor: "#000000" },
+      desktop: { ...defaultAoVivoSettings, borderColor: "#eab308", ctaBgColor: "#000000", ctaTextColor: "#eab308" },
+      mobile: { ...defaultAoVivoSettings, width: 80, borderColor: "#eab308", ctaBgColor: "#000000", ctaTextColor: "#eab308" },
       linked: false
     },
     player: {
       desktop: {
         ...defaultPlayerSettings,
         borderColor: "#eab308",
-        couponCodeBgColor: "#eab308",
-        couponCodeColor: "#000000",
-        couponTextBgColor: "#000000",
-        couponTextColor: "#eab308",
+        couponCodeBgColor: "#000000",
+        couponCodeColor: "#eab308",
+        couponTextBgColor: "#eab308",
+        couponTextColor: "#000000",
         infoBgColor: "#000000",
         infoTextColor: "#eab308",
         productPriceColor: "#ca8a04",
@@ -250,10 +270,10 @@ const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
       mobile: {
         ...defaultPlayerSettings,
         borderColor: "#eab308",
-        couponCodeBgColor: "#eab308",
-        couponCodeColor: "#000000",
-        couponTextBgColor: "#000000",
-        couponTextColor: "#eab308",
+        couponCodeBgColor: "#000000",
+        couponCodeColor: "#eab308",
+        couponTextBgColor: "#eab308",
+        couponTextColor: "#000000",
         infoBgColor: "#000000",
         infoTextColor: "#eab308",
         productPriceColor: "#ca8a04",
@@ -263,47 +283,51 @@ const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
   },
   {
     id: "preset_live",
-    name: "Tema Live Especial (Roxo & Neon)",
+    name: "Tema Live (Vermelho & Branco)",
     isDefault: true,
     divulgacao: {
-      desktop: { ...defaultDivulgacaoSettings, borderColor: "#8b5cf6", ctaBgColor: "#8b5cf6", ctaTextColor: "#ffffff", countdownBgColor: "#7c3aed", countdownTextColor: "#ffffff" },
-      mobile: { ...defaultDivulgacaoSettings, width: 80, borderColor: "#8b5cf6", ctaBgColor: "#8b5cf6", ctaTextColor: "#ffffff", countdownBgColor: "#7c3aed", countdownTextColor: "#ffffff" },
+      desktop: { ...defaultDivulgacaoSettings, borderColor: "#e7191f", ctaBgColor: "#e7191f", ctaTextColor: "#ffffff", countdownBgColor: "#e7191f", countdownTextColor: "#ffffff" },
+      mobile: { ...defaultDivulgacaoSettings, width: 80, borderColor: "#e7191f", ctaBgColor: "#e7191f", ctaTextColor: "#ffffff", countdownBgColor: "#e7191f", countdownTextColor: "#ffffff" },
       linked: false
     },
     aoVivo: {
-      desktop: { ...defaultAoVivoSettings, borderColor: "#8b5cf6", ctaBgColor: "#8b5cf6", ctaTextColor: "#ffffff" },
-      mobile: { ...defaultAoVivoSettings, width: 80, borderColor: "#8b5cf6", ctaBgColor: "#8b5cf6", ctaTextColor: "#ffffff" },
+      desktop: { ...defaultAoVivoSettings, borderColor: "#e7191f", ctaBgColor: "#e7191f", ctaTextColor: "#ffffff" },
+      mobile: { ...defaultAoVivoSettings, width: 80, borderColor: "#e7191f", ctaBgColor: "#e7191f", ctaTextColor: "#ffffff" },
       linked: false
     },
     player: {
       desktop: {
         ...defaultPlayerSettings,
-        borderColor: "#8b5cf6",
-        couponCodeBgColor: "#8b5cf6",
+        borderColor: "#e7191f",
+        titleText: "Live Especial",
+        couponCode: "LIVE15",
+        couponCodeBgColor: "#e7191f",
         couponCodeColor: "#ffffff",
-        couponTextBgColor: "#4c1d95",
-        couponTextColor: "#ffffff",
-        infoBgColor: "#6d28d9",
+        couponTextBgColor: "#ffffff",
+        couponTextColor: "#e7191f",
+        infoBgColor: "#e7191f",
         infoTextColor: "#ffffff",
-        productPriceColor: "#7c3aed",
+        productPriceColor: "#e7191f",
       },
       mobile: {
         ...defaultPlayerSettings,
-        borderColor: "#8b5cf6",
-        couponCodeBgColor: "#8b5cf6",
+        borderColor: "#e7191f",
+        titleText: "Live Especial",
+        couponCode: "LIVE15",
+        couponCodeBgColor: "#e7191f",
         couponCodeColor: "#ffffff",
-        couponTextBgColor: "#4c1d95",
-        couponTextColor: "#ffffff",
-        infoBgColor: "#6d28d9",
+        couponTextBgColor: "#ffffff",
+        couponTextColor: "#e7191f",
+        infoBgColor: "#e7191f",
         infoTextColor: "#ffffff",
-        productPriceColor: "#7c3aed",
+        productPriceColor: "#e7191f",
       },
       linked: true
     }
   },
   {
     id: "preset_aniversario",
-    name: "Tema Aniversário (Rosa & Ouro)",
+    name: "Tema Aniversário (Rosa & Branco)",
     isDefault: true,
     divulgacao: {
       desktop: { ...defaultDivulgacaoSettings, borderColor: "#ec4899", ctaBgColor: "#ec4899", ctaTextColor: "#ffffff", countdownBgColor: "#db2777", countdownTextColor: "#ffffff" },
@@ -319,22 +343,26 @@ const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
       desktop: {
         ...defaultPlayerSettings,
         borderColor: "#ec4899",
+        titleText: "Especial Aniversário",
+        couponCode: "NIVER20",
         couponCodeBgColor: "#ec4899",
         couponCodeColor: "#ffffff",
-        couponTextBgColor: "#831843",
-        couponTextColor: "#fbcfe8",
-        infoBgColor: "#be185d",
+        couponTextBgColor: "#fdf2f8",
+        couponTextColor: "#ec4899",
+        infoBgColor: "#ec4899",
         infoTextColor: "#ffffff",
         productPriceColor: "#db2777",
       },
       mobile: {
         ...defaultPlayerSettings,
         borderColor: "#ec4899",
+        titleText: "Especial Aniversário",
+        couponCode: "NIVER20",
         couponCodeBgColor: "#ec4899",
         couponCodeColor: "#ffffff",
-        couponTextBgColor: "#831843",
-        couponTextColor: "#fbcfe8",
-        infoBgColor: "#be185d",
+        couponTextBgColor: "#fdf2f8",
+        couponTextColor: "#ec4899",
+        infoBgColor: "#ec4899",
         infoTextColor: "#ffffff",
         productPriceColor: "#db2777",
       },
@@ -353,7 +381,7 @@ const ColorInput = ({ value, onChange, label }: { value: string; onChange: (v: s
       <div className="relative w-7 h-7 rounded-lg overflow-hidden shrink-0 shadow-sm border border-slate-200 bg-slate-50">
         <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="absolute inset-[-25%] w-[150%] h-[150%] cursor-pointer border-0 p-0" />
       </div>
-      <input type="text" value={value.toUpperCase()} onChange={(e) => onChange(e.target.value)} className="h-7 w-full min-w-[70px] rounded-md border border-slate-200 bg-slate-50/50 px-2 text-[11px] font-mono text-slate-600 shadow-sm outline-none focus:border-rose-500 focus:bg-white transition-colors" />
+      <input type="text" value={value?.toUpperCase() || ""} onChange={(e) => onChange(e.target.value)} className="h-7 w-full min-w-[70px] rounded-md border border-slate-200 bg-slate-50/50 px-2 text-[11px] font-mono text-slate-600 shadow-sm outline-none focus:border-rose-500 focus:bg-white transition-colors" />
     </div>
   </div>
 );
@@ -439,9 +467,9 @@ const ElementSubItem = ({
 
         <div 
           onClick={handleToggle}
-          className={`relative inline-flex h-4.5 w-8 items-center rounded-full transition-colors cursor-pointer shrink-0 ${checked ? 'bg-rose-600' : 'bg-slate-300'}`}
+          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer shrink-0 ${checked ? 'bg-rose-600' : 'bg-slate-300'}`}
         >
-          <span className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-4' : 'translate-x-0.5'}`} />
+          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-4.5' : 'translate-x-1'}`} />
         </div>
       </div>
 
@@ -478,7 +506,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
   const [templateNameInput, setTemplateNameInput] = useState<string>("Padrão Vidlytics (Azul)");
   const [bannerAlert, setBannerAlert] = useState<string>("");
 
-  // Sempre ao abrir o modal, resetar para a aba Divulgação e visualização Mobile
+  // Sempre ao abrir o modal, reseta para a aba Divulgação e visualização Mobile
   useEffect(() => {
     if (isOpen) {
       setActiveTab("divulgacao");
@@ -488,7 +516,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     }
   }, [isOpen]);
 
-  // Carrega templates do usuário gravados no navegador
+  // Carrega templates salvos
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_TEMPLATES);
@@ -506,7 +534,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     setTimeout(() => setBannerAlert(""), 3500);
   };
 
-  // Ao trocar de template no select
+  // Seleção de template existente
   const handleSelectTemplate = (id: string) => {
     const tpl = templates.find(t => t.id === id);
     if (!tpl) return;
@@ -518,20 +546,21 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     notify(`Template "${tpl.name}" carregado!`);
   };
 
-  // Salvar alterações no template atual selecionado (ou se for default, salva como cópia com o novo nome)
+  // Salvar atualizações no template selecionado
   const handleSaveCurrentTemplate = () => {
     const name = templateNameInput.trim();
-    if (!name) return;
+    if (!name) {
+      notify("Informe um nome para o template antes de salvar!");
+      return;
+    }
 
     const currentTpl = templates.find(t => t.id === selectedTemplateId);
 
-    // Se estiver em cima de um preset de fábrica ou se mudou o nome, salva como novo personalizado
     if (!currentTpl || currentTpl.isDefault) {
       handleSaveAsNewTemplate();
       return;
     }
 
-    // Atualiza o template personalizado existente
     const updated = templates.map(t => {
       if (t.id === selectedTemplateId) {
         return {
@@ -551,10 +580,13 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     notify(`Template "${name}" atualizado com sucesso!`);
   };
 
-  // Salvar como um novo template independente
+  // Salvar como novo template
   const handleSaveAsNewTemplate = () => {
     const name = templateNameInput.trim();
-    if (!name) return;
+    if (!name) {
+      notify("Informe um nome para o novo template!");
+      return;
+    }
 
     const newId = "custom_" + Date.now();
     const newTemplate: LiveAppearanceTemplate = {
@@ -573,7 +605,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     notify(`Novo template "${name}" salvo!`);
   };
 
-  // Excluir template customizado
+  // Excluir template personalizado
   const handleDeleteCurrentTemplate = () => {
     const current = templates.find(t => t.id === selectedTemplateId);
     if (!current || current.isDefault) return;
@@ -588,7 +620,9 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     notify("Template excluído.");
   };
 
-  const handleSave = () => { onSave(divulgacaoConfig, aoVivoConfig, playerConfig); };
+  const handleSave = () => {
+    onSave(divulgacaoConfig, aoVivoConfig, playerConfig);
+  };
 
   const handleReset = () => {
     setOpenSubItem("");
@@ -754,7 +788,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[97vw] w-[97vw] h-[96vh] p-0 flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border-0">
         
-        {/* CABEÇALHO COM SELEÇÃO DE ABAS */}
+        {/* CABEÇALHO */}
         <div className="px-5 py-2.5 border-b border-slate-200 bg-white flex items-center justify-between shrink-0 z-20">
           <div className="flex items-center gap-4">
             <h2 className="text-[17px] font-bold tracking-tight text-slate-800">Estilo da Experiência Ao Vivo</h2>
@@ -785,7 +819,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
           </button>
         </div>
 
-        {/* BARRA PRÁTICA E DIRETA DE GERENCIAMENTO DE TEMPLATES */}
+        {/* GERENCIAMENTO DE TEMPLATES */}
         <div className="px-5 py-2 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 text-slate-500 text-[12px] font-bold">
@@ -793,7 +827,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
               <span>Tema/Template:</span>
             </div>
 
-            {/* SELETOR DE TEMPLATES EXISTENTES */}
             <select
               value={selectedTemplateId}
               onChange={(e) => handleSelectTemplate(e.target.value)}
@@ -813,18 +846,16 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
               )}
             </select>
 
-            {/* CAMPO COM O NOME DO TEMPLATE PARA RENOMEAR/EDITAR DIRETO */}
             <div className="flex items-center gap-1">
               <span className="text-[11px] font-semibold text-slate-400 pl-1">Nome:</span>
               <Input
                 value={templateNameInput}
                 onChange={(e) => setTemplateNameInput(e.target.value)}
-                placeholder="Nome do tema (ex: Black Friday, Verão...)"
+                placeholder="Nome do tema..."
                 className="h-8 w-[240px] text-[12px] bg-white rounded-lg border-slate-300 focus:border-rose-500"
               />
             </div>
 
-            {/* BOTÃO SALVAR ATUALIZAÇÃO NO TEMPLATE */}
             <Button
               onClick={handleSaveCurrentTemplate}
               size="sm"
@@ -840,7 +871,23 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
               {isCurrentTemplateCustom ? "Atualizar Template" : "Salvar Template"}
             </Button>
 
-            {/* EXCLUIR SE FOR TEMPLATE CRIADO */}
+            <Button
+              onClick={() => {
+                const name = templateNameInput.trim();
+                if (!name || name === templates.find(t => t.id === selectedTemplateId)?.name) {
+                  setTemplateNameInput(`${name || "Meu Tema"} (Cópia)`);
+                }
+                handleSaveAsNewTemplate();
+              }}
+              size="sm"
+              variant="ghost"
+              title="Salvar como um novo template independente"
+              className="h-8 px-2 text-[11.5px] font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
+            >
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              Novo
+            </Button>
+
             {isCurrentTemplateCustom && (
               <Button
                 onClick={handleDeleteCurrentTemplate}
@@ -854,7 +901,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
             )}
           </div>
 
-          {/* MENSAGEM DISCRETA DE SUCESSO */}
           {bannerAlert && (
             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full animate-in fade-in">
               <Check className="w-3 h-3 text-emerald-600" />
@@ -866,7 +912,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
         {/* CORPO PRINCIPAL */}
         <div className="flex flex-1 overflow-hidden min-h-0">
           
-          {/* PAINEL DE CONFIGURAÇÕES */}
+          {/* SIDEBAR DE CONFIGURAÇÃO */}
           <div className="w-[340px] min-w-[340px] bg-white border-r border-slate-200 flex flex-col z-10 overflow-hidden shrink-0">
             <div className="py-2.5 px-4 flex justify-between items-center border-b border-slate-100">
               <span className="text-[13px] font-bold text-slate-800">Ajuste dos Elementos</span>
@@ -899,7 +945,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
 
                   <AccordionItem id="player_visibilidade" title="2. Elementos Visíveis" openAccordion={openAccordion} setOpenAccordion={setOpenAccordion}>
                     <div className="space-y-2">
-                      
                       <ElementSubItem
                         id="sub_title"
                         label="Exibir Título no Vídeo"
@@ -1004,7 +1049,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
             </div>
           </div>
 
-          {/* PREVIEW MAXIMIZADO */}
+          {/* PREVIEW CENTRALIZADO E PROPORCIONAL */}
           <div className="flex-1 flex flex-col items-center justify-center p-2.5 sm:p-4 bg-slate-100/60 overflow-hidden min-h-0">
             <div className="w-full h-full bg-white rounded-xl border border-slate-200/90 shadow-sm flex items-center justify-center p-2 sm:p-3 relative overflow-hidden min-h-0">
                 
@@ -1013,7 +1058,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                   <div className={`relative bg-[#0a0a0a] transition-all duration-300 flex flex-col shrink-0 ${
                     device === "desktop" 
                       ? "w-full max-w-[1050px] aspect-video rounded-xl border-4 border-[#0a0a0a] overflow-hidden shadow-xl" 
-                      : "h-full max-h-[96%] aspect-[9/18.5] rounded-[2rem] shadow-[0_0_0_3px_#e2e8f0] border-[6px] border-[#0a0a0a] overflow-hidden"
+                      : "h-full max-h-[96%] aspect-[9/19] rounded-[2.2rem] shadow-[0_0_0_3px_#e2e8f0] border-[6px] border-[#0a0a0a] overflow-hidden"
                   }`}>
                     {device === "mobile" && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] max-w-[120px] h-[18px] bg-[#0a0a0a] rounded-b-[0.9rem] z-[100]"></div>}
                     <div className="absolute inset-0 bg-white">
@@ -1062,7 +1107,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                   /* PLAYER */
                   <div className="w-full h-full flex justify-center items-center overflow-hidden">
                     {device === 'mobile' ? (
-                      /* MOBILE COM 3 SMARTPHONES */
+                      /* 3 MOCKUPS MOBILE */
                       <div className="w-full h-full flex items-center justify-center gap-4 md:gap-7 overflow-x-auto overflow-y-hidden px-2 select-none">
                         {[
                           { id: "normal",   label: "Player" },
@@ -1074,7 +1119,6 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                               className="relative bg-[#0a0a0a] rounded-[2.5rem] border-[6px] border-slate-200 shadow-2xl overflow-hidden shrink-0"
                               style={{ height: 'min(78vh, 660px)', aspectRatio: '9 / 19' }}
                             >
-                              {/* Notch */}
                               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[36%] max-w-[110px] h-[18px] bg-slate-200 rounded-b-[0.9rem] z-30"></div>
 
                               <video
@@ -1084,9 +1128,9 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                               />
                               <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/85 pointer-events-none z-10"></div>
 
-                              {/* TOPO ESQUERDO */}
+                              {/* TÍTULO */}
                               <div className="absolute top-4 left-3 flex items-center gap-1.5 z-20">
-                                <div className="w-6 h-6 rounded-full bg-[#1b4332] border border-white/50 flex items-center justify-center text-[7px] font-extrabold text-white shadow">USE</div>
+                                <div className="w-6 h-6 rounded-full bg-[#0094ea] border border-white/50 flex items-center justify-center text-[7px] font-extrabold text-white shadow">USE</div>
                                 {currentPlayer.showTitle && (
                                   <span className="font-bold text-[12.5px] drop-shadow-md tracking-tight leading-none" style={{ color: currentPlayer.titleColor }}>
                                     {currentPlayer.titleText}
@@ -1094,7 +1138,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 )}
                               </div>
 
-                              {/* COLUNA ESQUERDA: CUPOM + INFO */}
+                              {/* CUPOM & INFO */}
                               <div className="absolute top-12 left-3 flex flex-col gap-1.5 z-20">
                                 {currentPlayer.showCoupon && (
                                   <div className="rounded-[6px] overflow-hidden flex flex-col w-[60px] shadow-md border" style={{ borderColor: currentPlayer.borderColor }}>
@@ -1119,7 +1163,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 )}
                               </div>
 
-                              {/* COLUNA DIREITA: AÇÕES */}
+                              {/* BARRA LATERAL DIREITA */}
                               <div className="absolute top-4 right-2.5 flex flex-col items-center gap-2 z-20">
                                 <div className="flex items-center gap-1 text-white text-[7.5px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow" style={{ backgroundColor: currentPlayer.borderColor }}>
                                   <PlaySquare className="w-2.5 h-2.5 fill-white"/> LIVE
@@ -1167,7 +1211,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               </div>
 
-                              {/* CHAT: 100% ACIMA DO CARD */}
+                              {/* CHAT */}
                               {phone.id === 'chat' && currentPlayer.showChat && (
                                 <div className="absolute bottom-[78px] left-2.5 right-2.5 z-20 flex flex-col justify-end pointer-events-none">
                                   <div className="flex flex-col gap-1.5 mb-2 overflow-hidden" style={{ maskImage: 'linear-gradient(to top, black 75%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to top, black 75%, transparent 100%)' }}>
@@ -1188,7 +1232,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               )}
 
-                              {/* CARD DO PRODUTO FIXO NA BASE - FOTO SANGRADA */}
+                              {/* PRODUTO NA BASE */}
                               {phone.id !== 'products' && currentPlayer.showProducts && (
                                 <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20">
                                   <div
@@ -1240,7 +1284,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                                 </div>
                               )}
 
-                              {/* GAVETA DE PRODUTOS DA LIVE */}
+                              {/* GAVETA DE PRODUTOS */}
                               {phone.id === 'products' && currentPlayer.showProducts && (
                                 <div className="absolute inset-x-2 bottom-2 top-7 z-50 flex flex-col overflow-hidden">
                                   <div
@@ -1348,10 +1392,10 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                         ))}
                       </div>
                     ) : (
-                      /* DESKTOP COM 3 COLUNAS */
+                      /* DESKTOP 3 COLUNAS */
                       <div className="flex gap-4 sm:gap-5 w-full max-w-[1150px] mx-auto h-full max-h-[640px] justify-center items-stretch py-1">
                         
-                        {/* COLUNA 1: Produtos da Live + Info */}
+                        {/* COLUNA 1: PRODUTOS */}
                         <div className="flex flex-col gap-3 w-full max-w-[340px] flex-1">
                           {currentPlayer.showProducts && (
                             <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden shadow-sm" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: `${currentPlayer.borderRadius}px` }}>
@@ -1443,7 +1487,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                           )}
                         </div>
 
-                        {/* COLUNA 2: Vídeo + Cupom */}
+                        {/* COLUNA 2: PLAYER VÍDEO */}
                         <div className="flex flex-col gap-3 w-full max-w-[340px] flex-1">
                             <div className="flex-1 min-h-0 relative bg-black overflow-hidden shadow-lg w-full" style={{
                               border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`,
@@ -1489,7 +1533,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
                             )}
                         </div>
 
-                        {/* COLUNA 3: Chat + Compartilhar */}
+                        {/* COLUNA 3: CHAT */}
                         <div className="flex flex-col gap-3 w-full max-w-[340px] flex-1">
                           {currentPlayer.showChat && (
                             <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden shadow-sm" style={{ border: `${currentPlayer.borderWidth}px solid ${currentPlayer.borderColor}`, borderRadius: `${currentPlayer.borderRadius}px` }}>
@@ -1535,7 +1579,7 @@ export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving 
           </div>
         </div>
 
-        {/* RODAPÉ */}
+        {/* FOOTER */}
         <div className="px-5 py-2.5 border-t border-slate-200 bg-white flex items-center justify-between shrink-0 z-20">
           <Button variant="ghost" onClick={handleReset} className="text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-semibold px-2 text-[12px] h-8">
             <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> RESETAR ESTA ABA
