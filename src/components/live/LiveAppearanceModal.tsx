@@ -246,39 +246,73 @@ const INITIAL_TEMPLATES: LiveAppearanceTemplate[] = [
     name: "Black Friday (Preto e Dourado)",
     isDefault: true,
     divulgacao: {
-      desktop: { ...defaultDivulgacaoSettings, borderColor: "#000000", ctaBgColor: "#eab308", ctaTextColor: "#000000", countdownBgColor: "#000000", countdownTextColor: "#eab308" },
-      mobile: { ...defaultDivulgacaoSettings, width: 80, borderColor: "#000000", ctaBgColor: "#eab308", ctaTextColor: "#000000", countdownBgColor: "#000000", countdownTextColor: "#eab308" },
+      desktop: {
+        ...defaultDivulgacaoSettings,
+        borderColor: "#eab308",
+        ctaBgColor: "#000000",
+        ctaTextColor: "#eab308",
+        countdownBgColor: "#000000",
+        countdownTextColor: "#eab308"
+      },
+      mobile: {
+        ...defaultDivulgacaoSettings,
+        width: 80,
+        borderColor: "#eab308",
+        ctaBgColor: "#000000",
+        ctaTextColor: "#eab308",
+        countdownBgColor: "#000000",
+        countdownTextColor: "#eab308"
+      },
       linked: false
     },
     aoVivo: {
-      desktop: { ...defaultAoVivoSettings, borderColor: "#000000", ctaBgColor: "#eab308", ctaTextColor: "#000000" },
-      mobile: { ...defaultAoVivoSettings, width: 80, borderColor: "#000000", ctaBgColor: "#eab308", ctaTextColor: "#000000" },
+      desktop: {
+        ...defaultAoVivoSettings,
+        borderColor: "#eab308",
+        ctaBgColor: "#ef4444",
+        ctaTextColor: "#ffffff"
+      },
+      mobile: {
+        ...defaultAoVivoSettings,
+        width: 80,
+        borderColor: "#eab308",
+        ctaBgColor: "#ef4444",
+        ctaTextColor: "#ffffff"
+      },
       linked: false
     },
     player: {
       desktop: {
         ...defaultPlayerSettings,
-        borderColor: "#000000",
-        couponCodeBgColor: "#eab308",
-        couponCodeColor: "#000000",
-        couponTextBgColor: "#000000",
-        couponTextColor: "#eab308",
-        infoBgColor: "#eab308",
-        infoTextColor: "#000000",
-        productPriceColor: "#ca8a04",
+        borderColor: "#eab308",
+        couponCode: "VIDLYTICS10",
+        couponCodeBgColor: "#000000",
+        couponCodeColor: "#eab308",
+        couponText: "10% OFF",
+        couponTextBgColor: "#ffffff",
+        couponTextColor: "#000000",
+        infoText1: "FRETE GRÁTIS",
+        infoText2: "Acima de R$ 199,00",
+        infoBgColor: "#000000",
+        infoTextColor: "#ffffff",
+        productPriceColor: "#eab308"
       },
       mobile: {
         ...defaultPlayerSettings,
-        borderColor: "#000000",
-        couponCodeBgColor: "#eab308",
-        couponCodeColor: "#000000",
-        couponTextBgColor: "#000000",
-        couponTextColor: "#eab308",
-        infoBgColor: "#eab308",
-        infoTextColor: "#000000",
-        productPriceColor: "#ca8a04",
+        borderColor: "#eab308",
+        couponCode: "VIDLYTICS10",
+        couponCodeBgColor: "#000000",
+        couponCodeColor: "#eab308",
+        couponText: "10% OFF",
+        couponTextBgColor: "#ffffff",
+        couponTextColor: "#000000",
+        infoText1: "FRETE GRÁTIS",
+        infoText2: "Acima de R$ 199,00",
+        infoBgColor: "#000000",
+        infoTextColor: "#ffffff",
+        productPriceColor: "#eab308"
       },
-      linked: true
+      linked: false
     }
   },
   {
