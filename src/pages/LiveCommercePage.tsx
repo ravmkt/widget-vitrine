@@ -14,13 +14,11 @@ import { LiveFormDialog } from "@/components/live/LiveFormDialog";
 import { ShareLiveModal } from "@/components/live/ShareLiveModal";
 import { LiveMetricsModal } from "@/components/live/LiveMetricsModal";
 
-// Importando o modal de aparência e os tipos configurados
 import LiveAppearanceModal, {
   DeviceConfig,
-  LiveWidgetSettings,
+  WidgetDivulgacaoSettings,
+  WidgetAoVivoSettings,
   LivePlayerSettings,
-  defaultWidgetSettings,
-  defaultPlayerSettings
 } from "@/components/live/LiveAppearanceModal";
 
 interface Product {
@@ -62,25 +60,11 @@ export function LiveCommercePage() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareLive, setShareLive] = useState<LiveRow | null>(null);
 
-  // Estados do Modal de Métricas da Live
   const [metricsModalOpen, setMetricsModalOpen] = useState(false);
   const [selectedLiveForMetrics, setSelectedLiveForMetrics] = useState<LiveRow | null>(null);
 
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [savingAppearance, setSavingAppearance] = useState(false);
-  
-  // Usando o formato DeviceConfig
-  const [widgetConfig, setWidgetConfig] = useState<DeviceConfig<LiveWidgetSettings>>({
-    desktop: { ...defaultWidgetSettings },
-    mobile: { ...defaultWidgetSettings, width: 90, marginBottom: 10, marginSide: 10 },
-    linked: false
-  });
-  
-  const [playerConfig, setPlayerConfig] = useState<DeviceConfig<LivePlayerSettings>>({
-    desktop: { ...defaultPlayerSettings },
-    mobile: { ...defaultPlayerSettings },
-    linked: true
-  });
 
   useEffect(() => {
     async function loadStoreAndPlan() {
@@ -135,48 +119,29 @@ export function LiveCommercePage() {
     if (!error && data) setLives(data as LiveRow[]);
   }
 
-  async function loadAppearanceConfig(currentStoreId: string) {
-    const { data, error } = await supabase
-      .from("store_settings")
-      .select("live_widget_config, live_player_config")
-      .eq("store_id", currentStoreId)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Erro ao carregar aparência da live:", error);
-      return;
-    }
-    
-    // Proteção para dados legados
-    if (data?.live_widget_config && Object.keys(data.live_widget_config).length > 0) {
-      if ('desktop' in (data.live_widget_config as any)) {
-        setWidgetConfig(data.live_widget_config as DeviceConfig<LiveWidgetSettings>);
-      }
-    }
-    if (data?.live_player_config && Object.keys(data.live_player_config).length > 0) {
-      if ('desktop' in (data.live_player_config as any)) {
-        setPlayerConfig(data.live_player_config as DeviceConfig<LivePlayerSettings>);
-      }
-    }
-  }
-
-  async function handleSaveAppearance(newWidgetConfig: DeviceConfig<LiveWidgetSettings>, newPlayerConfig: DeviceConfig<LivePlayerSettings>) {
+  async function handleSaveAppearance(
+    divulgacao: DeviceConfig<WidgetDivulgacaoSettings>,
+    aoVivo: DeviceConfig<WidgetAoVivoSettings>,
+    player: DeviceConfig<LivePlayerSettings>
+  ) {
     if (!storeId) return;
     try {
       setSavingAppearance(true);
+      const combinedWidgetConfig = {
+        divulgacao,
+        aoVivo,
+      };
+
       const { error } = await supabase
         .from("store_settings")
         .update({
-          live_widget_config: newWidgetConfig,
-          live_player_config: newPlayerConfig,
+          live_widget_config: combinedWidgetConfig,
+          live_player_config: player,
         })
         .eq("store_id", storeId);
 
       if (error) throw error;
-      
-      setWidgetConfig(newWidgetConfig);
-      setPlayerConfig(newPlayerConfig);
-      
+
       toast.success("Aparência da Live salva com sucesso!");
       setAppearanceOpen(false);
     } catch (err) {
@@ -277,10 +242,7 @@ export function LiveCommercePage() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            onClick={() => {
-              if (storeId) loadAppearanceConfig(storeId);
-              setAppearanceOpen(true);
-            }}
+            onClick={() => setAppearanceOpen(true)}
             className="gap-2"
           >
             <Palette className="h-4 w-4" />
@@ -421,12 +383,9 @@ export function LiveCommercePage() {
         isOpen={appearanceOpen}
         onClose={() => setAppearanceOpen(false)}
         onSave={handleSaveAppearance}
-        initialWidgetConfig={widgetConfig}
-        initialPlayerConfig={playerConfig}
         isSaving={savingAppearance}
       />
 
-      {/* Modal de Métricas com Linha do Tempo e KPIs */}
       <LiveMetricsModal
         open={metricsModalOpen}
         onOpenChange={setMetricsModalOpen}
