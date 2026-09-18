@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   var WIDGET_VERSION = '2026.09.16-21';
 
   console.info(
@@ -573,72 +573,102 @@ function trackLiveEvent(liveId, eventType, metadata) {
   }).catch(function () {});
 }
 
+function getActiveLiveWidgetConfig() {
+  var isMobile = window.innerWidth < 768;
+  var cfg = liveWidgetConfig || {};
+  if (cfg.desktop || cfg.mobile) {
+    var devCfg = isMobile ? (cfg.mobile || cfg.desktop) : (cfg.desktop || cfg.mobile);
+    return Object.assign({}, devCfg);
+  }
+  return cfg;
+}
+
 function renderLiveWidget(live) {
   if (!live || liveWidgetRoot) return;
-  if (liveWidgetConfig.enabled === false) return;
 
-  var posMap = {
-    'bottom-right': 'bottom:20px;right:20px;',
-    'bottom-left': 'bottom:20px;left:20px;',
-    'top-right': 'top:20px;right:20px;',
-    'top-left': 'top:20px;left:20px;'
-  };
-var posCss = posMap[normalizeFloatingPosition(liveWidgetConfig.position)] || posMap['bottom-right'];
+  var currentCfg = getActiveLiveWidgetConfig();
+  if (currentCfg.enabled === false) return;
+
+  var isLive = live.status === 'live';
+  var shape = currentCfg.shape || 'portrait';
+  var width = Number(currentCfg.width) || (shape === 'circle' ? 90 : 180);
+  var borderRadius = shape === 'circle' ? '999px' : (currentCfg.borderRadius !== undefined ? currentCfg.borderRadius + 'px' : '16px');
+  var borderWidth = currentCfg.borderWidth !== undefined ? currentCfg.borderWidth + 'px' : '2px';
+  var borderColor = currentCfg.borderColor || '#e11d48';
+  var position = currentCfg.position || 'bottom-right';
+
+  var marginBottom = currentCfg.marginBottom !== undefined ? currentCfg.marginBottom + 'px' : '20px';
+  var marginTop = currentCfg.marginTop !== undefined ? currentCfg.marginTop + 'px' : '20px';
+  var marginSide = currentCfg.marginSide !== undefined ? currentCfg.marginSide + 'px' : '20px';
+
+  var posStyles = [];
+  if (position.indexOf('bottom') !== -1) posStyles.push('bottom:' + marginBottom);
+  if (position.indexOf('top') !== -1) posStyles.push('top:' + marginTop);
+  if (position.indexOf('right') !== -1) posStyles.push('right:' + marginSide);
+  if (position.indexOf('left') !== -1) posStyles.push('left:' + marginSide);
 
   var host = document.createElement('div');
   host.id = 'vidlytics-live-root';
-  host.style.cssText = 'position:fixed;z-index:2147483000;' + posCss;
+  host.style.cssText = 'position:fixed;z-index:2147483000;' + posStyles.join(';') + ';';
   document.body.appendChild(host);
   liveWidgetRoot = host;
   liveWidgetShadow = host.attachShadow({ mode: 'open' });
 
-  var isLive = live.status === 'live';
-var mediaUrl = live.promo_media_url || live.youtube_thumbnail_url || '';
+  var mediaUrl = live.promo_media_url || live.youtube_thumbnail_url || '';
   var mediaType = live.promo_media_type || 'image';
-  var ctaText = live.promo_cta_text || 'Assista Agora';
+  var ctaText = live.promo_cta_text || (isLive ? 'Assistir Agora' : 'Quero Participar');
   var title = live.title || 'Live Commerce';
+  var scheduledAt = live.scheduled_at ? new Date(live.scheduled_at) : null;
+
+  var aspectCss = (shape === 'square' || shape === 'circle') ? 'aspect-ratio: 1/1;' : 'aspect-ratio: 9/16;';
 
   var style = document.createElement('style');
   style.textContent =
-    '.vl-live-card{width:260px;border-radius:14px;overflow:hidden;background:#0f172a;box-shadow:0 10px 30px rgba(0,0,0,.35);font-family:system-ui,sans-serif;cursor:pointer;position:relative;animation:vlFadeIn .3s ease;}' +
-    '@keyframes vlFadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}' +
-    '.vl-live-media{width:100%;height:140px;object-fit:cover;display:block;background:#000;}' +
-    '.vl-live-badge{position:absolute;top:10px;left:10px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;display:flex;align-items:center;gap:4px;}' +
-    '.vl-live-badge.scheduled{background:#334155;}' +
-    '.vl-live-dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:vlPulse 1.2s infinite;}' +
-    '@keyframes vlPulse{0%,100%{opacity:1;}50%{opacity:.3;}}' +
-    '.vl-live-body{padding:10px 12px 12px;}' +
-    '.vl-live-title{color:#fff;font-size:13px;font-weight:700;line-height:1.3;margin:0 0 8px;max-height:34px;overflow:hidden;}' +
-    '.vl-live-cta{display:block;width:100%;background:#22c55e;color:#fff;border:none;border-radius:8px;padding:8px 0;font-size:12px;font-weight:700;text-align:center;cursor:pointer;}' +
-    '.vl-live-close{position:absolute;top:6px;right:8px;background:rgba(0,0,0,.4);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;cursor:pointer;line-height:1;z-index:2;}';
+    '.vl-live-container {' +
+      'width:' + width + 'px;' +
+      aspectCss +
+      'border-radius:' + borderRadius + ';' +
+      'border:' + borderWidth + ' solid ' + borderColor + ';' +
+      'overflow:hidden; position:relative; box-shadow:0 12px 32px rgba(0,0,0,0.35);' +
+      'cursor:pointer; background:#000; font-family:system-ui,-apple-system,sans-serif;' +
+      'user-select:none; transition:transform .2s ease;' +
+    '}' +
+    '.vl-live-container:hover { transform: scale(1.03); }' +
+    '.vl-live-media { width:100%; height:100%; object-fit:cover; display:block; }' +
+    '.vl-live-overlay-grad {' +
+      'position:absolute; inset:0;' +
+      'background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.4) 100%);' +
+      'display:flex; flex-direction:column; justify-content:space-between; padding:10px; box-sizing:border-box;' +
+    '}' +
+    '.vl-live-top-row { display:flex; justify-content:space-between; align-items:flex-start; width:100%; }' +
+    '.vl-live-badge {' +
+      'background:' + (isLive ? '#ef4444' : '#3b82f6') + ';' +
+      'color:#fff; font-size:10px; font-weight:800; padding:3px 8px; border-radius:999px;' +
+      'display:inline-flex; align-items:center; gap:4px; text-transform:uppercase; letter-spacing:0.5px;' +
+    '}' +
+    '.vl-live-pulse { width:6px; height:6px; background:#fff; border-radius:50%; animation:vlP 1.2s infinite; }' +
+    '@keyframes vlP { 0%,100%{opacity:1;} 50%{opacity:0.3;} }' +
+    '.vl-live-close {' +
+      'background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:50%;' +
+      'width:22px; height:22px; display:flex; align-items:center; justify-content:center;' +
+      'font-size:14px; cursor:pointer; line-height:1; transition:background .2s;' +
+    '}' +
+    '.vl-live-close:hover { background:rgba(0,0,0,0.8); }' +
+    '.vl-live-bottom-info { display:flex; flex-direction:column; gap:6px; width:100%; }' +
+    '.vl-live-title { color:#fff; font-size:11px; font-weight:700; line-height:1.2; margin:0; text-shadow:0 1px 2px rgba(0,0,0,0.8); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
+    '.vl-live-countdown { background:rgba(0,0,0,0.65); backdrop-filter:blur(4px); color:#fbbf24; font-size:10px; font-weight:700; text-align:center; padding:4px 6px; border-radius:6px; border:1px solid rgba(251,191,36,0.3); }' +
+    '.vl-live-cta-btn {' +
+      'width:100%; padding:6px 0; background:' + (currentCfg.ctaBgColor || '#22c55e') + ';' +
+      'color:' + (currentCfg.ctaTextColor || '#ffffff') + ';' +
+      'font-size:11px; font-weight:700; text-align:center; border:none; border-radius:6px; cursor:pointer;' +
+      'box-shadow:0 2px 8px rgba(0,0,0,0.3); transition:filter .2s;' +
+    '}' +
+    '.vl-live-cta-btn:hover { filter:brightness(1.1); }';
+
   liveWidgetShadow.appendChild(style);
 
   var card = document.createElement('div');
-  card.className = 'vl-live-card';
-
-  var closeBtn = document.createElement('button');
-  closeBtn.className = 'vl-live-close';
-  closeBtn.textContent = '×';
-  closeBtn.onclick = function (e) {
-    e.stopPropagation();
-    host.remove();
-    liveWidgetRoot = null;
-  };
-  card.appendChild(closeBtn);
-
-  var badge = document.createElement('div');
-  badge.className = 'vl-live-badge' + (isLive ? '' : ' scheduled');
-  if (isLive) {
-    badge.style.background = liveWidgetConfig.bubble_color || '#ef4444';
-    badge.style.color = liveWidgetConfig.text_color || '#fff';
-    var dot = document.createElement('span');
-    dot.className = 'vl-live-dot';
-    badge.appendChild(dot);
-    badge.appendChild(document.createTextNode(liveWidgetConfig.label_text || 'AO VIVO'));
-  } else {
-    badge.textContent = 'EM BREVE';
-  }
-  card.appendChild(badge);
+  card.className = 'vl-live-container';
 
   if (mediaUrl) {
     if (mediaType === 'video') {
@@ -659,27 +689,93 @@ var mediaUrl = live.promo_media_url || live.youtube_thumbnail_url || '';
     }
   }
 
-  var body = document.createElement('div');
-  body.className = 'vl-live-body';
+  if (shape !== 'circle') {
+    var overlayEl = document.createElement('div');
+    overlayEl.className = 'vl-live-overlay-grad';
 
-  var titleEl = document.createElement('p');
-  titleEl.className = 'vl-live-title';
-  titleEl.textContent = title;
-  body.appendChild(titleEl);
+    var topRow = document.createElement('div');
+    topRow.className = 'vl-live-top-row';
 
-  var cta = document.createElement('button');
-  cta.className = 'vl-live-cta';
-  cta.textContent = ctaText;
-  body.appendChild(cta);
+    var badge = document.createElement('div');
+    badge.className = 'vl-live-badge';
+    if (isLive) {
+      badge.innerHTML = '<span class="vl-live-pulse"></span> AO VIVO';
+    } else {
+      badge.textContent = 'EM BREVE';
+    }
+    topRow.appendChild(badge);
 
-  card.appendChild(body);
-  liveWidgetShadow.appendChild(card);
+    if (currentCfg.allowClose !== false) {
+      var closeBtn = document.createElement('button');
+      closeBtn.className = 'vl-live-close';
+      closeBtn.textContent = '×';
+      closeBtn.onclick = function (e) {
+        e.stopPropagation();
+        host.remove();
+        liveWidgetRoot = null;
+      };
+      topRow.appendChild(closeBtn);
+    }
+    overlayEl.appendChild(topRow);
+
+    var bottomInfo = document.createElement('div');
+    bottomInfo.className = 'vl-live-bottom-info';
+
+    if (currentCfg.showTitle !== false) {
+      var titleEl = document.createElement('p');
+      titleEl.className = 'vl-live-title';
+      titleEl.textContent = title;
+      bottomInfo.appendChild(titleEl);
+    }
+
+    if (!isLive && scheduledAt && scheduledAt > new Date()) {
+      var countEl = document.createElement('div');
+      countEl.className = 'vl-live-countdown';
+      function updateCountdown() {
+        var diff = scheduledAt.getTime() - new Date().getTime();
+        if (diff <= 0) {
+          countEl.textContent = 'Começando agora!';
+          return;
+        }
+        var d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        var h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        var m = Math.floor((diff / 1000 / 60) % 60);
+        var s = Math.floor((diff / 1000) % 60);
+        countEl.textContent = '⏳ ' + (d > 0 ? d + 'd ' : '') + (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+      }
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+      bottomInfo.appendChild(countEl);
+    }
+
+    var ctaBtn = document.createElement('button');
+    ctaBtn.className = 'vl-live-cta-btn';
+    ctaBtn.textContent = ctaText;
+    bottomInfo.appendChild(ctaBtn);
+
+    overlayEl.appendChild(bottomInfo);
+    card.appendChild(overlayEl);
+  } else {
+    if (currentCfg.allowClose !== false) {
+      var closeCircle = document.createElement('button');
+      closeCircle.className = 'vl-live-close';
+      closeCircle.style.cssText = 'position:absolute; top:4px; right:4px; z-index:3;';
+      closeCircle.textContent = '×';
+      closeCircle.onclick = function (e) {
+        e.stopPropagation();
+        host.remove();
+        liveWidgetRoot = null;
+      };
+      card.appendChild(closeCircle);
+    }
+  }
 
   card.addEventListener('click', function () {
     trackLiveEvent(live.id, 'product_click', { source: 'promo_card' });
     openLiveModal(live);
   });
 
+  liveWidgetShadow.appendChild(card);
   currentLiveData = live;
   trackLiveEvent(live.id, 'view', { source: 'promo_card' });
 }
@@ -6882,6 +6978,8 @@ function initWidget() {
       }
 
       return readStoreSettings().then(function (settings) {
+        if (settings.live_widget_config) { liveWidgetConfig = settings.live_widget_config; }
+        if (settings.live_player_config) { livePlayerConfig = settings.live_player_config; }
         if (settings.widget_enabled === false || settings.app_enabled === false) {
           console.warn('[Vidlytics] Widget inativo: o aplicativo está desativado nas configurações da loja (Offline).');
           appDisabledBySettings = true;
