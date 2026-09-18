@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   var WIDGET_VERSION = '2026.09.16-21';
 
   console.info(
