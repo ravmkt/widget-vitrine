@@ -521,7 +521,7 @@ const ElementSubItem = ({
   );
 };
 
-export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving }: Props) {
+export default function LiveAppearanceModal({ isOpen, onClose, onSave, isSaving, initialData }: Props) {
   const [activeTab, setActiveTab] = useState<"divulgacao" | "aovivo" | "player">("divulgacao");
   const [device, setDevice] = useState<"desktop" | "mobile">("mobile");
   const [openAccordion, setOpenAccordion] = useState<string>("player_visibilidade");
