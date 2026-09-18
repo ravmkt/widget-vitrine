@@ -407,6 +407,7 @@ export function LiveCommercePage() {
         onClose={() => setAppearanceOpen(false)}
         onSave={handleSaveAppearance}
         isSaving={savingAppearance}
+        initialData={appearanceData}
       />
 
       <LiveMetricsModal
