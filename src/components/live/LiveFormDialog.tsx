@@ -1027,8 +1027,9 @@ export function LiveFormDialog({
             )}
           </div>
 
-          {/* RODAPÉ COM NAVEGAÇÃO DOS PASSOS */}
+          {/* RODAPÉ COM NAVEGAÇÃO DOS PASSOS E BOTÃO SALVAR GLOBAL */}
           <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            {/* LADO ESQUERDO: VOLTAR */}
             {currentStep > 1 ? (
               <Button
                 type="button"
@@ -1042,6 +1043,7 @@ export function LiveFormDialog({
               <div />
             )}
 
+            {/* LADO DIREITO: CANCELAR, AVANÇAR E SALVAR */}
             <div className="flex items-center gap-2">
               <Button
                 type="button"
@@ -1052,46 +1054,37 @@ export function LiveFormDialog({
                 Cancelar
               </Button>
 
-              {currentStep === 1 && (
+              {/* BOTÃO AVANÇAR (Etapas 1, 2 e 3) */}
+              {currentStep < 4 && (
                 <Button
                   type="button"
-                  onClick={handleNextFromStep1}
-                  className="bg-rose-600 hover:bg-rose-700 text-white h-9 px-5 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm"
+                  variant="outline"
+                  onClick={() => {
+                    if (currentStep === 1) handleNextFromStep1();
+                    else if (currentStep === 2) handleNextFromStep2();
+                    else if (currentStep === 3) handleNextFromStep3();
+                  }}
+                  className="h-9 px-4 text-xs font-semibold rounded-xl flex items-center gap-1.5 border-slate-300 hover:bg-slate-100"
                 >
                   Avançar <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
               )}
 
-              {currentStep === 2 && (
-                <Button
-                  type="button"
-                  onClick={handleNextFromStep2}
-                  className="bg-rose-600 hover:bg-rose-700 text-white h-9 px-5 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm"
-                >
-                  Avançar <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
-              )}
-
-              {currentStep === 3 && (
-                <Button
-                  type="button"
-                  onClick={handleNextFromStep3}
-                  className="bg-rose-600 hover:bg-rose-700 text-white h-9 px-5 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm"
-                >
-                  Avançar <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
-              )}
-
-              {currentStep === 4 && (
-                <Button
-                  type="button"
-                  onClick={handleFinalSave}
-                  disabled={saving}
-                  className="bg-rose-600 hover:bg-rose-700 text-white h-9 px-6 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm"
-                >
-                  {saving ? "Salvando..." : "Salvar Live"}
-                </Button>
-              )}
+              {/* BOTÃO SALVAR (Sempre visível em qualquer etapa) */}
+              <Button
+                type="button"
+                onClick={handleFinalSave}
+                disabled={saving}
+                className="bg-rose-600 hover:bg-rose-700 text-white h-9 px-6 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm"
+              >
+                {saving ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Salvando...
+                  </>
+                ) : (
+                  "Salvar Live"
+                )}
+              </Button>
             </div>
           </div>
 
