@@ -9,6 +9,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { MODULES } from '@/lib/modules';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError, showWarning } from '@/utils/toast';
 
@@ -287,7 +288,7 @@ export function PlansPage() {
           const isCurrent = p.id === currentPlanId;
           const isUpdating = updatingPlanId === p.id;
           const isPopular = p.is_popular || p.slug === 'pro';
-          const allowsLive = Boolean(p.allows_live);
+          const allowsLive = Array.isArray(p.modules) ? p.modules.includes(MODULES.LIVE_COMMERCE) : Boolean(p.allows_live);
           const isPagesUnlimited = Number(p.pages_limit) >= 9999;
           const videosLimit = p.videos_limit || (p.slug === 'scale' ? 100 : p.slug === 'pro' ? 30 : 10);
 
@@ -434,3 +435,5 @@ export function PlansPage() {
     </div>
   );
 }
+
+
