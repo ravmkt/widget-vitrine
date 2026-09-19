@@ -1070,12 +1070,32 @@ function fetchLiveSpotlight(live) {
       var newId = rows[0].spotlight_product_id || null;
       if (newId === liveSpotlightProductId) return;
       liveSpotlightProductId = newId;
+
       var cards = document.querySelectorAll('.vl-live-product');
       cards.forEach(function (c) {
         var pid = c.getAttribute('data-vl-product-id');
         if (newId && pid === newId) c.classList.add('vl-spotlight');
         else c.classList.remove('vl-spotlight');
       });
+
+      if (liveSpotlightOverlayEl) {
+        if (newId) {
+          var prod = liveActiveProducts.filter(function (p) { return p.id === newId; })[0];
+          if (prod) {
+            liveSpotlightOverlayEl.innerHTML =
+              '<img src="' + (prod.image_url || '') + '" alt="">' +
+              '<div class="vl-live-spotlight-overlay-info">' +
+                '<div class="vl-live-spotlight-overlay-name">' + (prod.name || '') + '</div>' +
+                '<div class="vl-live-spotlight-overlay-price">' + (prod.price || '') + '</div>' +
+              '</div>';
+            liveSpotlightOverlayEl.classList.add('vl-active');
+          } else {
+            liveSpotlightOverlayEl.classList.remove('vl-active');
+          }
+        } else {
+          liveSpotlightOverlayEl.classList.remove('vl-active');
+        }
+      }
     })
     .catch(function () {});
 }
