@@ -996,6 +996,9 @@ function stopLivePolling() {
   if (liveSpotlightPollTimer) { clearInterval(liveSpotlightPollTimer); liveSpotlightPollTimer = null; }
   liveChatSeenIds = {};
   liveSpotlightProductId = null;
+  liveSpotlightOverlayEl = null;
+liveActiveProducts = [];
+
 }
 
 function startLivePolling(live) {
