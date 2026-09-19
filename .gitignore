@@ -31,3 +31,5 @@ public/*.bak
 public/widget.js.bak
 
 public/widget.js.bak-*
+
+backups/
