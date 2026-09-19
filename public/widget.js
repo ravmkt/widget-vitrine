@@ -896,6 +896,7 @@ vidEl.src = live.stream_url;
 
   var products = live.featured_products || [];
   if (products.length) {
+    liveActiveProducts = products;
     var grid = document.createElement('div');
     grid.className = 'vl-live-products';
     products.forEach(function (p) {
