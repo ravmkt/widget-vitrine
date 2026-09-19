@@ -1,485 +1,565 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  RefreshCw,
-  ShoppingBag,
-  Send,
-  X,
-  Star,
-  Users,
-  Smartphone,
-  Monitor,
-  Tag,
-  Megaphone,
-  Radio,
-  Eye,
-  CheckCircle2
-} from "lucide-react";
-import { toast } from "sonner";
-import { useLiveChat } from "@/hooks/useLiveChat";
-import { useLiveSpotlight } from "@/hooks/useLiveSpotlight";
+import React, { useState, useEffect } from 'react';
+import { 
+  Tv, 
+  Smartphone, 
+  Monitor, 
+  Star, 
+  Tag, 
+  Gift, 
+  AlertTriangle, 
+  Send, 
+  Users, 
+  TrendingUp, 
+  MessageSquare, 
+  MousePointerClick, 
+  ShoppingBag, 
+  DollarSign, 
+  X, 
+  CheckCircle2, 
+  Flame, 
+  Heart, 
+  Smile
+} from 'lucide-react';
 
 interface Product {
   id: string;
   name: string;
   price: number;
-  image_url?: string;
+  image: string;
+  url?: string;
+  is_active?: boolean;
 }
 
-interface LiveData {
+interface Coupon {
   id: string;
-  store_id: string;
-  title: string;
-  youtube_video_id: string;
-  featured_product_ids: string[];
-  spotlight_product_id: string | null;
-  is_active: boolean;
-  status: string;
+  code: string;
+  discount: string;
+  description?: string;
 }
 
-export default function LiveAdminPage() {
-  const { liveId } = useParams<{ liveId: string }>();
+interface Advantage {
+  id: string;
+  title: string;
+  icon?: string;
+}
 
-  const [live, setLive] = useState<LiveData | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [chatInput, setChatInput] = useState("");
-  const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
+interface ChatMessage {
+  id: string;
+  sender: string;
+  text: string;
+  time: string;
+  isOfficial?: boolean;
+  type?: 'text' | 'coupon' | 'alert';
+}
 
-  // Painéis de Ação Rápida
-  const [couponCode, setCouponCode] = useState("");
-  const [announcementText, setAnnouncementText] = useState("");
+export default function LiveAdmin() {
+  const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
+  
+  // Destaques e Estados Ativos
+  const [activeProductId, setActiveProductId] = useState<string | null>('prod-2');
+  const [activeCouponId, setActiveCouponId] = useState<string | null>(null);
+  const [activeAdvantageId, setActiveAdvantageId] = useState<string | null>(null);
+  const [isUrgentAlertActive, setIsUrgentAlertActive] = useState<boolean>(false);
+  const [urgentAlertText, setUrgentAlertText] = useState<string>('ÚLTIMAS PEÇAS DISPONÍVEIS!');
 
-  const { messages, sendMessage } = useLiveChat(liveId || null, live?.store_id || null);
-  const { spotlightProductId, setSpotlight } = useLiveSpotlight(
-    liveId || null,
-    live?.spotlight_product_id || null
-  );
+  // Mock inicial de dados (integrados à live)
+  const [products] = useState<Product[]>([
+    { id: 'prod-1', name: 'Calça Confort Bicolor Preto e Rosa Pink 46/48 - G', price: 154.95, image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=150&auto=format&fit=crop&q=60' },
+    { id: 'prod-2', name: 'Blusa Confort - Verde Jade 46/48 - G', price: 149.95, image: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=150&auto=format&fit=crop&q=60' },
+    { id: 'prod-3', name: 'Calça Confort - Rosa Pink 42/44 - M', price: 149.95, image: 'https://images.unsplash.com/photo-1506630448388-4e683c67ddb0?w=150&auto=format&fit=crop&q=60' },
+    { id: 'prod-4', name: 'Blusa Manga Longa Canelada Soft', price: 299.90, image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=150&auto=format&fit=crop&q=60' }
+  ]);
 
-  useEffect(() => {
-    if (!liveId) return;
+  const [coupons] = useState<Coupon[]>([
+    { id: 'c-1', code: 'LIVE10', discount: '10% OFF' },
+    { id: 'c-2', code: 'FRETEGRATIS', discount: 'Frete Grátis acima de R$ 199' },
+    { id: 'c-3', code: 'PRIMEIRACOMPRA', discount: 'R$ 20 OFF' }
+  ]);
 
-    async function load() {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("lives")
-        .select("id, store_id, title, youtube_video_id, featured_product_ids, spotlight_product_id, is_active, status")
-        .eq("id", liveId)
-        .maybeSingle();
+  const [advantages] = useState<Advantage[]>([
+    { id: 'adv-1', title: 'Frete Grátis para todo Brasil' },
+    { id: 'adv-2', title: 'Parcele em até 6x Sem Juros' },
+    { id: 'adv-3', title: 'Brinde exclusivo nas compras de hoje' }
+  ]);
 
-      if (error || !data) {
-        toast.error("Live não encontrada.");
-        setLoading(false);
-        return;
-      }
-      setLive(data as LiveData);
+  // Métricas
+  const [metrics, setMetrics] = useState({
+    activeViewers: 15,
+    peakViewers: 42,
+    messagesCount: 1,
+    productClicks: 10,
+    salesCount: 2,
+    salesTotal: 200.00,
+    lostSalesTotal: 800.00 // Pessoas que clicaram no produto mas não concluíram
+  });
 
-      const productIds: string[] = Array.isArray(data.featured_product_ids) ? data.featured_product_ids : [];
-      if (productIds.length > 0) {
-        const { data: prods } = await supabase
-          .from("products")
-          .select("id, name, price, image_url")
-          .in("id", productIds);
-        if (prods) setProducts(prods as Product[]);
-      }
-      setLoading(false);
+  // Chat
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { id: '1', sender: 'Você (Loja Oficial)', text: 'AVISO: Bem-vindos à nossa Super Live!', time: '10:00', isOfficial: true, type: 'alert' }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+
+  const activeProduct = products.find(p => p.id === activeProductId);
+  const activeCoupon = coupons.find(c => c.id === activeCouponId);
+  const activeAdvantage = advantages.find(a => a.id === activeAdvantageId);
+
+  // Toggle Produto
+  const toggleProduct = (id: string) => {
+    setActiveProductId(prev => prev === id ? null : id);
+  };
+
+  // Toggle Cupom
+  const toggleCoupon = (coupon: Coupon) => {
+    if (activeCouponId === coupon.id) {
+      setActiveCouponId(null);
+    } else {
+      setActiveCouponId(coupon.id);
+      // Dispara aviso no chat oficial
+      const msg: ChatMessage = {
+        id: String(Date.now()),
+        sender: 'Loja Oficial',
+        text: `🏷️ Cupom ativado: use ${coupon.code} para ${coupon.discount}!`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isOfficial: true,
+        type: 'coupon'
+      };
+      setMessages(prev => [...prev, msg]);
+      setMetrics(m => ({ ...m, messagesCount: m.messagesCount + 1 }));
     }
-    load();
-  }, [liveId]);
+  };
 
-  const handleSendChat = async (textToSend?: string) => {
-    const text = (textToSend || chatInput).trim();
-    if (!text) return;
-    try {
-      await sendMessage("Loja", text, true);
-      if (!textToSend) setChatInput("");
-    } catch {
-      toast.error("Erro ao enviar mensagem.");
+  // Toggle Vantagem
+  const toggleAdvantage = (adv: Advantage) => {
+    if (activeAdvantageId === adv.id) {
+      setActiveAdvantageId(null);
+    } else {
+      setActiveAdvantageId(adv.id);
     }
   };
 
-  const handleToggleSpotlight = async (productId: string) => {
-    try {
-      const next = spotlightProductId === productId ? null : productId;
-      await setSpotlight(next);
-      if (next) {
-        toast.success("Produto ativado em destaque na live!");
-      } else {
-        toast.info("Destaque removido da live.");
-      }
-    } catch {
-      toast.error("Erro ao atualizar destaque.");
-    }
+  // Enviar Mensagem Chat
+  const handleSendMessage = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const newMsg: ChatMessage = {
+      id: String(Date.now()),
+      sender: 'Você (Loja Oficial)',
+      text: chatInput,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isOfficial: true,
+      type: 'text'
+    };
+
+    setMessages(prev => [...prev, newMsg]);
+    setMetrics(m => ({ ...m, messagesCount: m.messagesCount + 1 }));
+    setChatInput('');
   };
 
-  const handleSendCoupon = async () => {
-    if (!couponCode.trim()) return;
-    const msg = `🔥 CUPOM ESPECIAL DA LIVE: Use o cupom "${couponCode.trim().toUpperCase()}" para desconto exclusivo!`;
-    await handleSendChat(msg);
-    setCouponCode("");
-    toast.success("Cupom anunciado no chat!");
+  const handleQuickEmoji = (emoji: string) => {
+    setChatInput(prev => prev + emoji);
   };
-
-  const handleSendAnnouncement = async () => {
-    if (!announcementText.trim()) return;
-    const msg = `📢 AVISO: ${announcementText.trim()}`;
-    await handleSendChat(msg);
-    setAnnouncementText("");
-    toast.success("Aviso anunciado no chat!");
-  };
-
-  const currentSpotlightProduct = products.find((p) => p.id === spotlightProductId);
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-950">
-        <RefreshCw className="h-8 w-8 animate-spin text-rose-500" />
-      </div>
-    );
-  }
-
-  if (!live) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-950 text-white">
-        Live não encontrada.
-      </div>
-    );
-  }
 
   return (
-    <div className="h-screen w-screen bg-slate-950 text-white flex flex-col overflow-hidden select-none">
-      {/* Topo / Header */}
-      <header className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800 bg-slate-900/60 shrink-0">
+    <div className="flex flex-col h-screen w-full bg-[#0a0f1d] text-slate-100 overflow-hidden font-sans p-3 md:p-5 select-none">
+      
+      {/* BARRA DE TOPO */}
+      <header className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3 px-1">
         <div className="flex items-center gap-3">
-          <Badge className="bg-rose-600 text-white flex items-center gap-1.5 px-2.5 py-1">
-            <Radio className="h-3.5 w-3.5 animate-pulse" /> TRANSMISSÃO ATIVA
-          </Badge>
-          <div className="flex items-center gap-2">
-            <h1 className="text-sm font-bold truncate max-w-sm sm:max-w-md">{live.title}</h1>
-            <Badge variant="outline" className="text-[10px] border-slate-700 text-slate-400">
-              ID: {live.id.slice(0, 8)}
-            </Badge>
+          <div className="flex items-center gap-2 bg-red-600/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-xs font-bold tracking-wider">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping inline-block" />
+            AO VIVO
           </div>
+          <h1 className="text-base md:text-lg font-bold text-white tracking-wide">
+            LIVE TRANSMISSÃO <span className="text-xs text-slate-400 font-normal ml-1">ID: 6461b26d</span>
+          </h1>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Métricas rápidas */}
-          <div className="hidden md:flex items-center gap-4 bg-slate-800/80 px-3 py-1 rounded-lg border border-slate-700 text-xs text-slate-300">
-            <div className="flex items-center gap-1.5">
-              <Eye className="w-3.5 h-3.5 text-rose-400" />
-              <span>{messages.length > 0 ? messages.length * 3 + 12 : 8} espectadores</span>
-            </div>
-            <div className="w-px h-3 bg-slate-700" />
-            <div className="flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-blue-400" />
-              <span>{messages.length} msgs</span>
-            </div>
-          </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => window.close()}
-            className="text-slate-400 hover:text-white hover:bg-slate-800 h-8"
-          >
-            <X className="h-4 w-4 mr-1" /> Fechar Painel
-          </Button>
-        </div>
+        <button 
+          onClick={() => window.history.back()}
+          className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition"
+        >
+          <X className="w-4 h-4" /> Fechar Painel
+        </button>
       </header>
 
-      {/* Grid Principal */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1.55fr_1.05fr_0.9fr] overflow-hidden">
+      {/* ÁREA PRINCIPAL (3 COLUNAS) */}
+      <div className="flex-1 grid grid-cols-12 gap-4 overflow-hidden min-h-0">
         
-        {/* COLUNA 1: Monitor da Live + Ações Rápidas */}
-        <div className="flex flex-col bg-black/60 border-r border-slate-800 overflow-hidden">
-          {/* Barra de controle do Monitor */}
-          <div className="px-4 py-2 bg-slate-900/40 border-b border-slate-800 flex items-center justify-between shrink-0">
-            <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Monitor ao Vivo
+        {/* COLUNA 1: MONITOR DE TRANSMISSÃO AO VIVO (5 COLUNAS) */}
+        <section className="col-span-12 lg:col-span-5 flex flex-col bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden p-3 shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Monitor ao Vivo
             </span>
 
             {/* Alternador Desktop / Mobile */}
-            <div className="flex items-center bg-slate-800/80 p-0.5 rounded-lg border border-slate-700">
-              <button
-                onClick={() => setViewMode("desktop")}
-                className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-md font-medium transition-all ${
-                  viewMode === "desktop" ? "bg-rose-600 text-white shadow-sm" : "text-slate-400 hover:text-white"
-                }`}
-                title="Modo Monitor Desktop (16:9)"
+            <div className="flex bg-slate-800/90 p-1 rounded-lg border border-slate-700/60 text-xs">
+              <button 
+                onClick={() => setViewMode('desktop')} 
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition ${viewMode === 'desktop' ? 'bg-red-600 text-white font-medium shadow' : 'text-slate-400 hover:text-white'}`}
               >
-                <Monitor className="h-3.5 w-3.5" /> Desktop
+                <Monitor className="w-3.5 h-3.5" /> Desktop
               </button>
-              <button
-                onClick={() => setViewMode("mobile")}
-                className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-md font-medium transition-all ${
-                  viewMode === "mobile" ? "bg-rose-600 text-white shadow-sm" : "text-slate-400 hover:text-white"
-                }`}
-                title="Modo Monitor Mobile (Vertical 9:16)"
+              <button 
+                onClick={() => setViewMode('mobile')} 
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition ${viewMode === 'mobile' ? 'bg-red-600 text-white font-medium shadow' : 'text-slate-400 hover:text-white'}`}
               >
-                <Smartphone className="h-3.5 w-3.5" /> Mobile
+                <Smartphone className="w-3.5 h-3.5" /> Mobile
               </button>
             </div>
           </div>
 
-          {/* Área do Player da Live */}
-          <div className="flex-1 bg-black flex items-center justify-center p-3 overflow-hidden relative">
-            <div
-              className={`transition-all duration-300 relative border border-slate-800 rounded-xl overflow-hidden shadow-2xl bg-slate-950 ${
-                viewMode === "desktop"
-                  ? "w-full max-w-2xl aspect-video"
-                  : "w-[270px] h-[480px] max-h-full"
-              }`}
-            >
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${live.youtube_video_id}?autoplay=1&mute=1&controls=1`}
-                className="w-full h-full border-0 pointer-events-auto"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title="Monitor da Live"
+          {/* Player Viewport */}
+          <div className="flex-1 bg-black rounded-lg relative overflow-hidden flex items-center justify-center border border-slate-800">
+            {/* Imagem do feed ou stream */}
+            <div className={`relative transition-all duration-300 h-full flex items-center justify-center ${viewMode === 'mobile' ? 'w-[280px] border-x border-slate-800' : 'w-full'}`}>
+              <img 
+                src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80" 
+                alt="Feed da Live" 
+                className="w-full h-full object-cover opacity-80"
               />
 
-              {/* Overlay Dinâmico do Produto Ativo (Exatamente como o visitante vê) */}
-              {currentSpotlightProduct && (
-                <div className="absolute bottom-3 left-3 right-3 sm:right-auto max-w-[280px] bg-slate-900/95 backdrop-blur-md border border-emerald-500/50 rounded-xl p-2.5 shadow-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="w-10 h-10 rounded-lg bg-slate-800 overflow-hidden shrink-0 border border-emerald-500/30 flex items-center justify-center">
-                    {currentSpotlightProduct.image_url ? (
-                      <img
-                        src={currentSpotlightProduct.image_url}
-                        alt={currentSpotlightProduct.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <ShoppingBag className="w-5 h-5 text-emerald-400" />
-                    )}
+              {/* OVERLAYS NA TELA DO MONITOR */}
+
+              {/* Topo do Player: Cupom e Vantagens Ativas */}
+              <div className="absolute top-3 left-3 right-3 flex flex-col gap-1.5 z-20 pointer-events-none">
+                {activeCoupon && (
+                  <div className="self-start bg-amber-500/90 backdrop-blur-md text-slate-950 font-bold text-xs px-3 py-1 rounded-md shadow-lg flex items-center gap-1.5 animate-bounce">
+                    <Tag className="w-3.5 h-3.5" /> CUPOM: {activeCoupon.code} ({activeCoupon.discount})
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wide flex items-center gap-1">
-                      <Star className="w-2.5 h-2.5 fill-emerald-400" /> Destaque Ativo
-                    </span>
-                    <p className="text-xs font-semibold text-white truncate">{currentSpotlightProduct.name}</p>
-                    <p className="text-xs font-extrabold text-emerald-300">
-                      R$ {Number(currentSpotlightProduct.price || 0).toFixed(2).replace(".", ",")}
-                    </p>
+                )}
+                {activeAdvantage && (
+                  <div className="self-start bg-indigo-600/90 backdrop-blur-md text-white font-semibold text-xs px-3 py-1 rounded-md shadow flex items-center gap-1.5">
+                    <Gift className="w-3.5 h-3.5 text-indigo-200" /> {activeAdvantage.title}
                   </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Barra Inferior: Cupons e Avisos Rápidos na Live */}
-          <div className="bg-slate-900/80 border-t border-slate-800 p-3 shrink-0 space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {/* Envio de Cupom */}
-              <div className="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-lg border border-slate-800">
-                <Tag className="w-4 h-4 text-amber-400 shrink-0 ml-1" />
-                <Input
-                  placeholder="Cupom (ex: LIVE10)"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendCoupon()}
-                  className="h-7 text-xs bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-1.5 uppercase font-mono"
-                />
-                <Button
-                  size="sm"
-                  onClick={handleSendCoupon}
-                  className="h-7 px-2.5 text-xs bg-amber-600 hover:bg-amber-700 text-white shrink-0"
-                >
-                  Lançar Cupom
-                </Button>
+                )}
               </div>
 
-              {/* Envio de Aviso Geral */}
-              <div className="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-lg border border-slate-800">
-                <Megaphone className="w-4 h-4 text-purple-400 shrink-0 ml-1" />
-                <Input
-                  placeholder="Aviso urgente (ex: Frete grátis nos prox 5 min!)"
-                  value={announcementText}
-                  onChange={(e) => setAnnouncementText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendAnnouncement()}
-                  className="h-7 text-xs bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-1.5"
-                />
-                <Button
-                  size="sm"
-                  onClick={handleSendAnnouncement}
-                  className="h-7 px-2.5 text-xs bg-purple-600 hover:bg-purple-700 text-white shrink-0"
-                >
-                  Avisar
-                </Button>
+              {/* Rodapé do Player: Alertas e Card de Produto */}
+              <div className="absolute bottom-3 left-3 right-3 flex flex-col gap-2 z-20 pointer-events-none">
+                
+                {/* Alerta Urgente (Posicionado em cima do produto se houver produto ativo) */}
+                {isUrgentAlertActive && (
+                  <div className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white font-extrabold text-center text-xs py-1.5 px-3 rounded-lg shadow-xl uppercase tracking-wider animate-pulse border border-red-300 flex items-center justify-center gap-2">
+                    <AlertTriangle className="w-4 h-4 fill-white text-red-600" />
+                    {urgentAlertText}
+                  </div>
+                )}
+
+                {/* Card de Produto Destacado */}
+                {activeProduct && (
+                  <div className="bg-slate-950/85 backdrop-blur-md border border-emerald-500/60 p-2.5 rounded-xl shadow-2xl flex items-center gap-3">
+                    <img 
+                      src={activeProduct.image} 
+                      alt={activeProduct.name} 
+                      className="w-12 h-12 object-cover rounded-lg border border-slate-700" 
+                    />
+                    <div className="flex-1 min-w-0 text-left">
+                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">★ DESTAQUE ATIVO</span>
+                      <h4 className="text-xs font-semibold text-white truncate">{activeProduct.name}</h4>
+                      <p className="text-xs font-black text-emerald-400">R$ {activeProduct.price.toFixed(2).replace('.', ',')}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
 
-        {/* COLUNA 2: Produtos da Live (com controle da Estrelinha / Destaque) */}
-        <div className="border-r border-slate-800 flex flex-col overflow-hidden bg-slate-950">
-          <div className="px-4 py-2.5 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900/40">
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4 text-rose-500" />
-              <h2 className="text-sm font-bold">Produtos na Live ({products.length})</h2>
-            </div>
-            {spotlightProductId && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSpotlight(null)}
-                className="h-6 px-2 text-[10px] text-slate-400 hover:text-rose-400"
-              >
-                Remover Destaque
-              </Button>
-            )}
+          {/* Barra de Ação Rápida de Alerta Urgente */}
+          <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center gap-2">
+            <input 
+              type="text" 
+              value={urgentAlertText}
+              onChange={(e) => setUrgentAlertText(e.target.value)}
+              placeholder="Aviso urgente (ex: Últimas 3 peças!)" 
+              className="flex-1 bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-red-500"
+            />
+            <button 
+              onClick={() => setIsUrgentAlertActive(!isUrgentAlertActive)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow ${
+                isUrgentAlertActive 
+                  ? 'bg-red-600 hover:bg-red-700 text-white' 
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+              }`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              {isUrgentAlertActive ? 'Remover Alerta' : 'Lançar Alerta'}
+            </button>
           </div>
+        </section>
 
-          <div className="px-3 py-2 bg-slate-900/20 border-b border-slate-800/80 text-[11px] text-slate-400 flex items-center gap-1.5">
-            <Star className="w-3.5 h-3.5 text-amber-400" />
-            <span>Clique na <b>estrelinha</b> de um produto para destacá-lo ao vivo no player do cliente.</span>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {products.length === 0 ? (
-              <div className="text-center py-12 px-4 space-y-2">
-                <ShoppingBag className="w-8 h-8 text-slate-600 mx-auto" />
-                <p className="text-xs text-slate-400 font-medium">Nenhum produto vinculado nesta live.</p>
-                <p className="text-[11px] text-slate-600">Vincule produtos na edição da live para ativá-los aqui.</p>
-              </div>
-            ) : (
-              products.map((p) => {
-                const isSpotlight = spotlightProductId === p.id;
-                return (
-                  <div
-                    key={p.id}
-                    onClick={() => handleToggleSpotlight(p.id)}
-                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                      isSpotlight
-                        ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30"
-                        : "border-slate-800 bg-slate-900/70 hover:border-slate-700 hover:bg-slate-900"
-                    }`}
+        {/* COLUNA 2: PRODUTOS, CUPONS E VANTAGENS (4 COLUNAS) */}
+        <section className="col-span-12 lg:col-span-4 flex flex-col bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden p-3 shadow-lg">
+          
+          <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
+            
+            {/* 1. SEÇÃO DE PRODUTOS */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <ShoppingBag className="w-4 h-4 text-emerald-400" /> Produtos na Live ({products.length})
+                </h3>
+                {activeProductId && (
+                  <button 
+                    onClick={() => setActiveProductId(null)} 
+                    className="text-[11px] text-slate-400 hover:text-rose-400 transition"
                   >
-                    <div className="w-12 h-12 rounded-lg bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-700">
-                      {p.image_url ? (
-                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <ShoppingBag className="w-5 h-5 text-slate-500" />
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-100 truncate">{p.name}</p>
-                      <p className="text-xs text-rose-400 font-bold mt-0.5">
-                        R$ {Number(p.price || 0).toFixed(2).replace(".", ",")}
-                      </p>
-                      {isSpotlight && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 mt-1">
-                          <CheckCircle2 className="w-3 h-3" /> Ao vivo no player
-                        </span>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleSpotlight(p.id);
-                      }}
-                      className={`p-2 rounded-lg transition-all ${
-                        isSpotlight
-                          ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
-                          : "text-slate-500 hover:text-amber-400 hover:bg-slate-800"
-                      }`}
-                      title={isSpotlight ? "Remover do destaque" : "Destacar produto ao vivo"}
-                    >
-                      <Star
-                        className={`h-5 w-5 transition-transform active:scale-125 ${
-                          isSpotlight ? "fill-emerald-400 text-emerald-400" : ""
-                        }`}
-                      />
-                    </button>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* COLUNA 3: Chat Interativo & Moderação */}
-        <div className="flex flex-col overflow-hidden bg-slate-950">
-          <div className="px-4 py-2.5 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900/40">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-400" />
-              <h2 className="text-sm font-bold">Chat ao Vivo</h2>
-            </div>
-            <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-semibold">
-              Canal Oficial
-            </span>
-          </div>
-
-          {/* Histórico de Mensagens */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
-            {messages.length === 0 ? (
-              <div className="text-center py-12 px-4 space-y-1">
-                <Users className="w-8 h-8 text-slate-600 mx-auto" />
-                <p className="text-xs text-slate-500">Nenhuma mensagem no chat ainda.</p>
-                <p className="text-[11px] text-slate-600">Inicie uma conversa como moderador!</p>
+                    Remover Destaque
+                  </button>
+                )}
               </div>
-            ) : (
-              messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`text-xs p-2.5 rounded-xl border max-w-[88%] ${
-                    m.is_from_store
-                      ? "bg-rose-950/40 border-rose-500/30 text-rose-100 ml-auto text-right"
-                      : "bg-slate-900 border-slate-800 text-slate-200"
+              
+              <div className="flex flex-col gap-2">
+                {products.map(prod => {
+                  const isSelected = activeProductId === prod.id;
+                  return (
+                    <div 
+                      key={prod.id} 
+                      onClick={() => toggleProduct(prod.id)}
+                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition border ${
+                        isSelected 
+                          ? 'bg-emerald-950/40 border-emerald-500/80 shadow' 
+                          : 'bg-slate-950/50 hover:bg-slate-800/60 border-slate-800/80'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <img src={prod.image} alt={prod.name} className="w-10 h-10 object-cover rounded-md border border-slate-800" />
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-medium text-slate-200 truncate">{prod.name}</h4>
+                          <span className="text-xs font-bold text-slate-100">R$ {prod.price.toFixed(2).replace('.', ',')}</span>
+                          {isSelected && (
+                            <span className="block text-[10px] text-emerald-400 font-medium">● Ao vivo no player</span>
+                          )}
+                        </div>
+                      </div>
+                      <button className={`p-1.5 rounded-full ${isSelected ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-500 hover:text-slate-300'}`}>
+                        <Star className={`w-4 h-4 ${isSelected ? 'fill-emerald-400' : ''}`} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. SEÇÃO DE CUPONS CADASTRADOS */}
+            <div className="pt-3 border-t border-slate-800/70">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <Tag className="w-4 h-4 text-amber-400" /> Cupons Cadastrados ({coupons.length})
+                </h3>
+                {activeCouponId && (
+                  <button 
+                    onClick={() => setActiveCouponId(null)} 
+                    className="text-[11px] text-slate-400 hover:text-rose-400 transition"
+                  >
+                    Desativar Cupom
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-1.5">
+                {coupons.map(coupon => {
+                  const isSelected = activeCouponId === coupon.id;
+                  return (
+                    <button
+                      key={coupon.id}
+                      onClick={() => toggleCoupon(coupon)}
+                      className={`flex items-center justify-between p-2 rounded-lg text-left text-xs transition border ${
+                        isSelected 
+                          ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold' 
+                          : 'bg-slate-950/40 border-slate-800/80 text-slate-300 hover:bg-slate-800/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-3.5 h-3.5 text-amber-400" />
+                        <span><strong>{coupon.code}</strong> — {coupon.discount}</span>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded ${isSelected ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-400'}`}>
+                        {isSelected ? 'ATIVO' : 'ATIVAR'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 3. SEÇÃO DE VANTAGENS / BENEFÍCIOS */}
+            <div className="pt-3 border-t border-slate-800/70">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <Gift className="w-4 h-4 text-indigo-400" /> Vantagens e Benefícios ({advantages.length})
+                </h3>
+                {activeAdvantageId && (
+                  <button 
+                    onClick={() => setActiveAdvantageId(null)} 
+                    className="text-[11px] text-slate-400 hover:text-rose-400 transition"
+                  >
+                    Desativar
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-1.5">
+                {advantages.map(adv => {
+                  const isSelected = activeAdvantageId === adv.id;
+                  return (
+                    <button
+                      key={adv.id}
+                      onClick={() => toggleAdvantage(adv)}
+                      className={`flex items-center justify-between p-2 rounded-lg text-left text-xs transition border ${
+                        isSelected 
+                          ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300 font-medium' 
+                          : 'bg-slate-950/40 border-slate-800/80 text-slate-300 hover:bg-slate-800/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Gift className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>{adv.title}</span>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded ${isSelected ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-800 text-slate-400'}`}>
+                        {isSelected ? 'EXIBINDO' : 'EXIBIR'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* COLUNA 3: MÉTRICAS GRANDES + CHAT COMPACTO (3 COLUNAS) */}
+        <section className="col-span-12 lg:col-span-3 flex flex-col gap-3 overflow-hidden">
+          
+          {/* CARDS DE MÉTRICAS ROBUSTOS (QUADRADINHOS) */}
+          <div className="grid grid-cols-2 gap-2">
+            
+            {/* Espectadores Ao Vivo */}
+            <div className="bg-slate-900/70 border border-slate-800 p-2.5 rounded-xl flex flex-col">
+              <span className="text-[11px] text-slate-400 flex items-center gap-1.5 mb-1 font-medium">
+                <Users className="w-3.5 h-3.5 text-cyan-400" /> Ao Vivo
+              </span>
+              <span className="text-xl font-black text-white">{metrics.activeViewers}</span>
+            </div>
+
+            {/* Pico de Audiência */}
+            <div className="bg-slate-900/70 border border-slate-800 p-2.5 rounded-xl flex flex-col">
+              <span className="text-[11px] text-slate-400 flex items-center gap-1.5 mb-1 font-medium">
+                <TrendingUp className="w-3.5 h-3.5 text-amber-400" /> Pico
+              </span>
+              <span className="text-xl font-black text-white">{metrics.peakViewers}</span>
+            </div>
+
+            {/* Cliques em Produtos */}
+            <div className="bg-slate-900/70 border border-slate-800 p-2.5 rounded-xl flex flex-col">
+              <span className="text-[11px] text-slate-400 flex items-center gap-1.5 mb-1 font-medium">
+                <MousePointerClick className="w-3.5 h-3.5 text-indigo-400" /> Cliques Prod.
+              </span>
+              <span className="text-xl font-black text-white">{metrics.productClicks}</span>
+            </div>
+
+            {/* Total Mensagens */}
+            <div className="bg-slate-900/70 border border-slate-800 p-2.5 rounded-xl flex flex-col">
+              <span className="text-[11px] text-slate-400 flex items-center gap-1.5 mb-1 font-medium">
+                <MessageSquare className="w-3.5 h-3.5 text-pink-400" /> Mensagens
+              </span>
+              <span className="text-xl font-black text-white">{metrics.messagesCount}</span>
+            </div>
+
+            {/* Vendas Realizadas */}
+            <div className="bg-emerald-950/30 border border-emerald-500/40 p-2.5 rounded-xl flex flex-col">
+              <span className="text-[11px] text-emerald-300 font-semibold flex items-center gap-1 mb-1">
+                <DollarSign className="w-3.5 h-3.5 text-emerald-400" /> Vendido
+              </span>
+              <span className="text-base font-black text-emerald-400">
+                R$ {metrics.salesTotal.toFixed(2).replace('.', ',')}
+              </span>
+            </div>
+
+            {/* Vendas Perdidas / Oportunidade */}
+            <div className="bg-rose-950/30 border border-rose-500/40 p-2.5 rounded-xl flex flex-col">
+              <span className="text-[11px] text-rose-300 font-semibold flex items-center gap-1 mb-1">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400" /> Não Comprado
+              </span>
+              <span className="text-base font-black text-rose-400">
+                R$ {metrics.lostSalesTotal.toFixed(2).replace('.', ',')}
+              </span>
+            </div>
+
+          </div>
+
+          {/* CHAT AO VIVO (ALTURA OTIMIZADA) */}
+          <div className="flex-1 flex flex-col bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden p-3 min-h-0">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800/80 mb-2">
+              <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5 text-blue-400" /> Chat ao Vivo
+              </span>
+              <span className="text-[10px] text-slate-400">Canal Oficial</span>
+            </div>
+
+            {/* Lista de Mensagens */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 text-xs">
+              {messages.map(msg => (
+                <div 
+                  key={msg.id} 
+                  className={`p-2 rounded-lg ${
+                    msg.type === 'coupon' 
+                      ? 'bg-amber-950/40 border border-amber-500/50 text-amber-200' 
+                      : msg.type === 'alert'
+                      ? 'bg-rose-950/40 border border-rose-500/50 text-rose-200'
+                      : 'bg-slate-950/60 border border-slate-800/70 text-slate-200'
                   }`}
                 >
-                  <span
-                    className={`font-bold block text-[10px] mb-0.5 ${
-                      m.is_from_store ? "text-rose-400" : "text-blue-400"
-                    }`}
-                  >
-                    {m.is_from_store ? "⭐ Você (Loja Oficial)" : m.author_name || "Cliente"}
-                  </span>
-                  <p className="break-words leading-relaxed">{m.message}</p>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="font-bold text-[11px] text-white flex items-center gap-1">
+                      {msg.isOfficial && <span className="text-amber-400">★</span>} {msg.sender}
+                    </span>
+                    <span className="text-[9px] text-slate-400">{msg.time}</span>
+                  </div>
+                  <p className="break-words">{msg.text}</p>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
 
-          {/* Atalhos Rápidos de Interação */}
-          <div className="px-3 pt-2 pb-1 border-t border-slate-800/80 bg-slate-900/30 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-            {["🔥", "❤️", "👏", "🎉", "😱", "Corre que tá acabando!"].map((quick, i) => (
-              <button
-                key={i}
-                onClick={() => handleSendChat(quick)}
-                className="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors shrink-0"
+            {/* Reações e Atalhos */}
+            <div className="flex items-center gap-1 pt-2 pb-1 text-xs">
+              {['🔥', '❤️', '👏', '🎉'].map(emoji => (
+                <button 
+                  key={emoji}
+                  onClick={() => handleQuickEmoji(emoji)} 
+                  className="bg-slate-800/60 hover:bg-slate-700 px-2 py-0.5 rounded text-xs transition"
+                >
+                  {emoji}
+                </button>
+              ))}
+              <button 
+                onClick={() => setChatInput('Corre que está acabando!')}
+                className="bg-slate-800/60 hover:bg-slate-700 px-2 py-0.5 rounded text-[10px] text-slate-300 ml-auto"
               >
-                {quick}
+                Corre que tá acabando!
               </button>
-            ))}
+            </div>
+
+            {/* Input de Envio */}
+            <form onSubmit={handleSendMessage} className="flex items-center gap-1.5 pt-1">
+              <input 
+                type="text" 
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Responder como Loja Oficial..." 
+                className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500"
+              />
+              <button 
+                type="submit" 
+                className="bg-blue-600 hover:bg-blue-500 text-white p-1.5 rounded-lg transition"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </form>
           </div>
 
-          {/* Input de Envio */}
-          <div className="p-3 border-t border-slate-800 flex items-center gap-2 shrink-0 bg-slate-900/60">
-            <Input
-              placeholder="Responder como Loja Oficial..."
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSendChat()}
-              className="h-9 text-xs bg-slate-900 border-slate-700 focus-visible:ring-rose-500 text-white placeholder:text-slate-500"
-            />
-            <Button
-              size="icon"
-              onClick={() => handleSendChat()}
-              className="h-9 w-9 bg-rose-600 hover:bg-rose-700 shrink-0 shadow-md"
-              title="Enviar Mensagem"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        </section>
 
       </div>
     </div>
