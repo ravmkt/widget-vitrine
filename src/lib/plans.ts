@@ -1,14 +1,18 @@
+import { MODULES, ModuleId } from './modules';
+
 export interface PlanDefinition {
   id?: string;
   name: string;
   slug: 'starter' | 'pro' | 'scale';
   priceMonthly: number;
-  priceYearly: number; // valor total anual com 20% off
+  priceYearly: number;
   priceYearlyPerMonth: number;
   videosLimit: number;
   viewsLimit: number;
   pagesLimit: number;
   storageLimitBytes: number;
+  modules: ModuleId[];
+  /** @deprecated use `modules.includes(MODULES.LIVE_COMMERCE)` */
   allowsLive: boolean;
   isPopular?: boolean;
   description: string;
@@ -25,7 +29,8 @@ export const PLANS: Record<string, PlanDefinition> = {
     videosLimit: 10,
     viewsLimit: 5000,
     pagesLimit: 2,
-    storageLimitBytes: 5 * 1024 * 1024 * 1024, // 5 GB
+    storageLimitBytes: 5 * 1024 * 1024 * 1024,
+    modules: [MODULES.VIDLYTICS],
     allowsLive: false,
     description: 'Perfeito para lojas iniciando com vídeos e stories para aumentar conversão.',
     features: [
@@ -46,7 +51,8 @@ export const PLANS: Record<string, PlanDefinition> = {
     videosLimit: 30,
     viewsLimit: 20000,
     pagesLimit: 10,
-    storageLimitBytes: 15 * 1024 * 1024 * 1024, // 15 GB
+    storageLimitBytes: 15 * 1024 * 1024 * 1024,
+    modules: [MODULES.VIDLYTICS, MODULES.LIVE_COMMERCE],
     allowsLive: true,
     isPopular: true,
     description: 'Para lojas em crescimento acelerado que buscam vender com vídeos e Live Commerce.',
@@ -68,8 +74,9 @@ export const PLANS: Record<string, PlanDefinition> = {
     priceYearlyPerMonth: 197.60,
     videosLimit: 100,
     viewsLimit: 60000,
-    pagesLimit: 9999, // Ilimitado
-    storageLimitBytes: 50 * 1024 * 1024 * 1024, // 50 GB
+    pagesLimit: 9999,
+    storageLimitBytes: 50 * 1024 * 1024 * 1024,
+    modules: [MODULES.VIDLYTICS, MODULES.LIVE_COMMERCE],
     allowsLive: true,
     description: 'Potência máxima e escala sem limites para grandes marcas do e-commerce.',
     features: [
@@ -84,13 +91,13 @@ export const PLANS: Record<string, PlanDefinition> = {
   },
 } as const;
 
-export const PLAN_LIMITS: Record<string, { views: number; pages: number; storage: number; videos: number; allowsLive: boolean }> = {
-  starter: { views: 5000, pages: 2, storage: 5368709120, videos: 10, allowsLive: false },
-  pro: { views: 20000, pages: 10, storage: 16106127360, videos: 30, allowsLive: true },
-  scale: { views: 60000, pages: 9999, storage: 53687091200, videos: 100, allowsLive: true },
+export const PLAN_LIMITS: Record<string, { views: number; pages: number; storage: number; videos: number; modules: ModuleId[]; allowsLive: boolean }> = {
+  starter: { views: 5000, pages: 2, storage: 5368709120, videos: 10, modules: [MODULES.VIDLYTICS], allowsLive: false },
+  pro: { views: 20000, pages: 10, storage: 16106127360, videos: 30, modules: [MODULES.VIDLYTICS, MODULES.LIVE_COMMERCE], allowsLive: true },
+  scale: { views: 60000, pages: 9999, storage: 53687091200, videos: 100, modules: [MODULES.VIDLYTICS, MODULES.LIVE_COMMERCE], allowsLive: true },
   // Fallbacks para assinaturas antigas
-  iniciante: { views: 5000, pages: 2, storage: 5368709120, videos: 10, allowsLive: false },
-  avançado: { views: 20000, pages: 10, storage: 16106127360, videos: 30, allowsLive: true },
-  avancado: { views: 20000, pages: 10, storage: 16106127360, videos: 30, allowsLive: true },
-  enterprise: { views: 60000, pages: 9999, storage: 53687091200, videos: 100, allowsLive: true },
+  iniciante: { views: 5000, pages: 2, storage: 5368709120, videos: 10, modules: [MODULES.VIDLYTICS], allowsLive: false },
+  avançado: { views: 20000, pages: 10, storage: 16106127360, videos: 30, modules: [MODULES.VIDLYTICS, MODULES.LIVE_COMMERCE], allowsLive: true },
+  avancado: { views: 20000, pages: 10, storage: 16106127360, videos: 30, modules: [MODULES.VIDLYTICS, MODULES.LIVE_COMMERCE], allowsLive: true },
+  enterprise: { views: 60000, pages: 9999, storage: 53687091200, videos: 100, modules: [MODULES.VIDLYTICS, MODULES.LIVE_COMMERCE], allowsLive: true },
 };
