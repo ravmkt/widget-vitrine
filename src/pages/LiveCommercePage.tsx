@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
+import { MODULES } from "@/lib/modules";
 import { useTenant } from "@/context/TenantContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,7 +83,7 @@ export function LiveCommercePage() {
         setLoading(true);
         const { data: store, error: storeErr } = await supabase
           .from("stores")
-          .select("id, plan_id, plan:plan_id(id, name, allows_live)")
+          .select("id, plan_id, plan:plan_id(id, name, allows_live, modules)")
           .eq("id", tenantStoreId)
           .maybeSingle();
 
@@ -95,7 +96,7 @@ export function LiveCommercePage() {
         const currentPlan = (store as any).plan;
         if (currentPlan) {
           setPlanName(currentPlan.name || "Starter");
-          setAllowsLive(currentPlan.allows_live !== false);
+          setAllowsLive(Array.isArray(currentPlan.modules) ? currentPlan.modules.includes(MODULES.LIVE_COMMERCE) : currentPlan.allows_live !== false);
         }
 
         const { data: prods } = await supabase
@@ -437,3 +438,5 @@ export function LiveCommercePage() {
     </div>
   );
 }
+
+
