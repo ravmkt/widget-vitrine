@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useLiveChat } from '@/hooks/useLiveChat';
+import { useLiveSpotlight } from '@/hooks/useLiveSpotlight';
 import {
   Smartphone, Monitor, Star, Tag, Gift, AlertTriangle, Send, Users,
   TrendingUp, MessageSquare, MousePointerClick, ShoppingBag, DollarSign,
@@ -25,15 +27,6 @@ interface Advantage {
   description: string;
 }
 
-interface ChatMessage {
-  id: string;
-  sender: string;
-  text: string;
-  time: string;
-  isOfficial?: boolean;
-  type?: 'text' | 'coupon' | 'alert';
-}
-
 export default function LiveAdmin() {
   const { liveId } = useParams<{ liveId: string }>();
   const navigate = useNavigate();
@@ -41,23 +34,18 @@ export default function LiveAdmin() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [liveTitle, setLiveTitle] = useState('');
-  const [accentColor, setAccentColor] = useState('#0099ff'); // fallback padrão
+  const [accentColor, setAccentColor] = useState('#0099ff');
+  const [storeId, setStoreId] = useState<string | null>(null);
 
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('mobile');
 
-  // Destaques e Estados Ativos (controle local de exibição no player)
-  const [activeProductId, setActiveProductId] = useState<string | null>(null);
-  const [activeCouponCode, setActiveCouponCode] = useState<string | null>(null);
-  const [activeAdvantageIdx, setActiveAdvantageIdx] = useState<number | null>(null);
   const [isUrgentAlertActive, setIsUrgentAlertActive] = useState<boolean>(false);
   const [urgentAlertText, setUrgentAlertText] = useState<string>('ÚLTIMAS PEÇAS DISPONÍVEIS!');
 
-  // Dados reais
   const [products, setProducts] = useState<Product[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [advantages, setAdvantages] = useState<Advantage[]>([]);
 
-  // Métricas (placeholder local até integrar analytics em tempo real)
   const [metrics, setMetrics] = useState({
     activeViewers: 0,
     peakViewers: 0,
@@ -67,9 +55,17 @@ export default function LiveAdmin() {
     lostSalesTotal: 0
   });
 
-  // Chat (local até integrar tabela de mensagens em tempo real)
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
+
+  // Spotlight sincronizado em tempo real (produto, cupom, vantagem)
+  const [initialSpotlight, setInitialSpotlight] = useState<{
+    productId: string | null;
+    couponCode: string | null;
+    advantageIdx: number | null;
+  }>({ productId: null, couponCode: null, advantageIdx: null });
+
+  const { spotlight, updateSpotlight } = useLiveSpotlight(liveId || null, initialSpotlight);
+  const { messages, sendMessage } = useLiveChat(liveId || null, storeId);
 
   useEffect(() => {
     if (!liveId) return;
@@ -79,7 +75,7 @@ export default function LiveAdmin() {
 
       const { data: live, error } = await supabase
         .from('lives')
-        .select('title, featured_product_ids, coupons, advantages, live_widget_config')
+        .select('title, store_id, featured_product_ids, coupons, advantages, live_widget_config, spotlight_product_id, spotlight_coupon_code, spotlight_advantage_idx')
         .eq('id', liveId)
         .maybeSingle();
 
@@ -90,6 +86,7 @@ export default function LiveAdmin() {
       }
 
       setLiveTitle(live.title || 'Live sem título');
+      setStoreId(live.store_id || null);
 
       const widgetConfig = live.live_widget_config as any;
       const themeColor =
@@ -102,6 +99,8 @@ export default function LiveAdmin() {
       setAdvantages(Array.isArray(live.advantages) ? live.advantages : []);
 
       const productIds: string[] = live.featured_product_ids || [];
+      let defaultProductId: string | null = live.spotlight_product_id || null;
+
       if (productIds.length > 0) {
         const { data: prods } = await supabase
           .from('products')
@@ -117,9 +116,17 @@ export default function LiveAdmin() {
             image: p.image_url || 'https://placehold.co/300x300?text=Produto'
           }));
           setProducts(mapped);
-          if (mapped.length > 0) setActiveProductId(mapped[0].id);
+          if (!defaultProductId && mapped.length > 0) {
+            defaultProductId = mapped[0].id;
+          }
         }
       }
+
+      setInitialSpotlight({
+        productId: defaultProductId,
+        couponCode: live.spotlight_coupon_code || null,
+        advantageIdx: live.spotlight_advantage_idx ?? null
+      });
 
       setLoading(false);
     };
@@ -127,51 +134,35 @@ export default function LiveAdmin() {
     loadLiveData();
   }, [liveId]);
 
-  const activeProduct = products.find(p => p.id === activeProductId);
-  const activeCoupon = coupons.find(c => c.code === activeCouponCode);
-  const activeAdvantage = activeAdvantageIdx !== null ? advantages[activeAdvantageIdx] : undefined;
+  useEffect(() => {
+    setMetrics((m) => ({ ...m, messagesCount: messages.length }));
+  }, [messages.length]);
+
+  const activeProduct = products.find(p => p.id === spotlight.productId);
+  const activeCoupon = coupons.find(c => c.code === spotlight.couponCode);
+  const activeAdvantage = spotlight.advantageIdx !== null ? advantages[spotlight.advantageIdx] : undefined;
 
   const toggleProduct = (id: string) => {
-    setActiveProductId(prev => prev === id ? null : id);
+    updateSpotlight({ productId: spotlight.productId === id ? null : id });
   };
 
   const toggleCoupon = (coupon: Coupon) => {
-    if (activeCouponCode === coupon.code) {
-      setActiveCouponCode(null);
+    if (spotlight.couponCode === coupon.code) {
+      updateSpotlight({ couponCode: null });
     } else {
-      setActiveCouponCode(coupon.code);
-      const msg: ChatMessage = {
-        id: String(Date.now()),
-        sender: 'Loja Oficial',
-        text: `🏷️ Cupom ativado: use ${coupon.code} para ${coupon.description}!`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isOfficial: true,
-        type: 'coupon'
-      };
-      setMessages(prev => [...prev, msg]);
-      setMetrics(m => ({ ...m, messagesCount: m.messagesCount + 1 }));
+      updateSpotlight({ couponCode: coupon.code });
+      sendMessage('Loja Oficial', `🏷️ Cupom ativado: use ${coupon.code} para ${coupon.description}!`, true).catch(console.error);
     }
   };
 
   const toggleAdvantage = (idx: number) => {
-    setActiveAdvantageIdx(prev => prev === idx ? null : idx);
+    updateSpotlight({ advantageIdx: spotlight.advantageIdx === idx ? null : idx });
   };
 
   const handleSendMessage = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!chatInput.trim()) return;
-
-    const newMsg: ChatMessage = {
-      id: String(Date.now()),
-      sender: 'Você (Loja Oficial)',
-      text: chatInput,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isOfficial: true,
-      type: 'text'
-    };
-
-    setMessages(prev => [...prev, newMsg]);
-    setMetrics(m => ({ ...m, messagesCount: m.messagesCount + 1 }));
+    sendMessage('Você (Loja Oficial)', chatInput, true).catch(console.error);
     setChatInput('');
   };
 
@@ -201,7 +192,6 @@ export default function LiveAdmin() {
   return (
     <div className="flex flex-col h-screen w-full bg-[#0a0f1d] text-slate-100 overflow-hidden font-sans p-3 md:p-4 select-none">
 
-      {/* HEADER SUPERIOR */}
       <header className="flex items-center justify-between pb-3 border-b border-slate-800 mb-3 px-1">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-red-600/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-xs font-bold tracking-wider">
@@ -222,10 +212,8 @@ export default function LiveAdmin() {
         </button>
       </header>
 
-      {/* ÁREA DE CONTEÚDO (3 COLUNAS) */}
       <div className="flex-1 grid grid-cols-12 gap-4 overflow-hidden min-h-0">
 
-        {/* COLUNA 1: MONITOR DE TRANSMISSÃO */}
         <section className="col-span-12 lg:col-span-5 flex flex-col bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden p-3 shadow-lg">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
@@ -415,7 +403,6 @@ export default function LiveAdmin() {
           </div>
         </section>
 
-        {/* COLUNA 2: PRODUTOS, CUPONS E VANTAGENS */}
         <section className="col-span-12 lg:col-span-4 flex flex-col bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden p-3 shadow-lg">
           <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
 
@@ -424,8 +411,8 @@ export default function LiveAdmin() {
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                   <ShoppingBag className="w-4 h-4 text-emerald-400" /> Produtos na Live ({products.length})
                 </h3>
-                {activeProductId && (
-                  <button onClick={() => setActiveProductId(null)} className="text-[11px] text-slate-400 hover:text-rose-400 transition">
+                {spotlight.productId && (
+                  <button onClick={() => updateSpotlight({ productId: null })} className="text-[11px] text-slate-400 hover:text-rose-400 transition">
                     Remover Destaque
                   </button>
                 )}
@@ -436,7 +423,7 @@ export default function LiveAdmin() {
               ) : (
                 <div className="flex flex-col gap-2">
                   {products.map(prod => {
-                    const isSelected = activeProductId === prod.id;
+                    const isSelected = spotlight.productId === prod.id;
                     return (
                       <div
                         key={prod.id}
@@ -472,8 +459,8 @@ export default function LiveAdmin() {
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                   <Tag className="w-4 h-4 text-sky-400" /> Cupons Cadastrados ({coupons.length})
                 </h3>
-                {activeCouponCode && (
-                  <button onClick={() => setActiveCouponCode(null)} className="text-[11px] text-slate-400 hover:text-rose-400 transition">
+                {spotlight.couponCode && (
+                  <button onClick={() => updateSpotlight({ couponCode: null })} className="text-[11px] text-slate-400 hover:text-rose-400 transition">
                     Desativar Cupom
                   </button>
                 )}
@@ -484,7 +471,7 @@ export default function LiveAdmin() {
               ) : (
                 <div className="grid grid-cols-1 gap-1.5">
                   {coupons.map(coupon => {
-                    const isSelected = activeCouponCode === coupon.code;
+                    const isSelected = spotlight.couponCode === coupon.code;
                     return (
                       <button
                         key={coupon.code}
@@ -517,8 +504,8 @@ export default function LiveAdmin() {
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                   <Gift className="w-4 h-4 text-indigo-400" /> Vantagens e Benefícios ({advantages.length})
                 </h3>
-                {activeAdvantageIdx !== null && (
-                  <button onClick={() => setActiveAdvantageIdx(null)} className="text-[11px] text-slate-400 hover:text-rose-400 transition">
+                {spotlight.advantageIdx !== null && (
+                  <button onClick={() => updateSpotlight({ advantageIdx: null })} className="text-[11px] text-slate-400 hover:text-rose-400 transition">
                     Desativar
                   </button>
                 )}
@@ -529,7 +516,7 @@ export default function LiveAdmin() {
               ) : (
                 <div className="grid grid-cols-1 gap-1.5">
                   {advantages.map((adv, idx) => {
-                    const isSelected = activeAdvantageIdx === idx;
+                    const isSelected = spotlight.advantageIdx === idx;
                     return (
                       <button
                         key={`${adv.title}-${idx}`}
@@ -560,7 +547,6 @@ export default function LiveAdmin() {
           </div>
         </section>
 
-        {/* COLUNA 3: MÉTRICAS + CHAT */}
         <section className="col-span-12 lg:col-span-3 flex flex-col gap-3 overflow-hidden">
 
           <div className="grid grid-cols-2 gap-2">
@@ -627,20 +613,20 @@ export default function LiveAdmin() {
                   <div
                     key={msg.id}
                     className={`p-2 rounded-lg ${
-                      msg.type === 'coupon'
-                        ? 'bg-sky-950/40 border border-sky-500/50 text-sky-200'
-                        : msg.type === 'alert'
-                        ? 'bg-rose-950/40 border border-rose-500/50 text-rose-200'
+                      msg.is_from_store
+                        ? 'bg-slate-950/60 border border-amber-700/40 text-slate-200'
                         : 'bg-slate-950/60 border border-slate-800/70 text-slate-200'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="font-bold text-[11px] text-white flex items-center gap-1">
-                        {msg.isOfficial && <span className="text-amber-400">★</span>} {msg.sender}
+                        {msg.is_from_store && <span className="text-amber-400">★</span>} {msg.author_name}
                       </span>
-                      <span className="text-[9px] text-slate-400">{msg.time}</span>
+                      <span className="text-[9px] text-slate-400">
+                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
                     </div>
-                    <p className="break-words">{msg.text}</p>
+                    <p className="break-words">{msg.message}</p>
                   </div>
                 ))
               )}
