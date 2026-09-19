@@ -791,6 +791,8 @@ var liveOverlay = null;
 var liveChatPollTimer = null;
 var liveSpotlightPollTimer = null;
 var liveSpotlightProductId = null;
+var liveSpotlightOverlayEl = null;
+var liveActiveProducts = [];
 var liveChatSeenIds = {};
 
 function closeLiveModal() {
