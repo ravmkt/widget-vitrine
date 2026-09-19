@@ -886,6 +886,11 @@ vidEl.src = live.stream_url;
   }
   modal.appendChild(playerWrap);
 
+  liveSpotlightOverlayEl = document.createElement('div');
+liveSpotlightOverlayEl.className = 'vl-live-spotlight-overlay';
+playerWrap.appendChild(liveSpotlightOverlayEl);
+
+
   var body = document.createElement('div');
   body.className = 'vl-live-modal-body';
 
