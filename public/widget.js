@@ -835,6 +835,12 @@ function openLiveModal(live) {
       '.vl-live-chat-form{display:flex;gap:6px;}' +
       '.vl-live-chat-input{flex:1;background:#1e293b;border:1px solid #334155;border-radius:20px;padding:8px 12px;color:#fff;font-size:12px;outline:none;}' +
       '.vl-live-chat-send{background:#22c55e;color:#0f172a;border:none;border-radius:50%;width:32px;height:32px;font-size:14px;cursor:pointer;flex-shrink:0;}';
+      '.vl-live-spotlight-overlay{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(15,23,42,.92);border-radius:12px;padding:8px 10px;display:flex;align-items:center;gap:10px;z-index:5;opacity:0;transform:translateY(8px);transition:opacity .25s ease,transform .25s ease;pointer-events:none;}' +
+'.vl-live-spotlight-overlay.vl-active{opacity:1;transform:translateY(0);pointer-events:auto;}' +
+'.vl-live-spotlight-overlay img{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#334155;}' +
+'.vl-live-spotlight-overlay-info{flex:1;min-width:0;}' +
+'.vl-live-spotlight-overlay-name{color:#fff;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+'.vl-live-spotlight-overlay-price{color:#22c55e;font-size:13px;font-weight:700;}' +
     document.head.appendChild(style);
   }
 
