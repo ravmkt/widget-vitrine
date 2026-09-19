@@ -925,10 +925,17 @@ playerWrap.appendChild(liveSpotlightOverlayEl);
       price.textContent = p.price || '';
       card.appendChild(price);
 
-      card.onclick = function () {
-        trackLiveEvent(live.id, 'product_click', { product_id: p.id, source: 'live_modal' });
-        if (p.url) window.open(p.url, '_blank');
-      };
+card.onclick = function () {
+  trackLiveEvent(live.id, 'product_click', { product_id: p.id, source: 'live_modal' });
+  try {
+    // Cookie de SESSÃO (sem expires) - atribuição só vale enquanto o navegador estiver aberto
+    document.cookie = 'vly_live_id=' + encodeURIComponent(live.id) + '; path=/; SameSite=Lax';
+    if (p.id) {
+      document.cookie = 'vly_product_id=' + encodeURIComponent(p.id) + '; path=/; SameSite=Lax';
+    }
+  } catch (_) {}
+  if (p.url) window.open(p.url, '_blank');
+};
 
       grid.appendChild(card);
     });
