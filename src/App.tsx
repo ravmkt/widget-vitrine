@@ -25,9 +25,8 @@ const IndicaGanhaPage = lazy(() =>
 );
 const LiveCommercePage = lazy(() =>
   import("@/pages/LiveCommercePage").then((m) => ({ default: m.LiveCommercePage }))
-  import LiveAdminPage from "@/pages/LiveAdminPage";
-
 );
+const LiveAdminPage = lazy(() => import("@/pages/LiveAdminPage"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
 const IntegrationPage = lazy(() => import("@/pages/IntegrationPage"));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
@@ -236,3 +235,4 @@ function App() {
 }
 
 export default App;
+
