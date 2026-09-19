@@ -1,0 +1,24 @@
+
+FullName                                                                       Length LastWriteTime
+--------                                                                       ------ -------------
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\aplicar-alteracoes.ps1               9137 27/08/2026 15:24:14
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\apply-name-color-fix.ps1             1976 23/08/2026 06:49:56
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\apply-name-color-patch.ps1           2477 23/08/2026 06:49:05
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\apply-widget-patch.ps1               5526 23/08/2026 06:44:00
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\corrigir-storydetails.ps1            4415 27/08/2026 15:40:25
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\fix-dynamic-card-style.ps1           3129 23/08/2026 06:57:05
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\temp_dynamic_part0.txt               7868 31/08/2026 12:53:47
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\temp_dynamic_part1.txt               9817 31/08/2026 12:59:25
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\temp_dynamic_part2.txt               6108 31/08/2026 13:04:18
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\temp_dynamic_part3.txt               6010 31/08/2026 13:07:58
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\temp_dynamic.txt                    11204 31/08/2026 12:41:53
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\temp_inspect.txt                    68022 31/08/2026 13:55:54
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\vercel.json                           905 16/09/2026 15:02:50
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\backups\widget.js.bak              248660 21/08/2026 08:28:36
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\backups\widget.js.before-dedup.bak 248436 21/08/2026 09:06:59
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\dist\widget.js.bak                 325876 16/09/2026 10:19:17
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\public\widget.js.bak               332171 18/09/2026 15:39:08
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\src\pages\AppearancePage.tsx.back… 175082 23/08/2026 10:04:12
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\src\pages\AppearancePage.tsx.bak   213186 03/09/2026 14:15:49
+F:\RODRIGO VICENTE\DYAD\vidlytics\vidlytics\src\pages\StoriesPage.tsx.bak       21955 09/09/2026 15:58:51
+
