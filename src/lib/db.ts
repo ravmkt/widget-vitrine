@@ -362,8 +362,6 @@ whatsapp_default_message: 'Olá! Tenho interesse no vídeo: {{story_title}}',
   whatsapp_message_template:
     'Olá! Tenho interesse nesse produto que vi no vídeo: {{story_title}}',
   pause_on_leave: true,
-  live_widget_config: {},
-  live_player_config: {},
 };
 
 const DEFAULT_APPEARANCES: Appearance[] = [
