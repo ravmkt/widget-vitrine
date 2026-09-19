@@ -29,3 +29,5 @@ public/*.bak
 
 # Backups locais
 public/widget.js.bak
+
+public/widget.js.bak-*

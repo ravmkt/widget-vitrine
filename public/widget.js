@@ -38,13 +38,8 @@
 var liveWidgetRoot = null;
 var liveWidgetShadow = null;
 var currentLiveData = null;
-var liveWidgetConfig = {
-  enabled: true,
-  position: 'bottom-right',
-  bubble_color: '#e11d48',
-  text_color: '#ffffff',
-  label_text: '🔴 AO VIVO AGORA'
-};
+var liveDivulgacaoConfig = null;
+var liveAoVivoConfig = null;
 var livePlayerConfig = {
   primary_color: '#e11d48',
   background_color: '#000000',
@@ -585,8 +580,7 @@ function getActiveLivePlayerConfig() {
 
 function getActiveLiveWidgetConfig(liveStatus) {
   var isMobile = window.innerWidth < 768;
-  var rootCfg = liveWidgetConfig || {};
-  var target = (liveStatus === 'live' && rootCfg.aoVivo) ? rootCfg.aoVivo : (rootCfg.divulgacao || rootCfg);
+  var target = (liveStatus === 'live' && liveAoVivoConfig) ? liveAoVivoConfig : (liveDivulgacaoConfig || {});
   if (target.desktop || target.mobile) {
     var devCfg = isMobile ? (target.mobile || target.desktop) : (target.desktop || target.mobile);
     return Object.assign({}, devCfg);
@@ -794,8 +788,13 @@ function renderLiveWidget(live) {
 }
 
 var liveOverlay = null;
+var liveChatPollTimer = null;
+var liveSpotlightPollTimer = null;
+var liveSpotlightProductId = null;
+var liveChatSeenIds = {};
 
 function closeLiveModal() {
+  stopLivePolling();
   if (liveOverlay) {
     liveOverlay.classList.remove('vl-active');
     setTimeout(function () {
@@ -825,7 +824,17 @@ function openLiveModal(live) {
       '.vl-live-product{background:#1e293b;border-radius:10px;overflow:hidden;cursor:pointer;}' +
       '.vl-live-product img{width:100%;height:90px;object-fit:cover;display:block;}' +
       '.vl-live-product-name{color:#e2e8f0;font-size:11px;padding:6px 8px 2px;}' +
-      '.vl-live-product-price{color:#22c55e;font-size:12px;font-weight:700;padding:0 8px 8px;}';
+      '.vl-live-product-price{color:#22c55e;font-size:12px;font-weight:700;padding:0 8px 8px;}' +
+      '.vl-live-product.vl-spotlight{outline:2px solid #22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25);}' +
+      '.vl-live-chat{margin-top:14px;border-top:1px solid #1e293b;padding-top:12px;}' +
+      '.vl-live-chat-title{color:#94a3b8;font-size:11px;font-weight:700;text-transform:uppercase;margin:0 0 8px;}' +
+      '.vl-live-chat-messages{max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}' +
+      '.vl-live-chat-msg{font-size:12px;color:#e2e8f0;background:#1e293b;border-radius:8px;padding:6px 10px;max-width:85%;word-break:break-word;align-self:flex-start;}' +
+      '.vl-live-chat-msg.vl-mine{background:#312e81;align-self:flex-end;text-align:right;}' +
+      '.vl-live-chat-msg b{display:block;font-size:10px;color:#64748b;margin-bottom:2px;}' +
+      '.vl-live-chat-form{display:flex;gap:6px;}' +
+      '.vl-live-chat-input{flex:1;background:#1e293b;border:1px solid #334155;border-radius:20px;padding:8px 12px;color:#fff;font-size:12px;outline:none;}' +
+      '.vl-live-chat-send{background:#22c55e;color:#0f172a;border:none;border-radius:50%;width:32px;height:32px;font-size:14px;cursor:pointer;flex-shrink:0;}';
     document.head.appendChild(style);
   }
 
@@ -883,7 +892,8 @@ vidEl.src = live.stream_url;
     grid.className = 'vl-live-products';
     products.forEach(function (p) {
       var card = document.createElement('div');
-      card.className = 'vl-live-product';
+      card.className = 'vl-live-product' + (liveSpotlightProductId && p.id === liveSpotlightProductId ? ' vl-spotlight' : '');
+      card.setAttribute('data-vl-product-id', p.id || '');
 
       var img = document.createElement('img');
       img.src = p.image_url || '';
@@ -911,6 +921,47 @@ vidEl.src = live.stream_url;
     body.appendChild(grid);
   }
 
+  var chatWrap = document.createElement('div');
+  chatWrap.className = 'vl-live-chat';
+
+  var chatTitle = document.createElement('p');
+  chatTitle.className = 'vl-live-chat-title';
+  chatTitle.textContent = 'Chat da live';
+  chatWrap.appendChild(chatTitle);
+
+  var chatMessages = document.createElement('div');
+  chatMessages.className = 'vl-live-chat-messages';
+  chatMessages.id = 'vl-live-chat-messages';
+  chatWrap.appendChild(chatMessages);
+
+  var chatForm = document.createElement('div');
+  chatForm.className = 'vl-live-chat-form';
+
+  var chatInput = document.createElement('input');
+  chatInput.className = 'vl-live-chat-input';
+  chatInput.type = 'text';
+  chatInput.maxLength = 300;
+  chatInput.placeholder = 'Digite sua mensagem...';
+  chatInput.id = 'vl-live-chat-input';
+
+  var chatSend = document.createElement('button');
+  chatSend.className = 'vl-live-chat-send';
+  chatSend.textContent = '\u27a4';
+  chatSend.onclick = function () {
+    var val = chatInput.value.trim();
+    if (!val) return;
+    postLiveChatMessage(live, val);
+    chatInput.value = '';
+  };
+  chatInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') chatSend.onclick();
+  });
+
+  chatForm.appendChild(chatInput);
+  chatForm.appendChild(chatSend);
+  chatWrap.appendChild(chatForm);
+  body.appendChild(chatWrap);
+
   modal.appendChild(body);
   liveOverlay.appendChild(modal);
   document.body.appendChild(liveOverlay);
@@ -922,6 +973,94 @@ vidEl.src = live.stream_url;
   requestAnimationFrame(function () {
     liveOverlay.classList.add('vl-active');
   });
+
+  startLivePolling(live);
+}
+
+function stopLivePolling() {
+  if (liveChatPollTimer) { clearInterval(liveChatPollTimer); liveChatPollTimer = null; }
+  if (liveSpotlightPollTimer) { clearInterval(liveSpotlightPollTimer); liveSpotlightPollTimer = null; }
+  liveChatSeenIds = {};
+  liveSpotlightProductId = null;
+}
+
+function startLivePolling(live) {
+  if (!live || !live.id) return;
+
+  fetchLiveChatMessages(live);
+  liveChatPollTimer = setInterval(function () { fetchLiveChatMessages(live); }, 4000);
+
+  fetchLiveSpotlight(live);
+  liveSpotlightPollTimer = setInterval(function () { fetchLiveSpotlight(live); }, 4000);
+}
+
+function fetchLiveChatMessages(live) {
+  if (!hasSupabase || !live || !live.id) return;
+  supabaseFetch(
+    'live_chat_messages?select=*&live_id=eq.' + encodeURIComponent(live.id) +
+    '&order=created_at.asc&limit=100',
+    { method: 'GET' }
+  )
+    .then(function (res) { return res.ok ? res.json() : []; })
+    .then(function (rows) {
+      if (!Array.isArray(rows)) return;
+      var container = document.getElementById('vl-live-chat-messages');
+      if (!container) return;
+      rows.forEach(function (m) {
+        if (liveChatSeenIds[m.id]) return;
+        liveChatSeenIds[m.id] = true;
+        var msgEl = document.createElement('div');
+        msgEl.className = 'vl-live-chat-msg' + (m.is_from_store ? ' vl-mine' : '');
+        var author = document.createElement('b');
+        author.textContent = m.is_from_store ? (live.store_name || 'Loja') : (m.author_name || 'Visitante');
+        msgEl.appendChild(author);
+        msgEl.appendChild(document.createTextNode(m.message || ''));
+        container.appendChild(msgEl);
+      });
+      container.scrollTop = container.scrollHeight;
+    })
+    .catch(function () {});
+}
+
+function postLiveChatMessage(live, text) {
+  if (!hasSupabase || !live || !live.id || !text) return;
+  var visitorName = 'Visitante';
+  try {
+    visitorName = localStorage.getItem('vl_visitor_name') || visitorName;
+  } catch (e) {}
+  supabaseFetch('live_chat_messages', {
+    method: 'POST',
+    headers: { 'Prefer': 'return=minimal' },
+    body: JSON.stringify({
+      live_id: live.id,
+      store_id: storeId,
+      author_name: visitorName,
+      message: text,
+      is_from_store: false
+    })
+  }).catch(function () {});
+}
+
+function fetchLiveSpotlight(live) {
+  if (!hasSupabase || !live || !live.id) return;
+  supabaseFetch(
+    'lives?select=spotlight_product_id&id=eq.' + encodeURIComponent(live.id) + '&limit=1',
+    { method: 'GET' }
+  )
+    .then(function (res) { return res.ok ? res.json() : []; })
+    .then(function (rows) {
+      if (!Array.isArray(rows) || !rows.length) return;
+      var newId = rows[0].spotlight_product_id || null;
+      if (newId === liveSpotlightProductId) return;
+      liveSpotlightProductId = newId;
+      var cards = document.querySelectorAll('.vl-live-product');
+      cards.forEach(function (c) {
+        var pid = c.getAttribute('data-vl-product-id');
+        if (newId && pid === newId) c.classList.add('vl-spotlight');
+        else c.classList.remove('vl-spotlight');
+      });
+    })
+    .catch(function () {});
 }
 
   function fetchJson(path) {
@@ -6998,7 +7137,10 @@ function initWidget() {
       }
 
       return readStoreSettings().then(function (settings) {
-        if (settings.live_widget_config) { liveWidgetConfig = settings.live_widget_config; }
+        if (settings.live_widget_config) {
+          liveDivulgacaoConfig = settings.live_widget_config.divulgacao || settings.live_widget_config;
+          liveAoVivoConfig = settings.live_widget_config.aoVivo || null;
+        }
         if (settings.live_player_config) { livePlayerConfig = settings.live_player_config; }
         if (settings.widget_enabled === false || settings.app_enabled === false) {
           console.warn('[Vidlytics] Widget inativo: o aplicativo está desativado nas configurações da loja (Offline).');
@@ -7020,7 +7162,8 @@ storeWhatsappMessage = settings.whatsapp_message || '';
 storeWhatsappMessageTemplate = settings.whatsapp_message_template || '';
 storeWhatsappEnabled = settings.whatsapp_enabled !== false;
           if (settings.live_widget_config) {
-            liveWidgetConfig = Object.assign({}, liveWidgetConfig, settings.live_widget_config);
+            liveDivulgacaoConfig = Object.assign({}, liveDivulgacaoConfig, settings.live_widget_config.divulgacao || settings.live_widget_config);
+            liveAoVivoConfig = Object.assign({}, liveAoVivoConfig, settings.live_widget_config.aoVivo || {});
           }
           if (settings.live_player_config) {
             livePlayerConfig = Object.assign({}, livePlayerConfig, settings.live_player_config);
@@ -7252,3 +7395,4 @@ fetchActiveLive().then(function(live) {
 });
 
 })();
+
