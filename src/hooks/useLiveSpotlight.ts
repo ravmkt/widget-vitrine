@@ -1,12 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 
-export function useLiveSpotlight(liveId: string | null, initialProductId: string | null) {
-  const [spotlightProductId, setSpotlightProductId] = useState<string | null>(initialProductId);
+interface SpotlightState {
+  productId: string | null;
+  couponCode: string | null;
+  advantageIdx: number | null;
+}
+
+export function useLiveSpotlight(liveId: string | null, initial: SpotlightState) {
+  const [spotlight, setSpotlightState] = useState<SpotlightState>(initial);
 
   useEffect(() => {
-    setSpotlightProductId(initialProductId);
-  }, [initialProductId]);
+    setSpotlightState(initial);
+  }, [initial.productId, initial.couponCode, initial.advantageIdx]);
 
   useEffect(() => {
     if (!liveId) return;
@@ -16,7 +22,12 @@ export function useLiveSpotlight(liveId: string | null, initialProductId: string
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "lives", filter: `id=eq.${liveId}` },
         (payload) => {
-          setSpotlightProductId((payload.new as any).spotlight_product_id || null);
+          const row = payload.new as any;
+          setSpotlightState({
+            productId: row.spotlight_product_id ?? null,
+            couponCode: row.spotlight_coupon_code ?? null,
+            advantageIdx: row.spotlight_advantage_idx ?? null,
+          });
         }
       )
       .subscribe();
@@ -26,18 +37,21 @@ export function useLiveSpotlight(liveId: string | null, initialProductId: string
     };
   }, [liveId]);
 
-  const setSpotlight = useCallback(
-    async (productId: string | null) => {
+  const updateSpotlight = useCallback(
+    async (patch: Partial<SpotlightState>) => {
       if (!liveId) return;
-      setSpotlightProductId(productId);
-      const { error } = await supabase
-        .from("lives")
-        .update({ spotlight_product_id: productId })
-        .eq("id", liveId);
+      setSpotlightState((prev) => ({ ...prev, ...patch }));
+
+      const dbPatch: Record<string, any> = {};
+      if ("productId" in patch) dbPatch.spotlight_product_id = patch.productId;
+      if ("couponCode" in patch) dbPatch.spotlight_coupon_code = patch.couponCode;
+      if ("advantageIdx" in patch) dbPatch.spotlight_advantage_idx = patch.advantageIdx;
+
+      const { error } = await supabase.from("lives").update(dbPatch).eq("id", liveId);
       if (error) throw error;
     },
     [liveId]
   );
 
-  return { spotlightProductId, setSpotlight };
+  return { spotlight, updateSpotlight };
 }
