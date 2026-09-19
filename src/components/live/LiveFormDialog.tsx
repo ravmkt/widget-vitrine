@@ -220,10 +220,11 @@ export function LiveFormDialog({
         // Carrega Produtos
         if (Array.isArray(data.featured_product_ids)) {
           const ctaTexts = data.product_cta_texts || {};
+          const couponTexts = data.product_coupon_texts || {};
           const mapped: LiveProductItem[] = data.featured_product_ids.map((pid: string) => ({
             product_id: pid,
             cta_text: ctaTexts[pid] || "",
-            coupon_code: ""
+            coupon_code: couponTexts[pid] || ""
           }));
           setLiveProducts(mapped);
         }
