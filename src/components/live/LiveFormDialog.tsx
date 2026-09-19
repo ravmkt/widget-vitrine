@@ -443,8 +443,10 @@ export function LiveFormDialog({
       const cleanedAdvantages = advantages.filter(a => a.title.trim().length > 0);
       const productIds = liveProducts.map(p => p.product_id);
       const productCtaMap: Record<string, string> = {};
+      const productCouponMap: Record<string, string> = {};
       liveProducts.forEach(p => {
         if (p.cta_text) productCtaMap[p.product_id] = p.cta_text;
+        if (p.coupon_code && p.coupon_code.trim()) productCouponMap[p.product_id] = p.coupon_code.trim();
       });
 
       // Busca o template selecionado para embutir as configs
