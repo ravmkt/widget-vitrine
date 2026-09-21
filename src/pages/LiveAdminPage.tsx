@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useLiveChat } from '@/hooks/useLiveChat';
 import { useLiveSpotlight } from '@/hooks/useLiveSpotlight';
+import { MODULES } from '@/lib/modules';
 import {
   Smartphone, Monitor, Star, Tag, Gift, AlertTriangle, Send, Users,
   TrendingUp, MessageSquare, MousePointerClick, ShoppingBag, DollarSign,
@@ -33,6 +34,7 @@ export default function LiveAdmin() {
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
   const [liveTitle, setLiveTitle] = useState('');
   const [accentColor, setAccentColor] = useState('#0099ff');
   const [storeId, setStoreId] = useState<string | null>(null);
@@ -680,5 +682,6 @@ export default function LiveAdmin() {
     </div>
   );
 }
+
 
 
