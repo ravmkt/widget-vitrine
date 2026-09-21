@@ -90,6 +90,25 @@ export default function LiveAdmin() {
       setLiveTitle(live.title || 'Live sem título');
       setStoreId(live.store_id || null);
 
+          if (live.store_id) {
+            const { data: storeData } = await supabase
+              .from('stores')
+              .select('plan:plan_id(modules, allows_live)')
+              .eq('id', live.store_id)
+              .maybeSingle();
+
+            const plan = (storeData as any)?.plan;
+            const hasLiveModule = Array.isArray(plan?.modules)
+              ? plan.modules.includes(MODULES.LIVE_COMMERCE)
+              : plan?.allows_live !== false;
+
+            if (!hasLiveModule) {
+              setAccessDenied(true);
+              setLoading(false);
+              return;
+            }
+          }
+
       const widgetConfig = live.live_widget_config as any;
       const themeColor =
         widgetConfig?.aoVivo?.desktop?.ctaBgColor ||
@@ -190,6 +209,21 @@ export default function LiveAdmin() {
       </div>
     );
   }
+
+      if (accessDenied) {
+        return (
+          <div className="flex flex-col items-center justify-center h-screen w-full bg-[#0a0f1d] text-slate-300 gap-3">
+            <AlertTriangle className="w-8 h-8 text-amber-500" />
+            <p className="text-sm">Seu plano atual não inclui o módulo Live Commerce.</p>
+            <button
+              onClick={() => navigate('/billing')}
+              className="text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg"
+            >
+              Fazer Upgrade
+            </button>
+          </div>
+        );
+      }
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#0a0f1d] text-slate-100 overflow-hidden font-sans p-3 md:p-4 select-none">
