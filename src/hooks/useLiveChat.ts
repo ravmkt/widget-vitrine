@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export interface LiveChatMessage {
   id: string;
@@ -14,21 +15,37 @@ export interface LiveChatMessage {
 export function useLiveChat(liveId: string | null, storeId: string | null) {
   const [messages, setMessages] = useState<LiveChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
     if (!liveId) return;
 
+    if (!isSupabaseConfigured || !supabase) {
+      setError("Supabase não configurado.");
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    setError(null);
+
     async function loadInitial() {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from("live_chat_messages")
         .select("*")
         .eq("live_id", liveId)
         .order("created_at", { ascending: true })
         .limit(200);
 
-      if (!error && data) setMessages(data as LiveChatMessage[]);
+      if (!isMounted) return;
+
+      if (fetchError) {
+        setError(fetchError.message);
+      } else if (data) {
+        setMessages(data as LiveChatMessage[]);
+      }
       setLoading(false);
     }
     loadInitial();
@@ -39,6 +56,7 @@ export function useLiveChat(liveId: string | null, storeId: string | null) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "live_chat_messages", filter: `live_id=eq.${liveId}` },
         (payload) => {
+          if (!isMounted) return;
           setMessages((prev) => [...prev, payload.new as LiveChatMessage]);
         }
       )
@@ -47,6 +65,7 @@ export function useLiveChat(liveId: string | null, storeId: string | null) {
     channelRef.current = channel;
 
     return () => {
+      isMounted = false;
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
@@ -54,18 +73,26 @@ export function useLiveChat(liveId: string | null, storeId: string | null) {
 
   const sendMessage = useCallback(
     async (authorName: string, message: string, isFromStore: boolean) => {
+      if (!isSupabaseConfigured || !supabase) {
+        throw new Error("Supabase não configurado.");
+      }
       if (!liveId || !storeId || !message.trim()) return;
-      const { error } = await supabase.from("live_chat_messages").insert({
+
+      const { error: insertError } = await supabase.from("live_chat_messages").insert({
         live_id: liveId,
         store_id: storeId,
         author_name: authorName.trim() || "Visitante",
         message: message.trim(),
         is_from_store: isFromStore,
       });
-      if (error) throw error;
+
+      if (insertError) {
+        setError(insertError.message);
+        throw insertError;
+      }
     },
     [liveId, storeId]
   );
 
-  return { messages, loading, sendMessage };
+  return { messages, loading, error, sendMessage };
 }

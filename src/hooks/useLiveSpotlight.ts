@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect, useCallback } from "react";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 interface SpotlightState {
   productId: string | null;
@@ -9,28 +9,41 @@ interface SpotlightState {
 
 export function useLiveSpotlight(liveId: string | null, initial: SpotlightState) {
   const [spotlight, setSpotlight] = useState<SpotlightState>(initial);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setSpotlight(initial);
   }, [initial.productId, initial.couponCode, initial.advantageIdx]);
 
-  const updateSpotlight = (partial: Partial<SpotlightState>) => {
-    setSpotlight(prev => {
-      const next = { ...prev, ...partial };
-      if (liveId) {
-        supabase
-          .from("lives")
-          .update({
-            spotlight_product_id: next.productId,
-            spotlight_coupon_code: next.couponCode,
-            spotlight_advantage_idx: next.advantageIdx
-          })
-          .eq("id", liveId)
-          .then(() => {});
-      }
-      return next;
-    });
-  };
+  const updateSpotlight = useCallback(
+    async (partial: Partial<SpotlightState>) => {
+      const next = { ...spotlight, ...partial };
+      setSpotlight(next);
 
-  return { spotlight, updateSpotlight };
+      if (!liveId) return;
+
+      if (!isSupabaseConfigured || !supabase) {
+        setError("Supabase não configurado.");
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from("lives")
+        .update({
+          spotlight_product_id: next.productId,
+          spotlight_coupon_code: next.couponCode,
+          spotlight_advantage_idx: next.advantageIdx,
+        })
+        .eq("id", liveId);
+
+      if (updateError) {
+        setError(updateError.message);
+      } else {
+        setError(null);
+      }
+    },
+    [liveId, spotlight]
+  );
+
+  return { spotlight, updateSpotlight, error };
 }
