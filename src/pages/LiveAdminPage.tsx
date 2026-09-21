@@ -64,8 +64,8 @@ export default function LiveAdmin() {
     advantageIdx: number | null;
   }>({ productId: null, couponCode: null, advantageIdx: null });
 
-  const { spotlight, updateSpotlight } = useLiveSpotlight(liveId || null, initialSpotlight);
-  const { messages, sendMessage } = useLiveChat(liveId || null, storeId);
+  const { spotlight, updateSpotlight, error: spotlightError } = useLiveSpotlight(liveId || null, initialSpotlight);
+  const { messages, sendMessage, error: chatError } = useLiveChat(liveId || null, storeId);
 
   useEffect(() => {
     if (!liveId) return;
@@ -191,6 +191,13 @@ export default function LiveAdmin() {
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#0a0f1d] text-slate-100 overflow-hidden font-sans p-3 md:p-4 select-none">
+
+      {(spotlightError || chatError) && (
+        <div className="flex items-center gap-2 bg-rose-950/60 border border-rose-600/40 text-rose-300 text-xs px-3 py-2 rounded-lg mb-2 mx-1">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <span>{spotlightError || chatError}</span>
+        </div>
+      )}
 
       <header className="flex items-center justify-between pb-3 border-b border-slate-800 mb-3 px-1">
         <div className="flex items-center gap-3">
@@ -673,3 +680,5 @@ export default function LiveAdmin() {
     </div>
   );
 }
+
+
