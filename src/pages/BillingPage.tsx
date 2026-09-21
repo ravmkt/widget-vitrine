@@ -20,6 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { PLAN_LIMITS } from '@/lib/plans';
+import { MODULES } from '@/lib/modules';
 import { showSuccess, showError } from '@/utils/toast';
 
 export function BillingPage() {
@@ -180,7 +181,7 @@ const { data: storeRow, error: storeErr } = await supabase
         setViewsLimit(dbViewsLimit > officialLimits.views ? dbViewsLimit : officialLimits.views);
         setPagesLimit(dbPagesLimit > officialLimits.pages ? dbPagesLimit : officialLimits.pages);
         setVideosLimit(dbVideosLimit);
-        setAllowsLive(Boolean(resolvedPlan?.allows_live ?? officialLimits.allowsLive));
+        setAllowsLive(Array.isArray(resolvedPlan?.modules) ? resolvedPlan.modules.includes(MODULES.LIVE_COMMERCE) : Boolean(resolvedPlan?.allows_live ?? officialLimits.allowsLive));
 
         // 📊 CONTADOR DE PÁGINAS ATIVAS EM TEMPO REAL
         try {
@@ -848,3 +849,5 @@ const { data: storeRow, error: storeErr } = await supabase
     </div>
   );
 }
+
+
